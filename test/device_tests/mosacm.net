@@ -1,0 +1,12 @@
+# *** MOS ACM equation test netlist ***
+#
+#
+.analysis testdev plot=1 ports_bias = [3.V, 1V, 0V] sweep_port=1 \
+	  start = 0V stop= 2V sweep_num=1100 device = mosacm:m1 \
+	  param = kp param_val = [2m, 5.1m, 10m]
+
+
+# Change parameters here if needed
+mosacm:m1 2 3 4 gnd w=30u l=1u
+
+.end

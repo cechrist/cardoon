@@ -1,0 +1,24 @@
+# *** Parser/Internal circuit representation Test netlist ***
+#
+#
+.model 2n222 diode (isat=3.fA area=2 cj0=1.5pF tt=.1ps)
+
+cap:c1 1 gnd c=1pF 
+res:r1 1 2 r=50.
+res_t:rt1 1 gnd 1000 gnd r=100.
+diode:d1 2 gnd model=2n222
+diode:d2 2 3 isat=2fA cj0=1pF rs=100
+mosekv:m1 2 3 4 gnd
+bjt:q1 2 3 4
+x1 2 3 4 LM741
+x2 2 gnd 3 LM741
+x3 2 gnd 3 testckt
+
+.subckt LM741 in out gnd
+res:r1 in out r=1kOhm
+cap:c2 out gnd c=1nH
+.ends
+
+.include kk.net
+
+.end

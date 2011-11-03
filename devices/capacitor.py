@@ -1,0 +1,98 @@
+"""
+Simple linear capacitor
+
+-------------------------------------------------------------------
+Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
+
+This file is part of the cardoon electronic circuit simulator.
+
+Cardoon is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3 or later:
+
+http://www.gnu.org/licenses/gpl.html
+"""
+
+import numpy as np
+from globalVars import glVar
+import circuit as cir
+
+class Device(cir.Element):
+    """
+    Linear Capacitor
+
+                 || C
+    0 o----------||---------o 1
+                 ||
+
+    """
+
+    # devtype is the 'model' name
+    devType = "cap"
+
+    # Number of terminals. If numTerms is set here, the parser knows
+    # in advance how many external terminals to expect. By default the
+    # parser makes no assumptions and allows any number of connections
+    #
+    numTerms = 2
+    
+    # Flags: at least one should be enabled for other than
+    # linear R, L, C, M
+    #
+    # isNonlinear = True
+    # needsDelays = True
+    # isFreqDefined = True
+    # isDCSource = True
+    # isTDSource = True
+    # isFDSource = True
+
+    # Nonlinear device attributes
+    # csOutPorts = ((0, 2), )
+    # csContPorts = ((0, 3), (1, 3), (2, 3))
+    # qsOutPorts = ( )
+    # qsContPorts = ( )
+    # csDelayedContPorts = ( )
+
+    paramDict = dict(
+        c = ('Capacitance', 'F', float, 0.)
+        )
+
+    def __init__(self, instanceName):
+        """
+        Here the Element constructor must be called. Do not connect
+        internal nodes here.
+        """
+        cir.Element.__init__(self, instanceName)
+
+
+    def process_params(self, circuit):
+        """
+        Takes the container circuit reference as an argument. 
+
+        Called once the external terminals have been connected and the
+        non-default parameters have been set. Make sanity checks
+        here. Internal terminals/devices should also be defined here
+        (use circuit reference for this).  Raise cir.CircuitError if a fatal
+        error is found.
+        """
+        # Access to global variables is through the glVar 
+        if not self.c:
+            raise cir.CircuitError(self.nodeName 
+                                   + ': Capacitance can not be zero')
+
+        # Adjust according to temperature (not needed so far)
+        # self.set_temp_vars(self.temp)
+        self.linearVCQS = [[(0, 1), (0, 1), self.c]]
+
+#    def set_temp_vars(self, temp):
+#        """
+#        Calculate temperature-dependent variables for temp given in C
+#        """
+#        # Absolute temperature (note temp is in deg. C)
+#        # T = const.T0 + temp
+#        deltaT = temp - self.tnom
+#        self.g /= (1. + (self.tc1 + self.tc2 * deltaT) * deltaT)
+
+# Here you can add additional functions and classes that only are
+# visible withing this module.
+

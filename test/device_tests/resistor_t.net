@@ -1,0 +1,12 @@
+# *** Thermal resistor test ***
+#
+#
+.analysis testdev plot=1 ports_bias = [3.V, 27.C] sweep_port=1 \
+	  start = 0C stop= 100.C sweep_num=1000 device = res_t:r1 \
+	  param = tc1 param_val = [0, 1m, 10m]
+.options temp=10C
+
+# Change parameters here if needed
+res_t:r1 1 2 3 4 r=1e3 tc1=10e-3
+
+.end

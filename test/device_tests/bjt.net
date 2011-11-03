@@ -1,0 +1,21 @@
+# *** MOS ACM equation test netlist ***
+#
+#
+#.analysis testdev plot=1 shell=0 ports_bias = [-.7V, 5V, -.1] \
+#	  sweep_port=0 start = -.75V stop= 0V sweep_num=1100 \
+#	  device = bjt:q1 \
+#	  param = temp param_val = [0., 27., 50]
+
+.analysis testdev plot=1 shell=0 ports_bias = [-.7V, 5V, -.1, 27] \
+	  sweep_port=0 start = -.75V stop= 0V sweep_num=1100 \
+	  device = bjt_t:q2
+
+
+
+# Change parameters here if needed
+#bjt:q1 2 3 4 model = mypnp
+bjt_t:q2 2 3 4 5 6 model = mypnp
+
+.model mypnp bjt_t (type=pnp isat=5e-17 bf=147 vaf=80 ikf=4.3e-3 ise=8e-18 ne=1.233 br=1.9 var=11 ikr=6e-4 isc=5e-16 nc=1.08 rb=1200 rbm=200 cje=58e-15 vje=0.83 mje=0.35 cjc=133e-15 vjc=0.6 mjc=0.44 xcjc=1 fc=0.85 tf=60e-12 xtf=48 itf=3e-2 tr=10e-9 eg=1.16 xti=3 xtb=1.6)
+
+.end

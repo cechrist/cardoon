@@ -1,0 +1,11 @@
+# *** State-Variable Diode equation test netlist ***
+#
+#
+.analysis testdev plot=1 shell=0 ports_bias = [100.] sweep_port=0 \
+	  start = .01 stop= 6 sweep_num=100 device = svdiode:d2 \
+	  param = temp param_val = [-30, 0., 27]
+.options temp = 27.
+
+svdiode:d2 2 3 cj0=10pF tt=1e-12 rs=100.
+
+.end

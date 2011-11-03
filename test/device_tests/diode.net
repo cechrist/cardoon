@@ -1,0 +1,17 @@
+# *** Diode equation test netlist ***
+#
+#
+.analysis testdev plot=1 ports_bias = [.7V] sweep_port=0 \
+ 	  start = .1V stop= .8V sweep_num=1100 device = diode:d2 \
+ 	  param = temp param_val = [0., 27, 40]
+
+.analysis testdev plot=0 ports_bias = [.45V, 27C] sweep_port=1 \
+	  start = -20C stop= 100C sweep_num=100 device = diode_t:d2 
+#	  param = isat param_val = [.1fA, 1fA, 10fA]
+
+.options temp = 10.
+
+diode:d2 2 3 cj0=10pF rs=100 bv = 4. tt=10e-12
+diode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
+
+.end

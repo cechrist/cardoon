@@ -1,0 +1,16 @@
+# *** Thermal MOS EKV equation test netlist ***
+#
+#
+.analysis testdev plot=1 shell=0 ports_bias = [3V, .7V, .1V, 27] sweep_port=1 \
+	  start = 0V stop= 3V sweep_num=1000 device = mosekv_t:m1 
+#	  param = temp param_val = [-10, 27, 50]
+
+#.analysis testdev plot=1 ports_bias = [-.1V, -1V, -3V] sweep_port=1 \
+#	  start = 0V stop= -3V sweep_num=100 device = mosekv:m1 \
+#	  param = temp param_val = [-10, 27, 50]
+
+
+# Change parameters here if needed
+mosekv_t:m1 2 3 4 gnd 1000 gnd w=30e-6 l=1e-6 type = n
+
+.end
