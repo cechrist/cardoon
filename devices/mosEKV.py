@@ -1,12 +1,15 @@
 """
+:mod:`mosEKV` -- MOS EKV 2.6 intrinsic model
+--------------------------------------------
+
+.. module:: mosEKV
+.. moduleauthor:: Carlos Christoffersen
+
 Intrinsic EKV 2.6 MOSFET model mostly based on [1], but some updates
 from a later revision (dated 1999) are also included.
 
-[1]
-The EPFL-EKV MOSFET Model Equations for Simulation
-Technical Report
-Model Version 2.6, June, 1997
-Revision I, September, 1997
+[1] The EPFL-EKV MOSFET Model Equations for Simulation, Technical
+Report, Model Version 2.6, June, 1997, Revision I, September, 1997,
 Revision II, July, 1998
 
 Matthias Bucher, Christophe Lallement, Christian Enz, Fabien
@@ -15,19 +18,18 @@ Theodoloz, Francois Krummenacher
 Electronics Laboratories, Swiss Federal Institute of Technology
  (EPFL), Lausanne, Switzerland
 
-Code originally based on freeda 1.4 implementation:
+Code originally based on freeda 1.4 implementation
+<http://www.freeda.org>::
 
-http://www.freeda.org
-
-// Element information
-ItemInfo Mosnekv::einfo =
-{
-  "mosnekv",
-  "EPFL EKV MOSFET model",
-  "Wonhoon Jang",
-  DEFAULT_ADDRESS"transistor>mosfet",
-  "2003_05_15"
-};
+    // Element information
+    ItemInfo Mosnekv::einfo =
+    {
+      "mosnekv",
+      "EPFL EKV MOSFET model",
+      "Wonhoon Jang",
+      DEFAULT_ADDRESS"transistor>mosfet",
+      "2003_05_15"
+    };
 
 The freeda code was auditted. Some equations have been changed for
 efficiency, clarity or to correct errors.  This version has several
@@ -37,17 +39,6 @@ noise equations.
 
 Parameter limit checking, simple capacitance calculations for
 operating point are not yet implemented.
-
-----------------------------------------------------------------------
-Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
-
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
 """
 
 import numpy as np
@@ -57,23 +48,23 @@ import cppaddev as ad
 
 class Device(cir.Element):
     """
-    Implements the EPFL EKV MOSFET 
+    Implements the EPFL EKV MOSFET::
 
-    Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk
-
-             Drain 0
-                     o
+        Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk
+        
+                 Drain 0
+                         o
+                         |
+                         |
+                     |---+
                      |
+        Gate 1 o-----|<-----o 3 Bulk
                      |
-                 |---+
-                 |
-    Gate 1 o-----|<-----o 3 Bulk
-                 |
-                 |---+
-                     |
-                     |
-                     o
-            Source 2
+                     |---+
+                         |
+                         |
+                         o
+                Source 2
     """
 
     devType = "mosekv"
@@ -284,6 +275,7 @@ class Device(cir.Element):
         Calculates Ids, Idb, Isb currents and D, G, S, charges. 
 
         Input:  vPort = [vdb , vgb , vsb]
+
         Output: vector with Ids, Idb, Isb currents and D, G, S charges. 
         
         If saveOP = True, return normal output vector plus operating

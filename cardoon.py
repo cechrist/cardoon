@@ -20,7 +20,7 @@ paramset
 """
 
 import circuit as cir
-from parser import parse_file, ParseError, analysisQueue
+from netlistparser import parse_file, ParseError, analysisQueue
 import analyses
 
 def parse(filename, ckt = None):

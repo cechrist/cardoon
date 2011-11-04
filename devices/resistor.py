@@ -1,16 +1,11 @@
 """
-Simple linear resistor plus definitions for nonlinear electrothermal model
+:mod:`resistor` -- Resistor model
+---------------------------------
 
--------------------------------------------------------------------
-Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
+.. module:: resistor
+.. moduleauthor:: Carlos Christoffersen
 
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
+Linear resistor plus definitions for nonlinear electrothermal model
 """
 
 import numpy as np
@@ -20,10 +15,10 @@ import cppaddev as ad
 
 class Device(cir.Element):
     """
-    Linear Resistor
+    Linear Resistor::
 
-                  R
-    0 o--------/\/\/\/---------o 1
+                    R
+      0 o--------/\/\/\/---------o 1
 
     """
 

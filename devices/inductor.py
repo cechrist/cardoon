@@ -1,16 +1,9 @@
 """
-Simple linear inductor
+:mod:`inductor` -- Linear inductor
+-----------------------------------
 
--------------------------------------------------------------------
-Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
-
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
+.. module:: inductor
+.. moduleauthor:: Carlos Christoffersen
 """
 
 import numpy as np
@@ -19,13 +12,15 @@ import circuit as cir
 
 class Device(cir.Element):
     """
-    Linear inductor implemented using a gyrator
-             __  __  __  _
-    0       /  \/  \/  \/ \          1
-      o----+   /\  /\  /\  +-------o    External view
-              (_/ (_/ (_/
+    Linear inductor::
 
-    Internal implementation (adds one internal node plus uses gnd)
+      .           __  __  __  _ 
+      .  0       /  \/  \/  \/ \          1
+      .    o----+   /\  /\  /\  +-------o    External view
+      .            (_/ (_/ (_/  
+
+    Internal implementation uses a gyrator (adds one internal node
+    plus uses gnd)::
 
                                           2
         0  o---------+            +----------------+

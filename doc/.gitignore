@@ -1,0 +1,4 @@
+# Ignore backups
+*~
+*.pyc
+_build

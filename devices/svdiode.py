@@ -1,20 +1,12 @@
 """
+:mod:`svdiode` -- State-variable-based diode model
+--------------------------------------------------
+
+.. module:: svdiode
+.. moduleauthor:: Carlos Christoffersen
+
 Diode model (from freeda/carrot source, in turn derived from spice
 model)
-
-This model works but should be re-implemented following an approach
-similar to diode.py
-
--------------------------------------------------------------------
-Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
-
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
 """
 
 # use: import pdb; pdb.set_trace() for debuging
@@ -27,7 +19,7 @@ import cppaddev as ad
 
 class Device(cir.Element):
     """
-    State-Variable-Based Diode device (based on Spice model)
+    State-Variable-Based Diode device (based on Spice model)::
 
             o  1                           
             |                            
@@ -37,7 +29,7 @@ class Device(cir.Element):
             |                          
             o  0    	                  
 
-    Internally represented as:
+    Internally represented as::
 
         0  o
            |
@@ -50,12 +42,13 @@ class Device(cir.Element):
                      | i(x)+dq/dt       |                |
           +         /|\                /|\ gyr vin      /^\ 
         vin        | | |              | | |            | | | gyr v(x)
-          -         \v/                \v/              \|/  
+          -         \V/                \V/              \|/  
                      |                  |                |
         1  o---------+                  +------+---------+
                                                |
                                               --- (terminal 3 is gnd)
                                                V
+
     Terminal 4 not present if Rs = 0
     """
 
@@ -116,12 +109,6 @@ class Device(cir.Element):
     def process_params(self, circuit):
         """
         Takes the container circuit reference as an argument. 
-
-        Called once the external terminals have been connected and the
-        non-default parameters have been set. Make sanity checks
-        here. Internal terminals/devices should also be defined here
-        (use circuit reference for this).  Raise cir.CircuitError if a fatal
-        error is found.
         """
         # Remove internal terminals
         self.clean_internal_terms(circuit)

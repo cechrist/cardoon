@@ -1,16 +1,10 @@
 """
-Simple linear capacitor
+:mod:`capacitor` -- Linear capacitor
+------------------------------------
 
--------------------------------------------------------------------
-Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
+.. module:: capacitor
+.. moduleauthor:: Carlos Christoffersen
 
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
 """
 
 import numpy as np
@@ -19,11 +13,11 @@ import circuit as cir
 
 class Device(cir.Element):
     """
-    Linear Capacitor
+    Linear Capacitor::
 
-                 || C
-    0 o----------||---------o 1
-                 ||
+                   || C
+      0 o----------||---------o 1
+                   ||
 
     """
 

@@ -1,22 +1,16 @@
 """
-Intrinsic BJT Gummel-Poon model 
+:mod:`bjt` -- Intrinsic Bipolar Transistor
+------------------------------------------
 
-Based mainly on previous implementation in carrot and some equations
-from Pspice manual. Equations from carrot was auditted and some
-mistakes were corrected.
+.. module:: bjt
+.. moduleauthor:: Carlos Christoffersen
+
+Intrinsic BJT Gummel-Poon model based mainly on previous
+implementation in carrot and some equations from Pspice
+manual. Equations from carrot was auditted and some mistakes were
+corrected.
 
 Bulk connection, RC, RE are not included for now.
-
-------------------------------------------------------------------------
-Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
-
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
 """
 
 import numpy as np
@@ -29,9 +23,7 @@ class Device(cir.Element):
     """
     Implements the Gummel-Poon BJT model
 
-    Can be used for NPN or PNP
-
-    Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)
+    Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
 
                       
       C (0) o----,         4----o  E (2)
@@ -42,6 +34,8 @@ class Device(cir.Element):
                       o 
    
                       B (1)
+
+    Can be used for NPN or PNP transistors.
 
     Internally may add up to 2 additional nodes (plus gnd) if rb is
     not zero: Bi(3) for the internal base node and, if rbm is
@@ -254,23 +248,23 @@ class Device(cir.Element):
         Calculates currents/charges
 
         Input is a vector may be one of the following, depending on
-        parameter values:
+        parameter values::
 
-        vPort = [vbe, vbc]
-        vPort = [vbie, vbic, vbbi]  (rb != 0, irb == 0)
-        vPort = [vbie, vbic, v4gnd] (gyrator voltage, irb != 0)
-        vPort = [vbie, vbic, vbbi, vbc] (xcjc < 1)
-        vPort = [vbie, vbic, v4gnd, vbc] (xcjc < 1)
+          vPort = [vbe, vbc]
+          vPort = [vbie, vbic, vbbi]  (rb != 0, irb == 0)
+          vPort = [vbie, vbic, v4gnd] (gyrator voltage, irb != 0)
+          vPort = [vbie, vbic, vbbi, vbc] (xcjc < 1)
+          vPort = [vbie, vbic, v4gnd, vbc] (xcjc < 1)
 
         Output also depends on parameter values. Charges only present
         if parameters make them different than 0 (i.e., cje, tf, cjc,
-        etc. are set to nonzero values)
+        etc. are set to nonzero values)::
         
-        outV = [ibe, ibc, ice, qbe, qbc]
-        outV = [ibe, ibc, ice, vbbi/Rb, qbe, qbc] (rb != 0, irb == 0)
-        outV = [ibe, ibc, ice, gyr*ib*Rb, qbe, qbc] (irb != 0)
-        outV = [ibe, ibc, ice, vbbi/Rb, qbe, qbc, qbx] (rb != 0, irb == 0)
-        outV = [ibe, ibc, ice, gyr*ib*Rb, qbe, qbc, qbx] (irb != 0)
+          outV = [ibe, ibc, ice, qbe, qbc]
+          outV = [ibe, ibc, ice, vbbi/Rb, qbe, qbc] (rb != 0, irb == 0)
+          outV = [ibe, ibc, ice, gyr*ib*Rb, qbe, qbc] (irb != 0)
+          outV = [ibe, ibc, ice, vbbi/Rb, qbe, qbc, qbx] (rb != 0, irb == 0)
+          outV = [ibe, ibc, ice, gyr*ib*Rb, qbe, qbc, qbx] (irb != 0)
         """
         # Invert control voltages if needed
         vPort1 = self._typef * vPort

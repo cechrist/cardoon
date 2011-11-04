@@ -1,15 +1,9 @@
 """
-DC current source
+:mod:`idc` -- DC current source
+-------------------------------
 
--------------------------------------------------------------------
-
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
+.. module:: idc
+.. moduleauthor:: Carlos Christoffersen
 """
 
 import numpy as np
@@ -18,11 +12,15 @@ import circuit as cir
 
 class Device(cir.Element):
     """
-    DC current source. Includes temperature dependence
-                ______ 
-               /      \ idc
-    0 o-------+  --->  +---------o 1
-               \______/
+    DC current source. 
+
+    Includes temperature dependence::
+
+                    ______ 
+                   /      \ idc
+        0 o-------+  --->  +---------o 1
+                   \______/  
+
     """
 
     # devtype is the 'model' name
@@ -73,12 +71,6 @@ class Device(cir.Element):
     def process_params(self, circuit):
         """
         Takes the container circuit reference as an argument. 
-
-        Called once the external terminals have been connected and the
-        non-default parameters have been set. Make sanity checks
-        here. Internal terminals/devices should also be defined here
-        (use circuit reference for this).  Raise cir.CircuitError if a fatal
-        error is found.
         """
         # Access to global variables is through the glVar 
 

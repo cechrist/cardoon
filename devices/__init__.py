@@ -1,28 +1,19 @@
 """
-This package contains all device models.  Device classes are imported
-into a dictionary. Keys are the device types. So to create a new
-device just use:
+devices package
+---------------
 
-devices.devClass['devType']('instancename')
+This package contains a library with device models.  Device classes
+are imported into a dictionary. Keys are the device types. So to
+create a new device just use::
 
-Examples: 
+    devices.devClass['devType']('instancename')
 
-from devices import devClass
-# Create device instance
-m1 = devClass['mosacm']('m1n')
+Examples::
 
-Refer to EmptyDev.py for a template how to build a device model.
+    from devices import devClass
+    # Create device instance
+    m1 = devClass['mosacm']('m1n')
 
-----------------------------------------------------------------------
-Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
-
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
 """
 import autoThermal
 
@@ -31,7 +22,7 @@ netElemList = ['mosACM', 'resistor', 'capacitor', 'inductor',
                'idc', 'vdc', 'diode', 'svdiode', 'mosEKV', 'bjt']
 
 # Add here any modules to be imported in addition to netElemList
-__all__ = netElemList 
+__all__ = netElemList + ['cppaddev']
 
 devClass = {}
 parType = {}

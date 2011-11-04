@@ -1,18 +1,12 @@
 """
-Diode model based on PN Juction class, also defined here.
+:mod:`diode` -- Diode model including charge and series resistance
+------------------------------------------------------------------
 
-The junction class can be re-used for other models with PN junctions
+.. module:: diode
+.. moduleauthor:: Carlos Christoffersen
 
--------------------------------------------------------------------
-Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
-
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
+This model is based on PN Juction class, also defined here. The
+junction class can be re-used for other models with PN junctions
 """
 
 # use: import pdb; pdb.set_trace() for debuging
@@ -106,15 +100,15 @@ class Junction:
 #-----------------------------------------------------------------------
 class Device(cir.Element):
     """
-    Diode device (based on spice model)
-
-            o  1                           
-            |                            
-          --+--
-           / \     
-          '-+-'
-            |                          
-            o  0    	                  
+    Diode device (based on spice model)::
+    
+               o  1                           
+               |                            
+             --+--
+              / \     
+             '-+-' 
+               |                          
+               o  0 
 
     """
 

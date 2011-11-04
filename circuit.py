@@ -1,56 +1,58 @@
 """
-Circuit, Terminal, Xsubckt and Element class definitions, graph Node
-class and functions to handle connections.
+:mod:`circuit` -- Classes for internal circuit representation
+-------------------------------------------------------------
 
-Examples of how to use this module
-==================================
+.. moduleauthor:: Carlos Christoffersen
 
-import circuit as cir
-from devices import devClass
+Example of how to use this module::
++++++++++++++++++++++++++++++++++++
 
-# Create circuit:
-mainckt = cir.Circuit()
+    import circuit as cir
+    from devices import devClass
+    
+    # Create circuit:
+    mainckt = cir.Circuit()
+    
+    # Add elements with private model
+    
+    # creates element type 'ind'
+    dev = devClass['ind']('Lchoke')
+    
+    # override 'l' parameter value (otherwise default value is used)
+    dev.set_param('l', 1e-9) 
+    
+    # add to circuit 
+    mainckt.add_elem(dev)
+    
+    # connect to terminals 'vdd' and and 'drain', automatically created
+    mainckt.connect(dev, ['vdd', 'drain'])
+    
+    # add element with shared (public) model: model 'my_nmos' is created
+    # if it is not already in circuit
+    m1 = devClass['mosacm']('mos1n')
+    mainckt.add_elem(m1, 'my_nmos')
+    
+    # To later retrieve model
+    model = cir.get_model('my_nmos')
+    # if model not found returns None, use cir.add_model() if needed
+    
+    # Subcircuits: create and add subcircuit instance
+    x1 = cir.Xsubckt('x1', 'LM741')
+    mainckt.add_subckt(x1)
+    # Connect subcircuit instance with cir.connect()
+    
+    # Subcircuit definition: tl2 are the external connections
+    tl2 = ['vdd', 'gnd', 'in', 'out']
+    amp1 = cir.SubCircuit('LM741', tl2)
+    # now you can treat amp1 as a regular circuit instance
+    dev = devClass['ind']('L2')
+    dev.override = [('l', 2e-9)] 
+    amp1.add_elem(dev)
+    amp1.connect(dev, ['in', 'n1'])
 
-# Add elements with private model
 
-# creates element type 'ind'
-dev = devClass['ind']('Lchoke')
-
-# override 'l' parameter value (otherwise default value is used)
-dev.set_param('l', 1e-9) 
-
-# add to circuit 
-mainckt.add_elem(dev)
-
-# connect to terminals 'vdd' and and 'drain', automatically created
-mainckt.connect(dev, ['vdd', 'drain'])
-
-# add element with shared (public) model: model 'my_nmos' is created
-# if it is not already in circuit
-m1 = devClass['mosacm']('mos1n')
-mainckt.add_elem(m1, 'my_nmos')
-
-# To later retrieve model
-model = cir.get_model('my_nmos')
-# if model not found returns None, use cir.add_model() if needed
-
-# Subcircuits: create and add subcircuit instance
-x1 = cir.Xsubckt('x1', 'LM741')
-mainckt.add_subckt(x1)
-# Connect subcircuit instance with cir.connect()
-
-# Subcircuit definition: tl2 are the external connections
-tl2 = ['vdd', 'gnd', 'in', 'out']
-amp1 = cir.SubCircuit('LM741', tl2)
-# now you can treat amp1 as a regular circuit instance
-dev = devClass['ind']('L2')
-dev.override = [('l', 2e-9)] 
-amp1.add_elem(dev)
-amp1.connect(dev, ['in', 'n1'])
-
-
-Notes:
-=====
+Notes
++++++
 
 * If anything goes wrong a CircuitError exception is thrown
 
@@ -71,16 +73,6 @@ Notes:
 * The same applies to subcircuit definitions. They are global and can
   be referred from any circuit/subcircuit.
 
------------------------------------------------------------------------
-Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
-
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
 """
 
 from paramset import ParamSet, Model
@@ -383,17 +375,17 @@ class Circuit:
 
     There are 2 global dictionaries defined at the class level:
 
-    cktDict: Contains references to all circuit/subcircuit instances
+    * cktDict: Contains references to all circuit/subcircuit instances
 
-    modelDict: References to all models in any circuit. Thus .model
-    statements are global and can be defined and referred anywhere
+    * modelDict: References to all models in any circuit. Thus .model
+      statements are global and can be defined and referred anywhere
 
     Element, Xsubckt and Terminal references are stored in
     dictionaries (one per instance), empty by default:
 
-    elemDict
-    subcktDict
-    termDict
+    * elemDict
+    * subcktDict
+    * termDict
 
     In the future we may implement topology checking utilities here.
     """
@@ -566,7 +558,7 @@ class Circuit:
         a list of terminal names (termList). If any terminal does not
         exist in the circuit it is created and added.
     
-        * Order in the adjacency list is important for Elements * 
+        **Order in the adjacency list is important for Elements**
     
         For example, for a MOSFET the first node corresponds to the drain,
         the second to the gate, etc.
