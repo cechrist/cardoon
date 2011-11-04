@@ -1,14 +1,21 @@
 
-Cardoon README
-==============
+Cardoon Electronic Circuit Simulator
+====================================
+
+Introduction
+------------
 
 Cardoon is a circuit simulator program being developed using
 Python. The design is inspired from the ideas that worked well in
-fREEDA (http://www.freeda.org/) and carrot
-(http://vision.lakeheadu.ca/research.html), and some improvements that
-take advantage of the flexibility in Python.  This project was
-initially named celery but it has changed to cardoon to avoid conflict
-with an unrelated python project.
+fREEDA <http://www.freeda.org/> and carrot
+<http://vision.lakeheadu.ca/research.html>, and some improvements that
+take advantage of the flexibility in Python. 
+
+One of the main goals of this project is to obtain a program which is
+easy to modify and test to experiment new simulation
+algorithms/models. A secondary objective is to add features and make
+the program efficient enough to be useful for general use, if
+possible.
 
 At this time only a few models are implemented, but some of them are
 already more complete than the equivalents in freeda and carrot (such
@@ -17,19 +24,7 @@ freeda) is supported. Currently a state-variable diode model is
 included. Electro-thermal models are automatically generated from
 electrical models.  Nonlinear models use automatic differentiation for
 jacobian calculation. In addition, automatic differentiation can also
-be used to calculate sensitivities (as in carrot).
-
-One of the main goals of this project is to obtain a program which is
-easy to modify and test to experiment new simulation
-algorithms/models. A secondary objective is to add features and make
-the program efficient enough to be useful for general use, if
-possible.
-
-Performance should be reasonably good (and faster than existing
-python-based simulators) because most calculations will be performed
-by C/C++ libraries. Preliminary speed tests of the evaluation of
-nonlinear device equations are promising (thanks to the cppad
-library).
+be used to calculate sensitivities.
 
 So far there is no real analysis implemented, except a simple
 nonlinear device test routine. The immediate plan is to document and
@@ -37,18 +32,8 @@ consolidate the main design and after that implement simple
 DC/AC/Transient(/noise?) to verify the Element interface works as
 intended.
 
-celery is being developed with Python 2.6 on Debian Squeeze, but it
+Cardoon is being developed with Python 2.6 on Debian Squeeze, but it
 should work OK with Python 2.7 under other operating systems.
-
-The following free libraries are required to run celery. All, except
-pycppad can be installed directly from Debian/Ubuntu packages. To
-install pycppad, just follow the instructions on its website.
-
-numpy:  http://numpy.scipy.org/
-pycppad:  http://www.seanet.com/~bradbell/pycppad/pycppad.xml
-matplotlib:  http://matplotlib.sourceforge.net/
-pyparsing:  http://pyparsing.wikispaces.com/
-ipython (optional for now):  http://ipython.org/
 
 Comments are welcome!
 
@@ -62,26 +47,8 @@ Cardoon is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 or later:
 
-http://www.gnu.org/licenses/gpl.html
+<http://www.gnu.org/licenses/gpl.html>
 
-(See also LICENSE file)
+(See also LICENSE file included with the source)
 
 
-
-Coding conventions:
-------------------
-
-1. Use only 80 columns. Break lines if needed.
-
-2. Use lowercase first and (perhaps) underscores for function names:
-copy_to()
-
-3. Classes are capitalized: Element, MyClass
-
-4. Use lowercase first and no underscores for public attributes: vt0,
-isNonlinear
-
-5. Use underscore first for private attributes: _privateVar 
-
-6. module names: first letter lowercase and no underscores: circuit,
-paramset

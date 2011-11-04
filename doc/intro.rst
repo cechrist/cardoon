@@ -32,7 +32,7 @@ consolidate the main design and after that implement simple
 DC/AC/Transient(/noise?) to verify the Element interface works as
 intended.
 
-celery is being developed with Python 2.6 on Debian Squeeze, but it
+Cardoon is being developed with Python 2.6 on Debian Squeeze, but it
 should work OK with Python 2.7 under other operating systems.
 
 Comments are welcome!
