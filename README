@@ -1,16 +1,13 @@
 
-Cardoon Electronic Circuit Simulator
-====================================
-
 Introduction
 ------------
 
 Cardoon is a circuit simulator program being developed using
-Python. The design is inspired from the ideas that worked well in
-fREEDA (http://www.freeda.org/) and carrot
-(http://vision.lakeheadu.ca/research.html), and some improvements that
-take advantage of the flexibility in Python. The main documentation
-page for this project can be found at:
+Python. The design is inspired from several ideas in fREEDA
+(http://www.freeda.org/) and carrot
+(http://vision.lakeheadu.ca/research.html), plus some improvements
+that take advantage of the flexibility in Python. The main
+documentation page for this project can be found at:
 
   http://vision.lakeheadu.ca/cardoon/
 
@@ -50,8 +47,10 @@ Cardoon is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 or later:
 
-  http://www.gnu.org/licenses/gpl.html
+  http://www.gnu.org/licenses/gpl-3.0.txt
 
 (See also LICENSE file included with the source)
+
+
 
 
