@@ -15,8 +15,9 @@ Contents:
    usage
    device_library
    coding
-   circuit_ref
    adding_devices
+   circuit_ref
+
 
 Indices and tables
 ==================

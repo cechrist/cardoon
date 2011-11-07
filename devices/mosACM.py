@@ -25,21 +25,21 @@ class Device(cir.Element):
     Implements a simplified ACM MOSFET model. 
 
     Only (some) DC equations are considered for now.
-    Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk
+    Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
 
-             Drain 0
-                     o
-                     |
-                     |
-                 |---+
-                 |
-    Gate 1 o-----|<-----o 3 Bulk
-                 |
-                 |---+
-                     |
-                     |
-                     o
-            Source 2
+               Drain 0
+                       o
+                       |
+                       |
+                   |---+
+                   |
+      Gate 1 o-----|<-----o 3 Bulk
+                   |
+                   |---+
+                       |
+                       |
+                       o
+              Source 2
     """
 
     devType = "mosacm"
@@ -52,7 +52,7 @@ class Device(cir.Element):
         gamma = ('Bulk Threshold Parameter', 'V^(1/2)', float, 0.631),
         kp = ('Transconductance Parameter', 'A/V^2', float, 510.6e-6),
         theta = ('Mobility Saturation Parameter', '1/V', float, 0.814),
-        vsat = ('Velocity Saturation', 'm/s', float, 8e4),
+        vsat = ('Saturation Velocity', 'm/s', float, 8e4),
         tox = ('Oxide Thickness', 'm', float, 7.5e-9)
         )
     

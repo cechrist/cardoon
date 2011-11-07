@@ -7,8 +7,7 @@
 
 Intrinsic BJT Gummel-Poon model based mainly on previous
 implementation in carrot and some equations from Pspice
-manual. Equations from carrot was auditted and some mistakes were
-corrected.
+manual. 
 
 Bulk connection, RC, RE are not included for now.
 """
@@ -21,7 +20,7 @@ from diode import Junction
 
 class Device(cir.Element):
     """
-    Implements the Gummel-Poon BJT model
+    Gummel-Poon intrinsic BJT model
 
     Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
 

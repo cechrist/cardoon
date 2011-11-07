@@ -4,8 +4,12 @@
 
 .. moduleauthor:: Carlos Christoffersen
 
-Example of how to use this module::
-+++++++++++++++++++++++++++++++++++
+Example of how to use this module
++++++++++++++++++++++++++++++++++
+
+The following example shows how to create and add devices from the
+point of view of a parser. Later another example from the point of
+view of an analysis will be added::
 
     import circuit as cir
     from devices import devClass

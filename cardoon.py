@@ -1,29 +1,13 @@
 #!/usr/bin/python
 """
-Coding conventions:
-
-1. Use only 80 columns. Break lines if needed.
-
-2. Use lowercase first and (perhaps) underscores for function names:
-copy_to()
-
-3. Classes are capitalized: Element, MyClass
-
-4. Use lowercase first and no underscores for public attributes: vt0,
-isNonlinear
-
-5. Use underscore first for private attributes: _privateVar 
-
-6. module names: first letter lowercase and no underscores: circuit,
-paramset
-
+Main simulator program
 """
 
 import circuit as cir
 from netlistparser import parse_file, ParseError, analysisQueue
 import analyses
 
-def parse(filename, ckt = None):
+def parse_net(filename, ckt = None):
     """
     Parse netlist file given in filename. If ckt is not given it
     parses in the circuit named 'main'. Returns analysisQueue with
@@ -67,7 +51,7 @@ if __name__ == "__main__":
         exit(1)
     # Use 'main' circuit
     try:
-        analysisQueue = parse(sys.argv[1])
+        analysisQueue = parse_net(sys.argv[1])
     except (ParseError, cir.CircuitError) as ex:
         print ex
         exit(1)

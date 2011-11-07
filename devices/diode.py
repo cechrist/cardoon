@@ -110,6 +110,7 @@ class Device(cir.Element):
                |                          
                o  0 
 
+    Includes depletion and diffusion charges.
     """
 
     # devtype is the 'model' name
@@ -245,8 +246,8 @@ class Device(cir.Element):
 
         vPort is a vector with 1 element (diode voltage)
 
-        Returns a vector with two elements, one for current and the
-        other for charge.
+        Returns a vector with two elements: current and charge. Charge
+        is ommited if both cj0 and tt are zero
         """
         # Calculate regular PN junction current and charge
         iD = self.jtn.get_id(vPort[0])

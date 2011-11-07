@@ -14,10 +14,10 @@ class Device(cir.Element):
     """
     Linear inductor::
 
-      .           __  __  __  _ 
-      .  0       /  \/  \/  \/ \          1
-      .    o----+   /\  /\  /\  +-------o    External view
-      .            (_/ (_/ (_/  
+                 __  __  __  _ 
+        0       /  \/  \/  \/ \          1
+          o----+   /\  /\  /\  +-------o    External view
+                  (_/ (_/ (_/  
 
     Internal implementation uses a gyrator (adds one internal node
     plus uses gnd)::

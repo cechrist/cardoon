@@ -5,40 +5,6 @@
 .. module:: mosEKV
 .. moduleauthor:: Carlos Christoffersen
 
-Intrinsic EKV 2.6 MOSFET model mostly based on [1], but some updates
-from a later revision (dated 1999) are also included.
-
-[1] The EPFL-EKV MOSFET Model Equations for Simulation, Technical
-Report, Model Version 2.6, June, 1997, Revision I, September, 1997,
-Revision II, July, 1998
-
-Matthias Bucher, Christophe Lallement, Christian Enz, Fabien
-Theodoloz, Francois Krummenacher
-
-Electronics Laboratories, Swiss Federal Institute of Technology
- (EPFL), Lausanne, Switzerland
-
-Code originally based on freeda 1.4 implementation
-<http://www.freeda.org>::
-
-    // Element information
-    ItemInfo Mosnekv::einfo =
-    {
-      "mosnekv",
-      "EPFL EKV MOSFET model",
-      "Wonhoon Jang",
-      DEFAULT_ADDRESS"transistor>mosfet",
-      "2003_05_15"
-    };
-
-The freeda code was auditted. Some equations have been changed for
-efficiency, clarity or to correct errors.  This version has several
-improvements such as an accurate F(v), works for negative VDS and
-includes electrothermal model, DC operating point paramenters and
-noise equations.
-
-Parameter limit checking, simple capacitance calculations for
-operating point are not yet implemented.
 """
 
 import numpy as np
@@ -48,7 +14,7 @@ import cppaddev as ad
 
 class Device(cir.Element):
     """
-    Implements the EPFL EKV MOSFET::
+    Intrinsic EPFL EKV 2.6 MOSFET::
 
         Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk
         
@@ -65,6 +31,37 @@ class Device(cir.Element):
                          |
                          o
                 Source 2
+
+    Mostly based on [1], but some updates from a later revision (dated
+    1999) are also included.
+    
+    [1] The EPFL-EKV MOSFET Model Equations for Simulation, Technical
+    Report, Model Version 2.6, June, 1997, Revision I, September,
+    1997, Revision II, July, 1998, Bucher, Christophe Lallement,
+    Christian Enz, Fabien Theodoloz, Francois Krummenacher,
+    Electronics Laboratories, Swiss Federal Institute of Technology
+    (EPFL), Lausanne, Switzerland
+    
+    This implementation includes accurate current interpolation
+    function (optional), works for negative VDS and includes
+    electrothermal model, DC operating point paramenters and noise
+    equations.
+    
+    Code originally based on freeda 1.4 implementation
+    <http://www.freeda.org>::
+    
+        // Element information
+        ItemInfo Mosnekv::einfo =
+        {
+          "mosnekv",
+          "EPFL EKV MOSFET model",
+          "Wonhoon Jang",
+          DEFAULT_ADDRESS"transistor>mosfet",
+          "2003_05_15"
+        };
+    
+    Parameter limit checking, simple capacitance calculations for
+    operating point are not yet implemented.
     """
 
     devType = "mosekv"

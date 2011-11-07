@@ -20,6 +20,8 @@ class Device(cir.Element):
                     R
       0 o--------/\/\/\/---------o 1
 
+    If the electro-thermal version is used (res_t), the device is
+    nonlinear.
     """
 
     # devtype is the 'model' name

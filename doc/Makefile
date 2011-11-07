@@ -1,6 +1,10 @@
 # Makefile for Sphinx documentation
 #
 
+# Add the parent directory to python path
+
+PYTHONPATH := $(PYTHONPATH):../
+
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
@@ -12,7 +16,7 @@ PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean html dirhtml pickle json htmlhelp qthelp latex changes linkcheck doctest
+.PHONY: help clean html dirhtml pickle json htmlhelp qthelp latex changes linkcheck doctest 
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -27,10 +31,13 @@ help:
 	@echo "  linkcheck to check all external links for integrity"
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
 
+device_library.rst:
+	../catalog.py > device_library.rst
+
 clean:
 	-rm -rf $(BUILDDIR)/*
 
-html:
+html: device_library.rst
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

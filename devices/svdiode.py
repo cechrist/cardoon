@@ -14,9 +14,104 @@ model)
 import numpy as np
 from globalVars import const, glVar
 import circuit as cir
-from svjunction import Junction
 import cppaddev as ad
 
+#-----------------------------------------------------------------------
+class SVJunction:
+    """
+    P-N Juction model.
+    
+    Based on carrot source, in turn based on spice/freeda diode
+    model. This is intended to model any regular P-N junction such as
+    Drain-Bulk, diodes, Collector-Bulk, etc.
+    
+    Transit time, breakdown and area effects not included
+    """
+    def process_params(self, isat, n, fc, cj0, vj, m, xti, eg0, Tnomabs):
+        """
+        Calculate variables dependent on parameter values only
+        """
+        # Saturation current
+        self.isat = isat 
+        # Emission coefficient
+        self.n = n
+        # Coefficient for forward-bias depletion capacitance
+        self.fc = fc
+        # Zero-bias depletion capacitance
+        self.cj0 = cj0
+        # Built-in junction potential
+        self.vj = vj
+        # PN junction grading coefficient
+        self.m = m
+        # Set some handy variables
+        self._k1 = xti / self.n
+        self._k2 = const.q * eg0 / self.n / const.k / Tnomabs
+        self._k3 = const.q * eg0 / self.n / const.k
+        self._k4 = 1. - self.m
+
+
+    def set_temp_vars(self, obj):
+        """
+        Calculate temperature-dependent variables for temp given in C
+
+        obj is an object instance containing the following attributes:
+        tnratio, Tabs, Tnomabs, vt, egapn, egap_t
+        """
+        self._t_is = self.isat * pow(obj.tnratio, self._k1) \
+            * np.exp(self._k2 - self._k3 / obj.Tabs) 
+        # Maximum argument in exponential function (no need to use
+        # safe_exp() with this model)
+        self._alpha = 1. / self.n / obj.vt
+        max_exp_arg = 5e8
+        self._svth = np.log(max_exp_arg / self._alpha) / self._alpha
+        self._kexp = obj.n * obj.vt * max_exp_arg
+        # Capacitance
+        if self.cj0:
+            self._t_vj = self.vj * obj.tnratio \
+                - 3. * obj.vt * np.log(obj.tnratio) \
+                - obj.tnratio * obj.egapn + obj.egap_t
+            self._t_cj0 = self.cj0 * (1. + self.m 
+                                     * (.0004 * (obj.Tabs - obj.Tnomabs) 
+                                         + 1. - self._t_vj / self.vj))
+            self._k5 = self._t_vj * self._t_cj0 / self._k4
+            self._k6 = self._t_cj0 * pow(1. - self.fc, - self.m - 1.)
+            self._k7 = ((1. - self.fc * (1. + self.m)) * self._t_vj * self.fc 
+                        + .5 * self.m * self._t_vj * self.fc * self.fc)
+
+    def get_idvd(self, x):
+        """
+        Returns junction a tuple (current, voltage)
+
+        x: state variable
+        """
+        # Static current
+        b = self._svth - x
+        c = self._t_is * (np.exp(self._alpha * x) - 1.)
+        d = self._t_is * self._kexp * \
+            (1. + self._alpha * (x - self._svth)) - self._t_is
+        iD = ad.condassign(b, c, d)
+        # Diode voltage
+        d = self._svth + \
+            np.log(1. + self._alpha * (x - self._svth)) / self._alpha
+        vD = ad.condassign(b, x, d)
+        return (iD, vD)
+
+
+    def get_qd(self, vd):
+        """
+        Returns junction depletion charge
+
+        vd: diode voltage
+        """
+        b = self.fc * self._t_vj - vd
+        c = self._k5 * (1. - pow(1. - vd / self._t_vj, self._k4))
+        d = self._k6 * ((1. - self.fc * (1. + self.m)) 
+                        * vd + .5 * self.m * vd * vd / self._t_vj 
+                        - self._k7) + self._k5 \
+                        * (1. - pow(1. - self.fc, self._k4))
+        return ad.condassign(b, c, d)
+
+#-----------------------------------------------------------------------
 class Device(cir.Element):
     """
     State-Variable-Based Diode device (based on Spice model)::
@@ -50,6 +145,8 @@ class Device(cir.Element):
                                                V
 
     Terminal 4 not present if Rs = 0
+
+    Implementation includes depletion and diffusion charges.
     """
 
     # devtype is the 'model' name
@@ -87,7 +184,18 @@ class Device(cir.Element):
 
     # Define parameters (note most parameters defined in svjunction.py)
     paramDict = dict(
-        cir.Element.tempItem + Junction.paramList,
+        cir.Element.tempItem,
+        isat = ('Saturation current', 'A', float, 1e-14),
+        n = ('Emission coefficient', ' ', float, 1.),
+        fc = ('Coefficient for forward-bias depletion capacitance', ' ', 
+              float, .5),
+        cj0 = ('Zero-bias depletion capacitance', 'F', float, 0.),
+        vj = ('Built-in junction potential', 'V', float, 1.),
+        m = ('PN junction grading coefficient', ' ', float, .5),
+        tt = ('Transit time', 's', float, 0.),
+        xti = ('Is temperature exponent', ' ', float, 3.),
+        eg0 = ('Energy bandgap', 'eV', float, 1.11),
+        tnom = ('Nominal temperature', 'C', float, 27.),
         ibv = ('Current at reverse breakdown voltage', 'A', float, 1e-10),
         bv = ('Breakdown voltage', 'V', float, 0.),
         area = ('Area multiplier', ' ', float, 1.),
@@ -97,14 +205,12 @@ class Device(cir.Element):
        )
 
     def __init__(self, instanceName):
-        """
-        Here the Element constructor must be called. Do not connect
-        internal nodes here.
-        """
+        # Here the Element constructor must be called. Do not connect
+        # internal nodes here.
         cir.Element.__init__(self, instanceName)
         # Ambient temperature (temp) by default set to 27 C 
         # Add statements as needed
-        self.jtn = Junction()
+        self.jtn = SVJunction()
 
     def process_params(self, circuit):
         """
@@ -131,12 +237,20 @@ class Device(cir.Element):
             self.csOutPorts = ((4, 1), (3, 2))
             self.noisePorts = ((0, 4), (4, 1))
 
+        self._qd = False
         if self.tt or self.cj0:
             # Add charge source (otherwise the charge calculation is ignored)
             self.qsOutPorts = (self.csOutPorts[0], )
+            self._qd = True
+
+        # Absolute nominal temperature
+        self.Tnomabs = self.tnom + const.T0
+        self.egapn = self.eg0 - .000702 * (self.Tnomabs**2) \
+            / (self.Tnomabs + 1108.)
 
         # Calculate variables in junction
-        self.jtn.process_params(self)
+        self.jtn.process_params(self.isat, self.n, self.fc, self.cj0, self.vj, 
+                                self.m, self.xti, self.eg0, self.Tnomabs)
         # Calculate temperature-dependent variables
         self.set_temp_vars(self.temp)
         # Make sure tape is re-generated
@@ -147,10 +261,17 @@ class Device(cir.Element):
         """
         Calculate temperature-dependent variables for temp given in C
         """
-        # Everything is handled by the PN junction
-        self.jtn.set_temp_vars(temp, self, ad)
-        self._Sthermal = 4. * const.k * (temp + const.T0) * self.rs
-
+        # Absolute temperature
+        self.Tabs = temp + const.T0
+        # Thermal voltage
+        self.vt = const.k * self.Tabs / const.q
+        # Temperature-adjusted egap
+        self.egap_t = self.eg0 - .000702 * (self.Tabs**2) / (self.Tabs + 1108.)
+        self._Sthermal = 4. * const.k * self.Tabs * self.rs
+        # Normalized temp
+        self.tnratio = self.Tabs / self.Tnomabs
+        # Everything else is handled by the PN junction
+        self.jtn.set_temp_vars(self)
 
     #---------------------------------------------------------------
     # Nonlinear device methods (isNonlinear = True)
@@ -161,25 +282,34 @@ class Device(cir.Element):
 
         vPort[0]: x as in Rizolli's equations
 
-        Returns a vector with 3 elements: current, voltage and charge
+        Returns a vector with 2 or 3 elements: current, voltage and
+        charge. Charge is ommited if both cj0 and tt are zero.
         """
         # Calculate state-variable PN junction current, voltage and charge
-        outV = self.jtn.eval_cqs(vPort[0], self, ad)
+        (iD, vD) = self.jtn.get_idvd(vPort[0])
+        if self.cj0:
+            qD = self.jtn.get_qd(vD)
+        if self.tt:
+            qD += self.tt * iD
 
-        # add breakdown current: here we need safe_exp() because state
-        # variable only transforms the forward exponential
+        # add breakdown current
         if (self.bv > 0.):
-            outV[0] -= self.ibv * \
-                ad.safe_exp(-(outV[1] + self.bv) / self.n / self._vt)
+            iD -= self.ibv * \
+                ad.safe_exp(-(vD + self.bv) / self.n / self.vt)
 
-        # area effect (voltage is not scaled by area)
-        outV[0] *= self.area
-        outV[2] *= self.area
+        # area effect
+        iD *= self.area
+        # Scale voltage (gyrator gain)
+        vD *= glVar.gyr
 
-        # Scale voltage to make it more similar to currents
-        outV[1] *= glVar.gyr
-
+        if self._qd:
+            # area effect for charge
+            qD *= self.area
+            outV = np.array([iD, vD, qD])
+        else:
+            outV = np.array([iD, vD])
         return outV
+
 
     def power(self, vPort, ioutV):
         """ 

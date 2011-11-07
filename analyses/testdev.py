@@ -43,6 +43,7 @@ class Analysis(ParamSet):
         sweep_num = ('Number of points in sweep', '', int, 0),
         device = ('Instance name of device to test', '', str, ''),
         plot = ('Auto-plot currents and charges', '', bool, True),
+        useAD = ('Use automatic differentiation', '', bool, True),
         param = ('Parameter for outer sweep', '', str, ''),
         param_val = ('Vector with parameter values to sweep', '', list, []),
         shell = ('Drop to ipython shell after calculation', '', bool, False)
@@ -100,7 +101,8 @@ class Analysis(ParamSet):
             # Print some info about what is being tested
             vports  = np.array(self.ports_bias)
             # Generate operating point info
-            dev.get_OP(vports)
+            if self.useAD:
+                dev.get_OP(vports)
             print '******************************************************'
             print 'Nonlinear device internal source test analysis'
             print '******************************************************'
@@ -135,12 +137,15 @@ class Analysis(ParamSet):
                     dev.process_params(circuit)
                 for i in range(np.shape(vsweep)[0]):
                     vports[self.sweep_port] = vsweep[i]
-                    outvars = dev.eval(vports)
+                    if self.useAD:
+                        # Use AD tape to evaluate function
+                        outvars = dev.eval(vports)
+                    else:
+                        # The one below is slower as it does not use tapes:
+                        outvars = dev.eval_cqs(vports)
                     # The function below in addition calculates derivatives
                     #(outvars, Jac) = dev.eval_and_deriv(vports)
-                    # The one below is slower as it does not use tapes:
-                    #outvars = dev.eval_cqs(vports)
-                    # Must convert current, charge to vectors
+                    # Convert current, charge to vectors
                     if ncurrents: 
                         iout[j,i,:] = outvars[0:ncurrents]
                     if ncharges:
