@@ -87,8 +87,8 @@ class ParamSet:
             # Format the whole list of parameters. This could be
             # achieved using functional programming but no need for
             # now.
-            for param in self.paramDict.iterkeys():
-                helpstring += self.format(param)
+            for key in sorted(self.paramDict.iterkeys()):
+                helpstring += self.format(key)
         helpstring += ' ========= ============ ============ ===================================================== \n'
         return helpstring
 

@@ -69,7 +69,7 @@ spice, fREEDA and QUCS, but at least for now it has some
 simplifications. The netlist is case-sensitive. Each line specifies
 one circuit element, an analysis to perform or another command.
 
-#. The backslash ("\") at the end of a line means that the line must
+#. The backslash ("\\") at the end of a line means that the line must
    be joined with the next one. The following is taken as single
    line::
 
