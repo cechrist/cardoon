@@ -111,6 +111,17 @@ class Device(cir.Element):
                o  0 
 
     Includes depletion and diffusion charges.
+
+    Netlist examples::
+
+        diode:d1 1 0 isat=10fA cj0=20fF
+
+        # Electrothermal device
+        diode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
+
+        # Model statement
+        .model dmodel1 diode (cj0 = 10pF tt=1ps)
+
     """
 
     # devtype is the 'model' name

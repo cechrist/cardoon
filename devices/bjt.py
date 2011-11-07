@@ -5,11 +5,6 @@
 .. module:: bjt
 .. moduleauthor:: Carlos Christoffersen
 
-Intrinsic BJT Gummel-Poon model based mainly on previous
-implementation in carrot and some equations from Pspice
-manual. 
-
-Bulk connection, RC, RE are not included for now.
 """
 
 import numpy as np
@@ -22,6 +17,9 @@ class Device(cir.Element):
     """
     Gummel-Poon intrinsic BJT model
 
+    This implementation based mainly on previous implementation in
+    carrot and some equations from Pspice manual.
+    
     Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
 
                       
@@ -40,6 +38,19 @@ class Device(cir.Element):
     not zero: Bi(3) for the internal base node and, if rbm is
     specified, ib(4) to measure the internal base current and
     calculate Rb(ib)
+
+    Bulk connection, RC, RE are not included for now.
+
+    Netlist examples::
+
+        bjt:q1 2 3 4 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
+
+        # Electro-thermal version
+        bjt_t:q2 2 3 5 pout gnd model = mypnp
+
+        # Model statement
+        .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
+
     """
 
     devType = "bjt"

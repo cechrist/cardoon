@@ -8,6 +8,9 @@ bjt
 
     Gummel-Poon intrinsic BJT model
 
+    This implementation based mainly on previous implementation in
+    carrot and some equations from Pspice manual.
+    
     Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
 
                       
@@ -26,6 +29,19 @@ bjt
     not zero: Bi(3) for the internal base node and, if rbm is
     specified, ib(4) to measure the internal base current and
     calculate Rb(ib)
+
+    Bulk connection, RC, RE are not included for now.
+
+    Netlist examples::
+
+        bjt:q1 2 3 4 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
+
+        # Electro-thermal version
+        bjt_t:q2 2 3 5 pout gnd model = mypnp
+
+        # Model statement
+        .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35         eg=1.16 xti=3 xtb=1.6)
+
     
 
 Parameters
@@ -113,6 +129,17 @@ diode
                o  0 
 
     Includes depletion and diffusion charges.
+
+    Netlist examples::
+
+        diode:d1 1 0 isat=10fA cj0=20fF
+
+        # Electrothermal device
+        diode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
+
+        # Model statement
+        .model dmodel1 diode (cj0 = 10pF tt=1ps)
+
     
 
 Parameters
@@ -308,6 +335,16 @@ mosekv
     
     Parameter limit checking, simple capacitance calculations for
     operating point are not yet implemented.
+
+    Netlist examples::
+
+        mosekv:m1 2 3 4 gnd w=30e-6 l=1e-6 type = n ekvint=0
+
+        # Electro-thermal version
+        mosekv_t:m1 2 3 4 gnd 1000 gnd w=30e-6 l=1e-6 type = n
+
+        # Model statement
+        .model ekvn mosekv (type = n kp = 200u theta = 0.6)
     
 
 Parameters
@@ -414,7 +451,9 @@ svdiode
             |                          
             o  0    	                  
 
-    Internally represented as::
+    This model has better convergence properties. Externally it
+    behaves exactly like the regular diode device. Internally
+    represented as::
 
         0  o
            |
@@ -436,7 +475,17 @@ svdiode
 
     Terminal 4 not present if Rs = 0
 
-    Implementation includes depletion and diffusion charges.
+    Implementation includes depletion and diffusion charges. 
+
+    Netlist examples::
+
+        svdiode:d1 1 0 isat=10fA cj0=20fF
+
+        # Electrothermal device
+        svdiode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
+
+        # Model statement
+        .model dmodel1 svdiode (cj0 = 10pF tt=1ps)
     
 
 Parameters

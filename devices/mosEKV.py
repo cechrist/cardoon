@@ -62,6 +62,16 @@ class Device(cir.Element):
     
     Parameter limit checking, simple capacitance calculations for
     operating point are not yet implemented.
+
+    Netlist examples::
+
+        mosekv:m1 2 3 4 gnd w=30e-6 l=1e-6 type = n ekvint=0
+
+        # Electro-thermal version
+        mosekv_t:m1 2 3 4 gnd 1000 gnd w=30e-6 l=1e-6 type = n
+
+        # Model statement
+        .model ekvn mosekv (type = n kp = 200u theta = 0.6)
     """
 
     devType = "mosekv"
