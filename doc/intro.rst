@@ -1,6 +1,6 @@
 
-Cardoon Electronic Circuit Simulator
-====================================
+Overview
+========
 
 Introduction
 ------------
@@ -47,7 +47,7 @@ Cardoon is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 or later:
 
-<http://www.gnu.org/licenses/gpl.html>
+http://www.gnu.org/licenses/gpl-3.0.txt
 
 (See also LICENSE file included with the source)
 
