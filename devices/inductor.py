@@ -33,6 +33,11 @@ class Device(cir.Element):
                                          |
                                         --- (terminal 3 here)
                                          V
+
+    Netlist example::
+
+        ind:l1 1 0 l=3uH
+
     """
 
     # devtype is the 'model' name

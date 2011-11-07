@@ -1,6 +1,6 @@
-==============
-Device Library
-==============
+======================
+Device Library Catalog
+======================
  
 bjt
 ---
@@ -40,7 +40,7 @@ bjt
         bjt_t:q2 2 3 5 pout gnd model = mypnp
 
         # Model statement
-        .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35         eg=1.16 xti=3 xtb=1.6)
+        .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
 
     
 
@@ -102,6 +102,10 @@ cap
                    || C
       0 o----------||---------o 1
                    ||
+
+    Netlist example::
+
+        cap:c1 1 2 c=10uF
 
     
 
@@ -185,6 +189,10 @@ idc
         0 o-------+  --->  +---------o 1
                    \______/  
 
+    Netlist example::
+
+        idc:vdd gnd 4 idc=2mA
+
     
 
 Parameters
@@ -225,6 +233,11 @@ ind
                                          |
                                         --- (terminal 3 here)
                                          V
+
+    Netlist example::
+
+        ind:l1 1 0 l=3uH
+
     
 
 Parameters
@@ -406,13 +419,22 @@ res
 ---
 
 
-    Linear Resistor::
+    Resistor::
 
                     R
       0 o--------/\/\/\/---------o 1
 
-    If the electro-thermal version is used (res_t), the device is
-    nonlinear.
+    Normally a linear device. If the electro-thermal version is used
+    (res_t), the device is nonlinear.
+
+    Netlist examples::
+
+        # Linear resistor (2 terminals)
+        res:r1 1 2 r=1e3 tc1=10e-3
+
+        # Electro-thermal resistor (nonlinear, 4 terminals)
+        res_t:r1 1 2 3 4 r=1e3 tc1=10e-3
+
     
 
 Parameters
@@ -544,6 +566,10 @@ vdc
                                   3      |
                                         --- (terminal 3 here)
                                          V  
+
+    Netlist example::
+
+        vdc:vdd 1 0 vdc=3V
 
     
 

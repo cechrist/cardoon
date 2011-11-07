@@ -21,6 +21,10 @@ class Device(cir.Element):
         0 o-------+  --->  +---------o 1
                    \______/  
 
+    Netlist example::
+
+        idc:vdd gnd 4 idc=2mA
+
     """
 
     # devtype is the 'model' name

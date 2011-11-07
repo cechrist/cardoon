@@ -109,11 +109,23 @@ one circuit element, an analysis to perform or another command.
 
 #. Global variables 
 
-.options <parameter list>
+   .options <parameter list>
+   
+   Example::
+   
+       .options temp=29.1439 gyr=1e-3
+   
+   List of global variables
 
-Example::
+    ========= ============ ============ ===================================================== 
+    Name       Default      Unit         Description                                          
+    ========= ============ ============ ===================================================== 
+    reltol     1.0e-05                   Relative tolerance                                   
+    abstol     1.0e-08                   Absolute tolerance                                   
+    gyr        0.01         S            Default gain in internal gyrators                    
+    temp       27.0         C            Ambient temperature                                  
+    ========= ============ ============ ===================================================== 
 
-    .options temp=29.1439 newton_verb=0 int_terms=1
 
 #. Subcircuits use a syntax similar to spice::
 

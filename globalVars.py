@@ -1,21 +1,18 @@
 """
-Global simulator variables, including global settings and physical
-constants.
+:mod:`globalVars` -- Global simulator variables and physical constants
+----------------------------------------------------------------------
+
+.. moduleauthor:: Carlos Christoffersen
 
 Physical constants are from http://physics.nist.gov/cuu/Constants/
 
-Use const.mu0 to access constants and glVar.temp for global
-variables.
+Usage example::
 
---------------------------------------------------------------------
+    from globalVars import const, glVar
 
-This file is part of the cardoon electronic circuit simulator.
+    # Calculate thermal voltage (Vt) at default temperature
+    vt = const.k * glVar.temp / const.q
 
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
 """
 
 from paramset import ParamSet
@@ -40,8 +37,8 @@ const.set_attributes()
 
 globDict = dict(
     temp = ('Ambient temperature', 'C', float, 27.),
-    abstol = ('Absolute tolerance', '-', float, 1e-8),
-    reltol = ('Relative tolerance', '-', float, 1e-5),
+    abstol = ('Absolute tolerance', '', float, 1e-8),
+    reltol = ('Relative tolerance', '', float, 1e-5),
     gyr = ('Default gain in internal gyrators', 'S', float, 1e-2)
 )
 

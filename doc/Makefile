@@ -32,7 +32,7 @@ help:
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
 
 device_library.rst:
-	../catalog.py > device_library.rst
+	../cardoon.py -c > device_library.rst
 
 clean:
 	-rm -rf $(BUILDDIR)/*

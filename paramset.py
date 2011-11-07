@@ -1,16 +1,12 @@
 """
-Handles sets of parameters used for Element, Models and Analysis
+:mod:`paramset` -- Classes for parameter handling
+-------------------------------------------------
 
----------------------------------------------------------------------
+.. moduleauthor:: Carlos Christoffersen
 
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
+Handles sets of parameters used for Elements, Models and Analyses
 """
+
 
 class ParamError(Exception):
     """
@@ -29,15 +25,17 @@ class ParamSet:
 
     def __init__(self, paramDict):
         """
-        Parameter definitions given in a dictionary:
+        Parameter definitions given in a dictionary with the following
+        format::
 
-        paramDict = dict(
-            w = ('Channel width', 'm', float, 10e-6),
-            l = ('Channel length', 'm', float, 10e-6),
-            vt0 = ('Threshold Voltage', 'V', float, 0.532),
-            vsat = ('Velocity Saturation', 'm/s', float, 8e4),
-            tox = ('Oxide Thickness', 'm', float, 7.5e-9)
-            )
+            paramDict = dict(
+                w = ('Channel width', 'm', float, 10e-6),
+                l = ('Channel length', 'm', float, 10e-6),
+                vt0 = ('Threshold Voltage', 'V', float, 0.532),
+                vsat = ('Velocity Saturation', 'm/s', float, 8e4),
+                tox = ('Oxide Thickness', 'm', float, 7.5e-9)
+                )
+
         """
         # 
         self.paramDict = paramDict
@@ -199,9 +197,9 @@ class ParamSet:
 #--------------------------------------------------------------------
 class Model(ParamSet):
     """
-    .model functionality (used for Elements)
+    Provides '.model' functionality (used for Elements)
 
-    Provides some extra functionality compared to ParamSet
+    Provides some extra functionality in addition to ParamSet methods
     """
 
     def __init__(self, name, modelType, paramDict):

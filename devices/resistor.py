@@ -15,13 +15,22 @@ import cppaddev as ad
 
 class Device(cir.Element):
     """
-    Linear Resistor::
+    Resistor::
 
                     R
       0 o--------/\/\/\/---------o 1
 
-    If the electro-thermal version is used (res_t), the device is
-    nonlinear.
+    Normally a linear device. If the electro-thermal version is used
+    (res_t), the device is nonlinear.
+
+    Netlist examples::
+
+        # Linear resistor (2 terminals)
+        res:r1 1 2 r=1e3 tc1=10e-3
+
+        # Electro-thermal resistor (nonlinear, 4 terminals)
+        res_t:r1 1 2 3 4 r=1e3 tc1=10e-3
+
     """
 
     # devtype is the 'model' name
