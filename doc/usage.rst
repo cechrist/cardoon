@@ -86,9 +86,9 @@ one circuit element, an analysis to perform or another command.
 
       model= mynpn v1 = 1kOhm r2 = 1e2MEG
 
-#. Element lines:
+#. Element lines::
 
-   <element type>:<name> <node list> [<model>] <parameter list>
+      <element type>:<name> <node list> [<model>] <parameter list>
 
    <model> is optional. Parameters specified in the element line
    override parameters in model. In this example, ``tc1`` is set to
@@ -97,9 +97,9 @@ one circuit element, an analysis to perform or another command.
       res:r1 1 gnd model = mymodel r=50. tc1=1e-5
       .model mymodel res (tc1=1e-4)
 
-#. Analysis lines
+#. Analysis lines::
 
-  .analysis <analysis type> <parameter list>
+     .analysis <analysis type> <parameter list>
 
   Example::
 
@@ -107,9 +107,9 @@ one circuit element, an analysis to perform or another command.
       start = .1V stop= .8V sweep_num=1100 device = diode:d2 \
       param = temp param_val = [0., 27, 40]
 
-#. Global variables 
+#. Global variables:: 
 
-   .options <parameter list>
+      .options <parameter list>
    
    Example::
    
@@ -137,7 +137,8 @@ one circuit element, an analysis to perform or another command.
       cap:c2 out gnd c=1nH
       .ends
 
-#. Include files: .include <filename>
+#. Include files::
 
+       .include <filename>
 
 For now there are no output commands defined.
