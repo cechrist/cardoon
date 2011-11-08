@@ -1,10 +1,11 @@
 """
-:mod:`bjt` -- Intrinsic Bipolar Transistor
-------------------------------------------
+:mod:`svbjt` -- State-Variable Intrinsic Bipolar Transistor
+-----------------------------------------------------------
 
-.. module:: bjt
+.. module:: svbjt
 .. moduleauthor:: Carlos Christoffersen
 
+################################# This is not ready yet!
 """
 
 import numpy as np
@@ -12,10 +13,11 @@ import circuit as cir
 from globalVars import const, glVar
 import cppaddev as ad
 from diode import Junction
+from svdiode import SVJunction
 
 class Device(cir.Element):
     """
-    Gummel-Poon intrinsic BJT model
+    State-variable-based Gummel-Poon intrinsic BJT model based
 
     This implementation based mainly on previous implementation in
     carrot and some equations from Pspice manual.
@@ -34,10 +36,13 @@ class Device(cir.Element):
 
     Can be used for NPN or PNP transistors.
 
-    Internally may add up to 2 additional nodes (plus gnd) if rb is
-    not zero: Bi(3) for the internal base node and, if rbm is
-    specified, ib(4) to measure the internal base current and
-    calculate Rb(ib)
+    The state variable formulation is achieved by replacing the BE and
+    BC diodes (Ibf, Ibr) with state-variable based diodes. This
+    requires two additional variables (nodes) but eliminates large
+    positive exponentials from the model.  In addition we may need up
+    to 2 additional nodes (plus gnd) if rb is not zero: Bi(3) for the
+    internal base node and, if rbm is specified, ib(4) to measure the
+    internal base current and calculate Rb(ib).
 
     Bulk connection, RC, RE are not included for now.
 
@@ -121,8 +126,8 @@ class Device(cir.Element):
         """
         cir.Element.__init__(self, instanceName)
         # Use junctions to model diodes and capacitors
-        self.jif = Junction()
-        self.jir = Junction()
+        self.jif = SVJunction()
+        self.jir = SVJunction()
         self.jile = Junction()
         self.jilc = Junction()
 
@@ -152,7 +157,6 @@ class Device(cir.Element):
                 self.csOutPorts = ((3, 2), (3, 0), (0, 2), (5, 4))
                 # Controling voltages are vbie, vbic and gyrator port
                 self.controlPorts = ((3, 2), (3, 0), (4, 5))
-                self.vPortGuess = np.array([0., 0., 0.])
                 # qbie, qbic
                 self.qsOutPorts = ((3, 2), (3, 0))
             else:
@@ -161,7 +165,6 @@ class Device(cir.Element):
                 self.csOutPorts = ((3, 2), (3, 0), (0, 2), (1, 3))
                 # Controling voltages are vbie, vbic
                 self.controlPorts = ((3, 2), (3, 0), (1, 3))
-                self.vPortGuess = np.array([0., 0., 0.])
                 # qbie, qbic
                 self.qsOutPorts = ((3, 2), (3, 0))
 
@@ -171,7 +174,6 @@ class Device(cir.Element):
             if self.cjc and (self.xcjc < 1.):
                 # add extra charge source and control voltage
                 self.controlPorts += ((1, 0), )
-                self.vPortGuess = np.concatenate(self.vPortGuess, [0.], axis=0)
                 self.qsOutPorts += ((1, 2), )
                 self._qbx = True
 
@@ -262,42 +264,45 @@ class Device(cir.Element):
         Input is a vector may be one of the following, depending on
         parameter values::
 
-          vPort = [vbe, vbc]
-          vPort = [vbie, vbic, vbbi]  (rb != 0, irb == 0)
-          vPort = [vbie, vbic, v4gnd] (gyrator voltage, irb != 0)
-          vPort = [vbie, vbic, vbbi, vbc] (xcjc < 1)
-          vPort = [vbie, vbic, v4gnd, vbc] (xcjc < 1)
+          vPort = [xbe, xbc]
+          vPort = [xbe, xbc, vbbi]  (rb != 0, irb == 0)
+          vPort = [xbe, xbc, v4gnd] (gyrator voltage, irb != 0)
+          vPort = [xbe, xbc, vbbi, vbc] (xcjc < 1)
+          vPort = [xbe, xbc, v4gnd, vbc] (xcjc < 1)
 
         Output also depends on parameter values. Charges only present
         if parameters make them different than 0 (i.e., cje, tf, cjc,
         etc. are set to nonzero values)::
         
-          outV = [ibe, ibc, ice, qbe, qbc]
-          outV = [ibe, ibc, ice, vbbi/Rb, qbe, qbc] (rb != 0, irb == 0)
-          outV = [ibe, ibc, ice, gyr*ib*Rb, qbe, qbc] (irb != 0)
-          outV = [ibe, ibc, ice, vbbi/Rb, qbe, qbc, qbx] (rb != 0, irb == 0)
-          outV = [ibe, ibc, ice, gyr*ib*Rb, qbe, qbc, qbx] (irb != 0)
+          outV = [ibe, vbe, ibc, vbc, ice, qbe, qbc]
+          outV = [ibe, vbe, ibc, vbc, ice, vbbi/Rb, qbe, qbc] 
+                 (rb != 0, irb == 0)
+          outV = [ibe, vbe, ibc, vbc, ice, gyr*ib*Rb, qbe, qbc] (irb != 0)
+          outV = [ibe, vbe, ibc, vbc, ice, vbbi/Rb, qbe, qbc, qbx] 
+                 (rb != 0, irb == 0)
+          outV = [ibe, vbe, ibc, vbc, ice, gyr*ib*Rb, qbe, qbc, qbx] (irb != 0)
+
         """
-        # Invert control voltages if needed
+        # Invert state variables if needed
         vPort1 = self._typef * vPort
 
-        # Calculate regular PN junctions currents and charges
-        ibf = self.jif.get_id(vPort1[0])
-        ibr = self.jif.get_id(vPort1[1])
+        # Calculate junctions currents and voltages
+        (ibf, vbe) = self.jif.get_idvd(vbe)
+        (ibr, vbc) = self.jif.get_idvd(vbc)
         if self.ise:
-            ile = self.jile.get_id(vPort1[0])
+            ile = self.jile.get_id(vbe)
         else:
             ile = 0.
         if self.isc:
-            ilc = self.jilc.get_id(vPort1[1])
+            ilc = self.jilc.get_id(vbc)
         else:
             ilc = 0.
         # Kqb
         q1m1 = 1.
         if self.var:
-            q1m1 -= vPort1[0] / self.var
+            q1m1 -= vbe / self.var
         if self.vaf:
-            q1m1 -= vPort1[1] / self.vaf
+            q1m1 -= vbc / self.vaf
         kqb = 1. / q1m1
         q2 = 0.
         if self.ikf:
@@ -309,12 +314,14 @@ class Device(cir.Element):
 
         # Create output vector [ibe, ibc, ice, ...]
         outV = np.zeros((self.ncurrents + self.ncharges), dtype = type(ibf))
-        # ibe
+        # ibe, vbe
         outV[0] = ibf / self._bf_t + ile
-        # ibc
-        outV[1] = ibr / self._br_t + ilc
+        outV[1] = glVar.gyr * vbe
+        # ibc, vbc
+        outV[2] = ibr / self._br_t + ilc
+        outV[3] = glVar.gyr * vbc
         # ice
-        outV[2] = (ibf - ibr) / kqb
+        outV[4] = (ibf - ibr) / kqb
 
         # RB
         if self.irb:
@@ -332,12 +339,12 @@ class Device(cir.Element):
             # Output is gyr * ib * rb.  It is divided by area^2 to
             # compensate that the whole vector is multiplied by area
             # at the end
-            outV[3] = glVar.gyr * ib * rb / pow(self.area, 2)
+            outV[5] = glVar.gyr * ib * rb / pow(self.area, 2)
         elif self.rb:
             # Using current source = vPort1[2] / rb
             rb = self.rbm + (self.rb - self.rbm) / kqb
             # Output is vbib / Rb
-            outV[3] = vPort1[2] / rb 
+            outV[5] = vPort1[2] / rb 
 
         # Charges ----------------------------------------------- 
 
@@ -350,25 +357,27 @@ class Device(cir.Element):
             tfeff = self.tf
             if self.vtf:
                 x = ibf / (ibf + self.itf)
+                # safe_exp() not needed since positive vbc grows
+                # logarithmically
                 tfeff *= (1. + self.xtf * x*x * 
-                          ad.safe_exp(vPort1[1] /1.44 /self.vtf))
+                          np.exp(vbc /1.44 /self.vtf))
             outV[self.ncurrents] = tfeff * ibf
         if self.cje:
-            outV[self.ncurrents] += self.jif.get_qd(vPort1[0]) 
+            outV[self.ncurrents] += self.jif.get_qd(vbe) 
 
         # qbc 
         if self._qbx:
             if self.tr:
                 outV[-2] = self.tr * ibr
             if self.cjc:
-                outV[-2] += self.jir.get_qd(vPort1[1]) * self.xcjc 
+                outV[-2] += self.jir.get_qd(vbc) * self.xcjc 
                 # qbx
                 outV[-1] = self.jir.get_qd(vPort1[-1]) * (1. - self.xcjc)
         else:
             if self.tr:
                 outV[-1] = self.tr * ibr
             if self.cjc:
-                outV[-1] += self.jir.get_qd(vPort1[1]) 
+                outV[-1] += self.jir.get_qd(vbc) 
 
         # Consider area effect and invert currents if needed
         outV *= self.area * self._typef
@@ -387,20 +396,21 @@ class Device(cir.Element):
         Input: control voltages as in eval_cqs() and currents from
         returned by eval_cqs()
         """
-        vce = vPort[0] - vPort[1]
+        # vce = vbe - vbc
+        gyrvce = currV[1] - currV[3]
         if self.rb or self.irb:
-            # currV[3] = ib * Rb * gyr
+            # currV[5] = ib * Rb * gyr
             # vPort[2] = ib / gyr
             # or
-            # currV[3] = VRb / Rb
+            # currV[5] = VRb / Rb
             # vPort[2] = VRb
-            pRb = currV[3] * vPort[2]
+            pRb = currV[5] * vPort[2]
         else:
             pRb = 0.
 
         # pout = ibe * vbie + ibc * vbic + vce * ice + pRb
-        pout = currV[0] * vPort[0] + currV[1] * vPort[1] \
-            + currV[2] * vce + pRb
+        pout = (currV[0] * currV[1] + currV[2] * currV[3] 
+                + currV[4] * gyrvce) / glVar.gyr + pRb
 
         return pout
 
@@ -415,14 +425,14 @@ class Device(cir.Element):
         # First we need the Jacobian
         (outV, jac) = self.eval_and_deriv(vPort)
 
+        # calculate gm, etc. in terms od jac for state-variable
+        # formulation
         self.OP = dict(
-            VBE = vPort[0],
-            VCE = vPort[0] - vPort[1],
-            IB = outV[0] + outV[1],
-            IC = outV[2] - outV[1],
-            IE = - outV[2] - outV[0],
-            gm = jac[2,0] - jac[1,0],
-            rpi = 1./(jac[0,0] + jac[1,0]),
+            VBE = outV[1] / glVar.gyr,
+            VCE = (currV[1] - currV[3]) / glVar.gyr,
+            IB = outV[0] + outV[2],
+            IC = outV[4] - outV[2],
+            IE = - outV[4] - outV[0],
             )
         return self.OP
 
