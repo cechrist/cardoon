@@ -275,6 +275,32 @@ class Device(cir.Element):
         # Noise variables
         self._kSt = 4. * const.k * T
 
+        # ----------------- self.qox calculation ------------------------
+        # Calculate gate charge with VG=VD=VS=0  (-qox)
+        # Effective gate voltage including reverse short channel effect
+        vgprime = - self._vt0a - self._deltavRSCE \
+            + self.phiT + self._gammaa * np.sqrt(self.phiT)
+        # Effective substrate factor including charge-sharing for
+        # short and narrow channels.  Pinch-off voltage for
+        # narrow-channel effect
+        vp0 = vgprime - self.phiT - \
+            self._gammaa * (np.sqrt(vgprime + self._gammaa*self._gammaa / 4.) 
+                            - self._gammaa / 2.)
+        # Effective substrate factor accounting for charge-sharing
+        tmp = 16. * self._Vt * self._Vt
+        vxprime = 0.5 * (self.phiT + self.phiT + tmp)
+        tmp = self.leta / self._leff * 2. * np.sqrt(vxprime)
+        tmp -= 3. * self.weta * np.sqrt(vp0 + self.phiT) / self._weff
+        gammao = self._gammaa - const.epSi / self.cox * tmp
+        gammaprime = 0.5 * (gammao + np.sqrt(gammao * gammao + 0.1 * self._Vt))
+        # Pinch-off voltage including short- and narrow-channel effect
+        vp = vgprime - self.phiT 
+        vp -= gammaprime * (np.sqrt(vgprime + pow(.5 * gammaprime, 2)) 
+                            - gammaprime / 2.)
+        sqvpphi = np.sqrt(vp + self.phiT + 1.e-6)
+        # 'oxide' charge
+        self.qox = self._gammaa * sqvpphi / self._Vt 
+
 
 
     def eval_cqs(self, vPort, saveOP = False):
@@ -394,7 +420,7 @@ class Device(cir.Element):
         qb1 -= (nq - 1.) * qi / nq
         qb = ad.condassign(vgprime, qb1, -vgprime / self._Vt)
         # qg = -qi - qox - qb, but qox == 0, so:
-        qg = -qi - qb
+        qg = -qi - qb - self.qox
         
         # Transconductance factor and mobility reduction due to vertical field
         betao = self.kpa * self.np * self._weff / leq 
