@@ -125,8 +125,24 @@ class Device(cir.Element):
             o  0    	                  
 
     This model has better convergence properties. Externally it
-    behaves exactly like the regular diode device. Internally
-    represented as::
+    behaves exactly like the regular diode device. 
+
+    Implementation includes depletion and diffusion charges. 
+
+    Netlist examples::
+
+        svdiode:d1 1 0 isat=10fA cj0=20fF
+
+        # Electrothermal device
+        svdiode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
+
+        # Model statement
+        .model dmodel1 svdiode (cj0 = 10pF tt=1ps)
+
+    Internal Topology
+    +++++++++++++++++
+
+    The internal representation is the following::
 
         0  o
            |
@@ -148,17 +164,6 @@ class Device(cir.Element):
 
     Terminal 4 not present if Rs = 0
 
-    Implementation includes depletion and diffusion charges. 
-
-    Netlist examples::
-
-        svdiode:d1 1 0 isat=10fA cj0=20fF
-
-        # Electrothermal device
-        svdiode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
-
-        # Model statement
-        .model dmodel1 svdiode (cj0 = 10pF tt=1ps)
     """
 
     # devtype is the 'model' name

@@ -6,6 +6,7 @@ Main simulator program
 import circuit as cir
 from netlistparser import parse_file, ParseError, analysisQueue
 import analyses
+import os
 
 def parse_net(filename, ckt = None):
     """
@@ -62,7 +63,9 @@ def device_catalog():
             continue
         val = devices.devClass[key]
         # Print doc string
-        print val.__doc__
+        doc = val.__doc__.split(os.linesep)
+        for line in doc:
+          print line[4:]
         print '\nParameters'
         print '++++++++++\n'
         # create parameter set from device dictionary

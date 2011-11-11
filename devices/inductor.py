@@ -19,6 +19,14 @@ class Device(cir.Element):
           o----+   /\  /\  /\  +-------o    External view
                   (_/ (_/ (_/  
 
+    Netlist example::
+
+        ind:l1 1 0 l=3uH
+
+
+    Internal Topology
+    +++++++++++++++++
+
     Internal implementation uses a gyrator (adds one internal node
     plus uses gnd)::
 
@@ -33,10 +41,6 @@ class Device(cir.Element):
                                          |
                                         --- (terminal 3 here)
                                          V
-
-    Netlist example::
-
-        ind:l1 1 0 l=3uH
 
     """
 

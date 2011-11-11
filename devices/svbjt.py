@@ -36,14 +36,6 @@ class Device(cir.Element):
 
     Can be used for NPN or PNP transistors.
 
-    The state variable formulation is achieved by replacing the BE and
-    BC diodes (Ibf, Ibr) with state-variable based diodes. This
-    requires two additional variables (nodes) but eliminates large
-    positive exponentials from the model.  In addition we may need up
-    to 2 additional nodes (plus gnd) if rb is not zero: Bi(3) for the
-    internal base node and, if rbm is specified, ib(4) to measure the
-    internal base current and calculate Rb(ib).
-
     Bulk connection, RC, RE are not included for now.
 
     Netlist examples::
@@ -56,6 +48,78 @@ class Device(cir.Element):
         # Model statement
         .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
 
+    Internal Topology
+    +++++++++++++++++
+
+    The state variable formulation is achieved by replacing the BE and
+    BC diodes (Ibf, Ibr) with state-variable based diodes. This
+    requires two additional variables (nodes) but eliminates large
+    positive exponentials from the model.  In addition we may need up
+    to 2 additional nodes (plus gnd) if rb is not zero: Bi(3) for the
+    internal base node and, if rbm is specified, ib(4) to measure the
+    internal base current and calculate Rb(ib).
+
+    1. If RB == 0::
+
+                         +----------------+--o 0 (C)
+                         |                |
+                        /^\               |
+                       | | | ibc(vbc)     |
+                        \|/               |       
+                         |               /|\       
+         (B) 1 o---------+              | | | ice    
+                         |               \V/      
+                        /|\               |       
+                       | | | ibe(vbe)     |
+                        \V/               |
+                         |                |
+                         +----------------+--o 2 (E)
+
+    2. If RB != 0 but IRB == 0::
+
+                                 +----------------+--o 0 (C)
+                                 |                |
+                                /^\               |
+                               | | | ibc(vbc)     |
+                                \|/               |       
+                     ,---,       |               /|\       
+         (B) 1 o----( --> )------+ 3 (Bi)       | | | ice    
+                     `---`       |               \V/      
+                                /|\               |       
+                     V13       | | | ibe(vbe)     |
+                    -----       \V/               |
+                     Rb()        |                |
+                                 +----------------+--o 2 (E)
+
+    3. If RB != 0 and IRB != 0::
+
+                                     +----------------+--o 0 (C)
+                                     |                |
+                                    /^\               |
+                       ib          | | | ibc(vbc)     |
+                                    \|/               |       
+                     ,---,           |               /|\       
+         (B) 1 o----( --> )----------+ 3 (Bi)       | | | ice    
+                     `---`           |               \V/      
+                                    /|\               |       
+                                   | | | ibe(vbe)     |
+                                    \V/               |
+                                     |                |
+                     gyr v13         +----------------+--o 2 (E)
+                                  
+                      ,---,       
+                 +---( <-- ) -----+
+                 |    `---`       |
+                 |                | ib/gyr
+         5 (gnd) |                |
+                 |    ,---,       | 4 (ib)
+                 +---( <-- )------+
+                 |    `---`       
+                ---               
+                 V    gyr ib Rb()
+                                           
+    Charge sources are connected between internal nodes defined
+    above. If xcjc is not 1 but RB is zero, xcjc is ignored.
     """
 
     devType = "bjt"

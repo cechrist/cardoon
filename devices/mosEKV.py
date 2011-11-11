@@ -72,6 +72,30 @@ class Device(cir.Element):
 
         # Model statement
         .model ekvn mosekv (type = n kp = 200u theta = 0.6)
+
+    Internal Topology
+    +++++++++++++++++
+
+    The internal topology is the following::
+
+                                      +-------------+--o 0 (D)
+                                      |             |
+                                      |             |
+                                    -----           |
+                                    ----- qd        |       
+                                      |            /|\       
+         (G) 1 o---------+            |           | | | ids    
+                         |            |            \V/      
+                         |            |             |       
+                       -----          |             |
+                       ----- qg       |      qs     |
+                         |            |      ||     |
+         (B) 4 o---------+------------+------||-----+--o 2 (S)
+                                             ||
+
+    The impact ionization current is normally added to the drain
+    current, but if the device is in reverse (Vds < 0 for N-channel)
+    mode, it is added to the source current.
     """
 
     devType = "mosekv"
@@ -158,6 +182,8 @@ class Device(cir.Element):
         internal nodes here.
         """
         cir.Element.__init__(self, instanceName)
+        # If qox code is disabled, qox is zero by default
+        self.qox = 0.
 
     def process_params(self, circuit):
         """
@@ -276,31 +302,35 @@ class Device(cir.Element):
         self._kSt = 4. * const.k * T
 
         # ----------------- self.qox calculation ------------------------
+        #
+        # Disabled since this is not strictly necessary if the
+        # analysis code is written carefully. In particular, it should
+        # not assume that all charges are initally set to zero.
+        # 
         # Calculate gate charge with VG=VD=VS=0  (-qox)
-        # Effective gate voltage including reverse short channel effect
-        vgprime = - self._vt0a - self._deltavRSCE \
-            + self.phiT + self._gammaa * np.sqrt(self.phiT)
-        # Effective substrate factor including charge-sharing for
-        # short and narrow channels.  Pinch-off voltage for
-        # narrow-channel effect
-        vp0 = vgprime - self.phiT - \
-            self._gammaa * (np.sqrt(vgprime + self._gammaa*self._gammaa / 4.) 
-                            - self._gammaa / 2.)
-        # Effective substrate factor accounting for charge-sharing
-        tmp = 16. * self._Vt * self._Vt
-        vxprime = 0.5 * (self.phiT + self.phiT + tmp)
-        tmp = self.leta / self._leff * 2. * np.sqrt(vxprime)
-        tmp -= 3. * self.weta * np.sqrt(vp0 + self.phiT) / self._weff
-        gammao = self._gammaa - const.epSi / self.cox * tmp
-        gammaprime = 0.5 * (gammao + np.sqrt(gammao * gammao + 0.1 * self._Vt))
-        # Pinch-off voltage including short- and narrow-channel effect
-        vp = vgprime - self.phiT 
-        vp -= gammaprime * (np.sqrt(vgprime + pow(.5 * gammaprime, 2)) 
-                            - gammaprime / 2.)
-        sqvpphi = np.sqrt(vp + self.phiT + 1.e-6)
-        # 'oxide' charge
-        self.qox = self._gammaa * sqvpphi / self._Vt 
-
+        # # Effective gate voltage including reverse short channel effect
+        # vgprime = - self._vt0a - self._deltavRSCE \
+        #     + self.phiT + self._gammaa * np.sqrt(self.phiT)
+        # # Effective substrate factor including charge-sharing for
+        # # short and narrow channels.  Pinch-off voltage for
+        # # narrow-channel effect
+        # vp0 = vgprime - self.phiT - \
+        #     self._gammaa * (np.sqrt(vgprime + self._gammaa*self._gammaa / 4.) 
+        #                     - self._gammaa / 2.)
+        # # Effective substrate factor accounting for charge-sharing
+        # tmp = 16. * self._Vt * self._Vt
+        # vxprime = 0.5 * (self.phiT + self.phiT + tmp)
+        # tmp = self.leta / self._leff * 2. * np.sqrt(vxprime)
+        # tmp -= 3. * self.weta * np.sqrt(vp0 + self.phiT) / self._weff
+        # gammao = self._gammaa - const.epSi / self.cox * tmp
+        # gammaprime = 0.5 * (gammao + np.sqrt(gammao * gammao + 0.1 * self._Vt))
+        # # Pinch-off voltage including short- and narrow-channel effect
+        # vp = vgprime - self.phiT 
+        # vp -= gammaprime * (np.sqrt(vgprime + pow(.5 * gammaprime, 2)) 
+        #                     - gammaprime / 2.)
+        # sqvpphi = np.sqrt(vp + self.phiT + 1.e-6)
+        # # 'oxide' charge
+        # self.qox = self._gammaa * sqvpphi / self._Vt 
 
 
     def eval_cqs(self, vPort, saveOP = False):

@@ -2,6 +2,9 @@
 Coding conventions
 ==================
 
+General guidelines
+++++++++++++++++++
+
 In general all code in the project should follow the following
 conventions.  Sometimes a few exceptions may be acceptable if it is
 not possible/practical to follow these rules.
@@ -20,4 +23,15 @@ not possible/practical to follow these rules.
 
 6. module names: first letter lowercase and no underscores: circuit,
    paramset
+
+
+Documentation
++++++++++++++
+
+Keep doctrings for modules up to date. That documentation will be
+included in the module reference. The user manual entry for device
+models is automatically generated from the doc string of the
+``Device`` class. Similarly, for analyses use the doctring from the
+``Analysis`` class in the corresponding module.
+
 

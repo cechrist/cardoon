@@ -6,43 +6,108 @@ bjt
 ---
 
 
-    Gummel-Poon intrinsic BJT model
+Gummel-Poon intrinsic BJT model
 
-    This implementation based mainly on previous implementation in
-    carrot and some equations from Pspice manual.
-    
-    Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
+This implementation based mainly on previous implementation in
+carrot and some equations from Pspice manual.
 
-                      
+Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
+
+                  
       C (0) o----,         4----o  E (2)
                   \       /
                    \     /
                   ---------
                       |
                       o 
-   
+    
                       B (1)
 
-    Can be used for NPN or PNP transistors.
+Can be used for NPN or PNP transistors.
 
-    Internally may add up to 2 additional nodes (plus gnd) if rb is
-    not zero: Bi(3) for the internal base node and, if rbm is
-    specified, ib(4) to measure the internal base current and
-    calculate Rb(ib)
+Bulk connection, RC, RE are not included for now.
 
-    Bulk connection, RC, RE are not included for now.
+Netlist examples::
 
-    Netlist examples::
+    bjt:q1 2 3 4 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
 
-        bjt:q1 2 3 4 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
+    # Electro-thermal version
+    bjt_t:q2 2 3 5 pout gnd model = mypnp
 
-        # Electro-thermal version
-        bjt_t:q2 2 3 5 pout gnd model = mypnp
+    # Model statement
+    .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
 
-        # Model statement
-        .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
+Internal Topology
++++++++++++++++++
 
-    
+Internally may add up to 2 additional nodes (plus gnd) if rb is
+not zero: Bi(3) for the internal base node and, if rbm is
+specified, ib(4) to measure the internal base current and
+calculate Rb(ib). The three possible cases are described here.
+
+1. If RB == 0::
+
+                     +----------------+--o 0 (C)
+                     |                |
+                    /^\               |
+                   | | | ibc(vbc)     |
+                    \|/               |       
+                     |               /|\       
+     (B) 1 o---------+              | | | ice    
+                     |               \V/      
+                    /|\               |       
+                   | | | ibe(vbe)     |
+                    \V/               |
+                     |                |
+                     +----------------+--o 2 (E)
+
+2. If RB != 0 but IRB == 0::
+
+                             +----------------+--o 0 (C)
+                             |                |
+                            /^\               |
+                           | | | ibc(vbc)     |
+                            \|/               |       
+                 ,---,       |               /|\       
+     (B) 1 o----( --> )------+ 3 (Bi)       | | | ice    
+                 `---`       |               \V/      
+                            /|\               |       
+                 V13       | | | ibe(vbe)     |
+                -----       \V/               |
+                 Rb()        |                |
+                             +----------------+--o 2 (E)
+
+3. If RB != 0 and IRB != 0::
+
+                                 +----------------+--o 0 (C)
+                                 |                |
+                                /^\               |
+                   ib          | | | ibc(vbc)     |
+                                \|/               |       
+                 ,---,           |               /|\       
+     (B) 1 o----( --> )----------+ 3 (Bi)       | | | ice    
+                 `---`           |               \V/      
+                                /|\               |       
+                               | | | ibe(vbe)     |
+                                \V/               |
+                                 |                |
+                 gyr v13         +----------------+--o 2 (E)
+                              
+                  ,---,       
+             +---( <-- ) -----+
+             |    `---`       |
+             |                | ib/gyr
+     5 (gnd) |                |
+             |    ,---,       | 4 (ib)
+             +---( <-- )------+
+             |    `---`       
+            ---               
+             V    gyr ib Rb()
+                                       
+Charge sources are connected between internal nodes defined
+above. If xcjc is not 1 but RB is zero, xcjc is ignored.
+
+
 
 Parameters
 ++++++++++
@@ -97,17 +162,17 @@ cap
 ---
 
 
-    Linear Capacitor::
+Linear Capacitor::
 
-                   || C
-      0 o----------||---------o 1
-                   ||
+               || C
+  0 o----------||---------o 1
+               ||
 
-    Netlist example::
+Netlist example::
 
-        cap:c1 1 2 c=10uF
+    cap:c1 1 2 c=10uF
 
-    
+
 
 Parameters
 ++++++++++
@@ -122,29 +187,29 @@ diode
 -----
 
 
-    Diode device (based on spice model)::
-    
-               o  1                           
-               |                            
-             --+--
-              / \     
-             '-+-' 
-               |                          
-               o  0 
+Diode device (based on spice model)::
 
-    Includes depletion and diffusion charges.
+           o  1                           
+           |                            
+         --+--
+          / \     
+         '-+-' 
+           |                          
+           o  0 
 
-    Netlist examples::
+Includes depletion and diffusion charges.
 
-        diode:d1 1 0 isat=10fA cj0=20fF
+Netlist examples::
 
-        # Electrothermal device
-        diode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
+    diode:d1 1 0 isat=10fA cj0=20fF
 
-        # Model statement
-        .model dmodel1 diode (cj0 = 10pF tt=1ps)
+    # Electrothermal device
+    diode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
 
-    
+    # Model statement
+    .model dmodel1 diode (cj0 = 10pF tt=1ps)
+
+
 
 Parameters
 ++++++++++
@@ -180,20 +245,20 @@ idc
 ---
 
 
-    DC current source. 
+DC current source. 
 
-    Includes temperature dependence::
+Includes temperature dependence::
 
-                    ______ 
-                   /      \ idc
-        0 o-------+  --->  +---------o 1
-                   \______/  
+                ______ 
+               /      \ idc
+    0 o-------+  --->  +---------o 1
+               \______/  
 
-    Netlist example::
+Netlist example::
 
-        idc:vdd gnd 4 idc=2mA
+    idc:vdd gnd 4 idc=2mA
 
-    
+
 
 Parameters
 ++++++++++
@@ -212,33 +277,37 @@ ind
 ---
 
 
-    Linear inductor::
+Linear inductor::
 
-                 __  __  __  _ 
-        0       /  \/  \/  \/ \          1
-          o----+   /\  /\  /\  +-------o    External view
-                  (_/ (_/ (_/  
+             __  __  __  _ 
+    0       /  \/  \/  \/ \          1
+      o----+   /\  /\  /\  +-------o    External view
+              (_/ (_/ (_/  
 
-    Internal implementation uses a gyrator (adds one internal node
-    plus uses gnd)::
+Netlist example::
 
-                                          2
-        0  o---------+            +----------------+
-                     | gyr V2     |                |
-          +         /|\          /^\               |
-        Vin        | | |        | | | gyr Vin    ----- gyr^2 * L
-          -         \V/          \|/             -----
-                     |            |                |
-        1  o---------+            +------+---------+
-                                         |
-                                        --- (terminal 3 here)
-                                         V
+    ind:l1 1 0 l=3uH
 
-    Netlist example::
 
-        ind:l1 1 0 l=3uH
+Internal Topology
++++++++++++++++++
 
-    
+Internal implementation uses a gyrator (adds one internal node
+plus uses gnd)::
+
+                                      2
+    0  o---------+            +----------------+
+                 | gyr V2     |                |
+      +         /|\          /^\               |
+    Vin        | | |        | | | gyr Vin    ----- gyr^2 * L
+      -         \V/          \|/             -----
+                 |            |                |
+    1  o---------+            +------+---------+
+                                     |
+                                    --- (terminal 3 here)
+                                     V
+
+
 
 Parameters
 ++++++++++
@@ -253,25 +322,25 @@ mosacm
 ------
 
 
-    Implements a simplified ACM MOSFET model. 
+Implements a simplified ACM MOSFET model. 
 
-    Only (some) DC equations are considered for now.
-    Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
+Only (some) DC equations are considered for now.
+Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
 
-               Drain 0
-                       o
-                       |
-                       |
-                   |---+
+           Drain 0
+                   o
                    |
-      Gate 1 o-----|<-----o 3 Bulk
                    |
-                   |---+
-                       |
-                       |
-                       o
-              Source 2
-    
+               |---+
+               |
+  Gate 1 o-----|<-----o 3 Bulk
+               |
+               |---+
+                   |
+                   |
+                   o
+          Source 2
+
 
 Parameters
 ++++++++++
@@ -300,65 +369,89 @@ mosekv
 ------
 
 
-    Intrinsic EPFL EKV 2.6 MOSFET::
+Intrinsic EPFL EKV 2.6 MOSFET::
 
-        Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk
-        
-                 Drain 0
-                         o
-                         |
-                         |
-                     |---+
+    Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk
+    
+             Drain 0
+                     o
                      |
-        Gate 1 o-----|<-----o 3 Bulk
                      |
-                     |---+
-                         |
-                         |
-                         o
-                Source 2
+                 |---+
+                 |
+    Gate 1 o-----|<-----o 3 Bulk
+                 |
+                 |---+
+                     |
+                     |
+                     o
+            Source 2
 
-    Mostly based on [1], but some updates from a later revision (dated
-    1999) are also included.
-    
-    [1] The EPFL-EKV MOSFET Model Equations for Simulation, Technical
-    Report, Model Version 2.6, June, 1997, Revision I, September,
-    1997, Revision II, July, 1998, Bucher, Christophe Lallement,
-    Christian Enz, Fabien Theodoloz, Francois Krummenacher,
-    Electronics Laboratories, Swiss Federal Institute of Technology
-    (EPFL), Lausanne, Switzerland
-    
-    This implementation includes accurate current interpolation
-    function (optional), works for negative VDS and includes
-    electrothermal model, DC operating point paramenters and noise
-    equations.
-    
-    Code originally based on freeda 1.4 implementation
-    <http://www.freeda.org>::
-    
-        // Element information
-        ItemInfo Mosnekv::einfo =
-        {
-          "mosnekv",
-          "EPFL EKV MOSFET model",
-          "Wonhoon Jang",
-          DEFAULT_ADDRESS"transistor>mosfet",
-          "2003_05_15"
-        };
-    
-    Parameter limit checking, simple capacitance calculations for
-    operating point are not yet implemented.
+Mostly based on [1], but some updates from a later revision (dated
+1999) are also included.
 
-    Netlist examples::
+[1] The EPFL-EKV MOSFET Model Equations for Simulation, Technical
+Report, Model Version 2.6, June, 1997, Revision I, September,
+1997, Revision II, July, 1998, Bucher, Christophe Lallement,
+Christian Enz, Fabien Theodoloz, Francois Krummenacher,
+Electronics Laboratories, Swiss Federal Institute of Technology
+(EPFL), Lausanne, Switzerland
 
-        mosekv:m1 2 3 4 gnd w=30e-6 l=1e-6 type = n ekvint=0
+This implementation includes accurate current interpolation
+function (optional), works for negative VDS and includes
+electrothermal model, DC operating point paramenters and noise
+equations.
 
-        # Electro-thermal version
-        mosekv_t:m1 2 3 4 gnd 1000 gnd w=30e-6 l=1e-6 type = n
+Code originally based on freeda 1.4 implementation
+<http://www.freeda.org>::
 
-        # Model statement
-        .model ekvn mosekv (type = n kp = 200u theta = 0.6)
-    
+    // Element information
+    ItemInfo Mosnekv::einfo =
+    {
+      "mosnekv",
+      "EPFL EKV MOSFET model",
+      "Wonhoon Jang",
+      DEFAULT_ADDRESS"transistor>mosfet",
+      "2003_05_15"
+    };
+
+Parameter limit checking, simple capacitance calculations for
+operating point are not yet implemented.
+
+Netlist examples::
+
+    mosekv:m1 2 3 4 gnd w=30e-6 l=1e-6 type = n ekvint=0
+
+    # Electro-thermal version
+    mosekv_t:m1 2 3 4 gnd 1000 gnd w=30e-6 l=1e-6 type = n
+
+    # Model statement
+    .model ekvn mosekv (type = n kp = 200u theta = 0.6)
+
+Internal Topology
++++++++++++++++++
+
+The internal topology is the following::
+
+                                  +-------------+--o 0 (D)
+                                  |             |
+                                  |             |
+                                -----           |
+                                ----- qd        |       
+                                  |            /|\       
+     (G) 1 o---------+            |           | | | ids    
+                     |            |            \V/      
+                     |            |             |       
+                   -----          |             |
+                   ----- qg       |      qs     |
+                     |            |      ||     |
+     (B) 4 o---------+------------+------||-----+--o 2 (S)
+                                         ||
+
+The impact ionization current is normally added to the drain
+current, but if the device is in reverse (Vds < 0 for N-channel)
+mode, it is added to the source current.
+
 
 Parameters
 ++++++++++
@@ -419,23 +512,23 @@ res
 ---
 
 
-    Resistor::
+Resistor::
 
-                    R
-      0 o--------/\/\/\/---------o 1
+                R
+  0 o--------/\/\/\/---------o 1
 
-    Normally a linear device. If the electro-thermal version is used
-    (res_t), the device is nonlinear.
+Normally a linear device. If the electro-thermal version is used
+(res_t), the device is nonlinear.
 
-    Netlist examples::
+Netlist examples::
 
-        # Linear resistor (2 terminals)
-        res:r1 1 2 r=1e3 tc1=10e-3
+    # Linear resistor (2 terminals)
+    res:r1 1 2 r=1e3 tc1=10e-3
 
-        # Electro-thermal resistor (nonlinear, 4 terminals)
-        res_t:r1 1 2 3 4 r=1e3 tc1=10e-3
+    # Electro-thermal resistor (nonlinear, 4 terminals)
+    res_t:r1 1 2 3 4 r=1e3 tc1=10e-3
 
-    
+
 
 Parameters
 ++++++++++
@@ -463,52 +556,57 @@ svdiode
 -------
 
 
-    State-Variable-Based Diode device (based on Spice model)::
+State-Variable-Based Diode device (based on Spice model)::
 
-            o  1                           
-            |                            
-          --+--
-           / \     
-          '-+-'
-            |                          
-            o  0    	                  
+        o  1                           
+        |                            
+      --+--
+       / \     
+      '-+-'
+        |                          
+        o  0    	                  
 
-    This model has better convergence properties. Externally it
-    behaves exactly like the regular diode device. Internally
-    represented as::
+This model has better convergence properties. Externally it
+behaves exactly like the regular diode device. 
 
-        0  o
-           |
-           \ 
-           / Rs
-           \ 
-           / 
-           |                                     2
-        4  o---------+                  +----------------+
-                     | i(x)+dq/dt       |                |
-          +         /|\                /|\ gyr vin      /^\ 
-        vin        | | |              | | |            | | | gyr v(x)
-          -         \V/                \V/              \|/  
-                     |                  |                |
-        1  o---------+                  +------+---------+
-                                               |
-                                              --- (terminal 3 is gnd)
-                                               V
+Implementation includes depletion and diffusion charges. 
 
-    Terminal 4 not present if Rs = 0
+Netlist examples::
 
-    Implementation includes depletion and diffusion charges. 
+    svdiode:d1 1 0 isat=10fA cj0=20fF
 
-    Netlist examples::
+    # Electrothermal device
+    svdiode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
 
-        svdiode:d1 1 0 isat=10fA cj0=20fF
+    # Model statement
+    .model dmodel1 svdiode (cj0 = 10pF tt=1ps)
 
-        # Electrothermal device
-        svdiode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
+Internal Topology
++++++++++++++++++
 
-        # Model statement
-        .model dmodel1 svdiode (cj0 = 10pF tt=1ps)
-    
+The internal representation is the following::
+
+    0  o
+       |
+       \ 
+       / Rs
+       \ 
+       / 
+       |                                     2
+    4  o---------+                  +----------------+
+                 | i(x)+dq/dt       |                |
+      +         /|\                /|\ gyr vin      /^\ 
+    vin        | | |              | | |            | | | gyr v(x)
+      -         \V/                \V/              \|/  
+                 |                  |                |
+    1  o---------+                  +------+---------+
+                                           |
+                                          --- (terminal 3 is gnd)
+                                           V
+
+Terminal 4 not present if Rs = 0
+
+
 
 Parameters
 ++++++++++
@@ -544,34 +642,38 @@ vdc
 ---
 
 
-    DC voltage source. 
+DC voltage source. 
 
-    Includes temperature dependence in vdc only::
-   
-                   ______ 
-                  /      \ vdc       Rint
-       0 o-------(  -  +  )--------/\/\/\/\--------o 1
-                  \______/ 
-   
-    Implemented using a gyrator if Rint is zero::
+Includes temperature dependence in vdc only::
 
-                                  2       V2
-        0  o---------+            +----------------+
-                     | gyr V2     |                |
-          +         /|\          /|\              /^\ 
-        vin        | | |        | | | gyr vin    | | | gyr vdc
-          -         \V/          \V/              \|/  
-                     |            |                |
-        1  o---------+            +------+---------+
-                                  3      |
-                                        --- (terminal 3 here)
-                                         V  
+               ______ 
+              /      \ vdc       Rint
+   0 o-------(  -  +  )--------/\/\/\/\--------o 1
+              \______/ 
 
-    Netlist example::
+Netlist example::
 
-        vdc:vdd 1 0 vdc=3V
+    vdc:vdd 1 0 vdc=3V
 
-    
+
+Internal Topology
++++++++++++++++++
+
+Implemented using a gyrator if Rint is zero::
+
+                              2       V2
+    0  o---------+            +----------------+
+                 | gyr V2     |                |
+      +         /|\          /|\              /^\ 
+    vin        | | |        | | | gyr vin    | | | gyr vdc
+      -         \V/          \V/              \|/  
+                 |            |                |
+    1  o---------+            +------+---------+
+                              3      |
+                                    --- (terminal 3 here)
+                                     V  
+
+
 
 Parameters
 ++++++++++

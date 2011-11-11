@@ -21,6 +21,14 @@ class Device(cir.Element):
        0 o-------(  -  +  )--------/\/\/\/\--------o 1
                   \______/ 
    
+    Netlist example::
+
+        vdc:vdd 1 0 vdc=3V
+
+
+    Internal Topology
+    +++++++++++++++++
+
     Implemented using a gyrator if Rint is zero::
 
                                   2       V2
@@ -34,10 +42,6 @@ class Device(cir.Element):
                                   3      |
                                         --- (terminal 3 here)
                                          V  
-
-    Netlist example::
-
-        vdc:vdd 1 0 vdc=3V
 
     """
 
