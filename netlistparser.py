@@ -329,8 +329,9 @@ def parse_file(filename, ckt):
     nodes = pp.OneOrMore(identifier + ~pp.FollowedBy("="))
 
     # Comment line: any line that starts with # , * or //
-    commentline = pp.Suppress(('*' ^ '#' + pp.Regex('.*')) ^ pp.dblSlashComment)
-
+    commentline = pp.Suppress(((pp.Literal('*') ^ pp.Literal('#')) 
+                               + pp.Regex('.*')) ^ pp.dblSlashComment)
+    
     # example: diode:d1 1 gnd model=mydiode isat= 2e-15 area = 2.
     elemline = elemname \
         + nodes.setResultsName('nodes') \
