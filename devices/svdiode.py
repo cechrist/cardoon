@@ -64,7 +64,7 @@ class SVJunction:
         self._alpha = 1. / self.n / obj.vt
         max_exp_arg = 5e8
         self._svth = np.log(max_exp_arg / self._alpha) / self._alpha
-        self._kexp = obj.n * obj.vt * max_exp_arg
+        self._kexp = self.n * obj.vt * max_exp_arg
         # Capacitance
         if self.cj0:
             self._t_vj = self.vj * obj.tnratio \

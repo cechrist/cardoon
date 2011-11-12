@@ -11,3 +11,7 @@ Internal Circuit Representation Reference
 
 .. automodule:: globalVars
        :members:
+
+.. automodule:: devices
+       :members:
+

@@ -49,10 +49,10 @@ class Device(cir.Element):
     Internal Topology
     +++++++++++++++++
 
-    Internally may add up to 2 additional nodes (plus gnd) if rb is
-    not zero: Bi(3) for the internal base node and, if rbm is
-    specified, ib(4) to measure the internal base current and
-    calculate Rb(ib). The three possible cases are described here.
+    Internally may add 2 additional nodes (plus gnd) if rb is not
+    zero: Bi(3) for the internal base node and ib(4) to measure the
+    internal base current and calculate Rb(ib). The possible
+    configurations are described here.
 
     1. If RB == 0::
 
@@ -70,23 +70,7 @@ class Device(cir.Element):
                          |                |
                          +----------------+--o 2 (E)
 
-    2. If RB != 0 but IRB == 0::
-
-                                 +----------------+--o 0 (C)
-                                 |                |
-                                /^\               |
-                               | | | ibc(vbc)     |
-                                \|/               |       
-                     ,---,       |               /|\       
-         (B) 1 o----( --> )------+ 3 (Bi)       | | | ice    
-                     `---`       |               \V/      
-                                /|\               |       
-                     V13       | | | ibe(vbe)     |
-                    -----       \V/               |
-                     Rb()        |                |
-                                 +----------------+--o 2 (E)
-
-    3. If RB != 0 and IRB != 0::
+    2. If RB != 0::
 
                                      +----------------+--o 0 (C)
                                      |                |
@@ -111,7 +95,7 @@ class Device(cir.Element):
                  +---( <-- )------+
                  |    `---`       
                 ---               
-                 V    gyr ib Rb()
+                 V    gyr ib Rb(ib)
                                            
     Charge sources are connected between internal nodes defined
     above. If xcjc is not 1 but RB is zero, xcjc is ignored.
@@ -177,7 +161,7 @@ class Device(cir.Element):
     controlPorts = ((1, 2), (1, 0))
     vPortGuess = np.array([0., 0.])
     # qbe, qbc
-    qsOutPorts = ((3, 2), (3, 0))
+    qsOutPorts = ((1, 2), (1, 0))
 
     def __init__(self, instanceName):
         """
@@ -205,39 +189,26 @@ class Device(cir.Element):
         # Flag to signal if the extra charge Qbx is needed or not
         self._qbx = False
         if self.rb:
-            # rb is not zero: add internal terminal
-            termList = [self.nodeName + ':Bi']
-            if self.irb:
-                # in addition we need gyrator
-                termList += [self.nodeName + ':ib', 'gnd']
-                # Linear VCCS for gyrator(s)
-                linearVCCS = [[(1, 3), (4, 5), glVar.gyr],
-                              [(4, 5), (1, 3), glVar.gyr]]
-                # ibe, ibc, ice, Rb(ib) * ib
-                self.csOutPorts = ((3, 2), (3, 0), (0, 2), (5, 4))
-                # Controling voltages are vbie, vbic and gyrator port
-                self.controlPorts = ((3, 2), (3, 0), (4, 5))
-                self.vPortGuess = np.array([0., 0., 0.])
-                # qbie, qbic
-                self.qsOutPorts = ((3, 2), (3, 0))
-            else:
-                # We can use current source
-                # ibe, ibc, ice
-                self.csOutPorts = ((3, 2), (3, 0), (0, 2), (1, 3))
-                # Controling voltages are vbie, vbic
-                self.controlPorts = ((3, 2), (3, 0), (1, 3))
-                self.vPortGuess = np.array([0., 0., 0.])
-                # qbie, qbic
-                self.qsOutPorts = ((3, 2), (3, 0))
-
+            # rb is not zero: add internal terminals
+            termList = [self.nodeName + ':Bi', self.nodeName + ':ib', 'gnd']
             # Connect required nodes
             circuit.connect_internal(self, termList)
+            # Linear VCCS for gyrator(s)
+            linearVCCS = [[(1, 3), (4, 5), glVar.gyr],
+                          [(4, 5), (1, 3), glVar.gyr]]
+            # ibe, ibc, ice, Rb(ib) * ib
+            self.csOutPorts = ((3, 2), (3, 0), (0, 2), (5, 4))
+            # Controling voltages are vbie, vbic and gyrator port
+            self.controlPorts = ((3, 2), (3, 0), (4, 5))
+            self.vPortGuess = np.array([0., 0., 0.])
+            # qbie, qbic
+            self.qsOutPorts = ((3, 2), (3, 0))
             # Now check if Cjbc must be splitted (since rb != 0)
             if self.cjc and (self.xcjc < 1.):
                 # add extra charge source and control voltage
                 self.controlPorts += ((1, 0), )
                 self.vPortGuess = np.concatenate(self.vPortGuess, [0.], axis=0)
-                self.qsOutPorts += ((1, 2), )
+                self.qsOutPorts += ((1, 0), )
                 self._qbx = True
 
         # Initially we may not need any charge
@@ -328,9 +299,7 @@ class Device(cir.Element):
         parameter values::
 
           vPort = [vbe, vbc]
-          vPort = [vbie, vbic, vbbi]  (rb != 0, irb == 0)
-          vPort = [vbie, vbic, v4gnd] (gyrator voltage, irb != 0)
-          vPort = [vbie, vbic, vbbi, vbc] (xcjc < 1)
+          vPort = [vbie, vbic, v4gnd] (gyrator voltage, rb != 0)
           vPort = [vbie, vbic, v4gnd, vbc] (xcjc < 1)
 
         Output also depends on parameter values. Charges only present
@@ -338,9 +307,7 @@ class Device(cir.Element):
         etc. are set to nonzero values)::
         
           outV = [ibe, ibc, ice, qbe, qbc]
-          outV = [ibe, ibc, ice, vbbi/Rb, qbe, qbc] (rb != 0, irb == 0)
           outV = [ibe, ibc, ice, gyr*ib*Rb, qbe, qbc] (irb != 0)
-          outV = [ibe, ibc, ice, vbbi/Rb, qbe, qbc, qbx] (rb != 0, irb == 0)
           outV = [ibe, ibc, ice, gyr*ib*Rb, qbe, qbc, qbx] (irb != 0)
         """
         # Invert control voltages if needed
@@ -382,27 +349,25 @@ class Device(cir.Element):
         outV[2] = (ibf - ibr) / kqb
 
         # RB
-        if self.irb:
+        if self.rb:
             # Using gyrator
             # vPort1[2] not defined if irb == 0
             # ib has area effect included (removed by _ck1 and _ck2)
             ib = vPort1[2] * glVar.gyr
-            ib1 = np.abs(ib)
-            x = np.sqrt(1. + self._ck1 * ib1) - 1.
-            x *= self._ck2 / np.sqrt(ib1)
-            tx = np.tan(x)
-            c = self.rbm + 3. * (self.rb - self.rbm) \
-                * (tx - x) / (x * tx * tx)
-            rb = ad.condassign(ib1, c, self.rb)
+            if self.irb:
+                ib1 = np.abs(ib)
+                x = np.sqrt(1. + self._ck1 * ib1) - 1.
+                x *= self._ck2 / np.sqrt(ib1)
+                tx = np.tan(x)
+                c = self.rbm + 3. * (self.rb - self.rbm) \
+                    * (tx - x) / (x * tx * tx)
+                rb = ad.condassign(ib1, c, self.rb)
+            else:
+                rb = self.rbm + (self.rb - self.rbm) / kqb
             # Output is gyr * ib * rb.  It is divided by area^2 to
             # compensate that the whole vector is multiplied by area
             # at the end
             outV[3] = glVar.gyr * ib * rb / pow(self.area, 2)
-        elif self.rb:
-            # Using current source = vPort1[2] / rb
-            rb = self.rbm + (self.rb - self.rbm) / kqb
-            # Output is vbib / Rb
-            outV[3] = vPort1[2] / rb 
 
         # Charges ----------------------------------------------- 
 
@@ -453,12 +418,9 @@ class Device(cir.Element):
         returned by eval_cqs()
         """
         vce = vPort[0] - vPort[1]
-        if self.rb or self.irb:
+        if self.rb:
             # currV[3] = ib * Rb * gyr
             # vPort[2] = ib / gyr
-            # or
-            # currV[3] = VRb / Rb
-            # vPort[2] = VRb
             pRb = currV[3] * vPort[2]
         else:
             pRb = 0.

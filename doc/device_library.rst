@@ -40,10 +40,10 @@ Netlist examples::
 Internal Topology
 +++++++++++++++++
 
-Internally may add up to 2 additional nodes (plus gnd) if rb is
-not zero: Bi(3) for the internal base node and, if rbm is
-specified, ib(4) to measure the internal base current and
-calculate Rb(ib). The three possible cases are described here.
+Internally may add 2 additional nodes (plus gnd) if rb is not
+zero: Bi(3) for the internal base node and ib(4) to measure the
+internal base current and calculate Rb(ib). The possible
+configurations are described here.
 
 1. If RB == 0::
 
@@ -61,23 +61,7 @@ calculate Rb(ib). The three possible cases are described here.
                      |                |
                      +----------------+--o 2 (E)
 
-2. If RB != 0 but IRB == 0::
-
-                             +----------------+--o 0 (C)
-                             |                |
-                            /^\               |
-                           | | | ibc(vbc)     |
-                            \|/               |       
-                 ,---,       |               /|\       
-     (B) 1 o----( --> )------+ 3 (Bi)       | | | ice    
-                 `---`       |               \V/      
-                            /|\               |       
-                 V13       | | | ibe(vbe)     |
-                -----       \V/               |
-                 Rb()        |                |
-                             +----------------+--o 2 (E)
-
-3. If RB != 0 and IRB != 0::
+2. If RB != 0::
 
                                  +----------------+--o 0 (C)
                                  |                |
@@ -102,7 +86,7 @@ calculate Rb(ib). The three possible cases are described here.
              +---( <-- )------+
              |    `---`       
             ---               
-             V    gyr ib Rb()
+             V    gyr ib Rb(ib)
                                        
 Charge sources are connected between internal nodes defined
 above. If xcjc is not 1 but RB is zero, xcjc is ignored.
@@ -551,6 +535,169 @@ res_t
 -----
 
 Electro-thermal version of res (extra thermal port)
+
+svbjt
+-----
+
+
+State-variable-based Gummel-Poon intrinsic BJT model based
+
+This implementation based mainly on previous implementation in
+carrot and some equations from Pspice manual.
+
+Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
+
+                  
+  C (0) o----,         4----o  E (2)
+              \       /
+               \     /
+              ---------
+                  |
+                  o 
+
+                  B (1)
+
+Can be used for NPN or PNP transistors.
+
+Bulk connection, RC, RE are not included for now.
+
+Netlist examples::
+
+    bjt:q1 2 3 4 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
+
+    # Electro-thermal version
+    bjt_t:q2 2 3 5 pout gnd model = mypnp
+
+    # Model statement
+    .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
+
+Internal Topology
++++++++++++++++++
+
+The state variable formulation is achieved by replacing the BE and
+BC diodes (Ibf, Ibr) with state-variable based diodes. This
+requires two additional variables (nodes) but eliminates large
+positive exponentials from the model::
+
+                      3 (x2)
+          +--------------------------+
+          |                          |
+         /|\                        /^\ 
+        | | | gyr v2               | | | gyr vbc(x)
+         \V/                        \|/  
+          |                          |
+          +--------------------------+-----------------+ 5 (gnd)
+          |                          |                 |
+         /^\                        /|\               ---
+        | | | gyr v1               | | | gyr vbe(x)    -
+         \|/                        \V/  
+          |                          |
+          +--------------------------+
+                       4 (x1)               
+                                              
+All currents/charges in the model are functions of voltages v3
+(x2) and v4 (x1). Note that vbc and vbe are now also functions of
+x1, x2.
+
+In addition we may need 2 additional nodes (plus gnd) if rb is not
+zero: Bi(3) for the internal base node and ib(4) to measure the
+internal base current and calculate Rb(ib)::
+
+1. If RB == 0::
+
+                       +----------------+--o 0 (C)
+                -      |                |
+                      /^\               |
+               v2    | | | ibc(x2)      |
+                      \|/               |       
+                +      |               /|\       
+       (B) 1 o---------+              | | | ice(x1,x2)
+                +      |               \V/      
+                      /|\               |       
+               v1    | | | ibe(x1)      |
+                      \V/               |
+                -      |                |
+                       +----------------+--o 2 (E)
+
+2. If RB != 0 and IRB != 0::
+
+                                 +----------------+--o 0 (C)
+                            -    |                |
+                                /^\               |
+                   ib      v2  | | | ibc(x2)      |
+                                \|/               |       
+                 ,---,      +    |               /|\       
+     (B) 1 o----( --> )----------+ 3 (Bi)       | | | ice(x1,x2)
+                 `---`      +    |               \V/      
+                                /|\               |       
+                           v1  | | | ibe(x1)      |
+                                \V/               |
+                            -    |                |
+                 gyr v13         +----------------+--o 2 (E)
+                              
+                  ,---,       
+             +---( <-- ) -----+
+             |    `---`       |
+             |                | ib/gyr
+     5 (gnd) |                |
+             |    ,---,       | 4 (ib)
+             +---( <-- )------+
+             |    `---`       
+            ---               
+             V    gyr ib Rb()
+                                       
+Charge sources are connected between internal nodes defined
+above. If xcjc is not 1 but RB is zero, xcjc is ignored.
+
+
+Parameters
+++++++++++
+
+ ========= ============ ============ ===================================================== 
+ Name       Default      Unit         Description                                          
+ ========= ============ ============ ===================================================== 
+ area       1.0                       Current multiplier                                   
+ bf         100.0                     Ideal maximum forward beta                           
+ br         1.0                       Ideal maximum reverse beta                           
+ cjc        0.0          F            Base collector zero bias p-n capacitance             
+ cje        0.0          F            Base emitter zero bias p-n capacitance               
+ eg         1.11         eV           Badgap voltage                                       
+ fc         0.5                       Forward bias depletion capacitor coefficient         
+ ikf        0.0          A            Forward-beta high current roll-off knee current      
+ ikr        0.0          A            Corner for reverse-beta high current roll off        
+ irb        0.0          A            Current at which rb falls to half of rbm             
+ isat       1.0e-16      A            Transport saturation current                         
+ isc        0.0          A            Base collector leakage saturation current            
+ ise        0.0          A            Base-emitter leakage saturation current              
+ itf        0.0          A            Transit time dependency on ic                        
+ mjc        0.33                      Base collector p-n grading factor                    
+ mje        0.33                      Base emitter p-n grading factor                      
+ nc         2.0                       Base-collector leakage emission coefficient          
+ ne         1.5                       Base-emitter leakage emission coefficient            
+ nf         1.0                       Forward current emission coefficient                 
+ nr         1.0                       Reverse current emission coefficient                 
+ rb         0.0          W            Zero bias base resistance                            
+ rbm        0.0          W            Minimum base resistance                              
+ temp       None         C            Device temperature                                   
+ tf         0.0          S            Ideal forward transit time                           
+ tnom       27.0         C            Nominal temperature                                  
+ tr         0.0          S            Ideal reverse transit time                           
+ type       npn                       Type (npn or pnp)                                    
+ vaf        0.0          V            Forward early voltage                                
+ var        0.0          V            Reverse early voltage                                
+ vjc        0.75         V            Base collector built in potential                    
+ vje        0.75         V            Base emitter built in potential                      
+ vtf        0.0          V            Transit time dependency on vbc                       
+ xcjc       1.0                       Fraction of cbc connected internal to rb             
+ xtb        0.0                       Forward and reverse beta temperature coefficient     
+ xtf        0.0                       Transit time bias dependence coefficient             
+ xti        3.0                       IS temperature effect exponent                       
+ ========= ============ ============ ===================================================== 
+
+svbjt_t
+-------
+
+Electro-thermal version of svbjt (extra thermal port)
 
 svdiode
 -------

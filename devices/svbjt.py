@@ -20,7 +20,8 @@ class Device(cir.Element):
     State-variable-based Gummel-Poon intrinsic BJT model based
 
     This implementation based mainly on previous implementation in
-    carrot and some equations from Pspice manual.
+    carrot and some equations from Pspice manual, with the addition of
+    the state-variable definitions.
     
     Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
 
@@ -54,57 +55,62 @@ class Device(cir.Element):
     The state variable formulation is achieved by replacing the BE and
     BC diodes (Ibf, Ibr) with state-variable based diodes. This
     requires two additional variables (nodes) but eliminates large
-    positive exponentials from the model.  In addition we may need up
-    to 2 additional nodes (plus gnd) if rb is not zero: Bi(3) for the
-    internal base node and, if rbm is specified, ib(4) to measure the
-    internal base current and calculate Rb(ib).
+    positive exponentials from the model::
+
+                          3 (x2)
+              +--------------------------+
+              |                          |
+             /|\                        /^\ 
+            | | | gyr v2               | | | gyr vbc(x)
+             \V/                        \|/  
+              |                          |
+              +--------------------------+-----------------+ 5 (gnd)
+              |                          |                 |
+             /^\                        /|\               ---
+            | | | gyr v1               | | | gyr vbe(x)    -
+             \|/                        \V/  
+              |                          |
+              +--------------------------+
+                           4 (x1)               
+                                                  
+    All currents/charges in the model are functions of voltages v3
+    (x2) and v4 (x1). Note that vbc and vbe are now also functions of
+    x1, x2.
+
+    In addition we may need 2 additional nodes (plus gnd) if rb is not
+    zero: Bi(3) for the internal base node and ib(4) to measure the
+    internal base current and calculate Rb(ib)::
 
     1. If RB == 0::
 
-                         +----------------+--o 0 (C)
-                         |                |
-                        /^\               |
-                       | | | ibc(vbc)     |
-                        \|/               |       
-                         |               /|\       
-         (B) 1 o---------+              | | | ice    
-                         |               \V/      
-                        /|\               |       
-                       | | | ibe(vbe)     |
-                        \V/               |
-                         |                |
-                         +----------------+--o 2 (E)
+                           +----------------+--o 0 (C)
+                    -      |                |
+                          /^\               |
+                   v2    | | | ibc(x2)      |
+                          \|/               |       
+                    +      |               /|\       
+           (B) 1 o---------+              | | | ice(x1,x2)
+                    +      |               \V/      
+                          /|\               |       
+                   v1    | | | ibe(x1)      |
+                          \V/               |
+                    -      |                |
+                           +----------------+--o 2 (E)
 
-    2. If RB != 0 but IRB == 0::
-
-                                 +----------------+--o 0 (C)
-                                 |                |
-                                /^\               |
-                               | | | ibc(vbc)     |
-                                \|/               |       
-                     ,---,       |               /|\       
-         (B) 1 o----( --> )------+ 3 (Bi)       | | | ice    
-                     `---`       |               \V/      
-                                /|\               |       
-                     V13       | | | ibe(vbe)     |
-                    -----       \V/               |
-                     Rb()        |                |
-                                 +----------------+--o 2 (E)
-
-    3. If RB != 0 and IRB != 0::
+    2. If RB != 0 and IRB != 0::
 
                                      +----------------+--o 0 (C)
-                                     |                |
+                                -    |                |
                                     /^\               |
-                       ib          | | | ibc(vbc)     |
+                       ib      v2  | | | ibc(x2)      |
                                     \|/               |       
-                     ,---,           |               /|\       
-         (B) 1 o----( --> )----------+ 3 (Bi)       | | | ice    
-                     `---`           |               \V/      
+                     ,---,      +    |               /|\       
+         (B) 1 o----( --> )----------+ 3 (Bi)       | | | ice(x1,x2)
+                     `---`      +    |               \V/      
                                     /|\               |       
-                                   | | | ibe(vbe)     |
+                               v1  | | | ibe(x1)      |
                                     \V/               |
-                                     |                |
+                                -    |                |
                      gyr v13         +----------------+--o 2 (E)
                                   
                       ,---,       
@@ -122,7 +128,7 @@ class Device(cir.Element):
     above. If xcjc is not 1 but RB is zero, xcjc is ignored.
     """
 
-    devType = "bjt"
+    devType = "svbjt"
     
     numTerms = 3  # for now
 
@@ -175,10 +181,10 @@ class Device(cir.Element):
         )
 
     # Default configuration assumes rb == 0
-    # ibe, ibc, ice 
-    csOutPorts = ((1, 2), (1, 0), (0, 2))
-    # Controling voltages are vbe, vbc 
-    controlPorts = ((1, 2), (1, 0))
+    # ibe, vbe, ibc, vbc, ice 
+    csOutPorts = ((1, 2), (5, 4), (1, 0), (5, 3), (0, 2))
+    # Controling voltages are x1, x2
+    controlPorts = ((4, 5), (3, 5))
     vPortGuess = np.array([0., 0.])
     # qbe, qbc
     qsOutPorts = ((3, 2), (3, 0))
@@ -209,36 +215,24 @@ class Device(cir.Element):
         # Flag to signal if the extra charge Qbx is needed or not
         self._qbx = False
         if self.rb:
-            # rb is not zero: add internal terminal
-            termList = [self.nodeName + ':Bi']
-            if self.irb:
-                # in addition we need gyrator
-                termList += [self.nodeName + ':ib', 'gnd']
-                # Linear VCCS for gyrator(s)
-                linearVCCS = [[(1, 3), (4, 5), glVar.gyr],
-                              [(4, 5), (1, 3), glVar.gyr]]
-                # ibe, ibc, ice, Rb(ib) * ib
-                self.csOutPorts = ((3, 2), (3, 0), (0, 2), (5, 4))
-                # Controling voltages are vbie, vbic and gyrator port
-                self.controlPorts = ((3, 2), (3, 0), (4, 5))
-                # qbie, qbic
-                self.qsOutPorts = ((3, 2), (3, 0))
-            else:
-                # We can use current source
-                # ibe, ibc, ice
-                self.csOutPorts = ((3, 2), (3, 0), (0, 2), (1, 3))
-                # Controling voltages are vbie, vbic
-                self.controlPorts = ((3, 2), (3, 0), (1, 3))
-                # qbie, qbic
-                self.qsOutPorts = ((3, 2), (3, 0))
-
+            # rb is not zero: add internal terminals
+            termList = [self.nodeName + ':Bi', self.nodeName + ':ib', 'gnd']
             # Connect required nodes
             circuit.connect_internal(self, termList)
+            # Linear VCCS for gyrator(s)
+            linearVCCS = [[(1, 6), (7, 5), glVar.gyr],
+                          [(7, 5), (1, 6), glVar.gyr]]
+            # ibe, ibc, ice, Rb(ib) * ib
+            self.csOutPorts = ((6, 2), (5, 4), (6, 0), (5, 3), (0, 2), (5, 7))
+            # Controling voltages are vbie, vbic and gyrator port
+            self.controlPorts = ((3, 2), (3, 0), (4, 5))
+            # qbie, qbic
+            self.qsOutPorts = ((6, 2), (6, 0))
             # Now check if Cjbc must be splitted (since rb != 0)
             if self.cjc and (self.xcjc < 1.):
                 # add extra charge source and control voltage
                 self.controlPorts += ((1, 0), )
-                self.qsOutPorts += ((1, 2), )
+                self.qsOutPorts += ((1, 0), )
                 self._qbx = True
 
         # Initially we may not need any charge
@@ -329,9 +323,7 @@ class Device(cir.Element):
         parameter values::
 
           vPort = [xbe, xbc]
-          vPort = [xbe, xbc, vbbi]  (rb != 0, irb == 0)
           vPort = [xbe, xbc, v4gnd] (gyrator voltage, irb != 0)
-          vPort = [xbe, xbc, vbbi, vbc] (xcjc < 1)
           vPort = [xbe, xbc, v4gnd, vbc] (xcjc < 1)
 
         Output also depends on parameter values. Charges only present
@@ -339,20 +331,16 @@ class Device(cir.Element):
         etc. are set to nonzero values)::
         
           outV = [ibe, vbe, ibc, vbc, ice, qbe, qbc]
-          outV = [ibe, vbe, ibc, vbc, ice, vbbi/Rb, qbe, qbc] 
-                 (rb != 0, irb == 0)
-          outV = [ibe, vbe, ibc, vbc, ice, gyr*ib*Rb, qbe, qbc] (irb != 0)
-          outV = [ibe, vbe, ibc, vbc, ice, vbbi/Rb, qbe, qbc, qbx] 
-                 (rb != 0, irb == 0)
-          outV = [ibe, vbe, ibc, vbc, ice, gyr*ib*Rb, qbe, qbc, qbx] (irb != 0)
+          outV = [ibe, vbe, ibc, vbc, ice, gyr*ib*Rb, qbe, qbc] (rb != 0)
+          outV = [ibe, vbe, ibc, vbc, ice, gyr*ib*Rb, qbe, qbc, qbx] (rb != 0)
 
         """
         # Invert state variables if needed
         vPort1 = self._typef * vPort
 
         # Calculate junctions currents and voltages
-        (ibf, vbe) = self.jif.get_idvd(vbe)
-        (ibr, vbc) = self.jif.get_idvd(vbc)
+        (ibf, vbe) = self.jif.get_idvd(vPort1[0])
+        (ibr, vbc) = self.jir.get_idvd(vPort1[1])
         if self.ise:
             ile = self.jile.get_id(vbe)
         else:
@@ -388,27 +376,25 @@ class Device(cir.Element):
         outV[4] = (ibf - ibr) / kqb
 
         # RB
-        if self.irb:
+        if self.rb:
             # Using gyrator
             # vPort1[2] not defined if irb == 0
             # ib has area effect included (removed by _ck1 and _ck2)
             ib = vPort1[2] * glVar.gyr
-            ib1 = np.abs(ib)
-            x = np.sqrt(1. + self._ck1 * ib1) - 1.
-            x *= self._ck2 / np.sqrt(ib1)
-            tx = np.tan(x)
-            c = self.rbm + 3. * (self.rb - self.rbm) \
-                * (tx - x) / (x * tx * tx)
-            rb = ad.condassign(ib1, c, self.rb)
+            if self.irb:
+                ib1 = np.abs(ib)
+                x = np.sqrt(1. + self._ck1 * ib1) - 1.
+                x *= self._ck2 / np.sqrt(ib1)
+                tx = np.tan(x)
+                c = self.rbm + 3. * (self.rb - self.rbm) \
+                    * (tx - x) / (x * tx * tx)
+                rb = ad.condassign(ib1, c, self.rb)
+            else:
+                rb = self.rbm + (self.rb - self.rbm) / kqb
             # Output is gyr * ib * rb.  It is divided by area^2 to
             # compensate that the whole vector is multiplied by area
             # at the end
             outV[5] = glVar.gyr * ib * rb / pow(self.area, 2)
-        elif self.rb:
-            # Using current source = vPort1[2] / rb
-            rb = self.rbm + (self.rb - self.rbm) / kqb
-            # Output is vbib / Rb
-            outV[5] = vPort1[2] / rb 
 
         # Charges ----------------------------------------------- 
 
@@ -462,12 +448,9 @@ class Device(cir.Element):
         """
         # vce = vbe - vbc
         gyrvce = currV[1] - currV[3]
-        if self.rb or self.irb:
+        if self.rb:
             # currV[5] = ib * Rb * gyr
             # vPort[2] = ib / gyr
-            # or
-            # currV[5] = VRb / Rb
-            # vPort[2] = VRb
             pRb = currV[5] * vPort[2]
         else:
             pRb = 0.
@@ -493,7 +476,7 @@ class Device(cir.Element):
         # formulation
         self.OP = dict(
             VBE = outV[1] / glVar.gyr,
-            VCE = (currV[1] - currV[3]) / glVar.gyr,
+            VCE = (outV[1] - outV[3]) / glVar.gyr,
             IB = outV[0] + outV[2],
             IC = outV[4] - outV[2],
             IE = - outV[4] - outV[0],
