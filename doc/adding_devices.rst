@@ -72,8 +72,9 @@ Module documentation
 --------------------
 
 Documentation for the device library catalog goes in the ``Device``
-class docstring in reStructuredText (reST) format. Example for diode
-device::
+class docstring in reStructuredText (reST) format. If the device
+contains internal nodes, document the internal topology here.  Example
+for diode device::
 
         Diode device (based on spice model)::
         
