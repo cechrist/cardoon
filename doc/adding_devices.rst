@@ -116,7 +116,7 @@ linear, nonlinear, frequency-defined.
 * If internal linear VCCS are needed, they are specified using the
   following format::
 
-    linearVCCS = [[(t0, t1), (t2, t3), g], ... ]
+    linearVCCS = [((t0, t1), (t2, t3), g), ... ]
   
   
     0  o--------+      +------o 2
@@ -127,9 +127,13 @@ linear, nonlinear, frequency-defined.
                        |      
     1  o--------+      +------o 3
 
+  The format consists on a list of tuples, one per voltage-controlled
+  current source (VCCS). Each tuple has 2 tuples for the control and
+  output ports, respectively and the transconductance goes at the end.
+
 * The same format is used for linear charge sources (VCQS)::
 
-    linearVCQS = [[(t0, t1), (t2, t3), c], ... ]
+    linearVCQS = [((t0, t1), (t2, t3), c), ... ]
 
 Both ``linearVCCS`` and ``linearVCQS`` may be empty lists and may be
 modified by ``process_params()`` according to paramenter
@@ -189,8 +193,9 @@ Operating Point
 ---------------
 
 The following function generates a dictionary with operating point
-variables should be implemented by all devices. Variable names are
-arbitrary::
+variables should be implemented by all devices. For
+frequency-dependent devices, f is assumed to be zero. Variable names
+are arbitrary::
 
    def get_OP(self, vPort):
        """
@@ -230,7 +235,7 @@ empty tuple.
 
 Example::
 
-  noisePorts = ((1, 2), (0, 2))
+  noisePorts = [(1, 2), (0, 2)]
 
 The ``get_noise()`` function in general requires a previous call to
 get_OP()::
@@ -239,6 +244,7 @@ get_OP()::
          """
          Return noise spectral density at frequency f
          
+	 f may be a scalar/vector
          Requires a previous call to get_OP() 
          """
          s1 = self.OP['Sthermal'] + self.OP['kSflicker'] / pow(f, self.af)
@@ -266,7 +272,7 @@ not specified, the initial guess is set to zero.
   Example for a 3-terminal BJT with BE and CE current sources,
   assuming teminals are connected C (0) - B (1) - E (2)::
   
-    csOutPorts = ((1, 2), (0, 2))
+    csOutPorts = [(1, 2), (0, 2)]
 
 * Controlling ports (``controlPorts``): list here all ports whose
   voltages are needed to calculate the nonlinear currents / charges in
@@ -274,12 +280,12 @@ not specified, the initial guess is set to zero.
 
   Example for BJT without intrinsic RC, RB and RE (vbc, vbe)::
 
-    controlPorts = ((1, 0), (1, 2))
+    controlPorts = [(1, 0), (1, 2)]
 
 * Time-delayed port voltages (``csDelayedContPorts``): optional, if
   ``needsDelays`` is ``True``, list port voltages in triplet format::
 
-    csDelayedContPorts = (n1, n2, delay)
+    csDelayedContPorts = [(n1, n2, delay1), (n3, n4, delay2)]
 
 Similar vectors are required for output ports of charge sources
 (``qsOutPorts``). Some of these could be empty and can be modified by

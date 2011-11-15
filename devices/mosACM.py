@@ -63,15 +63,13 @@ class Device(cir.Element):
 
     isNonlinear = True
 
-    vPortGuess = np.array([1., .7, 0.])
-
-
     # For now only one current source between D and S
-    csOutPorts = ((0, 2), )
+    csOutPorts = [(0, 2)]
     # Controling voltages are DB, GB and SB
-    controlPorts = ((0, 3), (1, 3), (2, 3))
+    controlPorts = [(0, 3), (1, 3), (2, 3)]
+    vPortGuess = np.array([0., 0., 0.])
     # No charge sources defined by now
-    qsOutPorts = ( )
+    qsOutPorts = [ ]
     # No time-delayed port voltages required
 
     def __init__(self, instanceName):

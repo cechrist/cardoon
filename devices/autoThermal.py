@@ -53,7 +53,11 @@ def thermal_device(nle):
         # resistor.py)
         isNonlinear = True
         # Initial guess for input ports:
-        vPortGuess = np.concatenate((nle.vPortGuess,[27.]), axis=0)
+        try:
+            vPortGuess = np.concatenate((nle.vPortGuess,[27.]), axis=0)
+        except AttributeError:
+            # Ignore if vPortGuess not provided
+            pass
         
         def __init__(self, instanceName):
             """
@@ -76,8 +80,8 @@ def thermal_device(nle):
             # once
             if not self.__thermalFlag:
                 thermalPort = (self.numTerms-1, self.numTerms-2)
-                self.csOutPorts = self.csOutPorts + (thermalPort, )
-                self.controlPorts = self.controlPorts + (thermalPort, )
+                self.csOutPorts.append(thermalPort)
+                self.controlPorts.append(thermalPort)
                 # Thermal output number
                 self.__ton = len(self.csOutPorts) - 1
                 # Thermal control port number

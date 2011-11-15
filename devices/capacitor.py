@@ -80,7 +80,7 @@ class Device(cir.Element):
 
         # Adjust according to temperature (not needed so far)
         # self.set_temp_vars(self.temp)
-        self.linearVCQS = [[(0, 1), (0, 1), self.c]]
+        self.linearVCQS = [((0, 1), (0, 1), self.c)]
 
 #    def set_temp_vars(self, temp):
 #        """

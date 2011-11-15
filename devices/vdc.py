@@ -101,15 +101,15 @@ class Device(cir.Element):
         if self.rint:
             # Can use Norton equivalent, no need for internal terminals
             self.idc = self.vdc / self.rint
-            self.linearVCCS = [[(0,1), (0,1), 1. / self.rint]]
+            self.linearVCCS = [((0,1), (0,1), 1. / self.rint)]
         else:
             # Connect internal terminals
             circuit.connect_internal(self, [self.nodeName + ':n2', 'gnd'])
             # Setup gyrator
             # Access to global variables is through the glVar (e.g.,
             # glVar.u0)
-            self.linearVCCS = [[(0,1), (2,3), glVar.gyr], 
-                               [(2,3), (0,1), glVar.gyr]]
+            self.linearVCCS = [((0,1), (2,3), glVar.gyr), 
+                               ((2,3), (0,1), glVar.gyr)]
             # sourceOutput should be already OK
             self._idc = glVar.gyr * self.vdc
 

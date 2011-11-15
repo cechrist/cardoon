@@ -386,7 +386,7 @@ function (optional), works for negative VDS and includes
 electrothermal model, DC operating point paramenters and noise
 equations.
 
-Code originally based on freeda 1.4 implementation
+Code originally based on fREEDA 1.4 implementation
 <http://www.freeda.org>::
 
     // Element information
@@ -786,8 +786,8 @@ svdiode_t
 
 Electro-thermal version of svdiode (extra thermal port)
 
-tlinp4
-------
+tlinpy4
+-------
 
 
 4-terminal physical transmission line model using Y parameters::

@@ -184,17 +184,9 @@ class Device(cir.Element):
     isNonlinear = True
     # Initial guess for state variable
     vPortGuess = np.array([0.])
-    # needsDelays = True
-    # isFreqDefined = True
-    # isDCSource = True
-    # isTDSource = True
-    # isFDSource = True
 
-    # Nonlinear device attributes
-    # csOutPorts = ((0, 2), )
-    # csContPorts = ((0, 3), (1, 3), (2, 3))
-    qsOutPorts = ( )
-    # csDelayedContPorts = ( )
+    # Nonlinear device attributes (defined in process_params())
+    qsOutPorts = [ ]
 
     # Independent source attribute: output port
     # sourceOutput = (0, 1)
@@ -239,25 +231,25 @@ class Device(cir.Element):
         # Needs at least one internal terminal: 
         termList = [self.nodeName + ':n2', 'gnd']
         circuit.connect_internal(self, termList)
-        self.linearVCCS = [[(0,1), (2,3), glVar.gyr]]
+        self.linearVCCS = [((0,1), (2,3), glVar.gyr)]
         # Nonlinear device attributes
-        self.csOutPorts = ((0, 1), (3, 2))
-        self.noisePorts = ((0, 1), )
-        self.controlPorts = ((2, 3), )
+        self.csOutPorts = [(0, 1), (3, 2)]
+        self.noisePorts = [(0, 1)]
+        self.controlPorts = [(2, 3)]
 
         if self.rs:
             # Needs one more terminal
             circuit.connect_internal(self, [self.nodeName + ':n3,'])
             g = 1. / self.rs / self.area
-            self.linearVCCS.append([(0,2), (0,2), g])
+            self.linearVCCS.append(((0,2), (0,2), g))
             # Nonlinear device outputs change
-            self.csOutPorts = ((4, 1), (3, 2))
-            self.noisePorts = ((0, 4), (4, 1))
+            self.csOutPorts = [(4, 1), (3, 2)]
+            self.noisePorts = [(0, 4), (4, 1)]
 
         self._qd = False
         if self.tt or self.cj0:
             # Add charge source (otherwise the charge calculation is ignored)
-            self.qsOutPorts = (self.csOutPorts[0], )
+            self.qsOutPorts.append(self.csOutPorts[0])
             self._qd = True
 
         # Absolute nominal temperature

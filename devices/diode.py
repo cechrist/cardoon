@@ -140,21 +140,10 @@ class Device(cir.Element):
     # linear R, L, C, M
     #
     isNonlinear = True
-    vPortGuess = np.array([.45])
-    # needsDelays = True
-    # isFreqDefined = True
-    # isDCSource = True
-    # isTDSource = True
-    # isFDSource = True
+    vPortGuess = np.array([0.])
 
-    # Nonlinear device attributes
-    # csOutPorts = ((0, 2), )
-    # csContPorts = ((0, 3), (1, 3), (2, 3))
-    qsOutPorts = ( )
-    # csDelayedContPorts = ( )
-
-    # Independent source attribute: output port
-    # sourceOutput = (0, 1)
+    # Nonlinear device attributes (defined in process_params())
+    qsOutPorts = [ ]
 
     # Define parameters (note most parameters defined in Junction)
     paramDict = dict(
@@ -203,16 +192,16 @@ class Device(cir.Element):
             # Need internal terminal
             circuit.connect_internal(self, [self.nodeName + ':n2'])
             g = 1. / self.rs / self.area
-            self.linearVCCS = [[(0,2), (0,2), g]]
+            self.linearVCCS = [((0,2), (0,2), g)]
             # Nonlinear device attributes
-            self.csOutPorts = ((2, 1), )
-            self.noisePorts = ((0, 2), (2, 1), )
-            self.controlPorts = ((2, 1), )
+            self.csOutPorts = [(2, 1)]
+            self.noisePorts = [(0, 2), (2, 1)]
+            self.controlPorts = [(2, 1)]
         else:
             # Nonlinear device attributes
-            self.csOutPorts = ((0, 1), )
-            self.noisePorts = ((0, 1), )
-            self.controlPorts = ((0, 1), )
+            self.csOutPorts = [(0, 1)]
+            self.noisePorts = [(0, 1)]
+            self.controlPorts = [(0, 1)]
 
         self._qd = False
         if self.tt or self.cj0:

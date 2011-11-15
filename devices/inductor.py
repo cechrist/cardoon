@@ -100,10 +100,10 @@ class Device(cir.Element):
         circuit.connect_internal(self, [self.nodeName + ':n2', 'gnd'])
         # Setup gyrator
         # Access to global variables is through the glVar 
-        self.linearVCCS = [[(0,1), (3,2), glVar.gyr], 
-                           [(2,3), (0,1), glVar.gyr]]
+        self.linearVCCS = [((0,1), (3,2), glVar.gyr), 
+                           ((2,3), (0,1), glVar.gyr)]
         cap = self.l * glVar.gyr * glVar.gyr
-        self.linearVCQS = [[(2, 3), (2, 3), cap]]
+        self.linearVCQS = [((2, 3), (2, 3), cap)]
 
         # Adjust according to temperature (not needed so far)
         # self.set_temp_vars(self.temp)

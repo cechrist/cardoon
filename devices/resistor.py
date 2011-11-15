@@ -56,10 +56,10 @@ class Device(cir.Element):
     # isFDSource = True
 
     # Nonlinear device attributes (used for electrothermal model)
-    csOutPorts = ((0, 1), )
-    noisePorts = ((0, 1), )
-    controlPorts = ((0, 1), )
-    qsOutPorts = ( )
+    csOutPorts = [(0, 1)]
+    noisePorts = [(0, 1)]
+    controlPorts = [(0, 1)]
+    qsOutPorts = [ ]
     vPortGuess = np.array([0.])
 
     paramDict = dict(
@@ -104,7 +104,7 @@ class Device(cir.Element):
             self.g = (self.w-self.narrow) / (self.l-self.narrow) / self.rsh
         # Adjust according to temperature
         self.set_temp_vars(self.temp)
-        self.linearVCCS = [[(0, 1), (0, 1), self.g]]
+        self.linearVCCS = [((0, 1), (0, 1), self.g)]
         # Delete AD tape (if any)
         ad.delete_tape(self)
 

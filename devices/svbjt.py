@@ -182,12 +182,12 @@ class Device(cir.Element):
 
     # Default configuration assumes rb == 0
     # ibe, vbe, ibc, vbc, ice 
-    csOutPorts = ((1, 2), (5, 4), (1, 0), (5, 3), (0, 2))
+    csOutPorts = [(1, 2), (5, 4), (1, 0), (5, 3), (0, 2)]
     # Controling voltages are x1, x2
-    controlPorts = ((4, 5), (3, 5))
+    controlPorts = [(4, 5), (3, 5)]
     vPortGuess = np.array([0., 0.])
     # qbe, qbc
-    qsOutPorts = ((3, 2), (3, 0))
+    qsOutPorts = [(3, 2), (3, 0)]
 
     def __init__(self, instanceName):
         """
@@ -220,32 +220,32 @@ class Device(cir.Element):
             # Connect required nodes
             circuit.connect_internal(self, termList)
             # Linear VCCS for gyrator(s)
-            linearVCCS = [[(1, 6), (7, 5), glVar.gyr],
-                          [(7, 5), (1, 6), glVar.gyr]]
+            linearVCCS = [((1, 6), (7, 5), glVar.gyr),
+                          ((7, 5), (1, 6), glVar.gyr)]
             # ibe, ibc, ice, Rb(ib) * ib
-            self.csOutPorts = ((6, 2), (5, 4), (6, 0), (5, 3), (0, 2), (5, 7))
+            self.csOutPorts = [(6, 2), (5, 4), (6, 0), (5, 3), (0, 2), (5, 7)]
             # Controling voltages are vbie, vbic and gyrator port
-            self.controlPorts = ((3, 2), (3, 0), (4, 5))
+            self.controlPorts = [(3, 2), (3, 0), (4, 5)]
             # qbie, qbic
-            self.qsOutPorts = ((6, 2), (6, 0))
+            self.qsOutPorts = [(6, 2), (6, 0)]
             # Now check if Cjbc must be splitted (since rb != 0)
             if self.cjc and (self.xcjc < 1.):
                 # add extra charge source and control voltage
-                self.controlPorts += ((1, 0), )
-                self.qsOutPorts += ((1, 0), )
+                self.controlPorts.append((1, 0))
+                self.qsOutPorts.append((1, 0))
                 self._qbx = True
 
-        # Initially we may not need any charge
-        keepPorts = ( )
+        # In principle we may not need any charge
+        keepPorts = [ ]
         if self.cje + self.tf:
             # keep qbe
-            keepPorts = self.qsOutPorts[1:]
+            keepPorts.append(self.qsOutPorts[0])
         if self.cjc + self.tr:
             # keep qbc, qbx (if any)
             if self._qbx:
                 keepPorts += self.qsOutPorts[-2:]
             else:
-                keepPorts += self.qsOutPorts[-1:]
+                keepPorts.append(self.qsOutPorts[-1])
         self.qsOutPorts = keepPorts
 
         # keep track of how many output variables are needed

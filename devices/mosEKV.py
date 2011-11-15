@@ -107,8 +107,6 @@ class Device(cir.Element):
 
     isNonlinear = True
 
-    vPortGuess = np.array([1., .5, 0.])
-
     paramDict = dict(
         cir.Element.tempItem,
         type = ('N- or P-channel MOS (n or p)', '', str, 'n'),
@@ -167,13 +165,14 @@ class Device(cir.Element):
         )
 
     # Ids, Idb, Isb
-    csOutPorts = ((0, 2), (0, 3), (2, 3))
+    csOutPorts = [(0, 2), (0, 3), (2, 3)]
     # Controling voltages are DB, GB and SB
-    controlPorts = ((0, 3), (1, 3), (2, 3))
+    controlPorts = [(0, 3), (1, 3), (2, 3)]
+    vPortGuess = np.array([0., 0., 0.])
     # One charge source connected to each D, G, S
-    qsOutPorts = ((0, 3), (1, 3), (2, 3))
+    qsOutPorts = [(0, 3), (1, 3), (2, 3)]
     # Noise sources: one between drain and source
-    noisePorts = ((0, 2), )
+    noisePorts = [(0, 2)]
     # No time-delayed port voltages required
 
     def __init__(self, instanceName):

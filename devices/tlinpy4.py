@@ -1,6 +1,6 @@
 """
-:mod:`tlinp4` -- Physical 4-terminal transmission line
-------------------------------------------------------
+:mod:`tlinpy4` -- Physical 4-terminal transmission line (Y-matrix based)
+------------------------------------------------------------------------
 
 .. module:: diode
 .. moduleauthor:: Carlos Christoffersen
@@ -45,7 +45,7 @@ class Device(cir.Element):
     """
 
     # devtype is the 'model' name
-    devType = "tlinp4"
+    devType = "tlinpy4"
     numTerms = 4
     isFreqDefined = True
     fPortsDefinition = [(0, 1), (2, 3)]
@@ -175,21 +175,21 @@ class Device(cir.Element):
                     # add resistor node
                     termlist.append(rnode + str(i))
                     # Add gyrator
-                    self.linearVCCS += [[(inn, rnn), (4, gnn), glVar.gyr], 
-                                        [(gnn, 4), (inn, rnn), glVar.gyr]]
+                    self.linearVCCS += [((inn, rnn), (4, gnn), glVar.gyr), 
+                                        ((gnn, 4), (inn, rnn), glVar.gyr)]
                     # Add resistor
-                    self.linearVCCS.append([(rnn, cnn), (rnn, cnn), 1./R])
+                    self.linearVCCS.append(((rnn, cnn), (rnn, cnn), 1./R))
                 else:
                     # Add gyrator
-                    self.linearVCCS += [[(inn, cnn), (4, gnn), glVar.gyr], 
-                                        [(gnn, 4), (inn, cnn), glVar.gyr]]
+                    self.linearVCCS += [((inn, cnn), (4, gnn), glVar.gyr), 
+                                        ((gnn, 4), (inn, cnn), glVar.gyr)]
                 # Add inductor
-                self.linearVCQS.append([(gnn, 4), (gnn, 4), indcap])
+                self.linearVCQS.append(((gnn, 4), (gnn, 4), indcap))
                 # Add capacitor
-                self.linearVCQS.append([(cnn, 1), (cnn, 1), C])
+                self.linearVCQS.append(((cnn, 1), (cnn, 1), C))
                 if G:
                     # Add conductor
-                    self.linearVCLS.append([(cnn, 1), (cnn, 1), G])
+                    self.linearVCLS.append(((cnn, 1), (cnn, 1), G))
 
         # Calculate temperature-dependent variables
         # self.set_temp_vars(self.temp)
@@ -201,19 +201,33 @@ class Device(cir.Element):
         """
         Calculates operating point information
     
-        Input:  vPort = [vdb , vgb , vsb]
+        Input:  vPort = [v1, v2]
+
         Output: dictionary with OP variables
+
+        The frequency-domain model is always used for this calculation.
         """
-        pass
+        ydc = self.get_dc_ymatrix()
+        iout = np.dot(ydc, vPort)
+        self.OP = dict(
+            V1 = vPort[0],
+            V2 = vPort[1],
+            I1 = iout[0],
+            I2 = iout[1]
+            )
+        return self.OP
+
+        
 
     #---------------------------------------------------------------------
     # Noise: in general requires a previous call to get_OP 
     #---------------------------------------------------------------------
-    def get_noise(self, f):
+    def get_noise(self, freq):
         """
-        Return noise spectral density at frequency f
+        Return noise spectral density at frequency freq
         
-        May require a previous call to get_OP() 
+        freq may be a scalar/vector
+        Not implemented
         """
         pass
 

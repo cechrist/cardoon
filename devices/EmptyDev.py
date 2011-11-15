@@ -61,11 +61,11 @@ class Device(cir.Element):
     # isFDSource = True
 
     # Nonlinear device attributes
-    # csOutPorts = ((0, 2), )
-    # controlPorts = ((0, 3), (1, 3), (2, 3))
-    # qsOutPorts = ( )
-    # noisePorts = ( )
-    # csDelayedContPorts = ( )
+    # csOutPorts = [(0, 2)]
+    # controlPorts = [(0, 3), (1, 3), (2, 3)]
+    # qsOutPorts = [ ] 
+    # noisePorts = [ ]
+    # csDelayedContPorts = [ ]
 
     # Independent source attribute: output port
     # sourceOutput = (0, 1)
