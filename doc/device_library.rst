@@ -786,23 +786,86 @@ svdiode_t
 
 Electro-thermal version of svdiode (extra thermal port)
 
+tlinps4
+-------
+
+
+4-terminal physical transmission line model using scattering
+parameters::
+
+         0 o===================================o 2
+                           Z0
+         1 o===================================o 3
+
+
+This model is similar to tlinpy4, but it is more robust and can
+handle lossless lines, even at DC, but internally requires 2
+additional ports to keep track of v1+ and v2+. This model is more
+suitable for convolution as the S parameters are better behaved
+than the Y parameters.
+
+Netlist Examples::
+
+  tlinps4:tl1 in gnd out gnd z0mag=100. length=0.3m
+  .model c_line tlins4 (z0mag=75.00 k=7 fscale=1.e10 alpha = 59.9)
+
+Internal Topology
++++++++++++++++++
+
+The model is symmetric. The schematic for Port 1 is shown here::
+
+           I1                              v1+ + v1-          v1-
+          --->                               ---->     v1+   ---->
+      0 o--------+                          +------------+----------+  4
+   +             |                          |            |          |  
+                 |                          |           +-+  s12 v2+|  
+  V1            -|- (v1+ - s12 v2+)/Z0     ---          | |        -|- 
+               ( V )                      ( ^ )       1 | |       ( V )
+   -            ---                    V1  -|-          +-+        --- 
+                 |                          |            |          |  
+      1 o--------+                          +------------+----------+  6
+                                                         |
+                                                        ---
+                                                         -
+
+Note: for a matched transmission line, s11 = s22 = 0 and s12 =
+s21. The equivalent 'Y' matrix is::
+
+           [              1/Z0    -s12/Z0 ]
+           [                              ]
+           [             -s21/Z0    1/Z0  ]           
+       Y = [                              ]
+           [ -1            1        s12   ]
+           [                              ]
+           [        -1    s21        1    ]
+
+
+
+Parameters
+++++++++++
+
+ ========= ============ ============ ===================================================== 
+ Name       Default      Unit         Description                                          
+ ========= ============ ============ ===================================================== 
+ alpha      0.1          dB/m         Attenuation                                          
+ fscale     0.0          Hz           Scaling frequency for attenuation                    
+ k          1.0                       Effective relative dielectric constant               
+ length     0.1          m            Line length                                          
+ tand       0.0                       Loss tangent                                         
+ z0mag      50.0         Ohms         Magnitude of characteristic impedance                
+ ========= ============ ============ ===================================================== 
+
 tlinpy4
 -------
 
 
 4-terminal physical transmission line model using Y parameters::
 
-             
-      0 o----+------+               +-----+-------o 2
-   +         |      |               |     |              +
-            +-+     |               |    +-+ 
-  v1        | |    -|- y12 v2      -|-   | |             v2
-        y11 | |   ( V )           ( V )  | | y22
-   -        +-+    ---      y21 v1 ---   +-+             -
-             |      |               |     |  
-      1 o----+------+               +-----+-------o 3
 
-                   y11 = y22 , y12 = y21
+         0 o===================================o 2
+                           Z0
+         1 o===================================o 3
+
 
 Code derived from fREEDA tlinp4 element. fREEDA implementation by
 Carlos E. Christoffersen, Mete Ozkar, Michael Steer
@@ -814,8 +877,25 @@ When ``nsect > 0`` the transmission line is expanded in
 
 Netlist Examples::
 
-  tlipn4:tl1 in gnd out gnd z0mag=100. l=0.3m
-  .model c_line tlinp4 (z0mag=75.00 k=7 fscale=1.e10 alpha = 59.9)
+  tlinpy4:tl1 in gnd out gnd z0mag=100. length=0.3m
+  .model c_line tlinpy4 (z0mag=75.00 k=7 fscale=1.e10 alpha = 59.9)
+
+
+Internal Topology
++++++++++++++++++
+
+The internal schematic is the following::
+             
+      0 o----+------+               +-----+-------o 2
+   +         |      |               |     |              +
+            +-+     |               |    +-+ 
+  v1        | |    -|- y12 v2      -|-   | |             v2
+        y11 | |   ( V )           ( V )  | | y22
+   -        +-+    ---      y21 v1 ---   +-+             -
+             |      |               |     |  
+      1 o----+------+               +-----+-------o 3
+
+                   y11 = y22 , y12 = y21
 
 
 

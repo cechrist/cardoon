@@ -17,17 +17,11 @@ class Device(cir.Element):
     """
     4-terminal physical transmission line model using Y parameters::
     
-                 
-          0 o----+------+               +-----+-------o 2
-       +         |      |               |     |              +
-                +-+     |               |    +-+ 
-      v1        | |    -|- y12 v2      -|-   | |             v2
-            y11 | |   ( V )           ( V )  | | y22
-       -        +-+    ---      y21 v1 ---   +-+             -
-                 |      |               |     |  
-          1 o----+------+               +-----+-------o 3
 
-                       y11 = y22 , y12 = y21
+             0 o===================================o 2
+                               Z0
+             1 o===================================o 3
+
 
     Code derived from fREEDA tlinp4 element. fREEDA implementation by
     Carlos E. Christoffersen, Mete Ozkar, Michael Steer
@@ -39,8 +33,25 @@ class Device(cir.Element):
 
     Netlist Examples::
 
-      tlipn4:tl1 in gnd out gnd z0mag=100. l=0.3m
-      .model c_line tlinp4 (z0mag=75.00 k=7 fscale=1.e10 alpha = 59.9)
+      tlinpy4:tl1 in gnd out gnd z0mag=100. length=0.3m
+      .model c_line tlinpy4 (z0mag=75.00 k=7 fscale=1.e10 alpha = 59.9)
+
+
+    Internal Topology
+    +++++++++++++++++
+
+    The internal schematic is the following::
+                 
+          0 o----+------+               +-----+-------o 2
+       +         |      |               |     |              +
+                +-+     |               |    +-+ 
+      v1        | |    -|- y12 v2      -|-   | |             v2
+            y11 | |   ( V )           ( V )  | | y22
+       -        +-+    ---      y21 v1 ---   +-+             -
+                 |      |               |     |  
+          1 o----+------+               +-----+-------o 3
+
+                       y11 = y22 , y12 = y21
 
     """
 
