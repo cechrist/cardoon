@@ -254,10 +254,10 @@ The following attributes are required for nonlinear models::
 
   isNonlinear = True
   needsDelays = True or False
-  vPortGuess = <numpy vector>
 
-``vPortGuess`` is a vector with a valid set of controlling voltages to
-be be used as an initial guess.
+An optional attribute, ``vPortGuess`` is a numpy vector with a valid
+set of controlling voltages to be used as an initial guess. If this is
+not specified, the initial guess is set to zero.
 
 * Current source output ports (``csOutPorts``): for each current
   source in the device, list ports as follows: ``(n1, n2)``. Current

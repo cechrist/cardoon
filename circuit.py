@@ -457,15 +457,16 @@ class Circuit:
         """
         To be used after all elements/terminals have been created. Can
         be called multiple times but only has an effect if
-        self._initialized is False
+        ``self._initialized`` is False
 
         1. Set attribute values in elements
 
         2. Checks for terminal connections and initializes
-        elements. Elements may add internal terminals at this point.
+           elements. Elements may add internal terminals at this
+           point.
 
-        4. If not flattened, checks that subcircuit definitions exist
-        and checks number of terminal connections.
+        3. If not flattened, checks that subcircuit definitions exist
+           and checks number of terminal connections.
         """
         # Can only initialize once
         if self._initialized:

@@ -47,7 +47,7 @@ class Device(cir.Element):
     electrothermal model, DC operating point paramenters and noise
     equations.
     
-    Code originally based on freeda 1.4 implementation
+    Code originally based on fREEDA 1.4 implementation
     <http://www.freeda.org>::
     
         // Element information
