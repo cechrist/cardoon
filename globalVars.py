@@ -29,7 +29,9 @@ constDict = dict(
     c0 = ('Speed of light in free space', 'm s^{-1}', float, 2.99792458e8),
     T0 = ('Zero degree Celsius temperature', 'K', float, 273.15),
     epSi = ('Permitivity of silicon', '', float, 104.5e-12),
-    epOx = ('Permitivity of silicon oxide', '', float, 34.5e-12)
+    epOx = ('Permitivity of silicon oxide', '', float, 34.5e-12),
+    Np2dB = ('Neper to dB conversion constant', 'dB/Np', 
+             float, 8.6858896380650368)
     )
 
 const = ParamSet(constDict)

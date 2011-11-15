@@ -543,7 +543,8 @@ svbjt
 State-variable-based Gummel-Poon intrinsic BJT model based
 
 This implementation based mainly on previous implementation in
-carrot and some equations from Pspice manual.
+carrot and some equations from Pspice manual, with the addition of
+the state-variable definitions.
 
 Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
 
@@ -601,7 +602,7 @@ x1, x2.
 
 In addition we may need 2 additional nodes (plus gnd) if rb is not
 zero: Bi(3) for the internal base node and ib(4) to measure the
-internal base current and calculate Rb(ib)::
+internal base current and calculate Rb(ib).
 
 1. If RB == 0::
 
@@ -784,6 +785,55 @@ svdiode_t
 ---------
 
 Electro-thermal version of svdiode (extra thermal port)
+
+tlinp4
+------
+
+
+4-terminal physical transmission line model using Y parameters::
+
+             
+      0 o----+------+               +-----+-------o 2
+   +         |      |               |     |              +
+            +-+     |               |    +-+ 
+  v1        | |    -|- y12 v2      -|-   | |             v2
+        y11 | |   ( V )           ( V )  | | y22
+   -        +-+    ---      y21 v1 ---   +-+             -
+             |      |               |     |  
+      1 o----+------+               +-----+-------o 3
+
+                   y11 = y22 , y12 = y21
+
+Code derived from fREEDA tlinp4 element. fREEDA implementation by
+Carlos E. Christoffersen, Mete Ozkar, Michael Steer
+
+Two models are supported dependent on the secting of nsect: When
+``nsect = 0`` (not set) the frequency-domain model is enabled.
+When ``nsect > 0`` the transmission line is expanded in 
+``nsect`` RLCG subsections.
+
+Netlist Examples::
+
+  tlipn4:tl1 in gnd out gnd z0mag=100. l=0.3m
+  .model c_line tlinp4 (z0mag=75.00 k=7 fscale=1.e10 alpha = 59.9)
+
+
+
+Parameters
+++++++++++
+
+ ========= ============ ============ ===================================================== 
+ Name       Default      Unit         Description                                          
+ ========= ============ ============ ===================================================== 
+ alpha      0.1          dB/m         Attenuation                                          
+ fopt       0            Hz           Optimum frequency for discrete approximation         
+ fscale     0.0          Hz           Scaling frequency for attenuation                    
+ k          1.0                       Effective relative dielectric constant               
+ length     0.1          m            Line length                                          
+ nsect      0                         Enable discrete approximation with n sections        
+ tand       0.0                       Loss tangent                                         
+ z0mag      50.0         Ohms         Magnitude of characteristic impedance                
+ ========= ============ ============ ===================================================== 
 
 vdc
 ---

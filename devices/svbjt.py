@@ -79,7 +79,7 @@ class Device(cir.Element):
 
     In addition we may need 2 additional nodes (plus gnd) if rb is not
     zero: Bi(3) for the internal base node and ib(4) to measure the
-    internal base current and calculate Rb(ib)::
+    internal base current and calculate Rb(ib).
 
     1. If RB == 0::
 

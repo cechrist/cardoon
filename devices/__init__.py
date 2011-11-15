@@ -18,8 +18,8 @@ Examples::
 import autoThermal
 
 # Regular 'netlist' elements must be listed here
-netElemList = ['mosACM', 'resistor', 'capacitor', 'inductor', 
-               'idc', 'vdc', 'diode', 'svdiode', 'mosEKV', 'bjt', 'svbjt']
+netElemList = ['mosACM', 'resistor', 'capacitor', 'inductor', 'idc', 'vdc', 
+               'diode', 'svdiode', 'mosEKV', 'bjt', 'svbjt', 'tlinp4']
 
 # Add here any modules to be imported in addition to netElemList
 __all__ = netElemList + ['cppaddev']

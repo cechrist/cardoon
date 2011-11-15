@@ -14,6 +14,8 @@ x1 2 3 4 LM741
 x2 2 gnd 3 LM741
 x3 2 gnd 3 testckt
 
+tlinp4:tline1 2 gnd 3 gnd 
+
 .subckt LM741 in out gnd
 res:r1 in out r=1kOhm
 cap:c2 out gnd c=1nH
