@@ -1,7 +1,11 @@
 """
-Empty device code to use as a model to create new ones
+:mod:`empty` -- Description goes here
+-------------------------------------
 
-This file is part of the cardoon electronic circuit simulator.
+.. module:: empty
+.. moduleauthor:: <your name>
+
+Empty device code to use as a model to create new ones
 """
 
 import numpy as np
@@ -17,21 +21,21 @@ class Device(cir.Element):
 
     This element does nothing. 
 
-    Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk
+    Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
 
-             Drain 0
-                     o
+                 Drain 0
+                         o
+                         |
+                         |
+                     |---+
                      |
+        Gate 1 o-----|<-----o 3 Bulk
                      |
-                 |---+
-                 |
-    Gate 1 o-----|<-----o 3 Bulk
-                 |
-                 |---+
-                     |
-                     |
-                     o
-            Source 2
+                     |---+
+                         |
+                         |
+                         o
+                Source 2
     """
 
     # devtype is the 'model' name
@@ -51,6 +55,7 @@ class Device(cir.Element):
     # vPortGuess = np.array([0., 0.])
     # needsDelays = True
     # isFreqDefined = True
+    # fPortsDefinition = [(0, 1), (2, 3)]
     # isDCSource = True
     # isTDSource = True
     # isFDSource = True
@@ -214,13 +219,23 @@ class Device(cir.Element):
     #---------------------------------------------------------------
     # Linear frequency-defined device methods (isFreqDefined = True)
     #---------------------------------------------------------------
-
-    def get_ymatrix(self, fvec)
+    def get_ymatrix(self, fvec):
         """
-        Documentation 
+        Returns Y matrix for all frequencies
+        fvec: vector/scalar
+        Frequencies in fvec can not be zero
         """
-        # should return 3-D np.array with Y matrix for each frequency
+        # should return 3-D np.array, one vector per element of Y matrix
         pass
+
+    def get_dc_ymatrix(self):
+        """
+        Returns a matrix with the DC Y parameters
+        """
+        # Return DC Y matrix
+        return np.array([[y11, y12],
+                         [y12, y11]])
+
 
     #---------------------------------------------------------------
     # Sources: DC always is always added to TD or FD

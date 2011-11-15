@@ -406,17 +406,34 @@ Must provide:
 Linear frequency-defined 
 ------------------------
 
-If ``isFreqDefined = True``, then the model must include the following
-function::
+If the attribute ``isFreqDefined = True``, then the model must
+also include the following attribute with the port definitions for the
+frequency-domain part of the device::
 
-    def get_ymatrix(self, fvec)
+  fPortsDefinition = [(0, 1), (2, 3)]
+
+The format of this list is one tuple per port. In the example above,
+there are two ports. The positive terminals are 0 and 2. The other
+terminals, 1 and 3 are (local) references.
+
+The Y parameters are calculated in the following functions::
+
+    def get_ymatrix(self, fvec):
         """
         Documentation 
+	fvec is a frequency vector/scalar, but frequency can not be zero
         """
         # should return 3-D np.array with Y matrix for each frequency
-        pass
+        return ymatrix
     
-This interface is still experimental and may change.
+
+    def get_dc_ymatrix(self):
+        """
+        Returns a matrix with the DC Y parameters
+	"""	
+	return ymatrix
+
+This interface is still experimental and may change. 
 
     
 
