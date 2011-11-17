@@ -6,7 +6,8 @@
 Cardoon Electronic Circuit Simulator
 ====================================
 
-**Contents:**
+Contents
+--------
 
 .. toctree::
    :maxdepth: 1
