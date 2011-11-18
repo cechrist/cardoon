@@ -7,6 +7,7 @@
 
 """
 
+from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 #from globalVars import glVar
@@ -104,18 +105,18 @@ class Analysis(ParamSet):
             # Generate operating point info
             if self.useAD:
                 dev.get_OP(vports)
-            print '******************************************************'
-            print 'Nonlinear device internal source test analysis'
-            print '******************************************************'
-            print dev
-            print '\nPort bias voltages:',  self.ports_bias, 'V'
-            print 'Inner sweep port:', self.sweep_port, ', start:', \
-                self.start, ', stop:', self.stop
+            print('******************************************************')
+            print('Nonlinear device internal source test analysis')
+            print('******************************************************')
+            print(dev)
+            print('\nPort bias voltages:',  self.ports_bias, 'V')
+            print('Inner sweep port:', self.sweep_port, ', start:', 
+                  self.start, ', stop:', self.stop)
 
             if param:
                 npsweep = len(self.param_val)
-                print 'Parameter sweep: {0} = {1}'.format(self.param, 
-                                                          self.param_val)
+                print('Parameter sweep: {0} = {1}'.format(self.param, 
+                                                          self.param_val))
             else:
                 npsweep = 1
             # Print element variables

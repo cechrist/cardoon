@@ -79,6 +79,7 @@ Notes
 
 """
 
+from __future__ import print_function
 from paramset import ParamSet, Model
 from globalVars import glVar
 import copy
@@ -219,15 +220,15 @@ class Element(Node, ParamSet):
         """
         Nicely print parameter list and OP (if any) with values and units
         """
-        print 'Parameter values:\n'
-        print ParamSet.__str__(self)
+        print('Parameter values:\n')
+        print(ParamSet.__str__(self))
         if hasattr(self, 'OP'):
-            print 'Operating point information:\n'
-            print ' Variable  |  Value '
-            print '-------------------------'
+            print('Operating point information:\n')
+            print(' Variable  |  Value ')
+            print('-------------------------')
             # Print operating point information
             for key in sorted(self.OP.iterkeys()):
-                print '{0:^10} | {1}'.format(key, self.OP[key])
+                print('{0:^10} | {1}'.format(key, self.OP[key]))
 
     # Parameter-related functions ----------------------------------------
     def is_set(self, paramName):
