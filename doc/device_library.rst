@@ -96,46 +96,46 @@ above. If xcjc is not 1 but RB is zero, xcjc is ignored.
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- area       1.0                       Current multiplier                                   
- bf         100.0                     Ideal maximum forward beta                           
- br         1.0                       Ideal maximum reverse beta                           
- cjc        0.0          F            Base collector zero bias p-n capacitance             
- cje        0.0          F            Base emitter zero bias p-n capacitance               
- eg         1.11         eV           Badgap voltage                                       
- fc         0.5                       Forward bias depletion capacitor coefficient         
- ikf        0.0          A            Forward-beta high current roll-off knee current      
- ikr        0.0          A            Corner for reverse-beta high current roll off        
- irb        0.0          A            Current at which rb falls to half of rbm             
- isat       1.0e-16      A            Transport saturation current                         
- isc        0.0          A            Base collector leakage saturation current            
- ise        0.0          A            Base-emitter leakage saturation current              
- itf        0.0          A            Transit time dependency on ic                        
- mjc        0.33                      Base collector p-n grading factor                    
- mje        0.33                      Base emitter p-n grading factor                      
- nc         2.0                       Base-collector leakage emission coefficient          
- ne         1.5                       Base-emitter leakage emission coefficient            
- nf         1.0                       Forward current emission coefficient                 
- nr         1.0                       Reverse current emission coefficient                 
- rb         0.0          W            Zero bias base resistance                            
- rbm        0.0          W            Minimum base resistance                              
- temp       None         C            Device temperature                                   
- tf         0.0          S            Ideal forward transit time                           
- tnom       27.0         C            Nominal temperature                                  
- tr         0.0          S            Ideal reverse transit time                           
- type       npn                       Type (npn or pnp)                                    
- vaf        0.0          V            Forward early voltage                                
- var        0.0          V            Reverse early voltage                                
- vjc        0.75         V            Base collector built in potential                    
- vje        0.75         V            Base emitter built in potential                      
- vtf        0.0          V            Transit time dependency on vbc                       
- xcjc       1.0                       Fraction of cbc connected internal to rb             
- xtb        0.0                       Forward and reverse beta temperature coefficient     
- xtf        0.0                       Transit time bias dependence coefficient             
- xti        3.0                       IS temperature effect exponent                       
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ area         1.0                       Current multiplier                                   
+ bf           100.0                     Ideal maximum forward beta                           
+ br           1.0                       Ideal maximum reverse beta                           
+ cjc          0.0          F            Base collector zero bias p-n capacitance             
+ cje          0.0          F            Base emitter zero bias p-n capacitance               
+ eg           1.11         eV           Badgap voltage                                       
+ fc           0.5                       Forward bias depletion capacitor coefficient         
+ ikf          0.0          A            Forward-beta high current roll-off knee current      
+ ikr          0.0          A            Corner for reverse-beta high current roll off        
+ irb          0.0          A            Current at which rb falls to half of rbm             
+ isat         1.0e-16      A            Transport saturation current                         
+ isc          0.0          A            Base collector leakage saturation current            
+ ise          0.0          A            Base-emitter leakage saturation current              
+ itf          0.0          A            Transit time dependency on ic                        
+ mjc          0.33                      Base collector p-n grading factor                    
+ mje          0.33                      Base emitter p-n grading factor                      
+ nc           2.0                       Base-collector leakage emission coefficient          
+ ne           1.5                       Base-emitter leakage emission coefficient            
+ nf           1.0                       Forward current emission coefficient                 
+ nr           1.0                       Reverse current emission coefficient                 
+ rb           0.0          W            Zero bias base resistance                            
+ rbm          0.0          W            Minimum base resistance                              
+ temp         None         C            Device temperature                                   
+ tf           0.0          S            Ideal forward transit time                           
+ tnom         27.0         C            Nominal temperature                                  
+ tr           0.0          S            Ideal reverse transit time                           
+ type         npn                       Type (npn or pnp)                                    
+ vaf          0.0          V            Forward early voltage                                
+ var          0.0          V            Reverse early voltage                                
+ vjc          0.75         V            Base collector built in potential                    
+ vje          0.75         V            Base emitter built in potential                      
+ vtf          0.0          V            Transit time dependency on vbc                       
+ xcjc         1.0                       Fraction of cbc connected internal to rb             
+ xtb          0.0                       Forward and reverse beta temperature coefficient     
+ xtf          0.0                       Transit time bias dependence coefficient             
+ xti          3.0                       IS temperature effect exponent                       
+ =========== ============ ============ ===================================================== 
 
 bjt_t
 -----
@@ -161,11 +161,11 @@ Netlist example::
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- c          0.0          F            Capacitance                                          
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ c            0.0          F            Capacitance                                          
+ =========== ============ ============ ===================================================== 
 
 diode
 -----
@@ -198,27 +198,27 @@ Netlist examples::
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- af         1.0                       Flicker noise exponent                               
- area       1.0                       Area multiplier                                      
- bv         0.0          V            Breakdown voltage                                    
- cj0        0.0          F            Zero-bias depletion capacitance                      
- eg0        1.11         eV           Energy bandgap                                       
- fc         0.5                       Coefficient for forward-bias depletion capacitance   
- ibv        1.0e-10      A            Current at reverse breakdown voltage                 
- isat       1.0e-14      A            Saturation current                                   
- kf         0.0                       Flicker noise coefficient                            
- m          0.5                       PN junction grading coefficient                      
- n          1.0                       Emission coefficient                                 
- rs         0.0          Ohms         Series resistance                                    
- temp       None         C            Device temperature                                   
- tnom       27.0         C            Nominal temperature                                  
- tt         0.0          s            Transit time                                         
- vj         1.0          V            Built-in junction potential                          
- xti        3.0                       Is temperature exponent                              
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ af           1.0                       Flicker noise exponent                               
+ area         1.0                       Area multiplier                                      
+ bv           0.0          V            Breakdown voltage                                    
+ cj0          0.0          F            Zero-bias depletion capacitance                      
+ eg0          1.11         eV           Energy bandgap                                       
+ fc           0.5                       Coefficient for forward-bias depletion capacitance   
+ ibv          1.0e-10      A            Current at reverse breakdown voltage                 
+ isat         1.0e-14      A            Saturation current                                   
+ kf           0.0                       Flicker noise coefficient                            
+ m            0.5                       PN junction grading coefficient                      
+ n            1.0                       Emission coefficient                                 
+ rs           0.0          Ohms         Series resistance                                    
+ temp         None         C            Device temperature                                   
+ tnom         27.0         C            Nominal temperature                                  
+ tt           0.0          s            Transit time                                         
+ vj           1.0          V            Built-in junction potential                          
+ xti          3.0                       Is temperature exponent                              
+ =========== ============ ============ ===================================================== 
 
 diode_t
 -------
@@ -247,15 +247,15 @@ Netlist example::
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- idc        0.0          A            DC current                                           
- tc1        0.0          1/C          Current temperature coefficient 1                    
- tc2        0.0          1/C^2        Current temperature coefficient 2                    
- temp       None         C            Device temperature                                   
- tnom       27.0         C            Nominal temperature                                  
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ idc          0.0          A            DC current                                           
+ tc1          0.0          1/C          Current temperature coefficient 1                    
+ tc2          0.0          1/C^2        Current temperature coefficient 2                    
+ temp         None         C            Device temperature                                   
+ tnom         27.0         C            Nominal temperature                                  
+ =========== ============ ============ ===================================================== 
 
 ind
 ---
@@ -296,11 +296,11 @@ plus uses gnd)::
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- l          0.0          H            Inductance                                           
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ l            0.0          H            Inductance                                           
+ =========== ============ ============ ===================================================== 
 
 mosacm
 ------
@@ -329,20 +329,20 @@ Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- gamma      0.631        V^(1/2)      Bulk Threshold Parameter                             
- kp         0.0005106    A/V^2        Transconductance Parameter                           
- l          1.0e-05      m            Channel length                                       
- phi        0.55         V            Surface Potential                                    
- temp       None         C            Device temperature                                   
- theta      0.814        1/V          Mobility Saturation Parameter                        
- tox        7.5e-09      m            Oxide Thickness                                      
- vsat       80000.0      m/s          Saturation Velocity                                  
- vt0        0.532        V            Threshold Voltage                                    
- w          1.0e-05      m            Channel width                                        
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ gamma        0.631        V^(1/2)      Bulk Threshold Parameter                             
+ kp           0.0005106    A/V^2        Transconductance Parameter                           
+ l            1.0e-05      m            Channel length                                       
+ phi          0.55         V            Surface Potential                                    
+ temp         None         C            Device temperature                                   
+ theta        0.814        1/V          Mobility Saturation Parameter                        
+ tox          7.5e-09      m            Oxide Thickness                                      
+ vsat         80000.0      m/s          Saturation Velocity                                  
+ vt0          0.532        V            Threshold Voltage                                    
+ w            1.0e-05      m            Channel width                                        
+ =========== ============ ============ ===================================================== 
 
 mosacm_t
 --------
@@ -440,52 +440,52 @@ mode, it is added to the source current.
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- Lambda     0.5                       Channel-length modulation                            
- af         1.0                       Flicker noise exponent                               
- agamma     0.0          V^(1/2)m     Area related body effect mismatch parameter          
- akp        0.0          m            Area related gain mismatch parameter                 
- avto       0.0          Vm           Area related threshold voltage mismatch parameter    
- bex        -1.5                      Mobility temperature exponent                        
- cox        0.0007       F/m^2        Gate oxide capacitance per area                      
- dl         0.0          m            Channel length correction                            
- dw         0.0          m            Channel width correction                             
- e0         1.0e+12      V/m          Mobility reduction coefficient                       
- ekvint     0                         Interpolation function (0: accurate, 1: simple)      
- gamma      1.0          V^1/2        Body effect parameter                                
- iba        0.0          1/m          First impact ionization coefficient                  
- ibb        3.0e+08      V/m          Second impact ionization coefficient                 
- ibbt       0.0009       1/K          Temperature coefficient for IBB                      
- ibn        1.0                       Saturation voltage factor for impact ionization      
- kf         0.0                       Flicker noise coefficient                            
- kp         5.0e-05      A/V^2        Transconductance parameter                           
- l          1.0e-06      m            Gate length                                          
- leta       0.1                       Short-channel effect coefficient                     
- lk         2.9e-07      m            Reverse short channel effect characteristic length   
- np         1.0                       Parallel multiple device number                      
- ns         1.0                       Serial multiple device number                        
- nsub       None         1/cm^3       Channel doping                                       
- phi        0.7          V            Bulk Fermi potential                                 
- q0         0.0          A.s/m^2      Reverse short channel effect peak charge density     
- satlim     54.5982                   Ratio defining the saturation limit if/ir            
- tcv        0.001        V/K          Threshold voltage temperature coefficient            
- temp       None         C            Device temperature                                   
- theta      0.0          1/V          Mobility recuction coefficient                       
- tnom       27.0         C            Nominal temperature of model parameters              
- tox        None         m            Oxide thickness                                      
- type       n                         N- or P-channel MOS (n or p)                         
- u0         None         cm^2/(V.s)   Low-field mobility                                   
- ucex       0.8                       Longitudinal critical field temperature exponent     
- ucrit      2.0e+06      V/m          Longitudinal critical field                          
- vfb        None         V            Flat-band voltage                                    
- vmax       None         m/s          Saturation velocity                                  
- vt0        0.5          V            Long_channel threshold voltage                       
- w          1.0e-06      m            Gate width                                           
- weta       0.25                      Narrow-channel effect coefficient                    
- xj         1.0e-07      m            Junction depth                                       
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ Lambda       0.5                       Channel-length modulation                            
+ af           1.0                       Flicker noise exponent                               
+ agamma       0.0          V^(1/2)m     Area related body effect mismatch parameter          
+ akp          0.0          m            Area related gain mismatch parameter                 
+ avto         0.0          Vm           Area related threshold voltage mismatch parameter    
+ bex          -1.5                      Mobility temperature exponent                        
+ cox          0.0007       F/m^2        Gate oxide capacitance per area                      
+ dl           0.0          m            Channel length correction                            
+ dw           0.0          m            Channel width correction                             
+ e0           1.0e+12      V/m          Mobility reduction coefficient                       
+ ekvint       0                         Interpolation function (0: accurate, 1: simple)      
+ gamma        1.0          V^1/2        Body effect parameter                                
+ iba          0.0          1/m          First impact ionization coefficient                  
+ ibb          3.0e+08      V/m          Second impact ionization coefficient                 
+ ibbt         0.0009       1/K          Temperature coefficient for IBB                      
+ ibn          1.0                       Saturation voltage factor for impact ionization      
+ kf           0.0                       Flicker noise coefficient                            
+ kp           5.0e-05      A/V^2        Transconductance parameter                           
+ l            1.0e-06      m            Gate length                                          
+ leta         0.1                       Short-channel effect coefficient                     
+ lk           2.9e-07      m            Reverse short channel effect characteristic length   
+ np           1.0                       Parallel multiple device number                      
+ ns           1.0                       Serial multiple device number                        
+ nsub         None         1/cm^3       Channel doping                                       
+ phi          0.7          V            Bulk Fermi potential                                 
+ q0           0.0          A.s/m^2      Reverse short channel effect peak charge density     
+ satlim       54.5982                   Ratio defining the saturation limit if/ir            
+ tcv          0.001        V/K          Threshold voltage temperature coefficient            
+ temp         None         C            Device temperature                                   
+ theta        0.0          1/V          Mobility recuction coefficient                       
+ tnom         27.0         C            Nominal temperature of model parameters              
+ tox          None         m            Oxide thickness                                      
+ type         n                         N- or P-channel MOS (n or p)                         
+ u0           None         cm^2/(V.s)   Low-field mobility                                   
+ ucex         0.8                       Longitudinal critical field temperature exponent     
+ ucrit        2.0e+06      V/m          Longitudinal critical field                          
+ vfb          None         V            Flat-band voltage                                    
+ vmax         None         m/s          Saturation velocity                                  
+ vt0          0.5          V            Long_channel threshold voltage                       
+ w            1.0e-06      m            Gate width                                           
+ weta         0.25                      Narrow-channel effect coefficient                    
+ xj           1.0e-07      m            Junction depth                                       
+ =========== ============ ============ ===================================================== 
 
 mosekv_t
 --------
@@ -517,19 +517,19 @@ Netlist examples::
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- l          0.0          m            Lenght                                               
- narrow     0.0          m            Narrowing due to side etching                        
- r          0.0          Ohms         Resistance                                           
- rsh        0.0          Ohms         Sheet resistance                                     
- tc1        0.0          1/C          Temperature coefficient 1                            
- tc2        0.0          1/C^2        Temperature coefficient 2                            
- temp       None         C            Device temperature                                   
- tnom       27.0         C            Nominal temperature                                  
- w          0.0          m            Width                                                
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ l            0.0          m            Lenght                                               
+ narrow       0.0          m            Narrowing due to side etching                        
+ r            0.0          Ohms         Resistance                                           
+ rsh          0.0          Ohms         Sheet resistance                                     
+ tc1          0.0          1/C          Temperature coefficient 1                            
+ tc2          0.0          1/C^2        Temperature coefficient 2                            
+ temp         None         C            Device temperature                                   
+ tnom         27.0         C            Nominal temperature                                  
+ w            0.0          m            Width                                                
+ =========== ============ ============ ===================================================== 
 
 res_t
 -----
@@ -654,46 +654,46 @@ above. If xcjc is not 1 but RB is zero, xcjc is ignored.
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- area       1.0                       Current multiplier                                   
- bf         100.0                     Ideal maximum forward beta                           
- br         1.0                       Ideal maximum reverse beta                           
- cjc        0.0          F            Base collector zero bias p-n capacitance             
- cje        0.0          F            Base emitter zero bias p-n capacitance               
- eg         1.11         eV           Badgap voltage                                       
- fc         0.5                       Forward bias depletion capacitor coefficient         
- ikf        0.0          A            Forward-beta high current roll-off knee current      
- ikr        0.0          A            Corner for reverse-beta high current roll off        
- irb        0.0          A            Current at which rb falls to half of rbm             
- isat       1.0e-16      A            Transport saturation current                         
- isc        0.0          A            Base collector leakage saturation current            
- ise        0.0          A            Base-emitter leakage saturation current              
- itf        0.0          A            Transit time dependency on ic                        
- mjc        0.33                      Base collector p-n grading factor                    
- mje        0.33                      Base emitter p-n grading factor                      
- nc         2.0                       Base-collector leakage emission coefficient          
- ne         1.5                       Base-emitter leakage emission coefficient            
- nf         1.0                       Forward current emission coefficient                 
- nr         1.0                       Reverse current emission coefficient                 
- rb         0.0          W            Zero bias base resistance                            
- rbm        0.0          W            Minimum base resistance                              
- temp       None         C            Device temperature                                   
- tf         0.0          S            Ideal forward transit time                           
- tnom       27.0         C            Nominal temperature                                  
- tr         0.0          S            Ideal reverse transit time                           
- type       npn                       Type (npn or pnp)                                    
- vaf        0.0          V            Forward early voltage                                
- var        0.0          V            Reverse early voltage                                
- vjc        0.75         V            Base collector built in potential                    
- vje        0.75         V            Base emitter built in potential                      
- vtf        0.0          V            Transit time dependency on vbc                       
- xcjc       1.0                       Fraction of cbc connected internal to rb             
- xtb        0.0                       Forward and reverse beta temperature coefficient     
- xtf        0.0                       Transit time bias dependence coefficient             
- xti        3.0                       IS temperature effect exponent                       
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ area         1.0                       Current multiplier                                   
+ bf           100.0                     Ideal maximum forward beta                           
+ br           1.0                       Ideal maximum reverse beta                           
+ cjc          0.0          F            Base collector zero bias p-n capacitance             
+ cje          0.0          F            Base emitter zero bias p-n capacitance               
+ eg           1.11         eV           Badgap voltage                                       
+ fc           0.5                       Forward bias depletion capacitor coefficient         
+ ikf          0.0          A            Forward-beta high current roll-off knee current      
+ ikr          0.0          A            Corner for reverse-beta high current roll off        
+ irb          0.0          A            Current at which rb falls to half of rbm             
+ isat         1.0e-16      A            Transport saturation current                         
+ isc          0.0          A            Base collector leakage saturation current            
+ ise          0.0          A            Base-emitter leakage saturation current              
+ itf          0.0          A            Transit time dependency on ic                        
+ mjc          0.33                      Base collector p-n grading factor                    
+ mje          0.33                      Base emitter p-n grading factor                      
+ nc           2.0                       Base-collector leakage emission coefficient          
+ ne           1.5                       Base-emitter leakage emission coefficient            
+ nf           1.0                       Forward current emission coefficient                 
+ nr           1.0                       Reverse current emission coefficient                 
+ rb           0.0          W            Zero bias base resistance                            
+ rbm          0.0          W            Minimum base resistance                              
+ temp         None         C            Device temperature                                   
+ tf           0.0          S            Ideal forward transit time                           
+ tnom         27.0         C            Nominal temperature                                  
+ tr           0.0          S            Ideal reverse transit time                           
+ type         npn                       Type (npn or pnp)                                    
+ vaf          0.0          V            Forward early voltage                                
+ var          0.0          V            Reverse early voltage                                
+ vjc          0.75         V            Base collector built in potential                    
+ vje          0.75         V            Base emitter built in potential                      
+ vtf          0.0          V            Transit time dependency on vbc                       
+ xcjc         1.0                       Fraction of cbc connected internal to rb             
+ xtb          0.0                       Forward and reverse beta temperature coefficient     
+ xtf          0.0                       Transit time bias dependence coefficient             
+ xti          3.0                       IS temperature effect exponent                       
+ =========== ============ ============ ===================================================== 
 
 svbjt_t
 -------
@@ -759,27 +759,27 @@ Terminal 4 not present if Rs = 0
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- af         1.0                       Flicker noise exponent                               
- area       1.0                       Area multiplier                                      
- bv         0.0          V            Breakdown voltage                                    
- cj0        0.0          F            Zero-bias depletion capacitance                      
- eg0        1.11         eV           Energy bandgap                                       
- fc         0.5                       Coefficient for forward-bias depletion capacitance   
- ibv        1.0e-10      A            Current at reverse breakdown voltage                 
- isat       1.0e-14      A            Saturation current                                   
- kf         0.0                       Flicker noise coefficient                            
- m          0.5                       PN junction grading coefficient                      
- n          1.0                       Emission coefficient                                 
- rs         0.0          Ohms         Series resistance                                    
- temp       None         C            Device temperature                                   
- tnom       27.0         C            Nominal temperature                                  
- tt         0.0          s            Transit time                                         
- vj         1.0          V            Built-in junction potential                          
- xti        3.0                       Is temperature exponent                              
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ af           1.0                       Flicker noise exponent                               
+ area         1.0                       Area multiplier                                      
+ bv           0.0          V            Breakdown voltage                                    
+ cj0          0.0          F            Zero-bias depletion capacitance                      
+ eg0          1.11         eV           Energy bandgap                                       
+ fc           0.5                       Coefficient for forward-bias depletion capacitance   
+ ibv          1.0e-10      A            Current at reverse breakdown voltage                 
+ isat         1.0e-14      A            Saturation current                                   
+ kf           0.0                       Flicker noise coefficient                            
+ m            0.5                       PN junction grading coefficient                      
+ n            1.0                       Emission coefficient                                 
+ rs           0.0          Ohms         Series resistance                                    
+ temp         None         C            Device temperature                                   
+ tnom         27.0         C            Nominal temperature                                  
+ tt           0.0          s            Transit time                                         
+ vj           1.0          V            Built-in junction potential                          
+ xti          3.0                       Is temperature exponent                              
+ =========== ============ ============ ===================================================== 
 
 svdiode_t
 ---------
@@ -816,14 +816,14 @@ The model is symmetric. The schematic for Port 1 is shown here::
 
            I1                              v1+ + v1-          v1-
           --->                               ---->     v1+   ---->
-      0 o--------+                          +------------+----------+  4
+      0 o--------,                          ,------------+----------,  4
    +             |                          |            |          |  
-                 |                          |           +-+  s12 v2+|  
-  V1            -|- (v1+ - s12 v2+)/Z0     ---          | |        -|- 
-               ( V )                      ( ^ )       1 | |       ( V )
-   -            ---                    V1  -|-          +-+        --- 
+                 |                          |           ,-,  s12 v2+|  
+  V1            /|\ (v1+ - s12 v2+)/Z0     /^\          | |        /|\ 
+               ( | )                      ( | )       1 | |       ( | )
+   -            \V/                    V1  \|/          '-'        \V/ 
                  |                          |            |          |  
-      1 o--------+                          +------------+----------+  6
+      1 o--------'                          '------------+----------'  6
                                                          |
                                                         ---
                                                          -
@@ -831,29 +831,29 @@ The model is symmetric. The schematic for Port 1 is shown here::
 Note: for a matched transmission line, s11 = s22 = 0 and s12 =
 s21. The equivalent 'Y' matrix is::
 
-           [              1/Z0    -s12/Z0 ]
-           [                              ]
-           [             -s21/Z0    1/Z0  ]           
-       Y = [                              ]
-           [ -1            1        s12   ]
-           [                              ]
-           [        -1    s21        1    ]
+           |              1/Z0    -s12/Z0 |
+           |                              |
+           |             -s21/Z0    1/Z0  |           
+       Y = |                              |
+           | -1            1        s12   |
+           |                              |
+           |        -1    s21        1    |
 
 
 
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- alpha      0.1          dB/m         Attenuation                                          
- fscale     0.0          Hz           Scaling frequency for attenuation                    
- k          1.0                       Effective relative dielectric constant               
- length     0.1          m            Line length                                          
- tand       0.0                       Loss tangent                                         
- z0mag      50.0         Ohms         Magnitude of characteristic impedance                
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ alpha        0.1          dB/m         Attenuation                                          
+ fscale       0.0          Hz           Scaling frequency for attenuation                    
+ k            1.0                       Effective relative dielectric constant               
+ length       0.1          m            Line length                                          
+ tand         0.0                       Loss tangent                                         
+ z0mag        50.0         Ohms         Magnitude of characteristic impedance                
+ =========== ============ ============ ===================================================== 
 
 tlinpy4
 -------
@@ -886,14 +886,14 @@ Internal Topology
 
 The internal schematic is the following::
              
-      0 o----+------+               +-----+-------o 2
+      0 o----+------,               ,-----+-------o 2
    +         |      |               |     |              +
-            +-+     |               |    +-+ 
-  v1        | |    -|- y12 v2      -|-   | |             v2
-        y11 | |   ( V )           ( V )  | | y22
-   -        +-+    ---      y21 v1 ---   +-+             -
+            ,-,     |               |    ,-, 
+  v1        | |    /|\ y12 v2      /|\   | |             v2
+        y11 | |   ( | )           ( | )  | | y22
+   -        '-'    \V/      y21 v1 \V/   '-'             -
              |      |               |     |  
-      1 o----+------+               +-----+-------o 3
+      1 o----+------'               '-----+-------o 3
 
                    y11 = y22 , y12 = y21
 
@@ -902,18 +902,18 @@ The internal schematic is the following::
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- alpha      0.1          dB/m         Attenuation                                          
- fopt       0            Hz           Optimum frequency for discrete approximation         
- fscale     0.0          Hz           Scaling frequency for attenuation                    
- k          1.0                       Effective relative dielectric constant               
- length     0.1          m            Line length                                          
- nsect      0                         Enable discrete approximation with n sections        
- tand       0.0                       Loss tangent                                         
- z0mag      50.0         Ohms         Magnitude of characteristic impedance                
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ alpha        0.1          dB/m         Attenuation                                          
+ fopt         0            Hz           Optimum frequency for discrete approximation         
+ fscale       0.0          Hz           Scaling frequency for attenuation                    
+ k            1.0                       Effective relative dielectric constant               
+ length       0.1          m            Line length                                          
+ nsect        0                         Enable discrete approximation with n sections        
+ tand         0.0                       Loss tangent                                         
+ z0mag        50.0         Ohms         Magnitude of characteristic impedance                
+ =========== ============ ============ ===================================================== 
 
 vdc
 ---
@@ -955,14 +955,14 @@ Implemented using a gyrator if Rint is zero::
 Parameters
 ++++++++++
 
- ========= ============ ============ ===================================================== 
- Name       Default      Unit         Description                                          
- ========= ============ ============ ===================================================== 
- rint       0.0          Ohms         Internal resistance                                  
- tc1        0.0          1/C          Voltage temperature coefficient 1                    
- tc2        0.0          1/C^2        Voltage temperature coefficient 2                    
- temp       None         C            Device temperature                                   
- tnom       27.0         C            Nominal temperature                                  
- vdc        0.0          V            DC current                                           
- ========= ============ ============ ===================================================== 
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ rint         0.0          Ohms         Internal resistance                                  
+ tc1          0.0          1/C          Voltage temperature coefficient 1                    
+ tc2          0.0          1/C^2        Voltage temperature coefficient 2                    
+ temp         None         C            Device temperature                                   
+ tnom         27.0         C            Nominal temperature                                  
+ vdc          0.0          V            DC current                                           
+ =========== ============ ============ ===================================================== 
 

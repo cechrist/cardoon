@@ -15,6 +15,7 @@ Contents
    intro
    usage
    device_library
+   analysis_library
    coding
    adding_devices
    circuit_ref

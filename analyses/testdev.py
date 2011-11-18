@@ -1,19 +1,10 @@
 """
-Test equations of one nonlinear device.
+:mod:`testdev` -- Test equations of one nonlinear device
+--------------------------------------------------------
 
-The advantage of using this method over a DC sweep is that no Newton
-iterations are needed.
+.. module:: testdev
+.. moduleauthor:: Carlos Christoffersen
 
--------------------------------------------------------------------
-Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
-
-This file is part of the celery electronic circuit simulator.
-
-Celery is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
 """
 
 import numpy as np
@@ -24,9 +15,19 @@ from analysis import AnalysisError
 
 class Analysis(ParamSet):
     """
-    testdev: Test nonlinear device internal source functions:
+    Test equations of one nonlinear device
 
-    process_params(), set_temp_vars(), eval_cqs() and eval()
+    One advantage of using this method over a DC sweep is that no
+    Newton iterations are needed. The following internal functions are
+    tested here:
+
+    * process_params()
+    * set_temp_vars()
+    * eval_cqs()
+    * eval()
+    * get_OP()
+    * power() (for electrothermal models)
+
     """
 
     # antype is the netlist name of the analysis: .analysis tran tstart=0 ...
