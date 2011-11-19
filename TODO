@@ -1,0 +1,17 @@
+
+List of outstanding issues
+--------------------------
+
+* Add "+" notation for multiple lines in parser
+
+* Review device interface: separate q and i for eval_cqs() and review
+  noise/frequency defined return types.
+
+* Review the need for nodenames in internal terminals
+
+* Add units to nodes
+
+* Review gnd node policy in circuit
+
+* Add NAM method in analysis
+

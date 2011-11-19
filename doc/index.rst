@@ -19,7 +19,8 @@ Contents
    coding
    adding_devices
    circuit_ref
-
+   design
+   
 
 Indices and tables
 ==================
