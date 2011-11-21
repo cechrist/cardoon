@@ -184,13 +184,12 @@ class Device(cir.Element):
         # If qox code is disabled, qox is zero by default
         self.qox = 0.
 
-    def process_params(self, circuit):
-        """
-        Called once the external terminals have been connected and the
-        non-default parameters have been set. Make sanity checks
-        here. Internal terminals/devices should also be defined here.
-        Raise cir.CircuitError if a fatal error is found.
-        """
+    def process_params(self):
+        # Called once the external terminals have been connected and
+        # the non-default parameters have been set. Make sanity checks
+        # here. Internal terminals/devices should also be defined
+        # here.  Raise cir.CircuitError if a fatal error is found.
+
         # import pdb; pdb.set_trace()
         # Any value other than zero uses the simple function
         if self.ekvint:

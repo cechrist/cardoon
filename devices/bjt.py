@@ -78,24 +78,24 @@ class Device(cir.Element):
                        ib          | | | ibc(vbc)     |
                                     \|/               |       
                      ,---,           |               /|\       
-         (B) 1 o----( --> )----------+ 3 (Bi)       | | | ice    
-                     `---`           |               \V/      
-                                    /|\               |       
-                                   | | | ibe(vbe)     |
-                                    \V/               |
-                                     |                |
-                     gyr v13         +----------------+--o 2 (E)
-                                  
-                      ,---,       
+         (B) 1 o-+--( --> )----------+ 3 (Bi)       | | | ice    
+                 |   `---`           |               \V/      
+                 |                  /|\               |       
+                 |                 | | | ibe(vbe)     |
+                 |                  \V/               |
+                 |                   |                |
+                 |   gyr v13         +----------------+--o 2 (E)
+                 |                
+                 |    ,---,       
                  +---( <-- ) -----+
                  |    `---`       |
                  |                | ib/gyr
-         5 (gnd) |                |
+                 |                |
                  |    ,---,       | 4 (ib)
-                 +---( <-- )------+
-                 |    `---`       
-                ---               
-                 V    gyr ib Rb(ib)
+                 +---( --> )------+
+                      `---`       
+
+                    gyr ib Rb(ib)
                                            
     Charge sources are connected between internal nodes defined
     above. If xcjc is not 1 but RB is zero, xcjc is ignored.
@@ -175,13 +175,13 @@ class Device(cir.Element):
         self.jile = Junction()
         self.jilc = Junction()
 
-    def process_params(self, circuit):
+    def process_params(self):
         """
         Adjusts internal topology and makes preliminary calculations
-        according to parameters.
+        according to parameters
         """
         # Remove internal terminals
-        self.clean_internal_terms(circuit)
+        self.clean_internal_terms()
         # Remove tape if present
         ad.delete_tape(self)
 
@@ -190,16 +190,14 @@ class Device(cir.Element):
         self._qbx = False
         if self.rb:
             # rb is not zero: add internal terminals
-            termList = [self.nodeName + ':Bi', self.nodeName + ':ib', 'gnd']
-            # Connect required nodes
-            circuit.connect_internal(self, termList)
+            self.add_internal_terms(2)
             # Linear VCCS for gyrator(s)
-            linearVCCS = [((1, 3), (4, 5), glVar.gyr),
-                          ((4, 5), (1, 3), glVar.gyr)]
+            linearVCCS = [((1, 3), (4, 1), glVar.gyr),
+                          ((4, 1), (1, 3), glVar.gyr)]
             # ibe, ibc, ice, Rb(ib) * ib
-            self.csOutPorts = [(3, 2), (3, 0), (0, 2), (5, 4)]
+            self.csOutPorts = [(3, 2), (3, 0), (0, 2), (1, 4)]
             # Controling voltages are vbie, vbic and gyrator port
-            self.controlPorts = [(3, 2), (3, 0), (4, 5)]
+            self.controlPorts = [(3, 2), (3, 0), (4, 1)]
             self.vPortGuess = np.array([0., 0., 0.])
             # qbie, qbic
             self.qsOutPorts = [(3, 2), (3, 0)]

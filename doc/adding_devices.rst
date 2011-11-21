@@ -48,12 +48,10 @@ class defined as follows::
             cir.Element.__init__(self, instanceName)
     
     
-        def process_params(self, circuit):
+        def process_params(self):
             """
 	    Prepares the device for simulation
 	    
-	    circuit: reference to container circuit
-
             Raises cir.CircuitError if a fatal error is found
             """
             # if device is based on cppaddev, make sure tape is re-generated
@@ -62,7 +60,11 @@ class defined as follows::
             # Use the following to make sure connections to internal
             # terminals are not repeated if this process_params is called
             # many times. 
-            self.clean_internal_terms(circuit)
+            self.clean_internal_terms()
+
+	    # This adds 2 internal terminals (in addition to any
+	    # existing ones): 
+	    self.add_internal_terms(2)
     
             # Ambient temperature (temp) by default set to 27 C 
             # Calculate temperature-dependent variables (if any)
@@ -98,7 +100,7 @@ for diode device::
             # Model statement
             .model dmodel1 diode (cj0 = 10pF tt=1ps)
     
-    
+
 Attributes and functions description
 ------------------------------------
 

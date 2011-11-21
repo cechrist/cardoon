@@ -64,10 +64,10 @@ class Device(cir.Element):
             | | | gyr v2               | | | gyr vbc(x)
              \V/                        \|/  
               |                          |
-              +--------------------------+-----------------+ 5 (gnd)
-              |                          |                 |
-             /^\                        /|\               ---
-            | | | gyr v1               | | | gyr vbe(x)    -
+              +--------------------------+ 1 (local reference)
+              |                          |               
+             /^\                        /|\              
+            | | | gyr v1               | | | gyr vbe(x)  
              \|/                        \V/  
               |                          |
               +--------------------------+
@@ -105,24 +105,24 @@ class Device(cir.Element):
                        ib      v2  | | | ibc(x2)      |
                                     \|/               |       
                      ,---,      +    |               /|\       
-         (B) 1 o----( --> )----------+ 3 (Bi)       | | | ice(x1,x2)
-                     `---`      +    |               \V/      
-                                    /|\               |       
-                               v1  | | | ibe(x1)      |
-                                    \V/               |
-                                -    |                |
-                     gyr v13         +----------------+--o 2 (E)
-                                  
-                      ,---,       
+         (B) 1 o-+--( --> )----------+ 5 (Bi)       | | | ice(x1,x2)
+                 |   `---`      +    |               \V/      
+                 |                  /|\               |       
+                 |             v1  | | | ibe(x1)      |
+                 |                  \V/               |
+                 |              -    |                |
+                 |   gyr v13         +----------------+--o 2 (E)
+                 |                
+                 |    ,---,       
                  +---( <-- ) -----+
                  |    `---`       |
                  |                | ib/gyr
-         5 (gnd) |                |
-                 |    ,---,       | 4 (ib)
-                 +---( <-- )------+
-                 |    `---`       
-                ---               
-                 V    gyr ib Rb()
+                 |                |
+                 |    ,---,       | 6 (ib)
+                 +---( --> )------+
+                      `---`       
+
+                    gyr ib Rb(ib)
                                            
     Charge sources are connected between internal nodes defined
     above. If xcjc is not 1 but RB is zero, xcjc is ignored.
@@ -182,9 +182,9 @@ class Device(cir.Element):
 
     # Default configuration assumes rb == 0
     # ibe, vbe, ibc, vbc, ice 
-    csOutPorts = [(1, 2), (5, 4), (1, 0), (5, 3), (0, 2)]
+    csOutPorts = [(1, 2), (1, 4), (1, 0), (1, 3), (0, 2)]
     # Controling voltages are x1, x2
-    controlPorts = [(4, 5), (3, 5)]
+    controlPorts = [(4, 1), (3, 1)]
     vPortGuess = np.array([0., 0.])
     # qbe, qbc
     qsOutPorts = [(3, 2), (3, 0)]
@@ -201,13 +201,13 @@ class Device(cir.Element):
         self.jile = Junction()
         self.jilc = Junction()
 
-    def process_params(self, circuit):
+    def process_params(self):
         """
         Adjusts internal topology and makes preliminary calculations
         according to parameters.
         """
         # Remove internal terminals
-        self.clean_internal_terms(circuit)
+        self.clean_internal_terms()
         # Remove tape if present
         ad.delete_tape(self)
 
@@ -216,18 +216,16 @@ class Device(cir.Element):
         self._qbx = False
         if self.rb:
             # rb is not zero: add internal terminals
-            termList = [self.nodeName + ':Bi', self.nodeName + ':ib', 'gnd']
-            # Connect required nodes
-            circuit.connect_internal(self, termList)
+            self.add_internal_terms(2)
             # Linear VCCS for gyrator(s)
-            linearVCCS = [((1, 6), (7, 5), glVar.gyr),
-                          ((7, 5), (1, 6), glVar.gyr)]
-            # ibe, ibc, ice, Rb(ib) * ib
-            self.csOutPorts = [(6, 2), (5, 4), (6, 0), (5, 3), (0, 2), (5, 7)]
-            # Controling voltages are vbie, vbic and gyrator port
-            self.controlPorts = [(3, 2), (3, 0), (4, 5)]
+            linearVCCS = [((1, 5), (6, 1), glVar.gyr),
+                          ((6, 1), (1, 5), glVar.gyr)]
+            # ibe, vbe, ibc, vbc, ice, Rb(ib) * ib
+            self.csOutPorts = [(5, 0), (1, 4), (5, 2), (1, 3), (0, 2), (1, 6)]
+            # Controling voltages are x1, x2 and gyrator port
+            self.controlPorts = [(4, 1), (3, 1), (6, 1)]
             # qbie, qbic
-            self.qsOutPorts = [(6, 2), (6, 0)]
+            self.qsOutPorts = [(5, 2), (5, 0)]
             # Now check if Cjbc must be splitted (since rb != 0)
             if self.cjc and (self.xcjc < 1.):
                 # add extra charge source and control voltage

@@ -48,10 +48,8 @@ class Device(cir.Element):
                    ( | )                      ( | )       1 | |       ( | )
        -            \V/                    V1  \|/          '-'        \V/ 
                      |                          |            |          |  
-          1 o--------'                          '------------+----------'  6
-                                                             |
-                                                            ---
-                                                             -
+          1 o--------+--------------------------+------------+----------'   
+
 
     Note: for a matched transmission line, s11 = s22 = 0 and s12 =
     s21. The equivalent 'Y' matrix is::
@@ -70,7 +68,7 @@ class Device(cir.Element):
     devType = "tlinps4"
     numTerms = 4
     isFreqDefined = True
-    fPortsDefinition = [(0, 1), (2, 3), (4, 6), (5, 6)]
+    fPortsDefinition = [(0, 1), (2, 3), (4, 1), (5, 3)]
 
     # Define parameters in a dictionary as follows: parameter name is
     # the key. Parameters are converted to class attributes after
@@ -93,24 +91,19 @@ class Device(cir.Element):
         # Add statements as needed
 
 
-    def process_params(self, circuit):
+    def process_params(self):
         """
-        Process parameters
-
-        circuit: circuit instance that contains the element
-
         This should be called each time parameter values are changed.
         """
-        # Called once the external terminals have been connected and the
-        # non-default parameters have been set. Make sanity checks
-        # here. Internal terminals/devices should also be defined here
-        # (use circuit reference for this).  Raise cir.CircuitError if a fatal
-        # error is found.
+        # Called once the external terminals have been connected and
+        # the non-default parameters have been set. Make sanity checks
+        # here. Internal terminals/devices should also be defined
+        # here.  Raise cir.CircuitError if a fatal error is found.
 
         # Use the following to make sure connections to internal
         # terminals are not repeated if this process_params is called
         # many times. 
-        self.clean_internal_terms(circuit)
+        self.clean_internal_terms()
         # Calculate the capacitance per unit length
         # k = epsilon_eff
         self.c = np.sqrt(self.k) / (self.z0mag * const.c0)
@@ -122,8 +115,7 @@ class Device(cir.Element):
         self.alpha_nepers = self.alpha / const.Np2dB
 
         # Add internal terminals
-        termlist = [self.nodeName + ':n4', self.nodeName + ':n5', 'gnd']
-        circuit.connect_internal(self, termlist)
+        self.add_internal_terms(2)
 
         # Calculate temperature-dependent variables
         # self.set_temp_vars(self.temp)
@@ -201,7 +193,6 @@ class Device(cir.Element):
             nfreqs = np.shape(freq)[0]
             y = np.zeros((4, 4, nfreqs), dtype = type(invZ0[0]))
         except IndexError:
-            nfreqs = 1
             y = np.zeros((4, 4), dtype = type(invZ0))
         # proper Y-part block
         y[0,2] = invZ0

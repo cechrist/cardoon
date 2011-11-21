@@ -72,10 +72,7 @@ class Device(cir.Element):
         cir.Element.__init__(self, instanceName)
 
 
-    def process_params(self, circuit):
-        """
-        Takes the container circuit reference as an argument. 
-        """
+    def process_params(self):
         # Access to global variables is through the glVar 
 
         # Adjust according to temperature

@@ -136,7 +136,7 @@ class Analysis(ParamSet):
                 if param:
                     setattr(dev, self.param, self.param_val[j])
                     # re-process parameters
-                    dev.process_params(circuit)
+                    dev.process_params()
                 for i in range(np.shape(vsweep)[0]):
                     vports[self.sweep_port] = vsweep[i]
                     if self.useAD:

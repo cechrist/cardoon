@@ -38,10 +38,7 @@ class Device(cir.Element):
         vin        | | |        | | | gyr vin    | | | gyr vdc
           -         \V/          \V/              \|/  
                      |            |                |
-        1  o---------+            +------+---------+
-                                  3      |
-                                        --- (terminal 3 here)
-                                         V  
+        1  o---------+------------+----------------+
 
     """
 
@@ -72,7 +69,7 @@ class Device(cir.Element):
     # csDelayedContPorts = ( )
 
     # Independent source attribute: output port (assuming rint=0)
-    sourceOutput = (3, 2)
+    sourceOutput = (1, 2)
 
     paramDict = dict(
         cir.Element.tempItem,
@@ -91,25 +88,27 @@ class Device(cir.Element):
         cir.Element.__init__(self, instanceName)
 
 
-    def process_params(self, circuit):
-        """
-        Takes the container circuit reference as an argument. 
-        """
+    def process_params(self):
+        # Called once the external terminals have been connected and
+        # the non-default parameters have been set. Make sanity checks
+        # here. Internal terminals/devices should also be defined
+        # here.  Raise cir.CircuitError if a fatal error is found.
+
         # remove any existing internal connections
-        self.clean_internal_terms(circuit)
+        self.clean_internal_terms()
         # Access to global variables is through the glVar 
         if self.rint:
             # Can use Norton equivalent, no need for internal terminals
             self.idc = self.vdc / self.rint
             self.linearVCCS = [((0,1), (0,1), 1. / self.rint)]
         else:
-            # Connect internal terminals
-            circuit.connect_internal(self, [self.nodeName + ':n2', 'gnd'])
+            # Connect internal terminal
+            self.add_internal_terms(1)
             # Setup gyrator
             # Access to global variables is through the glVar (e.g.,
             # glVar.u0)
-            self.linearVCCS = [((0,1), (2,3), glVar.gyr), 
-                               ((2,3), (0,1), glVar.gyr)]
+            self.linearVCCS = [((0,1), (2,1), glVar.gyr), 
+                               ((2,1), (0,1), glVar.gyr)]
             # sourceOutput should be already OK
             self._idc = glVar.gyr * self.vdc
 

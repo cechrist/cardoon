@@ -27,8 +27,7 @@ class Device(cir.Element):
     Internal Topology
     +++++++++++++++++
 
-    Internal implementation uses a gyrator (adds one internal node
-    plus uses gnd)::
+    Internal implementation uses a gyrator (adds one internal node)::
 
                                           2
         0  o---------+            +----------------+
@@ -37,10 +36,8 @@ class Device(cir.Element):
         Vin        | | |        | | | gyr Vin    ----- gyr^2 * L
           -         \V/          \|/             -----
                      |            |                |
-        1  o---------+            +------+---------+
-                                         |
-                                        --- (terminal 3 here)
-                                         V
+        1  o---------+------------+----------------+
+
 
     """
 
@@ -80,30 +77,26 @@ class Device(cir.Element):
         cir.Element.__init__(self, instanceName)
 
 
-    def process_params(self, circuit):
-        """
-        Takes the container circuit reference as an argument. 
-        """
+    def process_params(self):
         # Called once the external terminals have been connected and
         # the non-default parameters have been set. Make sanity checks
-        # here. Internal terminals/devices should also be defined here
-        # (use circuit reference for this).  Raise cir.CircuitError if
-        # a fatal error is found.
+        # here. Internal terminals/devices should also be defined
+        # here.  Raise cir.CircuitError if a fatal error is found.
 
         # remove any existing internal connections
-        self.clean_internal_terms(circuit)
+        self.clean_internal_terms()
 
         if not self.l:
             raise cir.CircuitError(self.nodeName 
                                    + ': Inductance can not be zero')
-        # Connect internal terminals
-        circuit.connect_internal(self, [self.nodeName + ':n2', 'gnd'])
+        # Connect internal terminal
+        self.add_internal_terms(1)
         # Setup gyrator
         # Access to global variables is through the glVar 
-        self.linearVCCS = [((0,1), (3,2), glVar.gyr), 
-                           ((2,3), (0,1), glVar.gyr)]
+        self.linearVCCS = [((0,1), (1,2), glVar.gyr), 
+                           ((2,1), (0,1), glVar.gyr)]
         cap = self.l * glVar.gyr * glVar.gyr
-        self.linearVCQS = [((2, 3), (2, 3), cap)]
+        self.linearVCQS = [((2, 1), (2, 1), cap)]
 
         # Adjust according to temperature (not needed so far)
         # self.set_temp_vars(self.temp)

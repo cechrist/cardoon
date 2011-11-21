@@ -151,19 +151,16 @@ class Device(cir.Element):
            \ 
            / 
            |                                     2
-        4  o---------+                  +----------------+
+        3  o---------+                  +----------------+
                      | i(x)+dq/dt       |                |
           +         /|\                /|\ gyr vin      /^\ 
         vin        | | |              | | |            | | | gyr v(x)
           -         \V/                \V/              \|/  
                      |                  |                |
-        1  o---------+                  +------+---------+
-                                               |
-                                              --- (terminal 3 is gnd)
-                                               V
+        1  o---------+------------------+----------------+
 
-    Terminal 4 not present if Rs = 0
 
+    Terminal 3 not present if Rs = 0
     """
 
     # devtype is the 'model' name
@@ -221,30 +218,26 @@ class Device(cir.Element):
         # Add statements as needed
         self.jtn = SVJunction()
 
-    def process_params(self, circuit):
-        """
-        Takes the container circuit reference as an argument. 
-        """
+    def process_params(self):
         # Remove internal terminals
-        self.clean_internal_terms(circuit)
+        self.clean_internal_terms()
         # Define topology first
         # Needs at least one internal terminal: 
-        termList = [self.nodeName + ':n2', 'gnd']
-        circuit.connect_internal(self, termList)
-        self.linearVCCS = [((0,1), (2,3), glVar.gyr)]
+        self.add_internal_terms(1)
+        self.linearVCCS = [((0, 1), (2, 1), glVar.gyr)]
         # Nonlinear device attributes
-        self.csOutPorts = [(0, 1), (3, 2)]
+        self.csOutPorts = [(0, 1), (1, 2)]
         self.noisePorts = [(0, 1)]
-        self.controlPorts = [(2, 3)]
+        self.controlPorts = [(2, 1)]
 
         if self.rs:
             # Needs one more terminal
-            circuit.connect_internal(self, [self.nodeName + ':n3,'])
+            self.add_internal_terms(1)
             g = 1. / self.rs / self.area
-            self.linearVCCS.append(((0,2), (0,2), g))
+            self.linearVCCS.append(((0, 3), (0, 3), g))
             # Nonlinear device outputs change
-            self.csOutPorts = [(4, 1), (3, 2)]
-            self.noisePorts = [(0, 4), (4, 1)]
+            self.csOutPorts = [(3, 1), (1, 2)]
+            self.noisePorts = [(3, 1), (0, 3)]
 
         self._qd = False
         if self.tt or self.cj0:
@@ -367,7 +360,7 @@ class Device(cir.Element):
         """
         sj = self.OP['Sshot'] + self.OP['kSflicker'] / pow(f, self.af)
         if self.rs:
-            sV = np.array([self.OP['Sthermal'], sj])
+            sV = np.array([sj, self.OP['Sthermal']])
         else:
             sV = np.array([sj])
         return sV
