@@ -286,7 +286,7 @@ class Device(cir.Element):
 
         vPort[0]: x as in Rizolli's equations
 
-        Returns a vector with 2 or 3 elements: current, voltage and
+        Returns a tuple with 2 or 3 elements: current, voltage and
         charge. Charge is ommited if both cj0 and tt are zero.
         """
         # Calculate state-variable PN junction current, voltage and charge
@@ -306,13 +306,14 @@ class Device(cir.Element):
         # Scale voltage (gyrator gain)
         vD *= glVar.gyr
 
+        iVec = np.array([iD, vD])
         if self._qd:
             # area effect for charge
             qD *= self.area
-            outV = np.array([iD, vD, qD])
+            qVec = np.array([qD])
+            return (iVec, qVec)
         else:
-            outV = np.array([iD, vD])
-        return outV
+            return (iVec, np.array([]))
 
 
     def power(self, vPort, ioutV):

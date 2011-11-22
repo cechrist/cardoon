@@ -104,18 +104,17 @@ def thermal_device(nle):
 
             # now calculate currents and charges
             if saveOP:
-                (outV1, opV) = nle.eval_cqs(self, vPort, saveOP)
+                (iVec1, qVec, opV) = nle.eval_cqs(self, vPort, saveOP)
             else:
-                outV1 = nle.eval_cqs(self, vPort)
+                (iVec1, qVec) = nle.eval_cqs(self, vPort)
             # Calculate instantaneous power 
-            pout = nle.power(self, vPort, outV1)
+            pout = nle.power(self, vPort, iVec1)
             # Re-arrange output vector
-            outV = np.concatenate((outV1[:self.__ton], [pout], 
-                                   outV1[self.__ton:]), axis = 0)
+            iVec = np.concatenate((iVec1, [pout]), axis = 0)
             if saveOP:
-                return (outV, opV)
+                return (iVec, qVec, opV)
             else:
-                return outV
+                return (iVec, qVec)
     
         # Create these using the AD facility
         eval_and_deriv = ad.eval_and_deriv

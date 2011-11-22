@@ -144,7 +144,7 @@ class Analysis(ParamSet):
                         outvars = dev.eval(vports)
                     else:
                         # The one below is slower as it does not use tapes:
-                        outvars = dev.eval_cqs(vports)
+                        outvars = np.concatenate(dev.eval_cqs(vports), axis=0)
                     # The function below in addition calculates derivatives
                     #(outvars, Jac) = dev.eval_and_deriv(vports)
                     # Convert current, charge to vectors

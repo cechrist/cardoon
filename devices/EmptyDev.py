@@ -136,20 +136,23 @@ class Device(cir.Element):
         """
         vPort is a vector with control voltages
     
-        Returns a numpy vector: currents first and then charges.
-        If saveOP = True, return tuple with normal vector and OP 
-        variables (only needed if ever saveOP is True, see resistor)
+        Returns tuple with two numpy vectors: one for currents and
+        another for charges.
+
+        If saveOP = True, return tuple with normal vectors and OP 
+        variables 
         """
-        # should return np.array with current in each port
-        #
-        # To avoid automatic differentiation problems, use the 
-        # condassign() function provided in cppaddev.py to replace 
-        # if statements dependent on vPort
-        pass
+        # Note that saveOP may be ommitted, see documentation
+
+        # calculation here
+        iVec = np.array([i1, i2])
+        qVec = np.array([q1])
         if saveOP:
-            return (outVec, opVars)
+            # calculate opVars
+            return (iVec, qVec, opVars)
         else:
-            return outVec
+            return (iVec, qVec)
+
 
     # Required for automatic electrothermal device generation
     def power(self, vPort, currV):

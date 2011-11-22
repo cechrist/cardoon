@@ -337,10 +337,11 @@ class Device(cir.Element):
 
         Input:  vPort = [vdb , vgb , vsb]
 
-        Output: vector with Ids, Idb, Isb currents and D, G, S charges. 
+        Output: vector with Ids, Idb, Isb currents and vector with D,
+        G, S charges.
         
         If saveOP = True, return normal output vector plus operating
-        point variables in tuple: (outV, opV)
+        point variables in tuple: (iVec, qVec, opV)
         """
         # Invert all voltages in case of a P-channel device
         vPort1 = self._tf * vPort
@@ -477,19 +478,20 @@ class Device(cir.Element):
         idb = ad.condassign(vib, idb1, 0.)
         
         # -------------------------------------------------------------
-        # Create output vector 
-        outV = np.array([0., 0., 0., 0., qg, 0.], dtype=type(idb))
+        # Create output vectors
+        qVec = np.array([0., qg, 0.], dtype=type(idb))
         # have to switch charges if Drain and Source voltages switched
-        outV[3] = ad.condassign(DtoSswap, qd, qs)
-        outV[5] = ad.condassign(DtoSswap, qs, qd)
-        # De-normalize charge before setting current
-        outV *= self._Cox * self._Vt 
+        qVec[0] = ad.condassign(DtoSswap, qd, qs)
+        qVec[2] = ad.condassign(DtoSswap, qs, qd)
+        # De-normalize charge and invert if needed
+        qVec *= self._Cox * self._Vt * self._tf
 
-        outV[0] = DtoSswap * ids
-        outV[1] = ad.condassign(DtoSswap, idb, 0.)
-        outV[2] = ad.condassign(DtoSswap, 0., idb)
-        # Revert currents/charges if needed
-        outV *= self._tf
+        iVec = np.array([0., 0., 0.], dtype=type(idb))
+        iVec[0] = DtoSswap * ids
+        iVec[1] = ad.condassign(DtoSswap, idb, 0.)
+        iVec[2] = ad.condassign(DtoSswap, 0., idb)
+        # Revert currents if needed
+        iVec *= self._tf
         
         #--------------------------------------------------------------
         # Operating point information
@@ -505,9 +507,9 @@ class Device(cir.Element):
             # Create operating point variables vector
             opV = np.array([vp, n, beta, IS, i_f, ir, irprime, 
                             Vth, tau0, tau, qi, DtoSswap])
-            return (outV, opV)
+            return (iVec, qVec, opV)
         else:
-            return outV
+            return (iVec, qVec)
 
 
     def power(self, vPort, currV):

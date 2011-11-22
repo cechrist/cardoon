@@ -308,9 +308,11 @@ class Device(cir.Element):
         if parameters make them different than 0 (i.e., cje, tf, cjc,
         etc. are set to nonzero values)::
         
-          outV = [ibe, ibc, ice, qbe, qbc]
-          outV = [ibe, ibc, ice, gyr*ib*Rb, qbe, qbc] (irb != 0)
-          outV = [ibe, ibc, ice, gyr*ib*Rb, qbe, qbc, qbx] (irb != 0)
+          iVec = [ibe, ibc, ice]
+          iVec = [ibe, ibc, ice, gyr*ib*Rb] (rb != 0)
+
+          qVec = [qbe, qbc]
+          qVec = [qbe, qbc, qbx] (rb != 0 and cjc != 1)
         """
         # Invert control voltages if needed
         vPort1 = self._typef * vPort
@@ -342,13 +344,14 @@ class Device(cir.Element):
             kqb *= .5 * (1. + np.sqrt(1. + 4. * q2))
 
         # Create output vector [ibe, ibc, ice, ...]
-        outV = np.zeros((self.ncurrents + self.ncharges), dtype = type(ibf))
+        iVec = np.zeros(self.ncurrents, dtype = type(ibf))
+        qVec = np.zeros(self.ncharges, dtype = type(ibf))
         # ibe
-        outV[0] = ibf / self._bf_t + ile
+        iVec[0] = ibf / self._bf_t + ile
         # ibc
-        outV[1] = ibr / self._br_t + ilc
+        iVec[1] = ibr / self._br_t + ilc
         # ice
-        outV[2] = (ibf - ibr) / kqb
+        iVec[2] = (ibf - ibr) / kqb
 
         # RB
         if self.rb:
@@ -369,7 +372,7 @@ class Device(cir.Element):
             # Output is gyr * ib * rb.  It is divided by area^2 to
             # compensate that the whole vector is multiplied by area
             # at the end
-            outV[3] = glVar.gyr * ib * rb / pow(self.area, 2)
+            iVec[3] = glVar.gyr * ib * rb / pow(self.area, 2)
 
         # Charges ----------------------------------------------- 
 
@@ -384,28 +387,29 @@ class Device(cir.Element):
                 x = ibf / (ibf + self.itf)
                 tfeff *= (1. + self.xtf * x*x * 
                           ad.safe_exp(vPort1[1] /1.44 /self.vtf))
-            outV[self.ncurrents] = tfeff * ibf
+            qVec[0] = tfeff * ibf
         if self.cje:
-            outV[self.ncurrents] += self.jif.get_qd(vPort1[0]) 
+            qVec[0] += self.jif.get_qd(vPort1[0]) 
 
         # qbc 
         if self._qbx:
             if self.tr:
-                outV[-2] = self.tr * ibr
+                qVec[-2] = self.tr * ibr
             if self.cjc:
-                outV[-2] += self.jir.get_qd(vPort1[1]) * self.xcjc 
+                qVec[-2] += self.jir.get_qd(vPort1[1]) * self.xcjc 
                 # qbx
-                outV[-1] = self.jir.get_qd(vPort1[-1]) * (1. - self.xcjc)
+                qVec[-1] = self.jir.get_qd(vPort1[-1]) * (1. - self.xcjc)
         else:
             if self.tr:
-                outV[-1] = self.tr * ibr
+                qVec[-1] = self.tr * ibr
             if self.cjc:
-                outV[-1] += self.jir.get_qd(vPort1[1]) 
+                qVec[-1] += self.jir.get_qd(vPort1[1]) 
 
         # Consider area effect and invert currents if needed
-        outV *= self.area * self._typef
+        iVec *= self.area * self._typef
+        qVec *= self.area * self._typef
 
-        return outV
+        return (iVec, qVec)
 
 
     # Use AD for eval and deriv function

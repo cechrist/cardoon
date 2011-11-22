@@ -266,8 +266,8 @@ class Device(cir.Element):
 
         vPort is a vector with 1 element (diode voltage)
 
-        Returns a vector with two elements: current and charge. Charge
-        is ommited if both cj0 and tt are zero
+        Returns one vector for current and another for charge. Charge
+        vector is empty if both cj0 and tt are zero
         """
         # Calculate regular PN junction current and charge
         iD = self.jtn.get_id(vPort[0])
@@ -279,14 +279,13 @@ class Device(cir.Element):
         if (self.bv > 0.):
             iD -= self.ibv * \
                 ad.safe_exp(-(vPort[0] + self.bv) / self.n / self.vt)
+        idV = np.array([iD * self.area])
         if self._qd:
-            outV = np.array([iD, qD])
+            qdV = np.array([qD * self.area])
         else:
-            outV = np.array([iD])
-        # area effect
-        outV *= self.area
+            qdV = np.array([])
 
-        return outV
+        return (idV, qdV)
 
 
     def power(self, vPort, ioutV):

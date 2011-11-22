@@ -111,7 +111,9 @@ def create_tape(dev, vPort):
     # Create derivative vector
     a_vPort = ad.independent(vPort)
     # perform actual calculation 
-    a_out = dev.eval_cqs(a_vPort)
+    (i_out, q_out) = dev.eval_cqs(a_vPort)
+    # Concatenate vectors as we want only one tape to be generated
+    a_out = np.concatenate((i_out, q_out), axis=0)
     # Save main function tape
     dev._func = ad.adfun(a_vPort, a_out)
     # optimize main function tape
@@ -127,7 +129,7 @@ def create_OP_tape(dev, vPort):
     """
     assert dev.isNonlinear
     a_vPort = ad.independent(vPort)
-    (a_out, a_opvars) = dev.eval_cqs(a_vPort, saveOP=True)
+    (i_out, q_out, a_opvars) = dev.eval_cqs(a_vPort, saveOP=True)
     # Save operating point variable tape
     dev._opfunc = ad.adfun(a_vPort, a_opvars)
     # optimize tape (if needed uncomment)

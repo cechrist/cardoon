@@ -348,33 +348,38 @@ Similar vectors are required for output ports of charge sources
           """
           vPort is a vector with control voltages
       
-          Returns a numpy vector: currents first and then charges.
-          If saveOP = True, return tuple with normal vector and OP 
-          variables (only needed if ever saveOP is True, see resistor)
+          Returns tuple with two numpy vectors: one for currents and
+          another for charges.
+
+          If saveOP = True, return tuple with normal vectors and OP 
+          variables 
           """
           # calculation here
-          outVec = np.array([var1, var2])
+          iVec = np.array([i1, i2])
+	  qVec = np.array([q1])
           if saveOP:
               # calculate opVars
-              return (outVec, opVars)
+              return (iVec, qVec, opVars)
           else:
-              return outVec
+              return (iVec, qVec)
 
-  The ``saveOP`` argument is optional and may be ommitted if not
-  needed. ``vPort`` contains control port voltages (or state
+  The ``saveOP`` argument is optional and may be ommitted if it is
+  never needed. ``vPort`` contains control port voltages (or state
   variables) in the order defined by ``controlPorts``, followed by any
   voltages defined in ``csDelayedContPorts``.
 
-  The variables in ``outVec`` are first currents following the order
-  defined in ``csOutPorts``, followed by any charges defined in
-  ``csOutPorts``.
+  The variables in ``iVec`` are first currents following the order
+  defined in ``csOutPorts``, in ``qVec`` are the charges defined in
+  ``csOutPorts``. If there are no currents/charges, return an empty
+  vector.
 
   To avoid automatic differentiation problems, use the
   ``ad.condassign()`` function provided in cppaddev.py to replace
-  ``if`` statements dependent on variables related to ``vPort``.
+  conditional (``if``) statements dependent on variables related to
+  ``vPort``.
 
 * The following two functions should be present, normally implemented
-  by evaluating the AD tape (i.e. they run *much* faster than
+  by evaluating the AD tape (they run *much* faster than
   ``eval_cqs()``). But we could also implement them manually by other
   means::
 

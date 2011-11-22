@@ -139,7 +139,7 @@ class Device(cir.Element):
         idrain = IS*(i_f - i_r) \
             / (1. + chi * np.abs(np.sqrt(1.+i_f)-np.sqrt(1.+i_r)))
         # Return numpy array with one element per current source.
-        return np.array(idrain, ndmin=1)
+        return (np.array([idrain]), np.array([]))
 
 
     # Use AD for eval and deriv function

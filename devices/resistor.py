@@ -119,13 +119,10 @@ class Device(cir.Element):
 
     def eval_cqs(self, vPort):
         """
-        Return current given port voltage
+        Return current given port voltage. Charge vector is empty
         """
-        return self.g * vPort
-#        if saveOP:
-#            return (iout, None)
-#        else:
-#            return iout
+        return (self.g * vPort, np.array([]))
+
 
     def power(self, vPort, ioutV):
         """ 
