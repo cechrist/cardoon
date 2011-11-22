@@ -68,7 +68,10 @@ class Device(cir.Element):
     devType = "tlinps4"
     numTerms = 4
     isFreqDefined = True
-    fPortsDefinition = [(0, 1), (2, 3), (4, 1), (5, 3)]
+    fPortsDefinition = [(0, 1), (2, 3), (4, 1), (5, 1)]
+    # Local reference for internal voltages is the reference of first
+    # port
+    localReference = 1
 
     # Define parameters in a dictionary as follows: parameter name is
     # the key. Parameters are converted to class attributes after

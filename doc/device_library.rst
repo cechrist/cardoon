@@ -304,7 +304,7 @@ Internal implementation uses a gyrator (adds one internal node)::
 
                                       2
     0  o---------+            +----------------+
-                 | gyr V2     |                |
+                 | gyr V21    |                |
       +         /|\          /^\               |
     Vin        | | |        | | | gyr Vin    ----- gyr^2 * L
       -         \V/          \|/             -----

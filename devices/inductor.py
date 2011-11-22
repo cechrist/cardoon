@@ -31,7 +31,7 @@ class Device(cir.Element):
 
                                           2
         0  o---------+            +----------------+
-                     | gyr V2     |                |
+                     | gyr V21    |                |
           +         /|\          /^\               |
         Vin        | | |        | | | gyr Vin    ----- gyr^2 * L
           -         \V/          \|/             -----
@@ -91,6 +91,8 @@ class Device(cir.Element):
                                    + ': Inductance can not be zero')
         # Connect internal terminal
         self.add_internal_terms(1)
+        # Set unit for internal term
+        self.neighbour[2].unit = '* {0} A'.format(1./glVar.gyr)
         # Setup gyrator
         # Access to global variables is through the glVar 
         self.linearVCCS = [((0,1), (1,2), glVar.gyr), 

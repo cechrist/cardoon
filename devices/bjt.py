@@ -162,6 +162,8 @@ class Device(cir.Element):
     vPortGuess = np.array([0., 0.])
     # qbe, qbc
     qsOutPorts = [(1, 2), (1, 0)]
+    # Local reference for internal voltages is always the base terminal
+    localReference = 1
 
     def __init__(self, instanceName):
         """
@@ -191,6 +193,8 @@ class Device(cir.Element):
         if self.rb:
             # rb is not zero: add internal terminals
             self.add_internal_terms(2)
+            # gyrator node unit
+            self.neighbour[4].unit = '* {0} A'.format(1./glVar.gyr)
             # Linear VCCS for gyrator(s)
             linearVCCS = [((1, 3), (4, 1), glVar.gyr),
                           ((4, 1), (1, 3), glVar.gyr)]

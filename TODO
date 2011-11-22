@@ -2,19 +2,6 @@
 List of outstanding issues
 --------------------------
 
-The following being addressed in newterminal branch:
-
-* Review device interface: consider (again) separating q and i for
-  eval_cqs() and review noise/frequency defined return types.
-
-* Review the need for nodenames in internal terminals 
-
-* Add units to nodes
-
-* Review gnd node policy in circuit
-
-After that:
-
 * Add NAM method in analysis
 
 Longer term:

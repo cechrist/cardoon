@@ -224,6 +224,8 @@ class Device(cir.Element):
         # Define topology first
         # Needs at least one internal terminal: 
         self.add_internal_terms(1)
+        # state variable has no units
+        self.neighbour[2].unit = ''
         self.linearVCCS = [((0, 1), (2, 1), glVar.gyr)]
         # Nonlinear device attributes
         self.csOutPorts = [(0, 1), (1, 2)]

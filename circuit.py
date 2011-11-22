@@ -111,7 +111,7 @@ class GraphNode:
 
     def __str__(self):
         """convert to string"""
-        desc = 'GraphNode name: ' + self.nodeName + '\n' 
+        desc = self.nodeName + '\n' 
         desc += 'Linked nodes: '
         for n in self.neighbour:
             desc += ' ' + n.nodeName
@@ -125,13 +125,16 @@ class Terminal(GraphNode):
     This class should used only for 'external' terminals (i.e.,
     terminals that appear in the netlist). See also InternalTerminal
     """
+    # By default terminals have volts as units. Devices may change this
+    unit = 'V'
+
     def __init__(self, instanceName):
         # Call base class constructors
         GraphNode.__init__(self, instanceName)
 
     def __str__(self):
         """convert to string"""
-        desc = 'Terminal ' + GraphNode.__str__(self)
+        desc = 'Terminal({0}): {1}'.format(self.unit, GraphNode.__str__(self))
         return(desc)
 
 #---------------------------------------------------------------------
@@ -141,8 +144,6 @@ class InternalTerminal(Terminal):
 
     They only have one neighbour (the parent Element instance)
     """
-    # We really do not need to derive this class from Terminal, but
-    # we do it just in case new functionality is added there.
 
     def __init__(self, element, number):
         """
@@ -161,8 +162,10 @@ class InternalTerminal(Terminal):
 
     def __str__(self):
         """convert to string"""
-        desc = 'Internal Terminal: {0}:{1}'.format(self.neighbour[0].nodeName,
-                                                  self.nodeName)
+        desc = 'Internal Terminal{0}: {1}:{2}'.format(
+            self.unit,
+            self.neighbour[0].nodeName,
+            self.nodeName)
         return(desc)
 
 
@@ -431,6 +434,10 @@ class Circuit:
 
     Internal terminals must be accessed directly from the parent
     Element instance.
+
+    Ground node: treated specially. Nodes '0' and 'gnd' are considered
+    to be the same. A circuit may not contain a ground node. In that
+    case it is up to the user to set a reference.
 
     In the future we may implement topology checking utilities here.
     """

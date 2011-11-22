@@ -188,6 +188,8 @@ class Device(cir.Element):
     vPortGuess = np.array([0., 0.])
     # qbe, qbc
     qsOutPorts = [(3, 2), (3, 0)]
+    # Local reference for internal voltages is always the base terminal
+    localReference = 1
 
     def __init__(self, instanceName):
         """
@@ -211,12 +213,18 @@ class Device(cir.Element):
         # Remove tape if present
         ad.delete_tape(self)
 
-        # Define topology first
+        # Define topology first. Add state variable nodes
+        self.add_internal_terms(2)
+        # state variables have no units
+        self.neighbour[3].unit = ''
+        self.neighbour[4].unit = ''
         # Flag to signal if the extra charge Qbx is needed or not
         self._qbx = False
         if self.rb:
             # rb is not zero: add internal terminals
             self.add_internal_terms(2)
+            # gyrator node unit
+            self.neighbour[6].unit = '* {0} A'.format(1./glVar.gyr)
             # Linear VCCS for gyrator(s)
             linearVCCS = [((1, 5), (6, 1), glVar.gyr),
                           ((6, 1), (1, 5), glVar.gyr)]

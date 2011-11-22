@@ -78,6 +78,10 @@ def thermal_device(nle):
             # once
             if not self.__thermalFlag:
                 thermalPort = (self.numTerms-1, self.numTerms-2)
+                # Add units to thermal port
+                self.neighbour[-1].unit = 'C'
+                self.neighbour[-2].unit = 'C'
+
                 self.csOutPorts.append(thermalPort)
                 self.controlPorts.append(thermalPort)
                 # Thermal output number

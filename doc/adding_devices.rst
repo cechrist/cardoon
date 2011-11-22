@@ -99,7 +99,7 @@ for diode device::
     
             # Model statement
             .model dmodel1 diode (cj0 = 10pF tt=1ps)
-    
+
 
 Attributes and functions description
 ------------------------------------
@@ -152,12 +152,57 @@ values. Inductors are represented by a combination of VCCS and VCQS
   should be ``cir.Element.tempItem``, which contains the description
   for the device temperature parameter (temp).
 
-* The ``process_params(self, circuit)`` function is called once the
+* The ``process_params(self)`` function is called once the
   external terminals have been connected and the non-default
   parameters have been set. This function may be called multiple times
   for example for paramter sweeps or parameter sensitivity. Make
   sanity checks here. Internal terminals/devices must also be
-  connected here.
+  connected here (see next section).
+
+
+Internal Terminals, Local References and Terminal Units
+-------------------------------------------------------
+
+Some models in addition to the external port voltages require
+additional independent variables that can be be obtained by defining
+internal terminals. For example, an inductor can be implemented using
+current sources as shown below::
+
+        0  o---------+            +----------------+ 2
+                     | V2-V1      |                |
+          +         /|\          /^\               |
+        Vin        ( | )        ( | ) Vin        ----- L
+          -         \V/          \|/             -----
+                     |            |                |
+        1  o---------+------------+----------------+
+
+The additional variable is the inductor current, which in this circuit
+can be obtained as ``V2 - V1``. Here Node 1 is used as a local
+reference. By default, all internal port voltages use the last
+external terminal as a reference (Node 1 in this example). This can be
+explicitly set with the ``localReference`` attibute::
+
+        self.localReference = 1
+
+Node 2 is implemented using an internal terminal. Internal terminals
+are normally created in ``process_params()`` as follows::
+
+	# This adds 1 internal terminal
+	self.add_internal_terms(1)
+
+They can be accessed directly from the terminal list of the device
+(``self.neighbour``). Terminals have an attribute called ``unit``.  As
+Node 1 is also part of the main circuit, its unit is left with the default
+('V'). The unit of the internal terminal variable should be changed to
+'A'::
+
+        # Set unit for internal term
+        self.neighbour[2].unit = 'A'
+
+Note that terminals in a device are internally numbered
+consecutively. If a model has 4 external terminals (i.e., 0 to 3), the
+first internal terminal would be 4.    
+
 
 Temperature Dependence
 ----------------------
@@ -253,7 +298,10 @@ get_OP()::
          s2 = something
          return np.array([s1, s2])
 
-This interface is still experimental and may change.
+This function should work when given for both scalar and vector
+frequencies. It should take advantage of the vectorization
+facilities in numpy.  This interface is still experimental and may
+change.
 
 Nonlinear models
 ----------------
@@ -431,7 +479,9 @@ The Y parameters are calculated in the following functions::
         Documentation 
 	fvec is a frequency vector/scalar, but frequency can not be zero
         """
-        # should return 3-D np.array with Y matrix for each frequency
+        # For scalar fvec returns Y matrix
+	# For vector should return 3-D np.array. The frequency
+        # index is the last.
         return ymatrix
     
 
@@ -441,7 +491,9 @@ The Y parameters are calculated in the following functions::
 	"""	
 	return ymatrix
 
-This interface is still experimental and may change. 
+``get_ymatrix()`` should work when given for both scalar and vector
+frequencies and should take advantage of the vectorization facilities
+in numpy.  
 
     
 
