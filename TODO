@@ -1,8 +1,14 @@
 
-List of outstanding issues
---------------------------
+Action Plan
+-----------
 
-* Add NAM method in analysis
+* Add class to handle nodal method in analysis
+
+* Implement OP/DC analysis
+
+* Implement AC analysis (noise too?)
+
+* Implement Transient analysis
 
 Longer term:
 

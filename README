@@ -3,8 +3,8 @@ Introduction
 ------------
 
 Cardoon is a circuit simulator program being developed using
-Python. The design is inspired from several ideas in fREEDA
-(http://www.freeda.org/) and carrot
+Python. The design was originally inspired from several ideas in
+fREEDA (http://www.freeda.org/) and carrot
 (http://vision.lakeheadu.ca/research.html), plus some improvements
 that take advantage of the flexibility in Python. The main
 documentation page for this project can be found at:
@@ -19,18 +19,21 @@ possible.
 
 At this time only a few models are implemented, but some of them are
 already more complete than the equivalents in freeda and carrot (such
-as MOS EKV 2.6 and the BJT model). State- variable modelling (as in
-freeda) is supported. Currently a state-variable diode model is
-included. Electro-thermal models are automatically generated from
-electrical models.  Nonlinear models use automatic differentiation for
-jacobian calculation. In addition, automatic differentiation can also
-be used to calculate sensitivities.
+as MOS EKV 2.6 and the BJT model). State-variable nonlinear device
+modeling (in the fREEDA sense) is supported. Currently a
+state-variable PN junction model is included. This junction is used to
+implement a diode (svdiode) and a bipolar transistor device
+(svbjt). Regular voltage controlled models for the diode and BJT are
+also available.  Electro-thermal models are automatically generated
+from electrical models.  Nonlinear models use automatic
+differentiation for jacobian calculation. In addition, automatic
+differentiation can also be used to calculate sensitivities.
 
 So far there is no real analysis implemented, except a simple
-nonlinear device test routine. The immediate plan is to document and
-consolidate the main design and after that implement simple
-DC/AC/Transient(/noise?) to verify the Element interface works as
-intended.
+nonlinear device test routine. The immediate plan is implement basic
+DC/AC/Transient(/noise?) analyses to finish testing the model library
+and study the performance and explore the performance that can be
+achieved.
 
 Cardoon is being developed with Python 2.6 on Debian Squeeze, but it
 should work OK with Python 2.7 under other operating systems.
