@@ -93,7 +93,7 @@ class CircuitError(Exception):
 
 
 #---------------------------------------------------------------------
-class Node:
+class GraphNode:
     """
     Simple graph node base class (not circuit node) 
 
@@ -111,39 +111,63 @@ class Node:
 
     def __str__(self):
         """convert to string"""
-        desc = 'Node name: ' + self.nodeName + '\n' 
+        desc = 'GraphNode name: ' + self.nodeName + '\n' 
         desc += 'Linked nodes: '
         for n in self.neighbour:
             desc += ' ' + n.nodeName
         return(desc)
 
 #---------------------------------------------------------------------
-class Terminal(Node):
+class Terminal(GraphNode):
     """
     Represent circuit terminals (i.e., nodes)
 
-    Basically the same as a graph Node with some extra attibutes.
+    This class should used only for 'external' terminals (i.e.,
+    terminals that appear in the netlist). See also InternalTerminal
     """
-
     def __init__(self, instanceName):
-        """
-        By default Terminals are created external. Internal terminals
-        (isInternal == True) are used to implement Element models for
-        example to add parasitic resistors in a transistor.
-        """
         # Call base class constructors
-        Node.__init__(self, instanceName)
-        self.isInternal = False
+        GraphNode.__init__(self, instanceName)
 
     def __str__(self):
         """convert to string"""
-        desc = 'Terminal ' + Node.__str__(self)
-        desc += '\nInternal: ' + str(self.isInternal)
+        desc = 'Terminal ' + GraphNode.__str__(self)
+        return(desc)
+
+#---------------------------------------------------------------------
+class InternalTerminal(Terminal):
+    """
+    Represent terminals that are internal to one Element instance
+
+    They only have one neighbour (the parent Element instance)
+    """
+    # We really do not need to derive this class from Terminal, but
+    # we do it just in case new functionality is added there.
+
+    def __init__(self, element, number):
+        """
+        Creates and connects internal terminal
+
+        element: parent Element instance
+        number: internal (to element) terminal number
+        """
+        instanceName = str(number)
+        # Call base class constructor
+        Terminal.__init__(self, instanceName)
+        # Connect to parent element
+        self.neighbour.append(element)
+        element.neighbour.append(self)
+        
+
+    def __str__(self):
+        """convert to string"""
+        desc = 'Internal Terminal: {0}:{1}'.format(self.neighbour[0].nodeName,
+                                                  self.nodeName)
         return(desc)
 
 
 #---------------------------------------------------------------------
-class Element(Node, ParamSet):
+class Element(GraphNode, ParamSet):
     """
     Base class for circuit Elements. 
 
@@ -182,7 +206,7 @@ class Element(Node, ParamSet):
         Example: diode:d1
         """
         # Call base class constructors
-        Node.__init__(self, self.devType + ':' + instanceName)
+        GraphNode.__init__(self, self.devType + ':' + instanceName)
         # Note: paramDict must be defined by the derived class
         ParamSet.__init__(self, self.paramDict)
         # Default is not to have a separate model
@@ -191,7 +215,7 @@ class Element(Node, ParamSet):
     # Printing and info-related functions ----------------------------------
     def __str__(self):
         """convert to string"""
-        desc = 'Element ' + Node.__str__(self)
+        desc = 'Element ' + GraphNode.__str__(self)
         desc += '\nDevice type: ' + self.devType + '\n' 
         if self.dotModel:
             desc += 'Model: {0}\n'.format(self.dotModel.name)
@@ -205,8 +229,9 @@ class Element(Node, ParamSet):
         desc = '{0} '.format(self.nodeName)
         # Add terminals
         for i, term in enumerate(self.neighbour):
-            # Have to check if numTerms has already been set
-            if (self.numTerms and (i >= self.numTerms)) or term.isInternal:
+            # Do not include internal terminals. The following works
+            # even when numTerms is not set.
+            if issubclass(type(term), InternalTerminal):
                 break
             desc += term.nodeName + ' '
         # Model (if any)
@@ -282,8 +307,8 @@ class Element(Node, ParamSet):
                                    ': must have ' + str(self.numTerms) 
                                    + ' terminals.')
         else:
-            # Set numterms to number of external connections (this is
-            # useful to detect internal connections later)
+            # Set numterms to number of external connections (useful
+            # to quickly find internal terminals)
             self.numTerms = len(self.neighbour)
 
     def disconnect(self, terminal):
@@ -300,8 +325,26 @@ class Element(Node, ParamSet):
             terminal.neighbour.remove(self)
         except ValueError:
             raise CircuitError('Nodes not linked')
+
+    def add_internal_terms(self, n):
+        """
+        Create and connect n additional internal terminals
+
+        Terminal names are derived from the index number in self.neighbour
+        """
+        for tnum in range(self.numTerms, self.numTerms+n):
+            # Create internal term (connects automatically)
+            term = InternalTerminal(self, tnum)
+
+
+    def get_internal_terms(self):
+        """
+        Returns a list of internal terms (if any)
+        """
+        return self.neighbour[self.numTerms:]
+
     
-    def clean_internal_terms(self, circuit):
+    def clean_internal_terms(self):
         """
         Disconnect any internal terms, 
 
@@ -310,18 +353,12 @@ class Element(Node, ParamSet):
         """
         for term in self.neighbour[self.numTerms:]:
             self.disconnect(term)
-            if term.isInternal:
-                circuit.remove_term(term.nodeName)
         # Chop adjacency list
-        self.neighbour[self.numTerms:] = []
-
-        # By now the number of terminals should match numTerms
-        assert len(self.neighbour) == self.numTerms
-
+        self.neighbour = self.neighbour[:self.numTerms]
 
 
 #---------------------------------------------------------------------
-class Xsubckt(Node):
+class Xsubckt(GraphNode):
     """
     Represent subcircuit instances (not definitions, use SubCircuit
     for those)
@@ -336,13 +373,13 @@ class Xsubckt(Node):
         """
         # Call base class constructors
         assert instanceName[0] == 'x'
-        Node.__init__(self, instanceName)
+        GraphNode.__init__(self, instanceName)
         self.cktName = cktName
         
 
     def __str__(self):
         """convert to string"""
-        desc = 'xsubckt ' + Node.__str__(self)
+        desc = 'xsubckt ' + GraphNode.__str__(self)
         desc += '\nSubcircuit definition: ' + self.cktName
         return(desc)
 
@@ -385,12 +422,15 @@ class Circuit:
     * modelDict: References to all models in any circuit. Thus .model
       statements are global and can be defined and referred anywhere
 
-    Element, Xsubckt and Terminal references are stored in
-    dictionaries (one per instance), empty by default:
+    Element, Xsubckt and (external) Terminal references are stored in
+    dictionaries, empty by default:
 
     * elemDict
     * subcktDict
     * termDict
+
+    Internal terminals must be accessed directly from the parent
+    Element instance.
 
     In the future we may implement topology checking utilities here.
     """
@@ -452,7 +492,7 @@ class Circuit:
             desc += model.netlist_string() + '\n\n'
         return desc
 
-    # Actions on the whole circuit
+    # Actions on the whole circuit --------------------------------------
 
     def init(self):
         """
@@ -475,7 +515,7 @@ class Circuit:
         for elem in self.elemDict.itervalues():
             elem.set_attributes()
             elem.check_terms()
-            elem.process_params(self)
+            elem.process_params()
 
         if not self._flattened:
             for xsubckt in self.subcktDict.itervalues():
@@ -484,6 +524,21 @@ class Circuit:
                 Circuit.cktDict[xsubckt.cktName].init()
 
         self._initialized = True
+
+
+    def get_internal_terms(self):
+        """
+        Returns a list with all internal terminals
+
+        Circuit must be initialized first. Note that the same effect
+        can be achieved by directly polling the elements.
+        """
+        assert self._initialized
+        intTermList = []
+        for elem in self.elemDict.itervalues():
+            intTermList += elem.get_internal_terms()
+        return intTermList
+
 
     def flatten(self):
         """ 
@@ -577,24 +632,7 @@ class Circuit:
             terminal.neighbour.append(element)
             element.neighbour.append(terminal)
     
-    def connect_internal(self, element, termList):
-        """
-        Used by devices to connect themselves to internal terminals
-        specified by a list of terminal names (termList). If any terminal
-        does not exist in the circuit it is created and added. The
-        'isInternal' attribute is set for each terminal (except for gnd or
-        0).
-    
-        * Order in the adjacency list is important * 
-        """
-        for termName in termList:
-            terminal = self.get_term(termName)
-            # Ground terminal treated specially
-            if not (terminal.nodeName == 'gnd'):
-                terminal.isInternal = True
-            terminal.neighbour.append(element)
-            element.neighbour.append(terminal)
-    
+
     def add_elem(self, elem, modelName = None):
         """ 
         Adds an element to a circuit.
@@ -659,8 +697,8 @@ class Circuit:
     
     def get_term(self, termName):
         """ 
-        Returns a terminal instance with the given name. The instance is
-        created if necessary
+        Returns an external terminal instance with the given name. The
+        instance is created if necessary
         """
         if termName == '0':
             # Special treatment for ground terminal

@@ -84,24 +84,19 @@ class Device(cir.Element):
         # Add statements as needed
 
 
-    def process_params(self, circuit):
+    def process_params(self):
         """
-        Process parameters
-
-        circuit: circuit instance that contains the element
-
-        This should be called each time parameter values are changed.
+        This should be called each time parameter values are changed
         """
-        # Called once the external terminals have been connected and the
-        # non-default parameters have been set. Make sanity checks
-        # here. Internal terminals/devices should also be defined here
-        # (use circuit reference for this).  Raise cir.CircuitError if a fatal
-        # error is found.
+        # Called once the external terminals have been connected and
+        # the non-default parameters have been set. Make sanity checks
+        # here. Internal terminals/devices should also be defined
+        # here.  Raise cir.CircuitError if a fatal error is found.
 
         # Use the following to make sure connections to internal
         # terminals are not repeated if this process_params is called
         # many times. 
-        self.clean_internal_terms(circuit)
+        self.clean_internal_terms()
         # Calculate the capacitance per unit length
         # k = epsilon_eff
         self.c = np.sqrt(self.k) / (self.z0mag * const.c0)
@@ -144,14 +139,9 @@ class Device(cir.Element):
             L = self.l * delta_x
             C = self.c * delta_x
 
-            # Create internal terminal list names
-            gyrnode = self.nodeName + ':gyr'
-            rnode = self.nodeName + ':r'
-            cnode = self.nodeName + ':c'
             # Gyrated inductor cap
             indcap = L * glVar.gyr * glVar.gyr
-            # Initialize to gnd node used for all gyrators (terminal 4)
-            termlist = ['gnd']
+            # Reference for all gyrators is term 1
             # nps: nodes added by one section
             if R:
                 nps = 3
@@ -164,13 +154,13 @@ class Device(cir.Element):
             for i in range(self.nsect):
                 # input node number
                 if i:
-                    inn = nps*i + 4
+                    inn = nps*i + 3
                 else:
                     inn = 0
                 # add gyrator node
-                termlist = [gyrnode + str(i)]
+                self.add_internal_terms(1)
                 # Gyrator node number
-                gnn = nps*i + 5
+                gnn = nps*i + 4
                 if R:
                     rnn = gnn + 1
                 else:
@@ -178,24 +168,24 @@ class Device(cir.Element):
                 # The last section does not add cap node
                 if i < self.nsect - 1:
                     # Add capacitor terminal
-                    termlist.append(cnode + str(i))
+                    self.add_internal_terms(1)
                     cnn = rnn + 1
                 else:
                     cnn = 2
                 if R:
                     # add resistor node
-                    termlist.append(rnode + str(i))
+                    self.add_internal_terms(1)
                     # Add gyrator
-                    self.linearVCCS += [((inn, rnn), (4, gnn), glVar.gyr), 
-                                        ((gnn, 4), (inn, rnn), glVar.gyr)]
+                    self.linearVCCS += [((inn, rnn), (1, gnn), glVar.gyr), 
+                                        ((gnn, 1), (inn, rnn), glVar.gyr)]
                     # Add resistor
                     self.linearVCCS.append(((rnn, cnn), (rnn, cnn), 1./R))
                 else:
                     # Add gyrator
-                    self.linearVCCS += [((inn, cnn), (4, gnn), glVar.gyr), 
-                                        ((gnn, 4), (inn, cnn), glVar.gyr)]
+                    self.linearVCCS += [((inn, cnn), (1, gnn), glVar.gyr), 
+                                        ((gnn, 1), (inn, cnn), glVar.gyr)]
                 # Add inductor
-                self.linearVCQS.append(((gnn, 4), (gnn, 4), indcap))
+                self.linearVCQS.append(((gnn, 1), (gnn, 1), indcap))
                 # Add capacitor
                 self.linearVCQS.append(((cnn, 1), (cnn, 1), C))
                 if G:

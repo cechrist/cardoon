@@ -90,24 +90,19 @@ class Device(cir.Element):
         # Add statements as needed
 
 
-    def process_params(self, circuit):
+    def process_params(self):
         """
-        Process parameters
-
-        circuit: circuit instance that contains the element
-
-        This should be called each time parameter values are changed.
+        This should be called each time parameter values are changed
         """
-        # Called once the external terminals have been connected and the
-        # non-default parameters have been set. Make sanity checks
-        # here. Internal terminals/devices should also be defined here
-        # (use circuit reference for this).  Raise cir.CircuitError if a fatal
-        # error is found.
+        # Called once the external terminals have been connected and
+        # the non-default parameters have been set. Make sanity checks
+        # here. Internal terminals/devices should also be defined
+        # here.  Raise cir.CircuitError if a fatal error is found.
 
         # Use the following to make sure connections to internal
         # terminals are not repeated if this process_params is called
         # many times. 
-        self.clean_internal_terms(circuit)
+        self.clean_internal_terms()
 
         # Calculate temperature-dependent variables
         # self.set_temp_vars(self.temp)

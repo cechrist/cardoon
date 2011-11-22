@@ -66,15 +66,13 @@ def thermal_device(nle):
             nle.__init__(self, instanceName)
             self.__thermalFlag = False
     
-        def process_params(self, circuit):
+        def process_params(self):
             """
-            Takes the container circuit reference as an argument. 
-    
             Basically do whatever the base class needs and add extra
             thermal terminals
             """
             # Let the base class do its stuff first
-            nle.process_params(self, circuit)
+            nle.process_params(self)
 
             # Add thermal terminals to control and output tuples only
             # once

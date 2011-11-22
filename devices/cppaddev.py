@@ -10,7 +10,7 @@ Usage:
 import cppaddev as ad
 ...
 
-    def process_params(self, circuit):
+    def process_params(self):
         ...
         # Add the following at the end to make sure tape is re-generated
         ad.delete_tape(self)

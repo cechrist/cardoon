@@ -122,6 +122,30 @@ class Device(cir.Element):
         # Model statement
         .model dmodel1 diode (cj0 = 10pF tt=1ps)
 
+    Internal Topology
+    +++++++++++++++++
+
+    The internal representation is the following::
+
+        0  o
+           |
+           \ 
+           / Rs
+           \ 
+           / 
+           |                      
+        2  o---------+            
+                     | i(vin)+dq/dt 
+          +         /|\           
+        vin        | | |          
+          -         \V/           
+                     |            
+        1  o---------+            
+                                  
+                                  
+                                  
+
+    Terminal 2 not present if Rs = 0
     """
 
     # devtype is the 'model' name
@@ -175,27 +199,23 @@ class Device(cir.Element):
         cir.Element.__init__(self, instanceName)
         self.jtn = Junction()
 
-    def process_params(self, circuit):
-        """
-        Takes the container circuit reference as an argument. 
-
-        Called once the external terminals have been connected and the
-        non-default parameters have been set. Make sanity checks
-        here. Internal terminals/devices should also be defined here
-        (use circuit reference for this).  Raise cir.CircuitError if a fatal
-        error is found.
-        """
+    def process_params(self):
+        # Called once the external terminals have been connected and
+        # the non-default parameters have been set. Make sanity checks
+        # here. Internal terminals/devices should also be defined
+        # here.  Raise cir.CircuitError if a fatal error is found.
+        
         # Remove internal terminals
-        self.clean_internal_terms(circuit)
+        self.clean_internal_terms()
         # Define topology first
         if self.rs:
-            # Need internal terminal
-            circuit.connect_internal(self, [self.nodeName + ':n2'])
+            # Need 1 internal terminal
+            self.add_internal_terms(1)
             g = 1. / self.rs / self.area
             self.linearVCCS = [((0,2), (0,2), g)]
             # Nonlinear device attributes
             self.csOutPorts = [(2, 1)]
-            self.noisePorts = [(0, 2), (2, 1)]
+            self.noisePorts = [(2, 1), (0, 2)]
             self.controlPorts = [(2, 1)]
         else:
             # Nonlinear device attributes
@@ -314,7 +334,7 @@ class Device(cir.Element):
         """
         sj = self.OP['Sshot'] + self.OP['kSflicker'] / pow(f, self.af)
         if self.rs:
-            sV = np.array([self.OP['Sthermal'], sj])
+            sV = np.array([sj, self.OP['Sthermal']])
         else:
             sV = np.array([sj])
         return sV

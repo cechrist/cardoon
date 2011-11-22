@@ -63,16 +63,12 @@ class Device(cir.Element):
         cir.Element.__init__(self, instanceName)
 
 
-    def process_params(self, circuit):
-        """
-        Takes the container circuit reference as an argument. 
+    def process_params(self):
+        # Called once the external terminals have been connected and
+        # the non-default parameters have been set. Make sanity checks
+        # here. Internal terminals/devices should also be defined
+        # here.  Raise cir.CircuitError if a fatal error is found.
 
-        Called once the external terminals have been connected and the
-        non-default parameters have been set. Make sanity checks
-        here. Internal terminals/devices should also be defined here
-        (use circuit reference for this).  Raise cir.CircuitError if a fatal
-        error is found.
-        """
         # Access to global variables is through the glVar 
         if not self.c:
             raise cir.CircuitError(self.nodeName 

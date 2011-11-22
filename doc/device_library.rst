@@ -69,24 +69,24 @@ configurations are described here.
                    ib          | | | ibc(vbc)     |
                                 \|/               |       
                  ,---,           |               /|\       
-     (B) 1 o----( --> )----------+ 3 (Bi)       | | | ice    
-                 `---`           |               \V/      
-                                /|\               |       
-                               | | | ibe(vbe)     |
-                                \V/               |
-                                 |                |
-                 gyr v13         +----------------+--o 2 (E)
-                              
-                  ,---,       
+     (B) 1 o-+--( --> )----------+ 3 (Bi)       | | | ice    
+             |   `---`           |               \V/      
+             |                  /|\               |       
+             |                 | | | ibe(vbe)     |
+             |                  \V/               |
+             |                   |                |
+             |   gyr v13         +----------------+--o 2 (E)
+             |                
+             |    ,---,       
              +---( <-- ) -----+
              |    `---`       |
              |                | ib/gyr
-     5 (gnd) |                |
+             |                |
              |    ,---,       | 4 (ib)
-             +---( <-- )------+
-             |    `---`       
-            ---               
-             V    gyr ib Rb(ib)
+             +---( --> )------+
+                  `---`       
+
+                gyr ib Rb(ib)
                                        
 Charge sources are connected between internal nodes defined
 above. If xcjc is not 1 but RB is zero, xcjc is ignored.
@@ -193,6 +193,30 @@ Netlist examples::
     # Model statement
     .model dmodel1 diode (cj0 = 10pF tt=1ps)
 
+Internal Topology
++++++++++++++++++
+
+The internal representation is the following::
+
+    0  o
+       |
+       \ 
+       / Rs
+       \ 
+       / 
+       |                      
+    2  o---------+            
+                 | i(vin)+dq/dt 
+      +         /|\           
+    vin        | | |          
+      -         \V/           
+                 |            
+    1  o---------+            
+                              
+                              
+                              
+
+Terminal 2 not present if Rs = 0
 
 
 Parameters
@@ -276,8 +300,7 @@ Netlist example::
 Internal Topology
 +++++++++++++++++
 
-Internal implementation uses a gyrator (adds one internal node
-plus uses gnd)::
+Internal implementation uses a gyrator (adds one internal node)::
 
                                       2
     0  o---------+            +----------------+
@@ -286,10 +309,8 @@ plus uses gnd)::
     Vin        | | |        | | | gyr Vin    ----- gyr^2 * L
       -         \V/          \|/             -----
                  |            |                |
-    1  o---------+            +------+---------+
-                                     |
-                                    --- (terminal 3 here)
-                                     V
+    1  o---------+------------+----------------+
+
 
 
 
@@ -587,10 +608,10 @@ positive exponentials from the model::
         | | | gyr v2               | | | gyr vbc(x)
          \V/                        \|/  
           |                          |
-          +--------------------------+-----------------+ 5 (gnd)
-          |                          |                 |
-         /^\                        /|\               ---
-        | | | gyr v1               | | | gyr vbe(x)    -
+          +--------------------------+ 1 (local reference)
+          |                          |               
+         /^\                        /|\              
+        | | | gyr v1               | | | gyr vbe(x)  
          \|/                        \V/  
           |                          |
           +--------------------------+
@@ -628,24 +649,24 @@ internal base current and calculate Rb(ib).
                    ib      v2  | | | ibc(x2)      |
                                 \|/               |       
                  ,---,      +    |               /|\       
-     (B) 1 o----( --> )----------+ 3 (Bi)       | | | ice(x1,x2)
-                 `---`      +    |               \V/      
-                                /|\               |       
-                           v1  | | | ibe(x1)      |
-                                \V/               |
-                            -    |                |
-                 gyr v13         +----------------+--o 2 (E)
-                              
-                  ,---,       
+     (B) 1 o-+--( --> )----------+ 5 (Bi)       | | | ice(x1,x2)
+             |   `---`      +    |               \V/      
+             |                  /|\               |       
+             |             v1  | | | ibe(x1)      |
+             |                  \V/               |
+             |              -    |                |
+             |   gyr v13         +----------------+--o 2 (E)
+             |                
+             |    ,---,       
              +---( <-- ) -----+
              |    `---`       |
              |                | ib/gyr
-     5 (gnd) |                |
-             |    ,---,       | 4 (ib)
-             +---( <-- )------+
-             |    `---`       
-            ---               
-             V    gyr ib Rb()
+             |                |
+             |    ,---,       | 6 (ib)
+             +---( --> )------+
+                  `---`       
+
+                gyr ib Rb(ib)
                                        
 Charge sources are connected between internal nodes defined
 above. If xcjc is not 1 but RB is zero, xcjc is ignored.
@@ -741,19 +762,16 @@ The internal representation is the following::
        \ 
        / 
        |                                     2
-    4  o---------+                  +----------------+
+    3  o---------+                  +----------------+
                  | i(x)+dq/dt       |                |
       +         /|\                /|\ gyr vin      /^\ 
     vin        | | |              | | |            | | | gyr v(x)
       -         \V/                \V/              \|/  
                  |                  |                |
-    1  o---------+                  +------+---------+
-                                           |
-                                          --- (terminal 3 is gnd)
-                                           V
+    1  o---------+------------------+----------------+
 
-Terminal 4 not present if Rs = 0
 
+Terminal 3 not present if Rs = 0
 
 
 Parameters
@@ -823,10 +841,8 @@ The model is symmetric. The schematic for Port 1 is shown here::
                ( | )                      ( | )       1 | |       ( | )
    -            \V/                    V1  \|/          '-'        \V/ 
                  |                          |            |          |  
-      1 o--------'                          '------------+----------'  6
-                                                         |
-                                                        ---
-                                                         -
+      1 o--------+--------------------------+------------+----------'   
+
 
 Note: for a matched transmission line, s11 = s22 = 0 and s12 =
 s21. The equivalent 'Y' matrix is::
@@ -945,10 +961,7 @@ Implemented using a gyrator if Rint is zero::
     vin        | | |        | | | gyr vin    | | | gyr vdc
       -         \V/          \V/              \|/  
                  |            |                |
-    1  o---------+            +------+---------+
-                              3      |
-                                    --- (terminal 3 here)
-                                     V  
+    1  o---------+------------+----------------+
 
 
 
