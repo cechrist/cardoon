@@ -20,7 +20,7 @@ Contents
    adding_devices
    circuit_ref
    design
-   
+   references   
 
 Indices and tables
 ==================

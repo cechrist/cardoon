@@ -142,3 +142,26 @@ one circuit element, an analysis to perform or another command.
        .include <filename>
 
 For now there are no output commands defined.
+
+
+Generating this documentation
+-----------------------------
+
+The main documentation files are kept in the ``doc`` directory. To
+generate the documentation in html or LaTeX formats (other formats are
+possible but not tested) the following packages are needed:
+
+* Sphinx (http://sphinx.pocoo.org/)
+
+* pyreverse from the pylint package yo generate UML diagrams
+  (http://www.logilab.org/2560)
+
+The documentation can be generated as follows::
+
+    cd doc
+    make html
+
+The device or analysis catalogs are not checked for dependencies. To
+force re-generation of those, you can just remove
+``device_library.rst`` and re-make the documentation. The ``latex``
+targets can be used to generate the documentation in latex format.

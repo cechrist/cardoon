@@ -34,10 +34,15 @@ help:
 device_library.rst:
 	../cardoon.py -c 
 
+circuit_uml.png: ../circuit.py ../paramset.py
+	pyreverse -o png circuit paramset
+	mv classes_No_Name.png circuit_uml.png
+	rm packages_No_Name.png
+
 clean:
 	-rm -rf $(BUILDDIR)/*
 
-html: device_library.rst
+html: device_library.rst circuit_uml.png
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

@@ -1,6 +1,8 @@
 #!/usr/bin/python
 """
 Main simulator program
+
+For now this is quite rudimentary. 
 """
 from __future__ import print_function
 import circuit as cir
