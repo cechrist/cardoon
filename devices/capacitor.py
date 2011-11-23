@@ -87,6 +87,4 @@ class Device(cir.Element):
 #        deltaT = temp - self.tnom
 #        self.g /= (1. + (self.tc1 + self.tc2 * deltaT) * deltaT)
 
-# Here you can add additional functions and classes that only are
-# visible withing this module.
 

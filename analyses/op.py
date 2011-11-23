@@ -6,8 +6,8 @@
 .. moduleauthor:: Carlos Christoffersen
 
 This is an attempt to port/adapt the existing analyses in pycircuit
-(https://github.com/henjo/pycircuit). Part of the code is cut and
-pasted from there.
+(https://github.com/henjo/pycircuit). For now most of the code is cut
+and pasted from there.
 
 *** Not functional yet ***
 """

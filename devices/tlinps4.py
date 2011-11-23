@@ -245,6 +245,4 @@ class Device(cir.Element):
 
 
 
-# Here you can add additional functions and classes that only are
-# visible withing this module.
 

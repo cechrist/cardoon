@@ -429,7 +429,7 @@ Similar vectors are required for output ports of charge sources
 Independent Sources
 -------------------
 
-Must provide: 
+Must provide the following arguments/functions: 
 
 1. At least one (perhaps more) of the source flags set to ``True``::
 
@@ -437,31 +437,50 @@ Must provide:
         # isTDSource = True
         # isFDSource = True
 
-2. A tuple with output port. Voltage sources are implemented using a
-   gyrator and a current source. Example::
+2. The ``sourceOutput`` argument that contains tuple with output
+   port. Voltage sources are implemented using a gyrator and a current
+   source. Example::
 
      sourceOutput = (0, 1) # for a current source
 
-3. Implement at least one of the source-related functions::
+3. Implement at least one of the following source-related functions::
 
        def get_DCsource(self):
-           """
-           Documentation (isDCSource = True)
-           """
+           # used if isDCSource = True
            # return current value
+	   pass
     
        def get_TDsource(self, ctime):
            """
-           Documentation (isTDSource = True)
            ctime is the current time
            """
+           # used if isTDSource = True
            # return current at ctime
+	   pass
       
        def get_FDsource(self, fvec):
            """
-           Documentation (isFDSource = True)
+	   fvec: frequency vector
+	   May not work for f=0
            """
+           # used if isFDSource = True
            # should return a np.array with currents for each frequency
+	   pass
+
+   These functions are used with the following conventions:
+
+     * The DC component is the only one that is active for OP or DC
+       analyses. 
+
+     * The DC component is always added to the contribution of the
+       other sources. Do not include DC components in the other
+       functions.
+
+     * Some analyses (such as some forms of envelope-following) may
+       require combined time/frequency or multiple time
+       dimensions. The interface may have to be extended to handle
+       that. The safest approach seems to be to define a new function
+       for each case.
 
 
 Linear frequency-defined 

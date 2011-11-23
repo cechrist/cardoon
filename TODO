@@ -6,6 +6,8 @@ Action Plan
 
 * Implement OP/DC analysis
 
+* Consider adding next_event() for TD sources
+
 * Implement AC analysis (noise too?)
 
 * Implement Transient analysis

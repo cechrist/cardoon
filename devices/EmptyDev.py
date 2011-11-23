@@ -243,26 +243,29 @@ class Device(cir.Element):
     #---------------------------------------------------------------
 
     def get_DCsource(self):
-        """
-        Documentation (isDCSource = True)
-        """
+        # used if isDCSource = True
         # return current value
-
+        pass
+    
     def get_TDsource(self, ctime):
         """
-        Documentation (isTDSource = True)
         ctime is the current time
         """
+        # used if isTDSource = True
         # return current at ctime
+        pass
     
     def get_FDsource(self, fvec):
         """
-        Documentation (isFDSource = True)
+        fvec: frequency vector
+        May not work for f=0
         """
+        # used if isFDSource = True
         # should return a np.array with currents for each frequency
+        pass
 
 
 
 # Here you can add additional functions and classes that only are
-# visible withing this module.
+# visible within this module.
 

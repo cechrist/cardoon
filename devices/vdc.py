@@ -148,6 +148,4 @@ class Device(cir.Element):
     #     """
     #     # should return a np.array with currents for each frequency
 
-# Here you can add additional functions and classes that only are
-# visible withing this module.
 
