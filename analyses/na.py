@@ -8,6 +8,22 @@
 
 import numpy as np
 
+def setQuad(G, idx, g):
+    """
+    Set VCCS quad in G NAM
+
+    idx are the G indexes in the following format::
+
+        [(on1, cn1), (on2, cn2), (on2, cn1), (on1, cn2)]
+
+    """
+    # This is a good candidate function to compile with cython?
+    G[idx[0]] = g
+    G[idx[1]] = g
+    G[idx[2]] = - g
+    G[idx[3]] = - g
+
+
 class NodalCircuit:
     """
     Provides methods for nodal analysis of circuit
@@ -39,9 +55,9 @@ class NodalCircuit:
         # Assign a number (0-inf) to all nodes except gnd=-1. For the
         # future: use graph techniques to find the optimum terminal
         # order
-        self.ref.rcnumber = -1
+        self.ref.__namRC = -1
         for i, term in enumerate(termList):
-            term.rcnumber = i
+            term.__namRC = i
 
         # Dimension is the number of unknowns to solve for
         self.dimension = len(termList)
@@ -50,6 +66,70 @@ class NodalCircuit:
         self.elemList = circuit.elemDict.values()
         self.nlinElements = filter(lambda x: x.isNonlinear, elemList)
         self.sourceDCElements = filter(lambda x: x.isDCSource, elemList)
+
+        # Map row/column numbers directly into VC*S descriptions
+        for elem in elemList:
+            # Create list with RC numbers
+            rcList = map(lambda x: x.__namRC, elem.neighbour)
+
+            # Create quad pairs for linearVC*S
+            def convert_vcs(x):
+                """
+                Converts format of VC*S 
+
+                input: [(cn1, cn2), (on1, on2), g]
+                output: [(on1, cn1), (on2, cn2), (on2, cn1), (on1, cn2)]
+                """
+                cn1 = rcList[x[0][0]]
+                cn2 = rcList[x[0][1]]
+                on1 = rcList[x[1][0]]
+                on2 = rcList[x[1][1]]
+                # May omit unnecesary pairs here?
+                return [(on1, cn1), (on2, cn2), (on2, cn1), (on1, cn2)]
+
+            elem.__linVCCidx = map(convert_vcs, elem.linearVCCS)
+            elem.__linVCQidx = map(convert_vcs, elem.linearVCQS)
+
+            # Convert nonlinear device descriptions
+            if elem.isNonlinear:
+                # Rather than doing this, here we should (somehow)
+                # precalculate the indexes of all Jacobian entries
+                def convert_port(x):
+                    n1 = rcList[x[0]]
+                    n2 = rcList[x[1]]
+                    return (n1, n2)
+                elem.__controlPorts = map(convert_port, elem.controlPorts)
+                elem.__csOutPorts = map(convert_port, elem.csOutPorts)
+                elem.__qsOutPorts = map(convert_port, elem.qsOutPorts)
+                # add code for time-delayed sources
+
+            # Translate source output terms
+            if elem.isDCSource:
+                # first get the destination row/columns 
+                n1 = rcList[elem.sourceOutput[0]]
+                n2 = rcList[elem.sourceOutput[1]]
+                elem.__namSourceOut = (n1, n2)
+
+        # Generate G matrix (never changes)
+        self.G = np.zeros((self.dimension, self.dimension))
+        for elem in elemList:
+            # check for VCCS in element
+            for i, vccs in enumerate(elem.linearVCCS):
+                # Must decide which is worse: always checking for gnd
+                # or keeping the gnd row/column and deleting it later.
+                #
+                set_quad(self.G, elem.__linVCCidx[i], vccs[2])
+
+        # Should generate C here too
+        self.C = np.zeros((self.dimension, self.dimension))
+        for elem in elemList:
+            # check for VCCS in element
+            for i, vcqs in enumerate(elem.linearVCQS):
+                # Must decide which is worse: always checking for gnd
+                # or keeping the gnd row/column and deleting it later.
+                #
+                set_quad(self.C, elem.__linVCQidx[i], vcqs[2])
+
         
         
     def get_DC_source(self, sVec, time):
@@ -60,16 +140,23 @@ class NodalCircuit:
         an argument to avoid having to create a new vector from
         scratch each time this function is called.
         """
-        # Erase vector first. Not sure if this is more efficient
-        sVec *= 0.
+        # Erase vector first. 
+        sVec[:] = 0.
         for elem in self.sourceDCElements:
             # first get the destination row/columns 
-            outTerm1 = elem.neighbour[elem.sourceOutput[0]]
-            outTerm2 = elem.neighbour[elem.sourceOutput[1]]
+            outTerm = elem.__namSourceOut
             current = elem.get_DCsource()
-            sVec[outTerm1] += current
-            sVec[outTerm2] -= current
+            if outTerm1 > 0:
+                sVec[outTerm[0]] += current
+            if outTerm2 > 0:
+                sVec[outTerm[1]] -= current
 
-    def get_i_G(self, iVec):
+    def get_i_G_DC(self, xVec, iVec, Jac):
+        """
+        Calculate total current and Jacobian
+
+        iVec = G xVec + i(xVec)
+        Jac = G + Ji(xVec)
+        """
         pass
 

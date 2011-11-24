@@ -14,6 +14,9 @@ Action Plan
 
 Longer term:
 
+* Implement extrinsic models for MOS and BJT using template classes
+  (cf. autothermal)
+
 * Add "+" notation for multiple lines in parser 
 
 
