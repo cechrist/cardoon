@@ -9,7 +9,8 @@ This is an attempt to port/adapt the existing analyses in pycircuit
 (https://github.com/henjo/pycircuit). For now most of the code is cut
 and pasted from there.
 
-*** Not functional yet ***
+************** This is experimental/incomplete ****************                
+
 """
 
 from __future__ import print_function

@@ -4,6 +4,9 @@
 
 .. module:: na
 .. moduleauthor:: Carlos Christoffersen
+
+************** This is experimental/incomplete ****************
+
 """
 
 import numpy as np
@@ -17,6 +20,8 @@ def setQuad(G, idx, g):
         [(on1, cn1), (on2, cn2), (on2, cn1), (on1, cn2)]
 
     """
+    # Review this as there may be a more compact way
+    #
     # This is a good candidate function to compile with cython?
     G[idx[0]] = g
     G[idx[1]] = g
@@ -52,15 +57,17 @@ class NodalCircuit:
         # remove ground node from terminal list
         termList.remove(self.ref)
 
-        # Assign a number (0-inf) to all nodes except gnd=-1. For the
-        # future: use graph techniques to find the optimum terminal
-        # order
-        self.ref.__namRC = -1
-        for i, term in enumerate(termList):
-            term.__namRC = i
-
         # Dimension is the number of unknowns to solve for
         self.dimension = len(termList)
+
+        # For the future: use graph techniques to find the optimum
+        # terminal order
+
+        # Assign a number (0-inf) to all nodes. For now we'll remove a
+        # row and a column after matrices are created.
+        self.ref.__namRC = self.dimension
+        for i, term in enumerate(termList):
+            term.__namRC = i
 
         # Get a list of all elements and nonlinear devices/sources
         self.elemList = circuit.elemDict.values()
@@ -69,8 +76,9 @@ class NodalCircuit:
 
         # Map row/column numbers directly into VC*S descriptions
         for elem in elemList:
-            # Create list with RC numbers
-            rcList = map(lambda x: x.__namRC, elem.neighbour)
+            # Create list with RC numbers (choose one)
+            # rcList = map(lambda x: x.__namRC, elem.neighbour)
+            rclist = [x.__namRC for x in elem.neighbour]
 
             # Create quad pairs for linearVC*S
             def convert_vcs(x):
@@ -92,8 +100,7 @@ class NodalCircuit:
 
             # Convert nonlinear device descriptions
             if elem.isNonlinear:
-                # Rather than doing this, here we should (somehow)
-                # precalculate the indexes of all Jacobian entries
+                # Translate terminal numbers first
                 def convert_port(x):
                     n1 = rcList[x[0]]
                     n2 = rcList[x[1]]
@@ -101,7 +108,31 @@ class NodalCircuit:
                 elem.__controlPorts = map(convert_port, elem.controlPorts)
                 elem.__csOutPorts = map(convert_port, elem.csOutPorts)
                 elem.__qsOutPorts = map(convert_port, elem.qsOutPorts)
-                # add code for time-delayed sources
+                # Columns of J(c,q) in G
+                col1 = list()
+                col2 = list()
+                for port in elem.__controlPorts:
+                    col1.append(port[0])
+                    col2.append(port[1])
+                lc = len(elem.controlPorts)
+                col1 = col1 * lc
+                col2 = col2 * lc
+                # Rows of Jc in G
+                rowc1 = list()
+                rowc2 = list()
+                for port in elem.__csOutPorts:
+                    rowc1 += lc*[port[0]]
+                    rowc2 += lc*[port[1]]
+                # Rows of Jq in G
+                rowq1 = list()
+                rowq2 = list()
+                for port in elem.__qsOutPorts:
+                    rowq1 += lc*[port[0]]
+                    rowq2 += lc*[port[1]]
+                # -----------------------------------------
+                # add code for time-delayed sources here
+                # -----------------------------------------
+                elem.__Jidx = [col1, col2, rowc1, rowc2, rowq1, rowq2]
 
             # Translate source output terms
             if elem.isDCSource:
@@ -146,10 +177,8 @@ class NodalCircuit:
             # first get the destination row/columns 
             outTerm = elem.__namSourceOut
             current = elem.get_DCsource()
-            if outTerm1 > 0:
-                sVec[outTerm[0]] += current
-            if outTerm2 > 0:
-                sVec[outTerm[1]] -= current
+            sVec[outTerm[0]] += current
+            sVec[outTerm[1]] -= current
 
     def get_i_G_DC(self, xVec, iVec, Jac):
         """
@@ -158,5 +187,17 @@ class NodalCircuit:
         iVec = G xVec + i(xVec)
         Jac = G + Ji(xVec)
         """
+        # Linear contribution
+        iVec = dot(G, xVec)
+        # Nonlinear contribution
+        for elem in self.nlinElements:
+            # first have to retrieve port voltages from xVec
+            xpos = [x1[0] for x1 in elem.__controlPorts]
+            xneg = [x1[1] for x1 in elem.__controlPorts]
+            xin = xVec[xpos] - xVec[xneg]
+            (outV, Jac) = elem.eval_and_deriv(xin)
+            # May have to separate currents from outV
+            
+
         pass
 
