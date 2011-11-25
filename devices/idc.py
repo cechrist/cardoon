@@ -92,20 +92,8 @@ class Device(cir.Element):
     # Sources: DC always is always added to TD or FD
     #---------------------------------------------------------------
 
-    def getDCSource(self):
+    def getDC_source(self):
         return self._adjIdc
 
-    # def getTDSource(self, ctime):
-    #     """
-    #     Documentation (isTDSource = True)
-    #     ctime is the current time
-    #     """
-    #     # return current at ctime
-    
-    # def getFDSource(self, fvec):
-    #     """
-    #     Documentation (isFDSource = True)
-    #     """
-    #     # should return a np.array with currents for each frequency
 
 

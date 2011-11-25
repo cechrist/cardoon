@@ -209,7 +209,8 @@ class Device(cir.Element):
             if self.cjc and (self.xcjc < 1.):
                 # add extra charge source and control voltage
                 self.controlPorts.append((1, 0))
-                self.vPortGuess = np.concatenate(self.vPortGuess, [0.], axis=0)
+                self.vPortGuess = np.concatenate((self.vPortGuess, [0.]), 
+                                                 axis=0)
                 self.qsOutPorts.append((1, 0))
                 self._qbx = True
 
