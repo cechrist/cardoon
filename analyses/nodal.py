@@ -25,10 +25,11 @@ less work to operate directly from the vector of unknowns in the
 equation-solving routine.
 
 It seems that it is possible to eliminate all the if statements in
-set_i() and set_Jac() by elimnating the (-1)s from the row and column
+set_i() and set_Jac() by eliminating the (-1)s from the row and column
 vectors. The problem is that we would have to store the corresponding
-non-zero indexes for current and Jac.
-
+non-zero indexes for current and Jac --> this is implemented now. May
+need some fine tuning. For linear conductances we keep the if
+statements as this is done only once.
 
 """
 
@@ -54,18 +55,26 @@ def set_quad(G, row1, col1, row2, col2, g):
             G[row2, col2] += g
 
 
+def set_xin(xin, posCols, negCols, xVec):
+    """
+    Calculate input port voltage xin
+    """
+    # good candidate for cython
+    for i,j in posCols:
+        xin[i] += xVec[j]
+    for i,j in negCols:
+        xin[i] -= xVec[j]
+
+
 def set_i(iVec, posRows, negRows, current):
     """
     Set current contributions of current into iVec
     """
     # good candidate for cython
-    # iVec part
-    for i,j in enumerate(posRows):
-        if j > 0:
-            iVec[j] += current[i]
-    for i,j in enumerate(negRows):
-        if j > 0:
-            iVec[j] -= current[i]
+    for i,j in posRows:
+        iVec[j] += current[i]
+    for i,j in negRows:
+        iVec[j] -= current[i]
 
 
 def set_Jac(M, posRows, negRows, posCols, negCols, Jac):
@@ -73,26 +82,18 @@ def set_Jac(M, posRows, negRows, posCols, negCols, Jac):
     Set current contributions of Jac into M
     """
     # good candidate for cython
-    for i1, i in enumerate(posRows):
-        if i > 0:
-            for j1, j in enumerate(posCols):
-                if j > 0:
-                    M[i,j] += Jac[i1,j1]
-    for i1, i in enumerate(negRows):
-        if i > 0:
-            for j1, j in enumerate(negCols):
-                if j > 0:
-                    M[i,j] += Jac[i1,j1]
-    for i1, i in enumerate(posRows):
-        if i > 0:
-            for j1, j in enumerate(negCols):
-                if j > 0:
-                    M[i,j] -= Jac[i1,j1]
-    for i1, i in enumerate(negRows):
-        if i > 0:
-            for j1, j in enumerate(posCols):
-                if j > 0:
-                    M[i,j] -= Jac[i1,j1]
+    for i1, i in posRows:
+        for j1, j in posCols:
+            M[i,j] += Jac[i1,j1]
+    for i1, i in negRows:
+        for j1, j in negCols:
+            M[i,j] += Jac[i1,j1]
+    for i1, i in posRows:
+        for j1, j in negCols:
+            M[i,j] -= Jac[i1,j1]
+    for i1, i in negRows:
+        for j1, j in posCols:
+            M[i,j] -= Jac[i1,j1]
 
 
 class NodalCircuit:
@@ -163,15 +164,17 @@ class NodalCircuit:
             # readily usable for the NA approach
             if elem.isNonlinear:
                 # Translate positive and negative terminal numbers
+                def create_list(portlist):
+                    tmp0 = [rcList[x1[0]] for x1 in portlist]
+                    tmp1 = [rcList[x1[1]] for x1 in portlist]
+                    return ([(i, j) for i,j in enumerate(tmp0) if j > -1],
+                            [(i, j) for i,j in enumerate(tmp1) if j > -1])
                 # Control voltages
-                elem.__vpos = [rcList[x1[0]] for x1 in elem.controlPorts]
-                elem.__vneg = [rcList[x1[1]] for x1 in elem.controlPorts]
+                (elem.__vpos, elem.__vneg) = create_list(elem.controlPorts)
                 # Current source terminals
-                elem.__cpos = [rcList[x1[0]] for x1 in elem.csOutPorts]
-                elem.__cneg = [rcList[x1[1]] for x1 in elem.csOutPorts]
+                (elem.__cpos, elem.__cneg) = create_list(elem.csOutPorts)
                 # Charge source terminals
-                elem.__qpos = [rcList[x1[0]] for x1 in elem.qsOutPorts]
-                elem.__qneg = [rcList[x1[1]] for x1 in elem.qsOutPorts]
+                (elem.__qpos, elem.__qneg) = create_list(elem.qsOutPorts)
 
             # Translate source output terms
             if elem.isDCSource:
@@ -204,7 +207,8 @@ class NodalCircuit:
                 # Only add to positive side. This is not the only way
                 # and may not work well in some cases but this is a
                 # guess anyway
-                x0[elem.__vpos] += elem.vPortGuess
+                for i,j in elem.__vpos:
+                    x0[j] += elem.vPortGuess[i]
             except AttributeError:
                 # if vPortGuess not given just leave things unchanged
                 pass
@@ -251,8 +255,8 @@ class NodalCircuit:
         # Nonlinear contribution
         for elem in self.nlinElements:
             # first have to retrieve port voltages from xVec
-            xin = xVec[elem.__vpos] - xVec[elem.__vneg]
-            outV = elem.eval(xin)
+            xin = np.zeros(len(elem.controlPorts))
+            set_xin(xin, elem.__vpos, elem.__vneg, xVec)
             # Update iVec. outV may have extra charge elements but
             # they are not used in the following
             set_i(iVec, elem.__cpos, elem.__cneg, outV)
@@ -282,7 +286,8 @@ class NodalCircuit:
         # Nonlinear contribution
         for elem in self.nlinElements:
             # first have to retrieve port voltages from xVec
-            xin = xVec[elem.__vpos] - xVec[elem.__vneg]
+            xin = np.zeros(len(elem.controlPorts))
+            set_xin(xin, elem.__vpos, elem.__vneg, xVec)
             (outV, outJac) = elem.eval_and_deriv(xin)
             # Update iVec and Jacobian now. outV may have extra charge
             # elements but they are not used in the following
@@ -302,7 +307,8 @@ class NodalCircuit:
             term.__v = v
         for elem in self.nlinElements:
             # first have to retrieve port voltages from xVec
-            xin = xVec[elem.__vpos] - xVec[elem.__vneg]
+            xin = np.zeros(len(elem.controlPorts))
+            set_xin(xin, elem.__vpos, elem.__vneg, xVec)
             # Set OP in element (discard return value)
             elem.get_OP(xin)
 

@@ -11,7 +11,7 @@
 #* (C) 1998 SIEMENS AG
 #* REV: 98.1        September 1998
 #***************************************************************
-.model t122 bjt (type=npn isat=0.480e-15 nf=1.008 bf=99.655 vaf=90.000 \
+.model t122 svbjt (type=npn isat=0.480e-15 nf=1.008 bf=99.655 vaf=90.000 \
 ikf=0.190 \
 ise=7.490e-15 ne=1.762 nr=1.010 br=38.400 var=7.000 ikr=93.200e-3 \
 isc=0.200e-15 nc=1.042 rb=1.500 irb=0.100e-3 rbm=1.200 cje=1.325e-12 \
@@ -27,7 +27,7 @@ res:rc 10 1 r=1k
 vdc:vb 3 0 vdc=10
 res:rb 3 2 r=96k
 
-bjt:q1 1 2 0 model=t122
+svbjt:q1 1 2 0 model=t122
 
 .end
 

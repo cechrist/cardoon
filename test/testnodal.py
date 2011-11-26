@@ -10,13 +10,20 @@ import analyses.nodal as nd
 parse_net('bias_npn.net')
 ckt=cir.get_mainckt()
 nodalckt = nd.NodalCircuit(ckt)
-x = nodalckt.get_guess() + 1.
-M = np.zeros((nodalckt.dimension, nodalckt.dimension))
+x = nodalckt.get_guess() + 1e-3
+Jac = np.zeros((nodalckt.dimension, nodalckt.dimension))
 iVec = np.zeros(nodalckt.dimension)
 s = np.zeros(nodalckt.dimension)
-
 nodalckt.get_DC_source(s)
-nodalckt.get_DC_i_Jac(x, iVec, M)
 
-print iVec
-print M
+for k in range(3):
+    nodalckt.get_DC_i_Jac(x, iVec, Jac)
+    try:
+        deltax = np.linalg.solve(Jac, iVec - s)
+    except:
+        print 'oops'
+        deltax = np.dot(np.linalg.pinv(Jac), iVec-s)
+    x -= deltax
+    print x
+
+

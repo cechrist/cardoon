@@ -240,7 +240,9 @@ class Device(cir.Element):
                 self.controlPorts.append((1, 0))
                 self.qsOutPorts.append((1, 0))
                 self._qbx = True
-
+        
+        # Make sure the guess is consistent
+        self.vPortGuess = np.zeros(len(self.controlPorts))
         # In principle we may not need any charge
         keepPorts = [ ]
         if self.cje + self.tf:
