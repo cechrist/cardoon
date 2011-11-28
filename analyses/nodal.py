@@ -31,10 +31,14 @@ non-zero indexes for current and Jac --> this is implemented now. May
 need some fine tuning. For linear conductances we keep the if
 statements as this is done only once.
 
+Consider converting NodalCircuit into a function that sets all
+attributes directly into circuit.
 """
 
 import numpy as np
 
+
+# ****************** Stand-alone functions to be optimized ****************
 
 def set_quad(G, row1, col1, row2, col2, g):
     """
@@ -43,15 +47,15 @@ def set_quad(G, row1, col1, row2, col2, g):
     G: target matrix
     """
     # good cython candidate
-    if col1 > 0:
-        if row1 > 0:
+    if col1 >= 0:
+        if row1 >= 0:
             G[row1, col1] += g
-        if row2 > 0:
+        if row2 >= 0:
             G[row2, col1] -= g
     if col2 > 0:
-        if row1 > 0:
+        if row1 >= 0:
             G[row1, col2] -= g
-        if row2 > 0:
+        if row2 >= 0:
             G[row2, col2] += g
 
 
@@ -96,104 +100,125 @@ def set_Jac(M, posRows, negRows, posCols, negCols, Jac):
             M[i,j] -= Jac[i1,j1]
 
 
-class NodalCircuit:
+# ********************** Regular functions *****************************
+
+def make_nodal_circuit(ckt, reference='gnd'):
     """
-    Provides methods for nodal analysis of circuit
+    Add attributes to Circuit/Elements/Terminals for nodal analysis
 
-    Takes a circuit as an argument. If the circuit contains the 'gnd'
-    node, it is used as the reference. Otherwise a reference node must
-    be indicated.
+    This functionalyty should be useful for any kind of nodal-based
+    analysis (DC, AC, TRAN, HB, etc.)
 
-    For now only DC is implemented.
+    Takes a Circuit instance (ckt) as an argument. If the circuit
+    contains the 'gnd' node, it is used as the reference. Otherwise a
+    reference node must be indicated.
+
+    New attributes are added in Circuit/Element/Terminal
+    instances. All new attributes start with "nD_"
 
     In the future this should also work with subcircuits. External
     connections have to handled for that.
-
     """
-    def __init__(self, circuit, reference='gnd'):
-        # Save circuit
-        self.cir = circuit
-        # get ground node
-        self.ref = circuit.get_term(reference)
+    # get ground node
+    ckt.nD_ref = ckt.get_term(reference)
 
-        # get a list of all terminals in circuit (internal/external)
-        self.termList = circuit.termDict.values() + circuit.get_internal_terms()
-        # remove ground node from terminal list
-        self.termList.remove(self.ref)
+    # get a list of all terminals in circuit (internal/external)
+    ckt.nD_termList = ckt.termDict.values() + ckt.get_internal_terms()
+    # remove ground node from terminal list
+    ckt.nD_termList.remove(ckt.nD_ref)
 
-        # Dimension is the number of unknowns to solve for
-        self.dimension = len(self.termList)
+    # Dimension is the number of unknowns to solve for
+    ckt.nD_dimension = len(ckt.nD_termList)
 
-        # For the future: use graph techniques to find the optimum
-        # terminal order
+    # For the future: use graph techniques to find the optimum
+    # terminal order
 
-        # Assign a number (0-inf) to all nodes. For the reference node
-        # assign -1 
-        self.ref.__namRC = -1
-        for i, term in enumerate(self.termList):
-            term.__namRC = i
+    # Assign a number (0-inf) to all nodes. For the reference node
+    # assign -1 
+    ckt.nD_ref.nD_namRC = -1
+    for i, term in enumerate(ckt.nD_termList):
+        term.nD_namRC = i
 
-        # Get a list of all elements and nonlinear devices/sources
-        self.elemList = circuit.elemDict.values()
-        self.nlinElements = filter(lambda x: x.isNonlinear, self.elemList)
-        self.sourceDCElements = filter(lambda x: x.isDCSource, self.elemList)
+    # Get a list of all elements and nonlinear devices/sources
+    ckt.nD_elemList = ckt.elemDict.values()
+    ckt.nD_nlinElements = filter(lambda x: x.isNonlinear, ckt.nD_elemList)
+    ckt.nD_sourceDCElements = filter(lambda x: x.isDCSource, ckt.nD_elemList)
 
-        # Map row/column numbers directly into VC*S descriptions
-        for elem in self.elemList:
-            # Create list with RC numbers (choose one)
-            # rcList = map(lambda x: x.__namRC, elem.neighbour)
-            rcList = [x.__namRC for x in elem.neighbour]
+    # Map row/column numbers directly into VC*S descriptions
+    for elem in ckt.nD_elemList:
+        # Create list with RC numbers (choose one)
+        # rcList = map(lambda x: x.nD_namRC, elem.neighbour)
+        rcList = [x.nD_namRC for x in elem.neighbour]
 
-            # Translate linear VCCS/VCQS format
-            def convert_vcs(x):
-                """
-                Converts format of VC*S 
+        # Translate linear VCCS/VCQS format
+        def convert_vcs(x):
+            """
+            Converts format of VC*S 
 
-                input: [(contn1, contn2), (outn1, outn2), g]
-                output: [row1, col1, row2, col2, g]
-                """
-                col1 = rcList[x[0][0]]
-                col2 = rcList[x[0][1]]
-                row1 = rcList[x[1][0]]
-                row2 = rcList[x[1][1]]
-                return [row1, col1, row2, col2, x[2]]
-            elem.__linVCCS = map(convert_vcs, elem.linearVCCS)
-            elem.__linVCQS = map(convert_vcs, elem.linearVCQS)
+            input: [(contn1, contn2), (outn1, outn2), g]
+            output: [row1, col1, row2, col2, g]
+            """
+            col1 = rcList[x[0][0]]
+            col2 = rcList[x[0][1]]
+            row1 = rcList[x[1][0]]
+            row2 = rcList[x[1][1]]
+            return [row1, col1, row2, col2, x[2]]
+        elem.nD_linVCCS = map(convert_vcs, elem.linearVCCS)
+        elem.nD_linVCQS = map(convert_vcs, elem.linearVCQS)
 
-            # Convert nonlinear device descriptions to a format more
-            # readily usable for the NA approach
-            if elem.isNonlinear:
-                # Translate positive and negative terminal numbers
-                def create_list(portlist):
-                    tmp0 = [rcList[x1[0]] for x1 in portlist]
-                    tmp1 = [rcList[x1[1]] for x1 in portlist]
-                    return ([(i, j) for i,j in enumerate(tmp0) if j > -1],
-                            [(i, j) for i,j in enumerate(tmp1) if j > -1])
-                # Control voltages
-                (elem.__vpos, elem.__vneg) = create_list(elem.controlPorts)
-                # Current source terminals
-                (elem.__cpos, elem.__cneg) = create_list(elem.csOutPorts)
-                # Charge source terminals
-                (elem.__qpos, elem.__qneg) = create_list(elem.qsOutPorts)
+        # Convert nonlinear device descriptions to a format more
+        # readily usable for the NA approach
+        if elem.isNonlinear:
+            # Translate positive and negative terminal numbers
+            def create_list(portlist):
+                tmp0 = [rcList[x1[0]] for x1 in portlist]
+                tmp1 = [rcList[x1[1]] for x1 in portlist]
+                return ([(i, j) for i,j in enumerate(tmp0) if j > -1],
+                        [(i, j) for i,j in enumerate(tmp1) if j > -1])
+            # Control voltages
+            (elem.nD_vpos, elem.nD_vneg) = create_list(elem.controlPorts)
+            # Current source terminals
+            (elem.nD_cpos, elem.nD_cneg) = create_list(elem.csOutPorts)
+            # Charge source terminals
+            (elem.nD_qpos, elem.nD_qneg) = create_list(elem.qsOutPorts)
 
-            # Translate source output terms
-            if elem.isDCSource:
-                # first get the destination row/columns 
-                n1 = rcList[elem.sourceOutput[0]]
-                n2 = rcList[elem.sourceOutput[1]]
-                elem.__sourceOut = (n1, n2)
+        # Translate source output terms
+        if elem.isDCSource:
+            # first get the destination row/columns 
+            n1 = rcList[elem.sourceOutput[0]]
+            n2 = rcList[elem.sourceOutput[1]]
+            elem.nD_sourceOut = (n1, n2)
+
+
+# ****************** Classes ****************
+
+class DCNodal:
+    """
+    Calculates the DC part of currents and Jacobian
+
+    Matrices and vectors (G, Jac, s) are allocated here. This is to
+    centralize all allocations and avoid repetitions.
+
+    Requires a nodal-ready Circuit instance (ckt) instance (see
+    make_nodal_circuit())
+    """
+
+    def __init__(self, ckt):
+        # Save ckt instance
+        self.ckt = ckt
+        # Make sure circuit is ready (analysis should take care)
+        assert ckt.nD_ref
+
+        # Allocate matrices/vectors
+        self.G = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.Jac = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.sVec = np.zeros(self.ckt.nD_dimension)
+        self.iVec = np.zeros(self.ckt.nD_dimension)
 
         # Generate G matrix (never changes)
-        self.G = np.zeros((self.dimension, self.dimension))
-        # Generate C here too
-        self.C = np.zeros((self.dimension, self.dimension))
-        for elem in self.elemList:
-            for vccs in elem.__linVCCS:
+        for elem in self.ckt.nD_elemList:
+            for vccs in elem.nD_linVCCS:
                 set_quad(self.G, *vccs)
-            for vcqs in elem.__linVCQS:
-                set_quad(self.C, *vcqs)
-
-
 
     def get_guess(self):
         """
@@ -201,114 +226,144 @@ class NodalCircuit:
         
         Returns a guess vector
         """
-        x0 = np.zeros(self.dimension)
-        for elem in self.nlinElements:
+        x0 = np.zeros(self.ckt.nD_dimension)
+        for elem in self.ckt.nD_nlinElements:
             try:
                 # Only add to positive side. This is not the only way
                 # and may not work well in some cases but this is a
                 # guess anyway
-                for i,j in elem.__vpos:
+                for i,j in elem.nD_vpos:
                     x0[j] += elem.vPortGuess[i]
             except AttributeError:
                 # if vPortGuess not given just leave things unchanged
                 pass
         return x0
 
-
-    def get_DC_source(self, sVec):
+    def get_source(self):
         """
         Get the source vector considering only the DC source components
-
-        sVec is the source destination source vector. It is passed as
-        an argument to avoid having to create a new vector from
-        scratch each time this function is called.
         """
         # Erase vector first. 
-        sVec[:] = 0.
-        for elem in self.sourceDCElements:
+        self.sVec[:] = 0.
+        for elem in self.ckt.nD_sourceDCElements:
             # first get the destination row/columns 
-            outTerm = elem.__sourceOut
+            outTerm = elem.nD_sourceOut
             current = elem.get_DCsource()
-            if outTerm[0] > 0:
-                sVec[outTerm[0]] += current
-            if outTerm[1] > 0:
-                sVec[outTerm[1]] -= current
+            # This may not need optimization because we usually do not
+            # have too many independent sources
+            # import pdb; pdb.set_trace()
+            if outTerm[0] >= 0:
+                self.sVec[outTerm[0]] -= current
+            if outTerm[1] >= 0:
+                self.sVec[outTerm[1]] += current
+        return self.sVec
         
 
-    def get_DC_i(self, xVec, iVec):
+    def get_i(self, xVec):
         """
         Calculate total current
 
-        iVec = G xVec + i(xVec)
+        returns iVec = G xVec + i(xVec)
 
         xVec: input vector of nodal voltages. 
         iVec: output vector of currents
-
-        Output vector is passed as an argument to avoid having to
-        create one from scratch each time this function is called.
         """
-        # Erase vector
-        iVec[:] = 0
+        # Erase arrays
+        self.iVec[:] = 0.
         # Linear contribution
-        iVec += np.dot(self.G, xVec)
-        Jac += self.G
+        self.iVec += np.dot(self.G, xVec)
         # Nonlinear contribution
-        for elem in self.nlinElements:
+        for elem in self.ckt.nD_nlinElements:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(len(elem.controlPorts))
-            set_xin(xin, elem.__vpos, elem.__vneg, xVec)
+            set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             # Update iVec. outV may have extra charge elements but
             # they are not used in the following
-            set_i(iVec, elem.__cpos, elem.__cneg, outV)
+            set_i(self.iVec, elem.nD_cpos, elem.nD_cneg, outV)
+        return iVec
 
-
-    def get_DC_i_Jac(self, xVec, iVec, Jac):
+    def get_i_Jac(self, xVec):
         """
         Calculate total current and Jacobian
 
-        iVec = G xVec + i(xVec)
-        Jac = G + Ji(xVec)
+        Returns: (iVec, Jac)
+
+            iVec = G xVec + i(xVec)
+            Jac = G + Ji(xVec)
 
         xVec: input vector of nodal voltages. 
         iVec: output vector of currents
         Jac: system Jacobian
-
-        Output vectors/matrix are passed as arguments to avoid having
-        to create new ones from scratch each time this function is
-        called.
         """
-        # Erase vectors
-        iVec[:] = 0
-        Jac[:] = 0
+        # Erase arrays
+        self.iVec[:] = 0
+        self.Jac[:] = 0
         # Linear contribution
-        iVec += np.dot(self.G, xVec)
-        Jac += self.G
+        self.iVec += np.dot(self.G, xVec)
+        self.Jac += self.G
         # Nonlinear contribution
-        for elem in self.nlinElements:
+        for elem in self.ckt.nD_nlinElements:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(len(elem.controlPorts))
-            set_xin(xin, elem.__vpos, elem.__vneg, xVec)
+            set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             (outV, outJac) = elem.eval_and_deriv(xin)
             # Update iVec and Jacobian now. outV may have extra charge
             # elements but they are not used in the following
-            set_i(iVec, elem.__cpos, elem.__cneg, outV)
-            set_Jac(Jac, elem.__cpos, elem.__cneg, 
-                    elem.__vpos, elem.__vneg, outJac)
+            set_i(self.iVec, elem.nD_cpos, elem.nD_cneg, outV)
+            set_Jac(self.Jac, elem.nD_cpos, elem.nD_cneg, 
+                    elem.nD_vpos, elem.nD_vneg, outJac)
 
-
+        return (self.iVec, self.Jac)
 
     def save_OP(self, xVec):
         """
         Save nodal voltages in terminals and set OP in elements
         """
         # Set nodal voltage of reference to zero
-        self.ref.__v = 0.
-        for v,term in zip(xVec, self.termList):
-            term.__v = v
-        for elem in self.nlinElements:
+        self.ckt.nD_ref.nD_v = 0.
+        for v,term in zip(xVec, self.ckt.nD_termList):
+            term.nD_v = v
+        for elem in self.ckt.nD_nlinElements:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(len(elem.controlPorts))
-            set_xin(xin, elem.__vpos, elem.__vneg, xVec)
+            set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             # Set OP in element (discard return value)
             elem.get_OP(xin)
 
+
+
+class TransientNodal(DCNodal):
+    """
+    Adds C and VCQS to DC part of currents and Jacobian
+
+    Matrices and vectors (G, Jac, s) are allocated here
+
+    Requires a NodalCircuit instance and possibly an integration method
+    """
+
+    def __init__(self, nodalCircuit):
+
+        DCNodal.nD_init__(self, nodalCircuit)
+        # Generate C here 
+        self.C = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        for elem in self.ckt.nD_elemList:
+            for vcqs in elem.nD_linVCQS:
+                set_quad(self.C, *vcqs)
+
+    def get_source(self):
+        """
+        Add time-domain component to DC
+        """
+        pass
+
+    def get_i(self, xVec):
+        """
+        Add contribution of C and VCQS to DC. Requires integration method
+        """
+        pass
+
+    def get_i_Jac(self, xVec):
+        """
+        Add contribution of C and VCQS to DC. Requires integration method
+        """
+        pass

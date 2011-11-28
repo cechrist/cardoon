@@ -92,7 +92,7 @@ class Device(cir.Element):
     # Sources: DC always is always added to TD or FD
     #---------------------------------------------------------------
 
-    def getDC_source(self):
+    def get_DCsource(self):
         return self._adjIdc
 
 

@@ -6,18 +6,19 @@ Run as follows: %run -i testnodal
 import numpy as np
 import analyses.nodal as nd
 
-
-parse_net('bias_npn.net')
+netlist = raw_input('netlist: ')
+parse_net(netlist)
 ckt=cir.get_mainckt()
-nodalckt = nd.NodalCircuit(ckt)
-x = nodalckt.get_guess() + 1e-3
-Jac = np.zeros((nodalckt.dimension, nodalckt.dimension))
-iVec = np.zeros(nodalckt.dimension)
-s = np.zeros(nodalckt.dimension)
-nodalckt.get_DC_source(s)
+ckt.init()
+nd.make_nodal_circuit(ckt)
+dc = nd.DCNodal(ckt)
+x = dc.get_guess() + 1e-3
 
-for k in range(3):
-    nodalckt.get_DC_i_Jac(x, iVec, Jac)
+x = dc.get_guess()
+s = dc.get_source()
+
+for k in range(10):
+    (iVec, Jac) = dc.get_i_Jac(x)
     try:
         deltax = np.linalg.solve(Jac, iVec - s)
     except:
