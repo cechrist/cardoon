@@ -47,12 +47,13 @@ def set_quad(G, row1, col1, row2, col2, g):
     G: target matrix
     """
     # good cython candidate
+    #import pdb; pdb.set_trace()
     if col1 >= 0:
         if row1 >= 0:
             G[row1, col1] += g
         if row2 >= 0:
             G[row2, col1] -= g
-    if col2 > 0:
+    if col2 >= 0:
         if row1 >= 0:
             G[row1, col2] -= g
         if row2 >= 0:
@@ -277,10 +278,11 @@ class DCNodal:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(len(elem.controlPorts))
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
+            outV = elem.eval(xin)
             # Update iVec. outV may have extra charge elements but
             # they are not used in the following
             set_i(self.iVec, elem.nD_cpos, elem.nD_cneg, outV)
-        return iVec
+        return self.iVec
 
     def get_i_Jac(self, xVec):
         """
@@ -329,7 +331,6 @@ class DCNodal:
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             # Set OP in element (discard return value)
             elem.get_OP(xin)
-
 
 
 class TransientNodal(DCNodal):

@@ -1,0 +1,12 @@
+# Very simple netlist
+
+idc:i1 gnd 2 idc=2m
+res:r1 1 gnd r=10k
+res:r2 1 2 r=1k
+svdiode:d1 1 gnd
+
+.analysis op shell=True
+
+.end
+
+

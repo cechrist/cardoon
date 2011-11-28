@@ -19,7 +19,7 @@ def parse_net(filename, ckt = None):
     if not ckt:
         ckt = cir.get_mainckt()
     parse_file(filename, ckt)
-    #ckt.flatten()
+    ckt.flatten()
     ckt.init()
     # The following is slow, so we may want to remove/change it later
     #ckt.check_sanity()

@@ -61,13 +61,13 @@ class Device(cir.Element):
               +--------------------------+
               |                          |
              /|\                        /^\ 
-            | | | gyr v2               | | | gyr vbc(x)
+            ( | ) gyr v2               ( | ) gyr vbc(x)
              \V/                        \|/  
               |                          |
               +--------------------------+ 1 (local reference)
               |                          |               
              /^\                        /|\              
-            | | | gyr v1               | | | gyr vbe(x)  
+            ( | ) gyr v1               ( | ) gyr vbe(x)  
              \|/                        \V/  
               |                          |
               +--------------------------+
@@ -86,13 +86,13 @@ class Device(cir.Element):
                            +----------------+--o 0 (C)
                     -      |                |
                           /^\               |
-                   v2    | | | ibc(x2)      |
+                   v2    ( | ) ibc(x2)      |
                           \|/               |       
                     +      |               /|\       
-           (B) 1 o---------+              | | | ice(x1,x2)
+           (B) 1 o---------+              ( | ) ice(x1,x2)
                     +      |               \V/      
                           /|\               |       
-                   v1    | | | ibe(x1)      |
+                   v1    ( | ) ibe(x1)      |
                           \V/               |
                     -      |                |
                            +----------------+--o 2 (E)
@@ -102,13 +102,13 @@ class Device(cir.Element):
                                      +----------------+--o 0 (C)
                                 -    |                |
                                     /^\               |
-                       ib      v2  | | | ibc(x2)      |
+                       ib      v2  ( | ) ibc(x2)      |
                                     \|/               |       
                      ,---,      +    |               /|\       
-         (B) 1 o-+--( --> )----------+ 5 (Bi)       | | | ice(x1,x2)
+         (B) 1 o-+--( --> )----------+ 5 (Bi)       ( | ) ice(x1,x2)
                  |   `---`      +    |               \V/      
                  |                  /|\               |       
-                 |             v1  | | | ibe(x1)      |
+                 |             v1  ( | ) ibe(x1)      |
                  |                  \V/               |
                  |              -    |                |
                  |   gyr v13         +----------------+--o 2 (E)
@@ -220,14 +220,19 @@ class Device(cir.Element):
         self.neighbour[4].unit = ''
         # Flag to signal if the extra charge Qbx is needed or not
         self._qbx = False
+        # Default state-variable VCCS
+        self.linearVCCS = [((1, 2), (4, 1), glVar.gyr),
+                           ((1, 0), (3, 1), glVar.gyr)]
         if self.rb:
             # rb is not zero: add internal terminals
             self.add_internal_terms(2)
             # gyrator node unit
             self.neighbour[6].unit = '* {0} A'.format(1./glVar.gyr)
-            # Linear VCCS for gyrator(s)
-            linearVCCS = [((1, 5), (6, 1), glVar.gyr),
-                          ((6, 1), (1, 5), glVar.gyr)]
+            # Add Linear VCCS for gyrator(s)
+            self.linearVCCS = [((5, 2), (4, 1), glVar.gyr),
+                               ((5, 0), (3, 1), glVar.gyr),
+                               ((1, 5), (6, 1), glVar.gyr),
+                               ((6, 1), (1, 5), glVar.gyr)]
             # ibe, vbe, ibc, vbc, ice, Rb(ib) * ib
             self.csOutPorts = [(5, 0), (1, 4), (5, 2), (1, 3), (0, 2), (1, 6)]
             # Controling voltages are x1, x2 and gyrator port

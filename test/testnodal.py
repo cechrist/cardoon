@@ -6,7 +6,8 @@ Run as follows: %run -i testnodal
 import numpy as np
 import analyses.nodal as nd
 
-netlist = raw_input('netlist: ')
+netlist = 'bias_npn.net'
+cir.reset_allckt()
 parse_net(netlist)
 ckt=cir.get_mainckt()
 ckt.init()
@@ -17,7 +18,7 @@ x = dc.get_guess() + 1e-3
 x = dc.get_guess()
 s = dc.get_source()
 
-for k in range(10):
+for k in range(200):
     (iVec, Jac) = dc.get_i_Jac(x)
     try:
         deltax = np.linalg.solve(Jac, iVec - s)
@@ -25,6 +26,8 @@ for k in range(10):
         print 'oops'
         deltax = np.dot(np.linalg.pinv(Jac), iVec-s)
     x -= deltax
-    print x
-
+    n = np.linalg.norm(dc.get_i(x) - s) + np.linalg.norm(deltax) 
+    print n
+    if n < 1e-8:
+        break
 

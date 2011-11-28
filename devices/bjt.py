@@ -59,13 +59,13 @@ class Device(cir.Element):
                          +----------------+--o 0 (C)
                          |                |
                         /^\               |
-                       | | | ibc(vbc)     |
+                       ( | ) ibc(vbc)     |
                         \|/               |       
                          |               /|\       
-         (B) 1 o---------+              | | | ice    
+         (B) 1 o---------+              ( | ) ice    
                          |               \V/      
                         /|\               |       
-                       | | | ibe(vbe)     |
+                       ( | ) ibe(vbe)     |
                         \V/               |
                          |                |
                          +----------------+--o 2 (E)
@@ -75,13 +75,13 @@ class Device(cir.Element):
                                      +----------------+--o 0 (C)
                                      |                |
                                     /^\               |
-                       ib          | | | ibc(vbc)     |
+                       ib          ( | ) ibc(vbc)     |
                                     \|/               |       
                      ,---,           |               /|\       
-         (B) 1 o-+--( --> )----------+ 3 (Bi)       | | | ice    
+         (B) 1 o-+--( --> )----------+ 3 (Bi)       ( | ) ice    
                  |   `---`           |               \V/      
                  |                  /|\               |       
-                 |                 | | | ibe(vbe)     |
+                 |                 ( | ) ibe(vbe)     |
                  |                  \V/               |
                  |                   |                |
                  |   gyr v13         +----------------+--o 2 (E)
@@ -196,8 +196,8 @@ class Device(cir.Element):
             # gyrator node unit
             self.neighbour[4].unit = '* {0} A'.format(1./glVar.gyr)
             # Linear VCCS for gyrator(s)
-            linearVCCS = [((1, 3), (4, 1), glVar.gyr),
-                          ((4, 1), (1, 3), glVar.gyr)]
+            self.linearVCCS = [((1, 3), (4, 1), glVar.gyr),
+                               ((4, 1), (1, 3), glVar.gyr)]
             # ibe, ibc, ice, Rb(ib) * ib
             self.csOutPorts = [(3, 2), (3, 0), (0, 2), (1, 4)]
             # Controling voltages are vbie, vbic and gyrator port

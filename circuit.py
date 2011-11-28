@@ -780,6 +780,15 @@ def get_mainckt():
     else:
         return Circuit.cktDict['main']
 
+def reset_allckt():
+    """
+    Erases all existing circuits
+
+    Used mostly for debugging purposes
+    """
+    Circuit.cktDict = dict()
+    Circuit.modelDict = dict()
+
 #---------------------------------------------------------------------
 def add_model(model):
     """ 
