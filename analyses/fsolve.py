@@ -7,14 +7,11 @@
 """
 
 from __future__ import print_function
-import logging
 import numpy as np
 from globalVars import glVar
-from analysis import AnalysisError
 
 class NoConvergenceError(Exception):
     pass
-
 
 def fsolve(x0, f_Jac_eval, f_eval):
     """
@@ -46,8 +43,8 @@ def fsolve(x0, f_Jac_eval, f_eval):
             deltax = np.linalg.solve(Jac, errFunc)
         except:
             logging.warning('Singular Jacobian')
-            # Use least-squares approach
-            deltax = np.linalg.lstsq(Jac, errFunc)
+            # Use pseudo-inverse
+            deltax = np.dot(np.linalg.pinv(Jac), errFunc)
         # Do not allow updates greater than 10
         maxDelta = max(abs(deltax))
         maxAllowed = 200.
@@ -82,77 +79,36 @@ def solve(x0, sV, obj):
 
     x0: initial guess
     sV: source vector
-    obj: object that provides the following methods::
+    obj: object that provides the following methods and attributes::
 
         (iVec, Jac) = obj.get_i_Jac(x)   # Returns current and Jacobian
         iVec = obj.get_i(x)              # Returns current
+        obj.convergence_helpers          # list of functions that can be used
+                                         # to solve equations
+
+    Example of helper functions:
+
+        obj.solve_simple(x0, sV)
+        obj.solve_homotopy_gmin(x0, sV)
+        obj.solve_homotopy_source(x0, sV)
 
     This function originally adapted from pycircuit
     (https://github.com/henjo/pycircuit)
     """
-    convergence_helpers = [solve_simple, solve_homotopy_gmin, 
-                           solve_homotopy_source, 
-                           None]
-
-    for algorithm in convergence_helpers:
+    for algorithm in obj.convergence_helpers:
         if algorithm == None:
-            raise AnalysisError('No convergence!')
+            raise NoConvergenceError(
+                'Giving up. No convergence with any method')
         else:
             if algorithm.__doc__:
                 print('Trying ' + algorithm.__doc__)
             try:
-                (x, res, iter) = algorithm(x0, sV, obj)
+                (x, res, iterations) = algorithm(x0, sV)
             except NoConvergenceError as ce:
-                logging.warning('Problems encountered: ' + str(ce))
+                print(str(ce))
             else:
                 break
 
-    return (x, res, iter)
-
-
-def solve_simple(x0, sV, obj):
-    """Simple Newton's method"""
-    def f_Jac_eval(x):
-        (iVec, Jac) = obj.get_i_Jac(x) 
-        return (iVec - sV, Jac)
-
-    def f_eval(x):
-        iVec = obj.get_i(x) 
-        return iVec - sV
-
-    return fsolve(x0, f_Jac_eval, f_eval)
-
-
-def solve_homotopy_gmin(x0, sV, obj):
-    """Newton's method with gmin stepping"""
-    x = x0
-    for gmin in (1, 1e-1, 1e-2, 0):
-        n_nodes = len(x0)
-        Ggmin = gmin * np.eye(n_nodes)
-
-        def f_Jac_eval(x):
-            (iVec, Jac) = obj.get_i_Jac(x) 
-            return (iVec - sV, Jac + Ggmin)
-        
-        def f_eval(x):
-            iVec = obj.get_i(x) 
-            return iVec - sV
-
-    return fsolve(x0, f_Jac_eval, f_eval)
-
-
-def solve_homotopy_source(x0, sV, obj):
-    """Newton's method with source stepping"""
-    x = x0
-    for lambda_ in (0, 1e-2, 1e-1, 1):
-        def f_Jac_eval(x):
-            (iVec, Jac) = obj.get_i_Jac(x) 
-            return (iVec - lambda_ * sV, Jac)
-        
-        def f_eval(x):
-            iVec = obj.get_i(x) 
-            return iVec - lambda_ * sV
-
-    return fsolve(x0, f_Jac_eval, f_eval)
+    return (x, res, iterations)
 
 

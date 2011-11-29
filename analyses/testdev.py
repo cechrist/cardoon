@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 #from globalVars import glVar
 from paramset import ParamSet
-from analysis import AnalysisError
+from analysis import AnalysisError, ipython_drop
 
 class Analysis(ParamSet):
     """
@@ -29,6 +29,8 @@ class Analysis(ParamSet):
     * get_OP()
     * power() (for electrothermal models)
 
+    After completion the analysis drops to an interactive shell if the
+    ``shell`` global variable is set to ``True``
     """
 
     # antype is the netlist name of the analysis: .analysis tran tstart=0 ...
@@ -47,8 +49,7 @@ class Analysis(ParamSet):
         plot = ('Auto-plot currents and charges', '', bool, True),
         useAD = ('Use automatic differentiation', '', bool, True),
         param = ('Parameter for outer sweep', '', str, ''),
-        param_val = ('Vector with parameter values to sweep', '', list, []),
-        shell = ('Drop to ipython shell after calculation', '', bool, False)
+        param_val = ('Vector with parameter values to sweep', '', list, [])
         )
 
 
@@ -160,15 +161,7 @@ class Analysis(ParamSet):
             if self.plot:
                 self.plot_all(vsweep, iout, qout, param, npsweep, paramunit)
 
-            if self.shell: 
-                from IPython.Shell import IPShellEmbed
-                args = ['-pi1','In <\\#>: ','-pi2','   .\\D.: ',
-                        '-po','Out<\\#>: ','-nosep']
-                ipshell = IPShellEmbed(args, 
-                                       banner = 'Dropping into IPython, type CTR-D to exit',
-                                       exit_msg = 'Leaving Interpreter, back to program.')
-                ipshell()
-
+            ipython_drop(globals(), locals())
 
 
     def plot_all(self, vsweep, iout, qout, param, npsweep, paramunit):

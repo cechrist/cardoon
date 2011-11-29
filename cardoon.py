@@ -109,9 +109,9 @@ if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
         print('\nUsage:')
-        print('        cardoon <netlistname>')
-        print('        cardoon -c')
-        print('        cardoon -i')
+        print('        cardoon <netlistname>  : Process netlist file')
+        print('        cardoon -c             : Generate catalogs')
+        print('        cardoon -i             : drop to Ipython shell')
         exit(1)
 
     if sys.argv[1] == '-c':

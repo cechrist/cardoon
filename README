@@ -29,8 +29,8 @@ from electrical models.  Nonlinear models use automatic
 differentiation for jacobian calculation. In addition, automatic
 differentiation can also be used to calculate sensitivities.
 
-So far there is no real analysis implemented, except a simple
-nonlinear device test routine. The immediate plan is implement basic
+Please see the list of supported analysis types in the analysis
+library catalog. The immediate plan is to implement basic
 DC/AC/Transient(/noise?) analyses to finish testing the model library
 and study the performance and explore the performance that can be
 achieved.

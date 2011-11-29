@@ -5,7 +5,7 @@ res:r1 1 gnd r=10k
 res:r2 1 2 r=1k
 svdiode:d1 1 gnd
 
-.analysis op shell=True
+.analysis op elemop=True
 
 .end
 

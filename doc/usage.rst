@@ -7,7 +7,7 @@ Installation
 ------------
 
 In addition to a Python interpreter (version 2.6 or possibly 2.7), the
-following free libraries are required to run celery. All, except
+following free libraries are required to run cardoon. All, except
 pycppad can be installed directly from Debian/Ubuntu packages. To
 install pycppad, just follow the instructions on its website.
 
@@ -19,7 +19,7 @@ install pycppad, just follow the instructions on its website.
 
 * pyparsing:  http://pyparsing.wikispaces.com/
 
-* ipython (optional for now):  http://ipython.org/
+* ipython:  http://ipython.org/
 
 You may also need to install *git* to fetch the source code from
 the github repository::
@@ -37,27 +37,46 @@ Usage
 
 At this moment the main program is very simple. It just reads a
 netlist file, builds the circuit described there and runs any
-specified analyses. Better integration with *ipython* is planned for
-the future to enable interactive use of the device and analysis
-libraries.
+specified analyses.
 
 After the source is installed, change into the cardoon directory and
-run::
+run the program with no arguments for a brief help message::
 
     cechrist@moon:~/wd/cardoon$ python cardoon.py 
-    Usage: cardoon <netlistname> 
+    Usage:
+            cardoon <netlistname>  : Process netlist file
+            cardoon -c             : Generate catalogs
+            cardoon -i             : drop to Ipython shell
 
 Then you can change into the test/devices directory and try some of
 the netlists there::
 
-    cechrist@moon:~/wd/cardoon$ cd test/device_tests/
-    cechrist@moon:~/wd/cardoon/test/device_tests$ python ../../cardoon.py mosekv.net
+    cechrist@moon:~/wd/cardoon$ cd test
+    cechrist@moon:~/wd/cardoon/test$ python ../cardoon.py simple.net
+    Trying Simple Newton's method
     ******************************************************
-    Nonlinear device internal source test analysis
+                 Operating point analysis
     ******************************************************
-    Element Node name: mosekv:m1
-    Linked nodes:  2 3 4 gnd
-    ...
+    Number of iterations =  3
+    Residual =  2.20086083382e-08
+    
+     Node      |  Value               | Unit 
+    ----------------------------------------
+    1          |             0.672162 | V
+    2          |              2.67216 | V
+    gnd        |                  0.0 | V
+    
+    Element:  svdiode:d1
+     Variable  |  Value 
+    -------------------------
+        Cd     | 6.69110617079e-05
+        ID     | 0.00193278379487
+      Sshot    | 6.19332180271e-22
+     Sthermal  | 0.0
+        VD     | 0.672162035866
+        gd     | 0.0747260598229
+     kFliker   | 0.0
+        x      | 4.38235965115
 
 
 Netlist Format
@@ -115,17 +134,18 @@ one circuit element, an analysis to perform or another command.
    
        .options temp=29.1439 gyr=1e-3
    
-   List of global variables
+   List of global variables (check globalVars.py for an updated list)
 
-    ========= ============ ============ ===================================================== 
-    Name       Default      Unit         Description                                          
-    ========= ============ ============ ===================================================== 
-    reltol     1.0e-05                   Relative tolerance                                   
-    abstol     1.0e-08                   Absolute tolerance                                   
-    gyr        0.01         S            Default gain in internal gyrators                    
-    temp       27.0         C            Ambient temperature                                  
-    ========= ============ ============ ===================================================== 
-
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ abstol       1.0e-08                   Absolute tolerance                                   
+ gyr          0.01         S            Default gain in internal gyrators                    
+ maxiter      100                       Maximum number of Newton iterations                  
+ reltol       1.0e-08                   Relative tolerance                                   
+ shell        0                         Drop to ipython shell after calculation              
+ temp         27.0         C            Ambient temperature                                  
+ =========== ============ ============ =====================================================  
 
 #. Subcircuits use a syntax similar to spice::
 

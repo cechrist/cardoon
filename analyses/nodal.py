@@ -31,12 +31,10 @@ non-zero indexes for current and Jac --> this is implemented now. May
 need some fine tuning. For linear conductances we keep the if
 statements as this is done only once.
 
-Consider converting NodalCircuit into a function that sets all
-attributes directly into circuit.
 """
 
 import numpy as np
-
+from fsolve import fsolve, NoConvergenceError
 
 # ****************** Stand-alone functions to be optimized ****************
 
@@ -193,6 +191,8 @@ def make_nodal_circuit(ckt, reference='gnd'):
 
 # ****************** Classes ****************
 
+#------------------------------------------------------------------------
+
 class DCNodal:
     """
     Calculates the DC part of currents and Jacobian
@@ -209,6 +209,12 @@ class DCNodal:
         self.ckt = ckt
         # Make sure circuit is ready (analysis should take care)
         assert ckt.nD_ref
+
+        # List here the functions that can be used to solve equations
+        self.convergence_helpers = [self.solve_simple, 
+                                    self.solve_homotopy_gmin, 
+                                    self.solve_homotopy_source, 
+                                    None]
 
         # Allocate matrices/vectors
         self.G = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
@@ -298,8 +304,8 @@ class DCNodal:
         Jac: system Jacobian
         """
         # Erase arrays
-        self.iVec[:] = 0
-        self.Jac[:] = 0
+        self.iVec[:] = 0.
+        self.Jac[:] = 0.
         # Linear contribution
         self.iVec += np.dot(self.G, xVec)
         self.Jac += self.G
@@ -332,6 +338,73 @@ class DCNodal:
             # Set OP in element (discard return value)
             elem.get_OP(xin)
 
+    # The following functions used to solve equations, originally from
+    # pycircuit
+    def solve_simple(self, x0, sV):
+        """Simple Newton's method"""
+        def f_Jac_eval(x):
+            (iVec, Jac) = self.get_i_Jac(x) 
+            return (iVec - sV, Jac)
+    
+        def f_eval(x):
+            iVec = self.get_i(x) 
+            return iVec - sV
+    
+        return fsolve(x0, f_Jac_eval, f_eval)
+    
+        
+    def solve_homotopy_source(self, x0, sV):
+        """Newton's method with source stepping"""
+        x = np.copy(x0)
+        totIter = 0
+        for lambda_ in np.linspace(start = .1, stop = 1., num = 10):
+            def f_Jac_eval(x):
+                (iVec, Jac) = self.get_i_Jac(x) 
+                return (iVec - lambda_ * sV, Jac)
+            
+            def f_eval(x):
+                iVec = self.get_i(x) 
+                return iVec - lambda_ * sV
+            (x, res, iterations) = fsolve(x, f_Jac_eval, f_eval)
+            print('lambda = {0}, res = {1}, iter = {2}'.format(lambda_, 
+                                                               res, iterations))
+            totIter += iterations
+
+        return (x, res, totIter)
+    
+
+    def solve_homotopy_gmin(self, x0, sV):
+        """Newton's method with gmin stepping"""
+        x = np.copy(x0)
+        totIter = 0
+        # Add a conductance in parallel with every node
+        idx = np.arange(self.ckt.nD_dimension)
+        for gmin in (1., .1, .01, 1e-3, 1e-4, 1e-5, 0.):
+            # Add conductances to G matrix
+            self.G[idx,idx] += gmin
+            try:
+                (x, res, iterations) = self.solve_simple(x, sV)
+                print('gmin = {0}, res = {1}, iter = {2}'.format(gmin, 
+                                                                 res, 
+                                                                 iterations))
+            except NoConvergenceError:
+                # Restore original G matrix
+                self.G[idx,idx] -= gmin
+                raise
+
+            totIter += iterations
+            # Restore original G matrix
+            self.G[idx,idx] -= gmin
+
+        # Call solve_simple with better initial guess
+        totIter += iterations
+
+        return (x, res, totIter)
+    
+    
+    
+
+#----------------------------------------------------------------------
 
 class TransientNodal(DCNodal):
     """

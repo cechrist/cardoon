@@ -50,13 +50,13 @@ configurations are described here.
                      +----------------+--o 0 (C)
                      |                |
                     /^\               |
-                   | | | ibc(vbc)     |
+                   ( | ) ibc(vbc)     |
                     \|/               |       
                      |               /|\       
-     (B) 1 o---------+              | | | ice    
+     (B) 1 o---------+              ( | ) ice    
                      |               \V/      
                     /|\               |       
-                   | | | ibe(vbe)     |
+                   ( | ) ibe(vbe)     |
                     \V/               |
                      |                |
                      +----------------+--o 2 (E)
@@ -66,13 +66,13 @@ configurations are described here.
                                  +----------------+--o 0 (C)
                                  |                |
                                 /^\               |
-                   ib          | | | ibc(vbc)     |
+                   ib          ( | ) ibc(vbc)     |
                                 \|/               |       
                  ,---,           |               /|\       
-     (B) 1 o-+--( --> )----------+ 3 (Bi)       | | | ice    
+     (B) 1 o-+--( --> )----------+ 3 (Bi)       ( | ) ice    
              |   `---`           |               \V/      
              |                  /|\               |       
-             |                 | | | ibe(vbe)     |
+             |                 ( | ) ibe(vbe)     |
              |                  \V/               |
              |                   |                |
              |   gyr v13         +----------------+--o 2 (E)
@@ -605,13 +605,13 @@ positive exponentials from the model::
           +--------------------------+
           |                          |
          /|\                        /^\ 
-        | | | gyr v2               | | | gyr vbc(x)
+        ( | ) gyr v2               ( | ) gyr vbc(x)
          \V/                        \|/  
           |                          |
           +--------------------------+ 1 (local reference)
           |                          |               
          /^\                        /|\              
-        | | | gyr v1               | | | gyr vbe(x)  
+        ( | ) gyr v1               ( | ) gyr vbe(x)  
          \|/                        \V/  
           |                          |
           +--------------------------+
@@ -630,13 +630,13 @@ internal base current and calculate Rb(ib).
                        +----------------+--o 0 (C)
                 -      |                |
                       /^\               |
-               v2    | | | ibc(x2)      |
+               v2    ( | ) ibc(x2)      |
                       \|/               |       
                 +      |               /|\       
-       (B) 1 o---------+              | | | ice(x1,x2)
+       (B) 1 o---------+              ( | ) ice(x1,x2)
                 +      |               \V/      
                       /|\               |       
-               v1    | | | ibe(x1)      |
+               v1    ( | ) ibe(x1)      |
                       \V/               |
                 -      |                |
                        +----------------+--o 2 (E)
@@ -646,13 +646,13 @@ internal base current and calculate Rb(ib).
                                  +----------------+--o 0 (C)
                             -    |                |
                                 /^\               |
-                   ib      v2  | | | ibc(x2)      |
+                   ib      v2  ( | ) ibc(x2)      |
                                 \|/               |       
                  ,---,      +    |               /|\       
-     (B) 1 o-+--( --> )----------+ 5 (Bi)       | | | ice(x1,x2)
+     (B) 1 o-+--( --> )----------+ 5 (Bi)       ( | ) ice(x1,x2)
              |   `---`      +    |               \V/      
              |                  /|\               |       
-             |             v1  | | | ibe(x1)      |
+             |             v1  ( | ) ibe(x1)      |
              |                  \V/               |
              |              -    |                |
              |   gyr v13         +----------------+--o 2 (E)

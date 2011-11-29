@@ -1,13 +1,13 @@
 # *** SVBJT test netlist ***
 #
 #
-#.analysis testdev plot=1 shell=0 ports_bias = [-.7V, 5V, -.1] \
+#.analysis testdev plot=1 ports_bias = [-.7V, 5V, -.1] \
 #	  sweep_port=0 start = -.75V stop= 0V sweep_num=1100 \
 #	  device = bjt:q1 \
 #	  param = temp param_val = [0., 27., 50]
 
 # Remember first two are state variables
-.analysis testdev useAD=1 plot=1 shell=0 ports_bias = [-50, 5., -5.] \
+.analysis testdev useAD=1 plot=1 ports_bias = [-50, 5., -5.] \
 	  sweep_port=0 start = 0. stop= -50. sweep_num=100 \
 	  device = svbjt:q1
 

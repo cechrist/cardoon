@@ -42,7 +42,8 @@ globDict = dict(
     abstol = ('Absolute tolerance', '', float, 1e-8),
     reltol = ('Relative tolerance', '', float, 1e-8),
     maxiter = ('Maximum number of Newton iterations', '', int, 100),
-    gyr = ('Default gain in internal gyrators', 'S', float, 1e-2)
+    gyr = ('Default gain in internal gyrators', 'S', float, 1e-2),
+    shell = ('Drop to ipython shell after calculation', '', bool, False)
 )
 
 glVar = ParamSet(globDict)

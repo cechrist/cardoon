@@ -21,7 +21,7 @@ not possible/practical to follow these rules.
 
 #. For attributes added to arbitrary instances use a unique prefix
    that ends with and underscore to avoid conflict with internal
-   attributes. Example: "nD_" (used in nodal.py)
+   attributes. Example: ``nD_`` (used in nodal.py)
 
 #. Use underscore first for private attributes: _privateVar 
 

@@ -2,9 +2,7 @@
 Action Plan
 -----------
 
-* Add class to handle nodal method in analysis
-
-* Implement OP/DC analysis
+* Implement OP/DC analysis. (OP working already)
 
 * Consider adding next_event() for TD sources
 

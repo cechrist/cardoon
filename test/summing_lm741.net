@@ -114,5 +114,6 @@ ne=0.5 nc=0.5 tr=3000e-9 vje=0.55 vjc=0.55)
 *  rc=100  re=10
 
 .analysis op
+.options maxiter=300 shell=1
 
 .end

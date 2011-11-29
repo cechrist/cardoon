@@ -11,7 +11,7 @@ from __future__ import print_function
 import numpy as np
 
 from paramset import ParamSet
-from analysis import AnalysisError
+from analysis import AnalysisError, ipython_drop
 import nodal as nd
 from fsolve import solve
 
@@ -19,9 +19,19 @@ class Analysis(ParamSet):
     """
     DC Operating Point Calculation
 
-    Calculates the DC operating point of a circuit. This is also
-    useful for many other analyses such as DC, AC, Transient, HB,
-    etc. Charge sources are ignored in this calculation.
+    Calculates the DC operating point of a circuit using the nodal
+    approach. Nodal voltages and nonlinear device operating points are
+    saved after the analysis is complete.
+
+    By default the voltage at all external voltages is printed after
+    the analysis is complete. Optionally the operating points of
+    nonlinear elements can be printed. 
+
+    Convergence parameters for the Newton method are controlled using
+    the global variables in ``.options``.
+
+    After completion the analysis drops to an interactive shell if the
+    ``shell`` global variable is set to ``True``
     """
 
     # antype is the netlist name of the analysis: .analysis tran tstart=0 ...
@@ -29,7 +39,7 @@ class Analysis(ParamSet):
 
     # Define parameters as follows
     paramDict = dict(
-        shell = ('Drop to ipython shell after calculation', '', bool, False)
+        elemop = ('Print element operating points', '', bool, False)
         )
 
 
@@ -51,14 +61,14 @@ class Analysis(ParamSet):
         x0 = dc.get_guess()
         sV = dc.get_source()
         # solve equations
-        (x, res, iter) = solve(x0, sV, dc)
+        (x, res, iterations) = solve(x0, sV, dc)
         dc.save_OP(x)
 
         # for now just print some fixed stuff
         print('******************************************************')
         print('             Operating point analysis')
         print('******************************************************')
-        print('Number of iterations = ', iter)
+        print('Number of iterations = ', iterations)
         print('Residual = ', res)
 
         print('\n Node      |  Value               | Unit ')
@@ -67,20 +77,14 @@ class Analysis(ParamSet):
             term = circuit.termDict[key]
             print('{0:10} | {1:20} | {2}'.format(key, term.nD_v, term.unit))
 
-        for elem in circuit.nD_nlinElements:
-            print('\nElement: ', elem.nodeName)
-            print(' Variable  |  Value ')
-            print('-------------------------')
-            print(elem.format_OP())
+        if self.elemop:
+            for elem in circuit.nD_nlinElements:
+                print('\nElement: ', elem.nodeName)
+                print(' Variable  |  Value ')
+                print('-------------------------')
+                print(elem.format_OP())
 
-        if self.shell: 
-            from IPython.Shell import IPShellEmbed
-            args = ['-pi1','In <\\#>: ','-pi2','   .\\D.: ',
-                    '-po','Out<\\#>: ','-nosep']
-            ipshell = IPShellEmbed(args, 
-                                   banner = 'Dropping into IPython, type CTR-D to exit',
-                                   exit_msg = 'Leaving Interpreter, back to program.')
-            ipshell()
+        ipython_drop(globals(), locals())
 
 
 
