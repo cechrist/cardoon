@@ -1,0 +1,118 @@
+*** OPAMP 741 ***
+*Summing Amplifier with Opamp 741 
+*Opamp 741 contains 26 BJT
+* Original freeda netlist by Muhammad Kabir
+* Does not work yet: removed substrate connections, rc, re
+
+***Input***
+vdc:v2 153 0 
+res:r2s 153 154 r=10.
+vdc:v1 151 0 
+res:r1s 151 152 r=10.
+
+res:r1ext 152 202 r=5e3
+res:r2ext 154 202 r=20e3
+res:r4ext 202 23 r=20e3
+
+res:r5ext 201 0 r=3.33e3
+
+
+***Power Supply****
+***VCC PIN 1
+***VEE PIN 2
+
+vdc:vcc 100 0 vdc=7.5
+res:rcc 1 100 r=20
+vdc:vee 0 101 vdc=7.5
+res:ree 101 2 r=20
+
+***Widlar Current Source***
+svbjt:q10 5 4 3 model=mynpn area=1
+svbjt:q11 4 4 2 model=mynpn area=1
+res:r4 3 2 r=5e3
+res:r5 6 4 r=39e3
+svbjt:q9 5 7 1 model=mypnp area=1
+svbjt:q12 6 6 1 model=mypnp area=1
+
+svbjt:q13b 15 6 1 model=mypnp area=3
+svbjt:q13a 16 6 1 model = mypnp area=1
+
+svbjt:q8 7 7 1 model = mypnp area=1
+
+***INPUT***
+*Vplus ---> PIN201
+*Vminus---> PIN202
+*Offset null1 ----> PIN14
+*Offset null2 ----> PIN17
+
+***Differential Amplifier***
+svbjt:q1 7 201 9 model = mynpn area=1
+svbjt:q2 7 202 10 model = mynpn area=1
+svbjt:q3 11 5 9 model = mypnp area=1
+svbjt:q4 12 5 10 model = mypnp area=1
+svbjt:q5 11 13 14 model = mynpn area=1
+svbjt:q6 12 13 17 model = mynpn area=1
+svbjt:q7 1 11 13 model = mynpn area=1
+res:r1 14 2 r=1e3
+res:r2 17 2 r=1e3
+res:r3 13 2 r=50e3
+
+
+svbjt:q19 16 16 20 model = mynpn area=1
+svbjt:q18 16 20 21 model = mynpn area=1
+res:r10 20 21 r=40e3
+cap:cc 15 12 c=30e-12
+
+
+svbjt:q16 1 12 18 model = mynpn area=1
+svbjt:q17 15 18 19 model = mynpn area=1
+svbjt:q22 12 25 2 model = mynpn area=1
+res:r9 18 2 r=50e3
+res:r8 19 2 r=100
+
+svbjt:q23b 2 15 12 model = mypnp area=1
+svbjt:q23a 2 15 21 model = mypnp area=1
+
+***Output***
+*Output ---> PIN23
+
+svbjt:q14 1 16 22 model = mynpn area=3
+svbjt:q15 16 22 23 model = mynpn area=1
+res:r6 22 23 r=27
+svbjt:q21 25 24 23 model = mypnp area=1
+res:r7 23 24 r=22
+svbjt:q20 2 21 24 area=1 isat=1e-14 rb=150  \
+br=4 bf=50 vaf=50 tf=20e-9 cje=0.5e-12 cjc=2e-12
+* rc=50 re=2
+
+svbjt:q24 25 25 2 model = mynpn area=1
+res:r12 25 2 r=50e3
+
+***Dummy Resistors
+res:rdummy1 4 0 r=20e6
+res:rdummy2 5 0 r=20e6
+res:rdummy3 6 0 r=20e6
+res:rdummy4 7 0 r=20e6
+res:rdummy5 9 0 r=20e6
+res:rdummy6 10 0 r=20e6
+res:rdummy7 11 0 r=20e6
+res:rdummy8 3 0 r=20e6
+res:rdummy9 12 0 r=20e6
+res:rdummy13 15 0 r=20e6
+res:rdummy14 16 0 r=20e6
+res:rdummy18 21 0 r=20e6
+res:rdummy21 24 0 r=20e6
+
+.model mynpn svbjt(type=npn isat=5e-15 rb=200 bf=200 \
+br=2 vaf=130 tf=0.35e-9 cje=1e-12 cjc=0.3e-12 \
+ne=0.33 nc=0.5 tr=400e-9 vje=0.7 vjc=0.55)
+* rc=200 re=2 
+
+.model mypnp svbjt(type=pnp isat=2e-15 rb=300 \
+bf=50 br=4 vaf=50 tf=30e-9 cje=0.3e-12 cjc=1e-12 \
+ne=0.5 nc=0.5 tr=3000e-9 vje=0.55 vjc=0.55)
+*  rc=100  re=10
+
+.analysis op
+
+.end

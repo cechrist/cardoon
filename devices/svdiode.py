@@ -62,7 +62,7 @@ class SVJunction:
         # Maximum argument in exponential function (no need to use
         # safe_exp() with this model)
         self._alpha = 1. / self.n / obj.vt
-        max_exp_arg = 5e8
+        max_exp_arg = 5e10
         self._svth = np.log(max_exp_arg / self._alpha) / self._alpha
         self._kexp = self.n * obj.vt * max_exp_arg
         # Capacitance

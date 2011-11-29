@@ -254,9 +254,20 @@ class Element(GraphNode, ParamSet):
             print('Operating point information:\n')
             print(' Variable  |  Value ')
             print('-------------------------')
-            # Print operating point information
+            print(self.format_OP())
+
+    def format_OP(self):
+        """ 
+        Return OP information in a formatted string
+        """
+        try:
+            # Format operating point information
+            s = ''
             for key in sorted(self.OP.iterkeys()):
-                print('{0:^10} | {1}'.format(key, self.OP[key]))
+                s += '{0:^10} | {1}\n'.format(key, self.OP[key])
+            return s
+        except AttributeError:
+            return ''
 
     # Parameter-related functions ----------------------------------------
     def is_set(self, paramName):

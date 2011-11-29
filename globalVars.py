@@ -40,7 +40,7 @@ const.set_attributes()
 globDict = dict(
     temp = ('Ambient temperature', 'C', float, 27.),
     abstol = ('Absolute tolerance', '', float, 1e-8),
-    reltol = ('Relative tolerance', '', float, 1e-5),
+    reltol = ('Relative tolerance', '', float, 1e-8),
     maxiter = ('Maximum number of Newton iterations', '', int, 100),
     gyr = ('Default gain in internal gyrators', 'S', float, 1e-2)
 )

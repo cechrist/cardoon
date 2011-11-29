@@ -13,7 +13,7 @@ import numpy as np
 from paramset import ParamSet
 from analysis import AnalysisError
 import nodal as nd
-from helperfunc import solve
+from fsolve import solve
 
 class Analysis(ParamSet):
     """
@@ -51,13 +51,27 @@ class Analysis(ParamSet):
         x0 = dc.get_guess()
         sV = dc.get_source()
         # solve equations
-        x = solve(x0, sV, dc)
+        (x, res, iter) = solve(x0, sV, dc)
         dc.save_OP(x)
 
-        # for now just print all operating points in nonlinear elements
-        print(x)
+        # for now just print some fixed stuff
+        print('******************************************************')
+        print('             Operating point analysis')
+        print('******************************************************')
+        print('Number of iterations = ', iter)
+        print('Residual = ', res)
+
+        print('\n Node      |  Value               | Unit ')
+        print('----------------------------------------')
+        for key in sorted(circuit.termDict.iterkeys()):
+            term = circuit.termDict[key]
+            print('{0:10} | {1:20} | {2}'.format(key, term.nD_v, term.unit))
+
         for elem in circuit.nD_nlinElements:
-            elem.print_vars()
+            print('\nElement: ', elem.nodeName)
+            print(' Variable  |  Value ')
+            print('-------------------------')
+            print(elem.format_OP())
 
         if self.shell: 
             from IPython.Shell import IPShellEmbed
