@@ -220,7 +220,7 @@ class Device(cir.Element):
     #---------------------------------------------------------------
     # Linear frequency-defined device methods (isFreqDefined = True)
     #---------------------------------------------------------------
-    def get_ymatrix(self, fvec):
+    def get_Y_matrix(self, fvec):
         """
         Returns Y matrix for all frequencies
         fvec: vector/scalar
@@ -229,9 +229,9 @@ class Device(cir.Element):
         # should return 3-D np.array, one vector per element of Y matrix
         pass
 
-    def get_dc_ymatrix(self):
+    def get_G_matrix(self):
         """
-        Returns a matrix with the DC Y parameters
+        Returns a matrix with the DC G parameters
         """
         # Return DC Y matrix
         return np.array([[y11, y12],

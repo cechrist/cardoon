@@ -4,9 +4,13 @@ Action Plan
 
 * Implement OP/DC analysis. (OP working already)
 
+* Add support for netlist variables
+
 * Consider adding next_event() for TD sources
 
 * Implement AC analysis (noise too?)
+
+* Add support for convolution of freq-defined elements
 
 * Implement Transient analysis
 

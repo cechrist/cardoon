@@ -68,6 +68,8 @@ class Analysis(ParamSet):
         print('******************************************************')
         print('             Operating point analysis')
         print('******************************************************')
+        if hasattr(circuit, 'title'):
+            print('\n', circuit.title, '\n')
         print('Number of iterations = ', iterations)
         print('Residual = ', res)
 
@@ -78,7 +80,7 @@ class Analysis(ParamSet):
             print('{0:10} | {1:20} | {2}'.format(key, term.nD_v, term.unit))
 
         if self.elemop:
-            for elem in circuit.nD_nlinElements:
+            for elem in circuit.nD_nlinElem:
                 print('\nElement: ', elem.nodeName)
                 print(' Variable  |  Value ')
                 print('-------------------------')

@@ -235,7 +235,7 @@ class Device(cir.Element):
     #---------------------------------------------------------------
     # Linear frequency-defined device methods (isFreqDefined = True)
     #---------------------------------------------------------------
-    def get_ymatrix(self, freq):
+    def get_Y_matrix(self, freq):
         """
         Returns a 3-D matrix with Y parameters
 
@@ -274,7 +274,7 @@ class Device(cir.Element):
                          [y12, y11]])
 
 
-    def get_dc_ymatrix(self):
+    def get_G_matrix(self):
         """
         Returns a matrix with the DC Y parameters
 

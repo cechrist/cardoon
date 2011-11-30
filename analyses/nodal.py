@@ -140,8 +140,11 @@ def make_nodal_circuit(ckt, reference='gnd'):
 
     # Get a list of all elements and nonlinear devices/sources
     ckt.nD_elemList = ckt.elemDict.values()
-    ckt.nD_nlinElements = filter(lambda x: x.isNonlinear, ckt.nD_elemList)
-    ckt.nD_sourceDCElements = filter(lambda x: x.isDCSource, ckt.nD_elemList)
+    ckt.nD_nlinElem = filter(lambda x: x.isNonlinear, ckt.nD_elemList)
+    ckt.nD_freqDefinedElem = filter(lambda x: x.isFreqDefined, ckt.nD_elemList)
+    ckt.nD_sourceDCElem = filter(lambda x: x.isDCSource, ckt.nD_elemList)
+    ckt.nD_sourceTDElem = filter(lambda x: x.isTDSource, ckt.nD_elemList)
+    ckt.nD_sourceFDElem = filter(lambda x: x.isFDSource, ckt.nD_elemList)
 
     # Map row/column numbers directly into VC*S descriptions
     for elem in ckt.nD_elemList:
@@ -165,15 +168,23 @@ def make_nodal_circuit(ckt, reference='gnd'):
         elem.nD_linVCCS = map(convert_vcs, elem.linearVCCS)
         elem.nD_linVCQS = map(convert_vcs, elem.linearVCQS)
 
+        # Translate positive and negative terminal numbers
+        def create_list(portlist):
+            """
+            Converts an internal port list into 2 lists with (+-) nodes
+
+            The format of each list is: 
+
+                (internal term number, namRC number)
+            """
+            tmp0 = [rcList[x1[0]] for x1 in portlist]
+            tmp1 = [rcList[x1[1]] for x1 in portlist]
+            return ([(i, j) for i,j in enumerate(tmp0) if j > -1],
+                    [(i, j) for i,j in enumerate(tmp1) if j > -1])
+
         # Convert nonlinear device descriptions to a format more
         # readily usable for the NA approach
         if elem.isNonlinear:
-            # Translate positive and negative terminal numbers
-            def create_list(portlist):
-                tmp0 = [rcList[x1[0]] for x1 in portlist]
-                tmp1 = [rcList[x1[1]] for x1 in portlist]
-                return ([(i, j) for i,j in enumerate(tmp0) if j > -1],
-                        [(i, j) for i,j in enumerate(tmp1) if j > -1])
             # Control voltages
             (elem.nD_vpos, elem.nD_vneg) = create_list(elem.controlPorts)
             # Current source terminals
@@ -181,12 +192,18 @@ def make_nodal_circuit(ckt, reference='gnd'):
             # Charge source terminals
             (elem.nD_qpos, elem.nD_qneg) = create_list(elem.qsOutPorts)
 
+        # Convert frequency-defined elements
+        if elem.isFreqDefined:
+            (elem.nD_fpos, elem.nD_fneg) =  create_list(elem.fPortsDefinition)
+
         # Translate source output terms
-        if elem.isDCSource:
+        if elem.isDCSource or elem.isTDSource or elem.isFDSource:
             # first get the destination row/columns 
             n1 = rcList[elem.sourceOutput[0]]
             n2 = rcList[elem.sourceOutput[1]]
             elem.nD_sourceOut = (n1, n2)
+
+        
 
 
 # ****************** Classes ****************
@@ -224,9 +241,14 @@ class DCNodal:
 
         # Generate G matrix (never changes)
         for elem in self.ckt.nD_elemList:
+            # All elements have nD_linVCCS (perhaps empty)
             for vccs in elem.nD_linVCCS:
                 set_quad(self.G, *vccs)
-
+        # Frequency-defined elements
+        for elem in self.ckt.nD_freqDefinedElem:
+            set_Jac(self.G, elem.nD_fpos, elem.nD_fneg, 
+                    elem.nD_fpos, elem.nD_fneg, elem.get_G_matrix())
+            
     def get_guess(self):
         """
         Retrieve guesses from vPortGuess in each nonlinear device
@@ -234,7 +256,7 @@ class DCNodal:
         Returns a guess vector
         """
         x0 = np.zeros(self.ckt.nD_dimension)
-        for elem in self.ckt.nD_nlinElements:
+        for elem in self.ckt.nD_nlinElem:
             try:
                 # Only add to positive side. This is not the only way
                 # and may not work well in some cases but this is a
@@ -252,7 +274,7 @@ class DCNodal:
         """
         # Erase vector first. 
         self.sVec[:] = 0.
-        for elem in self.ckt.nD_sourceDCElements:
+        for elem in self.ckt.nD_sourceDCElem:
             # first get the destination row/columns 
             outTerm = elem.nD_sourceOut
             current = elem.get_DCsource()
@@ -280,7 +302,7 @@ class DCNodal:
         # Linear contribution
         self.iVec += np.dot(self.G, xVec)
         # Nonlinear contribution
-        for elem in self.ckt.nD_nlinElements:
+        for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(len(elem.controlPorts))
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
@@ -310,7 +332,7 @@ class DCNodal:
         self.iVec += np.dot(self.G, xVec)
         self.Jac += self.G
         # Nonlinear contribution
-        for elem in self.ckt.nD_nlinElements:
+        for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(len(elem.controlPorts))
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
@@ -331,7 +353,7 @@ class DCNodal:
         self.ckt.nD_ref.nD_v = 0.
         for v,term in zip(xVec, self.ckt.nD_termList):
             term.nD_v = v
-        for elem in self.ckt.nD_nlinElements:
+        for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(len(elem.controlPorts))
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)

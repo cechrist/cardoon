@@ -496,9 +496,9 @@ The format of this list is one tuple per port. In the example above,
 there are two ports. The positive terminals are 0 and 2. The other
 terminals, 1 and 3 are (local) references.
 
-The Y parameters are calculated in the following functions::
+The Y/G parameters are calculated in the following functions::
 
-    def get_ymatrix(self, fvec):
+    def get_Y_matrix(self, fvec):
         """
         Documentation 
 	fvec is a frequency vector/scalar, but frequency can not be zero
@@ -509,15 +509,16 @@ The Y parameters are calculated in the following functions::
         return ymatrix
     
 
-    def get_dc_ymatrix(self):
+    def get_G_matrix(self):
         """
-        Returns a matrix with the DC Y parameters
+        Returns a matrix with the DC G parameters
 	"""	
 	return ymatrix
 
 ``get_ymatrix()`` should work when given for both scalar and vector
 frequencies and should take advantage of the vectorization facilities
-in numpy.  
+in numpy. It may not work at DC, that is why ``get_gmatrix()`` is also
+needed.
 
     
 
