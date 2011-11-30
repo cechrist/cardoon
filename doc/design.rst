@@ -82,6 +82,52 @@ and generate custom AD tapes for greater efficiency (trying this is
 one of the near-term goals).
 
 
+Model, netlist variables and sensitivities considerations
+---------------------------------------------------------
+
+Currently device parameters can be initially set by three different
+means, in order of priority:
+
+1. Explicitly specified in the device line
+
+2. Specified in a global model
+
+3. The default value 
+
+The explicitly-specified parameters are kept in a separated dictionary
+in each element. Netlist variables could be used to set the values of
+parameters specified in the device line or the model line. We could do
+something similar to support netlist variables:
+
+1. If a string is specified as the value of a numeric parameter value,
+   then it is marked as a potential variable.
+
+2. Variables are specified in a ``.var`` statement in the netlist and
+   are assumed to be numeric::
+
+       .var freq=1GHz m1=25.
+
+3. When the circuit is initialized, models first and then elements can
+   check the variable dictionary to find and set the variable
+   value. The circuit could pass a reference of the variable
+   dictionary for this purpose. If the variable is not found raise an
+   exception.
+
+The main difficulty is how to update those when a variable value is
+changed. This would require to repeat the whole process for all
+models/elements as there is no way to know which ones are affected.
+
+A change in variables/model/element parameters is likely to happen in
+sweeps, sensitivity and optimization calculations.  From the above
+considerations the current solution requires re-visiting all elements
+and re-generating all equations.
+
+Avoiding this would require for each variable to have a reference for
+each device/model using it. This would result in a more optimal
+recalculation when variables are changed but requires more storage per
+variable, creates more complications if a device/model is deleted and
+also would require special codo to regenerate only the affected part
+of equations.  A similar situation occurs between elements and models.
 
 
 .. include:: ../TODO

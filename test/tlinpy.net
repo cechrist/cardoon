@@ -1,0 +1,15 @@
+# Simple netlist with transmission line (test of nsect parameter)
+
+.options shell=True
+
+idc:i1 gnd 20 idc=2m
+res:r1 20 2 r=10k
+tlinpy4:tline1 2 gnd 3 gnd nsect=10 tand=1e-3
+res:r2 3 gnd r=1k
+svdiode:d1 3 gnd
+
+.analysis op elemop=True
+
+.end
+
+
