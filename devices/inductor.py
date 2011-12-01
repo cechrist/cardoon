@@ -90,9 +90,7 @@ class Device(cir.Element):
             raise cir.CircuitError(self.nodeName 
                                    + ': Inductance can not be zero')
         # Connect internal terminal
-        self.add_internal_terms(1)
-        # Set unit for internal term
-        self.neighbour[2].unit = '* {0} A'.format(1./glVar.gyr)
+        self.add_internal_term('il', '{0} A'.format(glVar.gyr))
         # Setup gyrator
         # Access to global variables is through the glVar 
         self.linearVCCS = [((0,1), (1,2), glVar.gyr), 

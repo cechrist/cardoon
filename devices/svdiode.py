@@ -223,9 +223,9 @@ class Device(cir.Element):
         self.clean_internal_terms()
         # Define topology first
         # Needs at least one internal terminal: 
-        self.add_internal_terms(1)
+        self.add_internal_term('x', 's.v.')
         # state variable has no units
-        self.neighbour[2].unit = ''
+        self.neighbour[2].unit = 's.v.'
         self.linearVCCS = [((0, 1), (2, 1), glVar.gyr)]
         # Nonlinear device attributes
         self.csOutPorts = [(0, 1), (1, 2)]
@@ -234,7 +234,7 @@ class Device(cir.Element):
 
         if self.rs:
             # Needs one more terminal
-            self.add_internal_terms(1)
+            self.add_internal_term('Vd_int', 'V')
             g = 1. / self.rs / self.area
             self.linearVCCS.append(((0, 3), (0, 3), g))
             # Nonlinear device outputs change

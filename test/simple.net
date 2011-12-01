@@ -1,7 +1,7 @@
 # Simple netlist with transmission line
-.options shell = True
+.options shell = False
 .vars iin = .5mA
-.analysis op elemop=True
+.analysis op elemop=1 intvars=1
 
 
 idc:i1 gnd 20 idc=iin

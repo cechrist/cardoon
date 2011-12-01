@@ -103,9 +103,7 @@ class Device(cir.Element):
             self.linearVCCS = [((0,1), (0,1), 1. / self.rint)]
         else:
             # Connect internal terminal
-            self.add_internal_terms(1)
-            # gyrator node unit
-            self.neighbour[2].unit = '* {0} A'.format(1./glVar.gyr)
+            self.add_internal_term('i', '{0} A'.format(glVar.gyr))
             # Setup gyrator
             # Access to global variables is through the glVar (e.g.,
             # glVar.u0)

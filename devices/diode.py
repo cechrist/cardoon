@@ -210,7 +210,7 @@ class Device(cir.Element):
         # Define topology first
         if self.rs:
             # Need 1 internal terminal
-            self.add_internal_terms(1)
+            self.add_internal_term('Vd_int', 'V')
             g = 1. / self.rs / self.area
             self.linearVCCS = [((0,2), (0,2), g)]
             # Nonlinear device attributes

@@ -62,9 +62,10 @@ class defined as follows::
             # many times. 
             self.clean_internal_terms()
 
-	    # This adds 2 internal terminals (in addition to any
-	    # existing ones): 
-	    self.add_internal_terms(2)
+	    # This adds one internal terminal (in addition to any
+	    # existing ones). First argument is the internal variable
+	    # name and second is the variable unit.
+	    self.add_internal_terms('i1', 'A')
     
             # Ambient temperature (temp) by default set to 27 C 
             # Calculate temperature-dependent variables (if any)
@@ -187,21 +188,21 @@ explicitly set with the ``localReference`` attibute::
 Node 2 is implemented using an internal terminal. Internal terminals
 are normally created in ``process_params()`` as follows::
 
-	# This adds 1 internal terminal
-	self.add_internal_terms(1)
+	# This adds one internal terminal (in addition to any
+	# existing ones). First argument is the internal variable
+	# name and second is the variable unit.
+	self.add_internal_terms('i1', 'A')
 
 They can be accessed directly from the terminal list of the device
-(``self.neighbour``). Terminals have an attribute called ``unit``.  As
-Node 1 is also part of the main circuit, its unit is left with the default
-('V'). The unit of the internal terminal variable should be changed to
-'A'::
+(``self.neighbour``). Terminals have an attribute called ``unit``.
+The unit of any existing terminal variable can be changed as follows::
 
-        # Set unit for internal term
-        self.neighbour[2].unit = 'A'
+        # Set unit for terminal 3
+        self.neighbour[3].unit = 'C'
 
 Note that terminals in a device are internally numbered
 consecutively. If a model has 4 external terminals (i.e., 0 to 3), the
-first internal terminal would be 4.    
+first internal terminal would be 4.
 
 
 Temperature Dependence

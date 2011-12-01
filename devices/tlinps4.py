@@ -118,7 +118,8 @@ class Device(cir.Element):
         self.alpha_nepers = self.alpha / const.Np2dB
 
         # Add internal terminals
-        self.add_internal_terms(2)
+        self.add_internal_term('V1+', 'V')
+        self.add_internal_term('V2+', 'V')
 
         # Calculate temperature-dependent variables
         # self.set_temp_vars(self.temp)

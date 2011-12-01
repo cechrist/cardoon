@@ -214,10 +214,8 @@ class Device(cir.Element):
         ad.delete_tape(self)
 
         # Define topology first. Add state variable nodes
-        self.add_internal_terms(2)
-        # state variables have no units
-        self.neighbour[3].unit = ''
-        self.neighbour[4].unit = ''
+        self.add_internal_term('x2','s.v.')
+        self.add_internal_term('x1','s.v.')
         # Flag to signal if the extra charge Qbx is needed or not
         self._qbx = False
         # Default state-variable VCCS
@@ -225,9 +223,8 @@ class Device(cir.Element):
                            ((1, 0), (3, 1), glVar.gyr)]
         if self.rb:
             # rb is not zero: add internal terminals
-            self.add_internal_terms(2)
-            # gyrator node unit
-            self.neighbour[6].unit = '* {0} A'.format(1./glVar.gyr)
+            self.add_internal_term('Bi', 'V')
+            self.add_internal_term('ib', '{0} A'.format(glVar.gyr))
             # Add Linear VCCS for gyrator(s)
             self.linearVCCS = [((5, 2), (4, 1), glVar.gyr),
                                ((5, 0), (3, 1), glVar.gyr),

@@ -158,7 +158,8 @@ class Device(cir.Element):
                 else:
                     inn = 0
                 # add gyrator node
-                self.add_internal_terms(1)
+                self.add_internal_term('il{0}'.format(i), 
+                                       '{0} A'.format(glVar.gyr))
                 # Gyrator node number
                 gnn = nps*i + 4
                 if R:
@@ -168,13 +169,13 @@ class Device(cir.Element):
                 # The last section does not add cap node
                 if i < self.nsect - 1:
                     # Add capacitor terminal
-                    self.add_internal_terms(1)
+                    self.add_internal_term('c{0}'.format(i), 'V')
                     cnn = rnn + 1
                 else:
                     cnn = 2
                 if R:
                     # add resistor node
-                    self.add_internal_terms(1)
+                    self.add_internal_term('r{0}'.format(i), 'V')
                     # Add gyrator
                     self.linearVCCS += [((inn, rnn), (1, gnn), glVar.gyr), 
                                         ((gnn, 1), (inn, rnn), glVar.gyr)]

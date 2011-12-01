@@ -192,9 +192,8 @@ class Device(cir.Element):
         self._qbx = False
         if self.rb:
             # rb is not zero: add internal terminals
-            self.add_internal_terms(2)
-            # gyrator node unit
-            self.neighbour[4].unit = '* {0} A'.format(1./glVar.gyr)
+            self.add_internal_term('Bi', 'V')
+            self.add_internal_term('ib', '{0} A'.format(glVar.gyr))
             # Linear VCCS for gyrator(s)
             self.linearVCCS = [((1, 3), (4, 1), glVar.gyr),
                                ((4, 1), (1, 3), glVar.gyr)]

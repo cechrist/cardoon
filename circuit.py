@@ -145,16 +145,15 @@ class InternalTerminal(Terminal):
     They only have one neighbour (the parent Element instance)
     """
 
-    def __init__(self, element, number):
+    def __init__(self, element, name):
         """
         Creates and connects internal terminal
 
         element: parent Element instance
-        number: internal (to element) terminal number
+        name: internal name (only unique to parent Element)
         """
-        instanceName = str(number)
         # Call base class constructor
-        Terminal.__init__(self, instanceName)
+        Terminal.__init__(self, name)
         # Connect to parent element
         self.neighbour.append(element)
         element.neighbour.append(self)
@@ -162,7 +161,7 @@ class InternalTerminal(Terminal):
 
     def __str__(self):
         """convert to string"""
-        desc = 'Internal Terminal{0}: {1}:{2}'.format(
+        desc = 'Internal Terminal ({0}): {1}:{2}'.format(
             self.unit,
             self.neighbour[0].nodeName,
             self.nodeName)
@@ -264,7 +263,7 @@ class Element(GraphNode, ParamSet):
             # Format operating point information
             s = ''
             for key in sorted(self.OP.iterkeys()):
-                s += '{0:^10} | {1}\n'.format(key, self.OP[key])
+                s += '{0:10} | {1}\n'.format(key, self.OP[key])
             return s
         except AttributeError:
             return ''
@@ -324,6 +323,10 @@ class Element(GraphNode, ParamSet):
             # Set numterms to number of external connections (useful
             # to quickly find internal terminals)
             self.numTerms = len(self.neighbour)
+        # If not set, set default local reference node to last
+        # external terminal
+        if not hasattr(self, 'localReference'):
+            self.localReference = self.numTerms - 1
 
     def disconnect(self, terminal):
         """
@@ -340,15 +343,16 @@ class Element(GraphNode, ParamSet):
         except ValueError:
             raise CircuitError('Nodes not linked')
 
-    def add_internal_terms(self, n):
+    def add_internal_term(self, name, unit):
         """
-        Create and connect n additional internal terminals
+        Create and connect one internal terminal
 
-        Terminal names are derived from the index number in self.neighbour
+        name: internal terminal name
+        unit: internal variable unit
         """
-        for tnum in range(self.numTerms, self.numTerms+n):
-            # Create internal term (connects automatically)
-            term = InternalTerminal(self, tnum)
+        # Create internal term (connects automatically)
+        term = InternalTerminal(self, name)
+        term.unit = unit
 
 
     def get_internal_terms(self):

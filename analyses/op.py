@@ -39,6 +39,7 @@ class Analysis(ParamSet):
 
     # Define parameters as follows
     paramDict = dict(
+        intvars = ('Print internal element nodal variables', '', bool, False),
         elemop = ('Print element operating points', '', bool, False)
         )
 
@@ -79,12 +80,19 @@ class Analysis(ParamSet):
             term = circuit.termDict[key]
             print('{0:10} | {1:20} | {2}'.format(key, term.nD_v, term.unit))
 
-        if self.elemop:
+        if self.intvars or self.elemop:
             for elem in circuit.nD_nlinElem:
                 print('\nElement: ', elem.nodeName)
-                print(' Variable  |  Value ')
-                print('-------------------------')
-                print(elem.format_OP())
+                if self.intvars:
+                    print('\n    Internal nodal variables:\n')
+                    vref = elem.neighbour[elem.localReference].nD_v
+                    for term in sorted(elem.get_internal_terms()):
+                        print('    {0:10} : {1:20} {2}'.format(
+                                term.nodeName, term.nD_v - vref, term.unit))
+                if self.elemop:
+                    print('\n    Operating point info:\n')
+                    for line in elem.format_OP().splitlines():
+                        print('    ' + line.replace('|',':'))
 
         ipython_drop(globals(), locals())
 
