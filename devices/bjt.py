@@ -20,7 +20,7 @@ class Device(cir.Element):
     This implementation based mainly on previous implementation in
     carrot and some equations from Pspice manual.
     
-    Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
+    Terminal order: 0 Collector, 1 Base, 2 Emitter::
 
                       
           C (0) o----,         4----o  E (2)
@@ -34,7 +34,7 @@ class Device(cir.Element):
 
     Can be used for NPN or PNP transistors.
 
-    Bulk connection, RC, RE are not included for now.
+    Bulk connection, RC, RE are not included here.
 
     Netlist examples::
 
@@ -78,24 +78,24 @@ class Device(cir.Element):
                        ib          ( | ) ibc(vbc)     |
                                     \|/               |       
                      ,---,           |               /|\       
-         (B) 1 o-+--( --> )----------+ 3 (Bi)       ( | ) ice    
-                 |   `---`           |               \V/      
-                 |                  /|\               |       
-                 |                 ( | ) ibe(vbe)     |
-                 |                  \V/               |
-                 |                   |                |
-                 |   gyr v13         +----------------+--o 2 (E)
-                 |                
-                 |    ,---,       
+         (B) 1 o----( --> )----------+ 3 (Bi)       ( | ) ice    
+                     `---`           |               \V/      
+                                    /|\               |       
+                                   ( | ) ibe(vbe)     |
+                                    \V/               |
+                                     |                |
+                     gyr v13         +----------------+--o 2 (E)
+                                  
+                      ,---,       
                  +---( <-- ) -----+
                  |    `---`       |
-                 |                | ib/gyr
-                 |                |
-                 |    ,---,       | 4 (ib)
-                 +---( --> )------+
-                      `---`       
-
-                    gyr ib Rb(ib)
+         lref    |                | ib/gyr
+         (5) ,---+                |
+             |   |    ,---,       | 4 (ib)
+             |   +---( --> )------+
+             |        `---`       
+            ---
+             V      gyr ib Rb(ib)
                                            
     Charge sources are connected between internal nodes defined
     above. If xcjc is not 1 but RB is zero, xcjc is ignored.
@@ -162,8 +162,6 @@ class Device(cir.Element):
     vPortGuess = np.array([0., 0.])
     # qbe, qbc
     qsOutPorts = [(1, 2), (1, 0)]
-    # Local reference for internal voltages is always the base terminal
-    localReference = 1
 
     def __init__(self, instanceName):
         """
@@ -192,15 +190,16 @@ class Device(cir.Element):
         self._qbx = False
         if self.rb:
             # rb is not zero: add internal terminals
-            self.add_internal_term('Bi', 'V')
-            self.add_internal_term('ib', '{0} A'.format(glVar.gyr))
+            self.add_internal_term('Bi', 'V')                       # 3
+            self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) # 4
+            self.add_reference_term()                               # 5
             # Linear VCCS for gyrator(s)
-            self.linearVCCS = [((1, 3), (4, 1), glVar.gyr),
-                               ((4, 1), (1, 3), glVar.gyr)]
+            self.linearVCCS = [((1, 3), (4, 5), glVar.gyr),
+                               ((4, 5), (1, 3), glVar.gyr)]
             # ibe, ibc, ice, Rb(ib) * ib
-            self.csOutPorts = [(3, 2), (3, 0), (0, 2), (1, 4)]
+            self.csOutPorts = [(3, 2), (3, 0), (0, 2), (5, 4)]
             # Controling voltages are vbie, vbic and gyrator port
-            self.controlPorts = [(3, 2), (3, 0), (4, 1)]
+            self.controlPorts = [(3, 2), (3, 0), (4, 5)]
             self.vPortGuess = np.array([0., 0., 0.])
             # qbie, qbic
             self.qsOutPorts = [(3, 2), (3, 0)]

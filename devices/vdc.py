@@ -15,11 +15,10 @@ class Device(cir.Element):
     DC voltage source. 
 
     Includes temperature dependence in vdc only::
-   
-                   ______ 
-                  /      \ vdc       Rint
-       0 o-------(  -  +  )--------/\/\/\/\--------o 1
-                  \______/ 
+                          
+                   ,---,  vdc       Rint
+       0 o--------( - + )---------/\/\/\/\--------o 1
+                   '---'  
    
     Netlist example::
 
@@ -31,14 +30,17 @@ class Device(cir.Element):
 
     Implemented using a gyrator if Rint is zero::
 
-                                  2       V2
+                                       i/gyr (2)
         0  o---------+            +----------------+
-                     | gyr V2     |                |
+                     | gyr V23    |                |
           +         /|\          /|\              /^\ 
         vin        | | |        | | | gyr vin    | | | gyr vdc
           -         \V/          \V/              \|/  
                      |            |                |
-        1  o---------+------------+----------------+
+        1  o---------+            +----------------+
+                                          |
+                                         --- lref (3)
+                                          V
 
     """
 
@@ -103,12 +105,13 @@ class Device(cir.Element):
             self.linearVCCS = [((0,1), (0,1), 1. / self.rint)]
         else:
             # Connect internal terminal
-            self.add_internal_term('i', '{0} A'.format(glVar.gyr))
+            self.add_internal_term('i', '{0} A'.format(glVar.gyr)) # 2
+            self.add_reference_term()                              # 3
             # Setup gyrator
             # Access to global variables is through the glVar (e.g.,
             # glVar.u0)
-            self.linearVCCS = [((0,1), (2,1), glVar.gyr), 
-                               ((2,1), (0,1), glVar.gyr)]
+            self.linearVCCS = [((0,1), (2,3), glVar.gyr), 
+                               ((2,3), (0,1), glVar.gyr)]
             # sourceOutput should be already OK
             self._idc = glVar.gyr * self.vdc
 

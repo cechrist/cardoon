@@ -29,14 +29,17 @@ class Device(cir.Element):
 
     Internal implementation uses a gyrator (adds one internal node)::
 
-                                          2
+                                        il/gyr  (2)
         0  o---------+            +----------------+
-                     | gyr V21    |                |
+                     | gyr V23    |                |
           +         /|\          /^\               |
         Vin        | | |        | | | gyr Vin    ----- gyr^2 * L
           -         \V/          \|/             -----
                      |            |                |
-        1  o---------+------------+----------------+
+        1  o---------+            +----------------+
+                                          |
+                                         --- lref (3)
+                                          V
 
 
     """
@@ -90,13 +93,14 @@ class Device(cir.Element):
             raise cir.CircuitError(self.nodeName 
                                    + ': Inductance can not be zero')
         # Connect internal terminal
-        self.add_internal_term('il', '{0} A'.format(glVar.gyr))
+        self.add_internal_term('il', '{0} A'.format(glVar.gyr)) # 2
+        self.add_reference_term()                               # 3
         # Setup gyrator
         # Access to global variables is through the glVar 
-        self.linearVCCS = [((0,1), (1,2), glVar.gyr), 
-                           ((2,1), (0,1), glVar.gyr)]
+        self.linearVCCS = [((0,1), (3,2), glVar.gyr), 
+                           ((2,3), (0,1), glVar.gyr)]
         cap = self.l * glVar.gyr * glVar.gyr
-        self.linearVCQS = [((2, 1), (2, 1), cap)]
+        self.linearVCQS = [((2, 3), (2, 3), cap)]
 
         # Adjust according to temperature (not needed so far)
         # self.set_temp_vars(self.temp)

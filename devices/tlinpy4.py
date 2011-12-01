@@ -141,7 +141,8 @@ class Device(cir.Element):
 
             # Gyrated inductor cap
             indcap = L * glVar.gyr * glVar.gyr
-            # Reference for all gyrators is term 1
+            # Reference for all gyrators is term 4
+            self.add_reference_term()  # 4
             # nps: nodes added by one section
             if R:
                 nps = 3
@@ -154,14 +155,14 @@ class Device(cir.Element):
             for i in range(self.nsect):
                 # input node number
                 if i:
-                    inn = nps*i + 3
+                    inn = nps*i + 4
                 else:
                     inn = 0
                 # add gyrator node
                 self.add_internal_term('il{0}'.format(i), 
                                        '{0} A'.format(glVar.gyr))
                 # Gyrator node number
-                gnn = nps*i + 4
+                gnn = nps*i + 5
                 if R:
                     rnn = gnn + 1
                 else:
@@ -177,16 +178,16 @@ class Device(cir.Element):
                     # add resistor node
                     self.add_internal_term('r{0}'.format(i), 'V')
                     # Add gyrator
-                    self.linearVCCS += [((inn, rnn), (1, gnn), glVar.gyr), 
-                                        ((gnn, 1), (inn, rnn), glVar.gyr)]
+                    self.linearVCCS += [((inn, rnn), (4, gnn), glVar.gyr), 
+                                        ((gnn, 4), (inn, rnn), glVar.gyr)]
                     # Add resistor
                     self.linearVCCS.append(((rnn, cnn), (rnn, cnn), 1./R))
                 else:
                     # Add gyrator
-                    self.linearVCCS += [((inn, cnn), (1, gnn), glVar.gyr), 
-                                        ((gnn, 1), (inn, cnn), glVar.gyr)]
+                    self.linearVCCS += [((inn, cnn), (4, gnn), glVar.gyr), 
+                                        ((gnn, 4), (inn, cnn), glVar.gyr)]
                 # Add inductor
-                self.linearVCQS.append(((gnn, 1), (gnn, 1), indcap))
+                self.linearVCQS.append(((gnn, 4), (gnn, 4), indcap))
                 # Add capacitor
                 self.linearVCQS.append(((cnn, 1), (cnn, 1), C))
                 if G:

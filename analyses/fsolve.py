@@ -42,7 +42,7 @@ def fsolve(x0, f_Jac_eval, f_eval):
         try:
             deltax = np.linalg.solve(Jac, errFunc)
         except:
-            logging.warning('Singular Jacobian')
+            print('Singular Jacobian')
             # Use pseudo-inverse
             deltax = np.dot(np.linalg.pinv(Jac), errFunc)
         # Do not allow updates greater than 10

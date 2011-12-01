@@ -121,25 +121,28 @@ def make_nodal_circuit(ckt, reference='gnd'):
     # get ground node
     ckt.nD_ref = ckt.get_term(reference)
 
-    # get a list of all terminals in circuit (internal/external)
+    # make a list of all non-reference terminals in circuit 
     ckt.nD_termList = ckt.termDict.values() + ckt.get_internal_terms()
     # remove ground node from terminal list
     ckt.nD_termList.remove(ckt.nD_ref)
+    # Assign a number (0-inf) to all nodes. For reference nodes
+    # assign -1 
+    ckt.nD_ref.nD_namRC = -1
+    # Make a list of all elements
+    ckt.nD_elemList = ckt.elemDict.values()
+    # Set RC number of reference terminals to -1
+    for elem in ckt.nD_elemList:
+        if elem.localReference:
+            elem.neighbour[elem.localReference].nD_namRC = -1
+    # For the future: use graph techniques to find the optimum
+    # terminal order
+    for i, term in enumerate(ckt.nD_termList):
+        term.nD_namRC = i
 
     # Dimension is the number of unknowns to solve for
     ckt.nD_dimension = len(ckt.nD_termList)
 
-    # For the future: use graph techniques to find the optimum
-    # terminal order
-
-    # Assign a number (0-inf) to all nodes. For the reference node
-    # assign -1 
-    ckt.nD_ref.nD_namRC = -1
-    for i, term in enumerate(ckt.nD_termList):
-        term.nD_namRC = i
-
-    # Get a list of all elements and nonlinear devices/sources
-    ckt.nD_elemList = ckt.elemDict.values()
+    # Create specialized element lists
     ckt.nD_nlinElem = filter(lambda x: x.isNonlinear, ckt.nD_elemList)
     ckt.nD_freqDefinedElem = filter(lambda x: x.isFreqDefined, ckt.nD_elemList)
     ckt.nD_sourceDCElem = filter(lambda x: x.isDCSource, ckt.nD_elemList)
@@ -191,6 +194,10 @@ def make_nodal_circuit(ckt, reference='gnd'):
             (elem.nD_cpos, elem.nD_cneg) = create_list(elem.csOutPorts)
             # Charge source terminals
             (elem.nD_qpos, elem.nD_qneg) = create_list(elem.qsOutPorts)
+            # Create list with external ports for gmin calculation
+            nports = elem.numTerms - 1
+            elem.nD_extPorts = [(i, nports) for i in range(nports)]
+            (elem.nD_epos, elem.nD_eneg) = create_list(elem.nD_extPorts)
 
         # Convert frequency-defined elements
         if elem.isFreqDefined:
@@ -399,11 +406,15 @@ class DCNodal:
         """Newton's method with gmin stepping"""
         x = np.copy(x0)
         totIter = 0
-        # Add a conductance in parallel with every node
-        idx = np.arange(self.ckt.nD_dimension)
-        for gmin in (1., .1, .01, 1e-3, 1e-4, 1e-5, 0.):
+        # Put conductances in parallel with external nonlinear device ports
+        Ggmin = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        for elem in self.ckt.nD_nlinElem:
+            Gadd = np.eye(len(elem.nD_extPorts))
+            set_Jac(Ggmin, elem.nD_epos, elem.nD_eneg, 
+                    elem.nD_epos, elem.nD_eneg, Gadd)
+        for gmin in (.1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 0.):
             # Add conductances to G matrix
-            self.G[idx,idx] += gmin
+            self.G += gmin * Ggmin
             try:
                 (x, res, iterations) = self.solve_simple(x, sV)
                 print('gmin = {0}, res = {1}, iter = {2}'.format(gmin, 
@@ -411,12 +422,12 @@ class DCNodal:
                                                                  iterations))
             except NoConvergenceError:
                 # Restore original G matrix
-                self.G[idx,idx] -= gmin
+                self.G -= gmin * Ggmin
                 raise
 
             totIter += iterations
             # Restore original G matrix
-            self.G[idx,idx] -= gmin
+            self.G -= gmin * Ggmin
 
         # Call solve_simple with better initial guess
         totIter += iterations

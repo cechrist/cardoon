@@ -169,40 +169,43 @@ additional independent variables that can be be obtained by defining
 internal terminals. For example, an inductor can be implemented using
 current sources as shown below::
 
-        0  o---------+            +----------------+ 2
-                     | V2-V1      |                |
+        0  o---------+            +----------------+ 2 (il)
+                     | V2-V3      |                |
           +         /|\          /^\               |
         Vin        ( | )        ( | ) Vin        ----- L
           -         \V/          \|/             -----
                      |            |                |
-        1  o---------+------------+----------------+
+        1  o---------+            +----------------+
+                                          |
+                                         --- lref (3)
+                                          V
 
 The additional variable is the inductor current, which in this circuit
-can be obtained as ``V2 - V1``. Here Node 1 is used as a local
-reference. By default, all internal port voltages use the last
-external terminal as a reference (Node 1 in this example). This can be
-explicitly set with the ``localReference`` attibute::
+can be obtained as ``V2 - V3``. Here Node 3 is used as a local
+reference. Internal references are merged with the global reference in
+nodal analysis and so do not add additional unknowns.  Both nodes 2
+and 3 are implemented using internal terminals. Note that terminals in
+a device are internally numbered consecutively. If a model has 2
+external terminals (i.e., 0 to 1), the first internal terminal would
+be 3.  Internal terminals are normally created in ``process_params()``
+as follows::
 
-        self.localReference = 1
+	# This adds one internal terminal. Assume only 2 external
+	# terminals are connected so far
+	self.add_internal_terms('i1', 'A') # internal number: 2
+	# Add local reference terminal
+	self.add_reference_term() # internal number: 3
 
-Node 2 is implemented using an internal terminal. Internal terminals
-are normally created in ``process_params()`` as follows::
-
-	# This adds one internal terminal (in addition to any
-	# existing ones). First argument is the internal variable
-	# name and second is the variable unit.
-	self.add_internal_terms('i1', 'A')
-
-They can be accessed directly from the terminal list of the device
+The first argument in ``add_internal_terms()`` is the internal
+variable name and second is the variable unit. Internal terminals can
+be directly accessed from the terminal list of the device
 (``self.neighbour``). Terminals have an attribute called ``unit``.
-The unit of any existing terminal variable can be changed as follows::
+The unit of any existing terminal variable can be manually changed as
+follows::
 
-        # Set unit for terminal 3
-        self.neighbour[3].unit = 'C'
+        # Set unit for terminal 6
+        self.neighbour[6].unit = 'C'
 
-Note that terminals in a device are internally numbered
-consecutively. If a model has 4 external terminals (i.e., 0 to 3), the
-first internal terminal would be 4.
 
 
 Temperature Dependence
@@ -495,7 +498,7 @@ frequency-domain part of the device::
 
 The format of this list is one tuple per port. In the example above,
 there are two ports. The positive terminals are 0 and 2. The other
-terminals, 1 and 3 are (local) references.
+terminals, 1 and 3 are (local) port references.
 
 The Y/G parameters are calculated in the following functions::
 

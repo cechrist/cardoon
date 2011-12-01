@@ -85,10 +85,9 @@ class Analysis(ParamSet):
                 print('\nElement: ', elem.nodeName)
                 if self.intvars:
                     print('\n    Internal nodal variables:\n')
-                    vref = elem.neighbour[elem.localReference].nD_v
-                    for term in sorted(elem.get_internal_terms()):
+                    for term in elem.get_internal_terms():
                         print('    {0:10} : {1:20} {2}'.format(
-                                term.nodeName, term.nD_v - vref, term.unit))
+                                term.nodeName, term.nD_v, term.unit))
                 if self.elemop:
                     print('\n    Operating point info:\n')
                     for line in elem.format_OP().splitlines():

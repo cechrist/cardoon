@@ -30,6 +30,7 @@ Parameters
  Name         Default      Unit         Description                                          
  =========== ============ ============ ===================================================== 
  elemop       0                         Print element operating points                       
+ intvars      0                         Print internal element nodal variables               
  =========== ============ ============ ===================================================== 
 
 testdev

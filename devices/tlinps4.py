@@ -48,7 +48,10 @@ class Device(cir.Element):
                    ( | )                      ( | )       1 | |       ( | )
        -            \V/                    V1  \|/          '-'        \V/ 
                      |                          |            |          |  
-          1 o--------+--------------------------+------------+----------'   
+          1 o--------+                          +---------+--+----------'   
+                                                          |
+                                                         --- lref (6)
+                                                          V
 
 
     Note: for a matched transmission line, s11 = s22 = 0 and s12 =
@@ -68,10 +71,7 @@ class Device(cir.Element):
     devType = "tlinps4"
     numTerms = 4
     isFreqDefined = True
-    fPortsDefinition = [(0, 1), (2, 3), (4, 1), (5, 1)]
-    # Local reference for internal voltages is the reference of first
-    # port
-    localReference = 1
+    fPortsDefinition = [(0, 1), (2, 3), (4, 6), (5, 6)]
 
     # Define parameters in a dictionary as follows: parameter name is
     # the key. Parameters are converted to class attributes after
@@ -118,8 +118,9 @@ class Device(cir.Element):
         self.alpha_nepers = self.alpha / const.Np2dB
 
         # Add internal terminals
-        self.add_internal_term('V1+', 'V')
-        self.add_internal_term('V2+', 'V')
+        self.add_internal_term('V1+', 'V') # 4
+        self.add_internal_term('V2+', 'V') # 5
+        self.add_reference_term()          # 6
 
         # Calculate temperature-dependent variables
         # self.set_temp_vars(self.temp)

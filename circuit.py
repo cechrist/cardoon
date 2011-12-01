@@ -200,6 +200,9 @@ class Element(GraphNode, ParamSet):
     linearVCQS = []
     noisePorts = ()
 
+    # Local reference: if not zero, reference (internal) terminal number
+    localReference = 0
+
     def __init__(self, instanceName):
         """
         The name of the element is formed by combining the given
@@ -268,6 +271,18 @@ class Element(GraphNode, ParamSet):
         except AttributeError:
             return ''
 
+    # General initialization --------------------------------------------
+    def init(self):
+        """
+        General initialization function
+
+        Set the attribute values, check basic terminal connectivity
+        and process parameters.
+        """
+        self.set_attributes()
+        self.check_terms()
+        self.process_params()
+
     # Parameter-related functions ----------------------------------------
     def is_set(self, paramName):
         """
@@ -323,10 +338,6 @@ class Element(GraphNode, ParamSet):
             # Set numterms to number of external connections (useful
             # to quickly find internal terminals)
             self.numTerms = len(self.neighbour)
-        # If not set, set default local reference node to last
-        # external terminal
-        if not hasattr(self, 'localReference'):
-            self.localReference = self.numTerms - 1
 
     def disconnect(self, terminal):
         """
@@ -354,13 +365,26 @@ class Element(GraphNode, ParamSet):
         term = InternalTerminal(self, name)
         term.unit = unit
 
+    def add_reference_term(self):
+        """
+        Create and connect one internal terminal to be used as local reference
+        """
+        # There is no need for more than one
+        assert not self.localReference
+        # Create internal term (connects automatically)
+        term = InternalTerminal(self, 'lref')
+        term.unit = '-'
+        # Set to reference terminal number
+        self.localReference = len(self.neighbour) - 1
 
     def get_internal_terms(self):
         """
-        Returns a list of internal terms (if any)
+        Returns a list of internal terms (if any) excluding local references
         """
-        return self.neighbour[self.numTerms:]
-
+        intTerms = self.neighbour[self.numTerms:]
+        if self.localReference:
+            intTerms.pop(self.localReference - self.numTerms)
+        return intTerms
     
     def clean_internal_terms(self):
         """
@@ -373,7 +397,8 @@ class Element(GraphNode, ParamSet):
             self.disconnect(term)
         # Chop adjacency list
         self.neighbour = self.neighbour[:self.numTerms]
-
+        # Clean local reference
+        self.localReference = 0
 
 #---------------------------------------------------------------------
 class Xsubckt(GraphNode):
@@ -530,22 +555,18 @@ class Circuit:
         be called multiple times but only has an effect if
         ``self._initialized`` is False
 
-        1. Set attribute values in elements
+        1. Initialize all elements. This includes a check for terminal
+           connections and parameter processing. Elements may add
+           internal terminals at this point.
 
-        2. Checks for terminal connections and initializes
-           elements. Elements may add internal terminals at this
-           point.
-
-        3. If not flattened, checks that subcircuit definitions exist
+        2. If not flattened, checks that subcircuit definitions exist
            and checks number of terminal connections.
         """
         # Can only initialize once
         if self._initialized:
             return
         for elem in self.elemDict.itervalues():
-            elem.set_attributes()
-            elem.check_terms()
-            elem.process_params()
+            elem.init()
 
         if not self._flattened:
             for xsubckt in self.subcktDict.itervalues():
@@ -558,7 +579,7 @@ class Circuit:
 
     def get_internal_terms(self):
         """
-        Returns a list with all internal terminals
+        Returns a list with all non-reference internal terminals
 
         Circuit must be initialized first. Note that the same effect
         can be achieved by directly polling the elements.

@@ -60,9 +60,6 @@ class Device(cir.Element):
     # isTDSource = True
     # isFDSource = True
 
-    # Local reference for internal voltages (by default last external terminal)
-    #localReference = 3
-
     # Nonlinear device attributes
     # csOutPorts = [(0, 2)]
     # controlPorts = [(0, 3), (1, 3), (2, 3)]
