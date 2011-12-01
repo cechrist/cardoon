@@ -20,7 +20,7 @@ http://www.gnu.org/licenses/gpl.html
 
 import pyparsing as pp
 
-from paramset import ParamError
+from paramset import ParamSet, ParamError
 import circuit as cir
 from globalVars import glVar
 from devices import devClass
@@ -33,6 +33,11 @@ class ParseError(Exception):
     """
     pass
 
+class NetVarException(Exception):
+    """
+    Used when a netlist variable is detected
+    """
+    pass
 
 # Stack to hold main circuit while processing subcircuits
 cktStack = []
@@ -115,30 +120,39 @@ def match_parameter(paramset, par):
         raise ParseError('Unrecognized parameter: {0}\n'.format(par[0])
                          + 'Valid parameters: ' + paramset.list_parameters())
     else:
-        convert_type(par, ptype)
+        try:
+            convert_type(par, ptype)
+        except NetVarException:
+            # Netlist variable detected, let it go and let paramset to
+            # take care
+            pass
 
 
 def convert_type(par, ptype):
     """
     To be used once the parameter type has been determined
+
+    Raises NetVarException if a netlist variable is detected
     """
     if ptype == str:
         if par.vector:
             raise ParseError('"' + par[0] + 
                              '" must be a string: only the following '
                              'special characters allowed: ' + allowedChars)
-    else:
+    elif not par.vector:
         # Try to convert to ptype
         if ptype == float:
             try:
                 par[1] = string_to_number(par[1])
             except (ValueError, pp.ParseException):
-                raise ParseError('"' + par[0] + '" must be numeric: ' + par[1])
+                raise NetVarException('"' + par[0] 
+                                      + '" must be numeric: ' + par[1])
         elif ptype == int:
             try:
                 par[1] = int(par[1])
             except ValueError:
-                raise ParseError('"' + par[0] + '" must be an int: ' + par[1])
+                raise NetVarException('"' + par[0] 
+                                      + '" must be an int: ' + par[1])
         elif ptype == bool:
             # Attempt to convert to a bool
             if (par[1] == 'False') or (par[1] == '0'):
@@ -146,22 +160,28 @@ def convert_type(par, ptype):
             elif (par[1] == 'True') or (par[1] == '1'):
                 par[1] = True
             else:
-                raise ParseError('Can not convert "' + par[0] + '" value: '
-                                + type(par[1]) + ' to bool')
+                raise NetVarException('Can not convert "' + par[0] 
+                                      + '" value: ' + type(par[1]) + ' to bool')
         elif ptype == list:
+            raise NetVarException('Can not convert "' + par[0] + '" value: '
+                                  + type(par[1]) + ' to list (vector)')
+        else:
+            assert False, par[0] + ': Parameter has unknown type'
+    else:
+        if ptype == list:
             # Assume the list contains all numeric values (otherwise
             # it should have type==string in parameter definition)
             try:
-                v = []
-                for item in par[1]:
-                    v.append(string_to_number(item))
+                v = [string_to_number(val) for val in par[1]]
                 par[1] = v
             except (ValueError, pp.ParseException):
                 raise ParseError('"', par[0] + 
                                  '" must be a list of numeric values: ' 
                                  + par[1])
         else:
-            assert False, par[0] + ': Parameter has unknown type'
+            raise ParseError('Can not convert "' + par[0] + '" value: '
+                             + type(par[1]))
+
 
 # *******************************************************************
 # Parse functions for individual lines
@@ -234,6 +254,24 @@ def parse_options(tok):
         glVar.set_param(par[0], par[1])
     # Now make sure attributes are updated
     glVar.set_attributes(useDefaults = False)
+
+
+def parse_vars(tok):
+    """
+    Set netlist variables in ParamSet.netVar
+    """
+    # Set parameters 
+    for par in tok.vars:
+        if par.vector:
+            convert_type(par, list)
+        elif (par[1] == 'True') or (par[1] == 'False'):
+            convert_type(par, bool)
+        else:
+            # Convert type to float if possible
+            convert_type(par, float)
+
+        # if control reaches here we are OK
+        ParamSet.netVar[par[0]] = par[1]
 
 
 def parse_subcktDef(tok):
@@ -349,6 +387,10 @@ def parse_file(filename, ckt):
     optionsline = pp.Suppress(pp.Keyword('.options', caseless=True)) \
         + parameters.setResultsName('options') 
 
+    # example: .vars freq=1GHz
+    varsline = pp.Suppress(pp.Keyword('.vars', caseless=True)) \
+        + parameters.setResultsName('vars') 
+
     # example: .subckt LM741 in out vdd gnd
     subcktDefLine = pp.Suppress(pp.Keyword('.subckt', caseless=True)) \
         + identifier.setResultsName('subName') \
@@ -377,6 +419,7 @@ def parse_file(filename, ckt):
         | elemline.setParseAction(parse_element) \
         | modelline.setParseAction(parse_model) \
         | optionsline.setParseAction(parse_options) \
+        | varsline.setParseAction(parse_vars) \
         | subcktDefLine.setParseAction(parse_subcktDef) \
         | subcktInstLine.setParseAction(parse_subcktInst) \
         | includeline.setParseAction(parse_include) \
@@ -427,7 +470,7 @@ def parse_file(filename, ckt):
                 # Most of the work is made here
                 try: 
                     result = netlistLine.parseString(line, parseAll = True)
-                except ParseError as pe:
+                except (ParseError, NetVarException) as pe:
                     raise ParseError('Parse error in file ' + filename
                                      + ', line ' + str(lineNumber) 
                                      + ':\n' + str(pe) + '\n"' + line + '"') 

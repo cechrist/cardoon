@@ -95,40 +95,31 @@ means, in order of priority:
 3. The default value 
 
 The explicitly-specified parameters are kept in a separated dictionary
-in each element. Netlist variables could be used to set the values of
-parameters specified in the device line or the model line. We could do
-something similar to support netlist variables:
+in each element. Global netlist variables can be used to set the
+values of parameters specified in the device line or the model
+line. 
 
 1. If a string is specified as the value of a numeric parameter value,
    then it is marked as a potential variable.
 
-2. Variables are specified in a ``.var`` statement in the netlist and
-   are assumed to be numeric::
+2. Variables are specified in a ``.vars`` statement in the netlist and
+   are assumed to be numeric/vectors
 
-       .var freq=1GHz m1=25.
+3. When the circuit/analysis is initialized, elements/models/analysis
+   check the global netlist variable dictionary to find and set the
+   variable value.  If the variable is not found raise an
+   exception. One problem with this is that by that time the netlist
+   line number is lost and the diagnostic message is not as good.
 
-3. When the circuit is initialized, models first and then elements can
-   check the variable dictionary to find and set the variable
-   value. The circuit could pass a reference of the variable
-   dictionary for this purpose. If the variable is not found raise an
-   exception.
-
-The main difficulty is how to update those when a variable value is
-changed. This would require to repeat the whole process for all
-models/elements as there is no way to know which ones are affected.
-
-A change in variables/model/element parameters is likely to happen in
-sweeps, sensitivity and optimization calculations.  From the above
-considerations the current solution requires re-visiting all elements
-and re-generating all equations.
-
-Avoiding this would require for each variable to have a reference for
-each device/model using it. This would result in a more optimal
-recalculation when variables are changed but requires more storage per
-variable, creates more complications if a device/model is deleted and
-also would require special codo to regenerate only the affected part
-of equations.  A similar situation occurs between elements and models.
-
+Another difficulty is how to update dependent parameters when a
+variable value is changed. This would require to repeat the whole
+process for all models/elements as there is no way to know which ones
+are affected.  A change in variables/model/element parameters is
+likely to happen in sweeps, sensitivity and optimization calculations.
+From the above considerations the current solution requires
+re-visiting all elements and re-generating all equations.  One work
+around is to create a list of elements to be updated when needed in
+the analysis code.
 
 .. include:: ../TODO
 

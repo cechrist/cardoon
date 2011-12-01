@@ -7,6 +7,7 @@ For now this is quite rudimentary.
 from __future__ import print_function
 import circuit as cir
 from netlistparser import parse_file, ParseError, analysisQueue
+from paramset import ParamError
 import analyses
 import os
 
@@ -44,7 +45,7 @@ def run_analyses(analysisQueue, ckt = None):
     else:
         print('Nothing to do. Printing circuit:\n')
         print(ckt)
-        print(ckt.models_to_str())
+        print(ckt.globals_to_str())
 
 def device_catalog():
     """
@@ -133,7 +134,7 @@ if __name__ == "__main__":
         # Use 'main' circuit
         try:
             analysisQueue = parse_net(sys.argv[1])
-        except (ParseError, cir.CircuitError) as ex:
+        except (ParseError, cir.CircuitError, ParamError) as ex:
             print(ex)
             exit(1)
         else:

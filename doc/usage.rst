@@ -88,35 +88,34 @@ spice, fREEDA and QUCS, but at least for now it has some
 simplifications. The netlist is case-sensitive. Each line specifies
 one circuit element, an analysis to perform or another command.
 
-#. The backslash ("\\") at the end of a line means that the line must
-   be joined with the next one. The following is taken as single
-   line::
+* The backslash ("\\") at the end of a line means that the line must
+  be joined with the next one. The following is taken as single line::
 
       .analysis testdev plot=1 ports_bias = [.7V] sweep_port=0 \
       start = .1V stop= .8V sweep_num=1100 device = diode:d2 \
       param = temp param_val = [0., 27, 40]
 
-   This is different from spice syntax but it is easier to read from
-   the parser.
+  This is different from spice syntax but it is easier to read from
+  the parser.
 
-#. Parameters can be ``float`` or ``int`` numbers, strings (``str``)
-   or numerical vectors. All spice suffixes can be used to specify
-   multipliers::
+* Parameters can be ``float`` or ``int`` numbers, strings (``str``) or
+  numerical vectors. All spice suffixes can be used to specify
+  multipliers::
 
       model= mynpn v1 = 1kOhm r2 = 1e2MEG
 
-#. Element lines::
+* Element lines::
 
       <element type>:<name> <node list> [<model>] <parameter list>
 
-   <model> is optional. Parameters specified in the element line
-   override parameters in model. In this example, ``tc1`` is set to
-   1e-5::
+  <model> is optional. Parameters specified in the element line
+  override parameters in model. In this example, ``tc1`` is set to
+  1e-5::
 
       res:r1 1 gnd model = mymodel r=50. tc1=1e-5
       .model mymodel res (tc1=1e-4)
 
-#. Analysis lines::
+* Analysis lines::
 
      .analysis <analysis type> <parameter list>
 
@@ -124,17 +123,17 @@ one circuit element, an analysis to perform or another command.
 
       .analysis testdev plot=1 ports_bias = [.7V] sweep_port=0 \
       start = .1V stop= .8V sweep_num=1100 device = diode:d2 \
-      param = temp param_val = [0., 27, 40]
+      param = temp param_val = [0., 27, 40] 
 
-#. Global variables:: 
+* Global options (similar to spice's options):: 
 
       .options <parameter list>
    
-   Example::
+  Example::
    
        .options temp=29.1439 gyr=1e-3
    
-   List of global variables (check globalVars.py for an updated list)
+  List of global options (check globalVars.py for an updated list)
 
  =========== ============ ============ ===================================================== 
  Name         Default      Unit         Description                                          
@@ -147,7 +146,7 @@ one circuit element, an analysis to perform or another command.
  temp         27.0         C            Ambient temperature                                  
  =========== ============ ============ =====================================================  
 
-#. Subcircuits use a syntax similar to spice::
+* Subcircuits use a syntax similar to spice::
 
       x1 2 3 4 X1
       x2 2 gnd 3 X1
@@ -157,11 +156,27 @@ one circuit element, an analysis to perform or another command.
       cap:c2 out gnd c=1nH
       .ends
 
-#. Include files::
+* Include files::
 
        .include <filename>
 
-For now there are no output commands defined.
+
+* Netlist variables::
+
+       .vars freq = 1GHz iin = .5mA
+       .vars portVolt1 = [1, 2, 0.]
+       idc:i1 gnd 20 idc=iin
+
+  Numeric/vector netlist variables are defined with the ``.vars``
+  keyword. Many occurences of this keyword may appear in the
+  netlist. No checking is made for repeated definitions. The last
+  definition overwrites any previous one.
+  
+  Netlist variables can be used as parameter values for element, model
+  and analysis lines. ``.var`` definitions can be placed anywhere in the
+  netlist.
+
+* For now there are no output commands defined.
 
 
 Generating this documentation

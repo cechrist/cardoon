@@ -1,6 +1,6 @@
 """
-:mod:`globalVars` -- Global simulator variables and physical constants
-----------------------------------------------------------------------
+:mod:`globalVars` -- Global simulator options and physical constants
+--------------------------------------------------------------------
 
 .. moduleauthor:: Carlos Christoffersen
 
@@ -12,6 +12,10 @@ Usage example::
 
     # Calculate thermal voltage (Vt) at default temperature
     vt = const.k * glVar.temp / const.q
+
+**Important Note:** The ``glVar`` name really refers to the variables
+in the ``.options`` line, **not** the netlist variables defined in
+``.vars``. Those are kept in a dictionary in ParamSet.
 
 """
 

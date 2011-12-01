@@ -5,6 +5,15 @@
 .. moduleauthor:: Carlos Christoffersen
 
 Handles sets of parameters used for Elements, Models and Analyses
+
+Netlist variables are also handled here. They are stored in the
+ParamSet.netVar dictionary, accesible to all derived classes.
+
+To reset parameters to netlist values, use the following::
+
+    obj.clean_attributes()
+    obj.set_attributes()
+
 """
 
 
@@ -21,26 +30,29 @@ class ParamSet:
 
     Useful for devices, analyses and anything that accepts
     parameters. 
+
+    Parameter definitions given in a dictionary with the following
+    format::
+
+        paramDict = dict(
+            w = ('Channel width', 'm', float, 10e-6),
+            l = ('Channel length', 'm', float, 10e-6),
+            vt0 = ('Threshold Voltage', 'V', float, 0.532),
+            vsat = ('Velocity Saturation', 'm/s', float, 8e4),
+            tox = ('Oxide Thickness', 'm', float, 7.5e-9)
+            )
+
     """
+    # Global netlist variable dictionary
+    netVar = dict()
 
     def __init__(self, paramDict):
-        """
-        Parameter definitions given in a dictionary with the following
-        format::
-
-            paramDict = dict(
-                w = ('Channel width', 'm', float, 10e-6),
-                l = ('Channel length', 'm', float, 10e-6),
-                vt0 = ('Threshold Voltage', 'V', float, 0.532),
-                vsat = ('Velocity Saturation', 'm/s', float, 8e4),
-                tox = ('Oxide Thickness', 'm', float, 7.5e-9)
-                )
-
-        """
         # 
         self.paramDict = paramDict
         # valueList is a dictionary with overriding parameter values
         self.valueDict = dict()
+        # Dictionary for netlist variable names used by this instance
+        self.varDict = dict()
 
     # Printing/formatting stuff -----------------------------------------
 
@@ -68,6 +80,8 @@ class ParamSet:
         Output netlist-formatted string listing only non-default parameters
         """
         desc = ''
+        for param, value in self.varDict.iteritems():
+            desc += '{0} = {1} '.format(param, value)
         for param, value in self.valueDict.iteritems():
             desc += '{0} = {1} '.format(param, value)
         return(desc)
@@ -122,13 +136,27 @@ class ParamSet:
 
         Mostly used by the parser.  Note that actual attribute is not
         set until set_attributes() is executed.  A check is made to
-        ensure the parameter name is valid
+        ensure the parameter name is valid. 
+
+        If value type does not match with parameter type it is assumed
+        that the value is a netlist variable name. The netlist
+        variable may be assigned a value at a later time before
+        set_attributes() is called.
         """
         if self.paramDict.has_key(paramName):
-            self.valueDict[paramName] = value
+            if type(value) == self.paramDict[paramName][2]:
+                # Regular parameter value
+                self.valueDict[paramName] = value
+            elif type(value) == str:
+                # hopefully netlist variable. Store name
+                self.varDict[paramName] = value
+            else:
+                # Something is wrong
+                raise ParamError(
+                    '{1}: not a valid value or variable name'.format(paramName))
         else:
-            raise ParamError('{0}: not a valid parameter name'.format(paramName))
-
+            raise ParamError(
+                '{0}: not a valid parameter name'.format(paramName))
 
     def get_type(self, paramName):
         """
@@ -137,13 +165,14 @@ class ParamSet:
         try:
             return self.paramDict[paramName][2]
         except KeyError:
-            raise ParamError('{0}: not a valid parameter name'.format(paramName))
+            raise ParamError(
+                '{0}: not a valid parameter name'.format(paramName))
 
     def is_set(self, paramName):
         """
         Returns True if paramName is valid and manually set
         """
-        if self.valueDict.has_key(paramName):
+        if self.valueDict.has_key(paramName) or self.varDict.has_key(paramName):
             return True
         else:
             return False
@@ -177,15 +206,58 @@ class ParamSet:
             except AttributeError:
                 pass
 
+    def _get_variable_value(self, paramName, variable):
+        """
+        Attempts to extract parameter value from netlist variables
+        """
+        try:
+            var = self.netVar[variable]
+        except KeyError:
+            raise ParamError(
+                'Undefined netlist variable: {0} (parameter: {1})'.format(
+                    variable, paramName))
+        # Attempt some conversion here
+        try:
+            if self.paramDict[paramName][2] == float:
+                if type(var) == int:
+                    actualValue = float(var)
+                else:
+                    # do not attempt conversion as this would
+                    # backfire if a netlist variable is set to a special
+                    # type such as adouble
+                    actualValue = var
+            elif self.paramDict[paramName][2] == int:
+                actualValue = int(var)
+            elif self.paramDict[paramName][2] == bool:
+                actualValue = bool(var)
+            elif type(actualValue) == self.paramDict[paramName][2]:
+                actualValue = var
+            else:
+                raise TypeError()
+        except TypeError:
+            raise ParamError(
+                '{0}: netlist variable type mismatch: {1} = {2}'.format(
+                    variable, paramName, var))
+        return actualValue
+
     def set_attributes(self, useDefaults = True):
         """
         Set attributes named after parameters in self.valueDict
+        
+        Parameter values may refer to netlist variables. If a netlist
+        variable is referenced but not defined, an exception is raised
+        here.
 
         If useDefaults is True, set defaults from self.paramDict 
         """
+        # Set values from netlist variables first
+        for key, value in self.varDict.iteritems():
+            actualValue = self._get_variable_value(key, value)
+            setattr(self, key, actualValue)
+        # Regular values
         for key, value in self.valueDict.iteritems():
             setattr(self, key, value)
-
+        # Defaults
         if useDefaults:
             for key, value in self.paramDict.iteritems():
                 # Only add these if not already set
@@ -243,12 +315,16 @@ class Model(ParamSet):
             if not hasattr(target, key):
                 # value not in target
                 try:
-                    # value in model
-                    value = self.valueDict[key]
+                    # Try netlist variable first
+                    value = self._get_variable_value(key, self.varDict[key])
                 except KeyError:
-                    # Use default
-                    value = paraminfo[3]
+                    # It may be OK, keep going
+                    try:
+                        # regular value
+                        value = self.valueDict[key]
+                    except KeyError:
+                        # Use default
+                        value = paraminfo[3]
                 setattr(target, key, value)
 
         
-    

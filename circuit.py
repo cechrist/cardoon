@@ -447,8 +447,8 @@ class Circuit:
     Element instance.
 
     Ground node: treated specially. Nodes '0' and 'gnd' are considered
-    to be the same. A circuit may not contain a ground node. In that
-    case it is up to the user to set a reference.
+    to be the same. If a circuit does not contain a ground node then
+    it is up to the user to set a reference.
 
     In the future we may implement topology checking utilities here.
     """
@@ -501,11 +501,19 @@ class Circuit:
         desc += '\n'
         return desc
 
-    def models_to_str(self):
+    def globals_to_str(self):
         """
-        Convert all public models to netlist format
+        Convert all global stuff to netlist format
+
+        This includes: models, netlist variables and .options variables
         """
-        desc = '#                  *** Models *** \n'
+        desc = '.vars '
+        for param, value in ParamSet.netVar.iteritems():
+            desc += '{0} = {1} '.format(param, value)
+        desc += '\n\n'
+        desc += '.options ' + glVar.netlist_string()
+        desc += '\n\n'
+        desc += '#                  *** Models *** \n'
         for model in Circuit.modelDict.itervalues():
             desc += model.netlist_string() + '\n\n'
         return desc
@@ -677,9 +685,9 @@ class Circuit:
             if Circuit.modelDict.has_key(modelName):
                 model = Circuit.modelDict[modelName]
                 if model.modelType != elem.devType:
-                    raise CircuitError('Incorrect model type "{0}" for ' +
-                                       'element "{1}"'.format(model.devType,
-                                                              elem.nodeName))
+                    raise CircuitError(
+                        'Incorrect model type "{0}" for element "{1}"'.format(
+                            model.modelType, elem.nodeName))
                 elem.dotModel = model
             else:
                 elem.dotModel = Model(modelName, elem.devType, elem.paramDict)
