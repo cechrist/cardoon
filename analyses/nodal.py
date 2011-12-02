@@ -141,6 +141,8 @@ def make_nodal_circuit(ckt, reference='gnd'):
 
     # Dimension is the number of unknowns to solve for
     ckt.nD_dimension = len(ckt.nD_termList)
+    # Number of external terminals excluding reference
+    ckt.nd_nterms = len(ckt.termDict.values()) - 1
 
     # Create specialized element lists
     ckt.nD_nlinElem = filter(lambda x: x.isNonlinear, ckt.nD_elemList)
@@ -194,10 +196,11 @@ def make_nodal_circuit(ckt, reference='gnd'):
             (elem.nD_cpos, elem.nD_cneg) = create_list(elem.csOutPorts)
             # Charge source terminals
             (elem.nD_qpos, elem.nD_qneg) = create_list(elem.qsOutPorts)
-            # Create list with external ports for gmin calculation
-            nports = elem.numTerms - 1
-            elem.nD_extPorts = [(i, nports) for i in range(nports)]
-            (elem.nD_epos, elem.nD_eneg) = create_list(elem.nD_extPorts)
+# Disabled since not needed for now
+#            # Create list with external ports for gmin calculation
+#            nports = elem.numTerms - 1
+#            elem.nD_extPorts = [(i, nports) for i in range(nports)]
+#            (elem.nD_epos, elem.nD_eneg) = create_list(elem.nD_extPorts)
 
         # Convert frequency-defined elements
         if elem.isFreqDefined:
@@ -381,7 +384,45 @@ class DCNodal:
     
         return fsolve(x0, f_Jac_eval, f_eval)
     
-        
+
+    def solve_homotopy_gmin(self, x0, sV):
+        """Newton's method with gmin stepping"""
+        x = np.copy(x0)
+        totIter = 0
+        idx = np.arange(self.ckt.nd_nterms)
+        for gminexp in np.arange(-1., -8., -1):
+            gmin = 10.**gminexp
+            # Add gmin from ground to all external nodes. Assume all
+            # external nodes are first. This will not work if the
+            # terminal order is changed.
+            def f_Jac_eval(xvec):
+                (iVec, Jac) = self.get_i_Jac(xvec) 
+                iVec[idx] += gmin * xvec[idx]
+                Jac[idx, idx] += gmin
+                return (iVec - sV, Jac)
+            def f_eval(xvec):
+                iVec = self.get_i(xvec)
+                iVec[idx] += gmin * xvec[idx]
+                return iVec - sV
+            (x, res, iterations) = fsolve(x0, f_Jac_eval, f_eval)
+            print('gmin = {0}, res = {1}, iter = {2}'.format(
+                    gmin, res, iterations))
+            totIter += iterations
+
+        # Call solve_simple with better initial guess
+        (x, res, iterations) = self.solve_simple(x, sV)
+        totIter += iterations
+
+        return (x, res, totIter)
+
+# Old code for gmin homotopy: add conductances in parallel to
+# nonlinear device external ports
+#
+#        for elem in self.ckt.nD_nlinElem:
+#            Gadd = np.eye(len(elem.nD_extPorts))
+#            set_Jac(Ggmin, elem.nD_epos, elem.nD_eneg, 
+#                    elem.nD_epos, elem.nD_eneg, Gadd)
+
     def solve_homotopy_source(self, x0, sV):
         """Newton's method with source stepping"""
         x = np.copy(x0)
@@ -400,40 +441,6 @@ class DCNodal:
             totIter += iterations
 
         return (x, res, totIter)
-    
-
-    def solve_homotopy_gmin(self, x0, sV):
-        """Newton's method with gmin stepping"""
-        x = np.copy(x0)
-        totIter = 0
-        # Put conductances in parallel with external nonlinear device ports
-        Ggmin = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
-        for elem in self.ckt.nD_nlinElem:
-            Gadd = np.eye(len(elem.nD_extPorts))
-            set_Jac(Ggmin, elem.nD_epos, elem.nD_eneg, 
-                    elem.nD_epos, elem.nD_eneg, Gadd)
-        for gmin in (.1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 0.):
-            # Add conductances to G matrix
-            self.G += gmin * Ggmin
-            try:
-                (x, res, iterations) = self.solve_simple(x, sV)
-                print('gmin = {0}, res = {1}, iter = {2}'.format(gmin, 
-                                                                 res, 
-                                                                 iterations))
-            except NoConvergenceError:
-                # Restore original G matrix
-                self.G -= gmin * Ggmin
-                raise
-
-            totIter += iterations
-            # Restore original G matrix
-            self.G -= gmin * Ggmin
-
-        # Call solve_simple with better initial guess
-        totIter += iterations
-
-        return (x, res, totIter)
-    
     
     
 
