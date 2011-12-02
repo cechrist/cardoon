@@ -510,6 +510,7 @@ class Circuit:
         desc = 'Circuit: {0}\n'.format(self.name)
         if hasattr(self, 'title'):
             desc = self.title + '\n'
+        return desc
 
     def netlist_string(self):
         """
@@ -810,7 +811,7 @@ class SubCircuit(Circuit):
         for termName in self.extConnectionList:
             desc += ' ' + termName
         desc += '\n'
-        desc += Circuit.__str__(self)
+        desc += Circuit.netlist_string(self)
         desc += '.ends\n\n'
         return desc
 

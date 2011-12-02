@@ -63,6 +63,11 @@ class Analysis(ParamSet):
         if hasattr(circuit, 'title'):
             print('\n', circuit.title, '\n')
 
+        # Only works with flattened circuits
+        if not circuit._flattened:
+            circuit.flatten()
+            circuit.init()
+
         # Create nodal object
         nd.make_nodal_circuit(circuit)
         dc = nd.DCNodal(circuit)
