@@ -105,7 +105,7 @@ def make_nodal_circuit(ckt, reference='gnd'):
     """
     Add attributes to Circuit/Elements/Terminals for nodal analysis
 
-    This functionalyty should be useful for any kind of nodal-based
+    This functionality should be useful for any kind of nodal-based
     analysis (DC, AC, TRAN, HB, etc.)
 
     Takes a Circuit instance (ckt) as an argument. If the circuit

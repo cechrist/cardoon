@@ -44,7 +44,7 @@ def run_analyses(analysisQueue, ckt = None):
                 print(ae)
     else:
         print('Nothing to do. Printing circuit:\n')
-        print(ckt)
+        print(ckt.netlist_string())
         print(ckt.globals_to_str())
 
 def device_catalog():

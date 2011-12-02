@@ -71,6 +71,10 @@ class defined as follows::
             # Calculate temperature-dependent variables (if any)
             # self.set_temp_vars(self.temp)
 
+A sample file named ``devices/EmptyDev.py`` is included to be used as
+a skeleton to create new models.
+
+
 Module documentation
 --------------------
 
@@ -524,8 +528,16 @@ frequencies and should take advantage of the vectorization facilities
 in numpy. It may not work at DC, that is why ``get_gmatrix()`` is also
 needed.
 
+Devices Package Documentation
+-----------------------------
     
+.. automodule:: devices
+       :members:
 
 
+Re-Generating Catalogs
+----------------------
 
-
+Erase one catalog file (for example, ``device_library.rst``) in the
+documentation directory (``doc/``) and re-make the documentation. All
+catalogs should be automatically re-generated.

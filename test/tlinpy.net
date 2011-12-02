@@ -1,6 +1,6 @@
 # Simple netlist with transmission line (test of nsect parameter)
 
-.options shell=True
+.options shell=False
 
 idc:i1 gnd 20 idc=2m
 res:r1 20 2 r=10k
