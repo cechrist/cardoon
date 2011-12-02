@@ -16,15 +16,6 @@ Mandatory Functions
 
 def run(self, circuit): self explanatory
 
--------------------------------------------------------------------
-
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
 """
 
 import numpy as np
@@ -44,11 +35,14 @@ class Analysis:
     anType = "empty_analysis"
 
     # Define parameters as follows
-    paramList = (
-        ('tstart', 'Initial time', 's', 0.),
-        ('tstop', 'Stop time', 's', 0.),
-        ('tstep', 'Initial time step', 's', 1e-3)
+    paramDict = dict(
+        intvars = ('Print internal element nodal variables', '', bool, False),
+        elemop = ('Print element operating points', '', bool, False)
         )
+
+    def __init__(self):
+        # Just init the base class
+        ParamSet.__init__(self, self.paramDict)
 
     def run(self, circuit):
         """
