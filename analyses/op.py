@@ -13,6 +13,7 @@ import numpy as np
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
 import nodal as nd
+from nodalAD import DCNodalAD
 from fsolve import solve, NoConvergenceError
 
 class Analysis(ParamSet):
@@ -40,7 +41,8 @@ class Analysis(ParamSet):
     # Define parameters as follows
     paramDict = dict(
         intvars = ('Print internal element nodal variables', '', bool, False),
-        elemop = ('Print element operating points', '', bool, False)
+        elemop = ('Print element operating points', '', bool, False),
+        fullAD = ('Use CPPAD for entire nonlinear part', '', bool, False)
         )
 
 
@@ -70,7 +72,10 @@ class Analysis(ParamSet):
 
         # Create nodal object
         nd.make_nodal_circuit(circuit)
-        dc = nd.DCNodal(circuit)
+        if self.fullAD:
+            dc = DCNodalAD(circuit)
+        else:
+            dc = nd.DCNodal(circuit)
         x0 = dc.get_guess()
         sV = dc.get_source()
         # solve equations

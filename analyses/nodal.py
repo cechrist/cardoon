@@ -15,22 +15,28 @@ the elements selected by obj are repeated (see tentative numpy
 tutorial at http://www.scipy.org/NumPy_Tutorial)
 
 So far there seem to be two ways to overcome this, to be tested as
-soon as this code starts working: the first is to use a few cython
-functions doing the inner loops. The second is to create a giant AD
-tape with the whole circuit.
+soon as this code starts working: 
+
+* The first is to use a few cython functions doing the inner
+  loops. Will try that when sparse matrix support is added. Otherwise
+  it makes no sense.
+
+* The second is to create a giant AD tape for the whole circuit. The
+  nodalAD module implements this. In principle it does not seem to be
+  faster, at least for the small netlists tried so far.
+
+The current solution is described here: Nonlinear (and
+frequency-defined) elements are added vectors nD_?pos and nD_?neg that
+contain the non-reference terminal RC numbers where the internal
+current sources are connected. This requires some pre-processing but
+in this way we can avoid ``if`` statements in all functions. For
+regular linear transconductances this is not necessary as we only have
+to fill the matrix once.
 
 Note about storing nodal voltages in Terminals: currently voltages are
 not stored by default. The main reason for this is efficiency as it is
 less work to operate directly from the vector of unknowns in the
 equation-solving routine.
-
-It seems that it is possible to eliminate all the if statements in
-set_i() and set_Jac() by eliminating the (-1)s from the row and column
-vectors. The problem is that we would have to store the corresponding
-non-zero indexes for current and Jac --> this is implemented now. May
-need some fine tuning. For linear conductances we keep the if
-statements as this is done only once.
-
 """
 
 import numpy as np

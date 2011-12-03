@@ -26,10 +26,8 @@ def solve(x0, sV, obj):
 
     x0: initial guess
     sV: source vector
-    obj: object that provides the following methods and attributes::
+    obj: object that provides the following attribute::
 
-        (iVec, Jac) = obj.get_i_Jac(x)   # Returns current and Jacobian
-        iVec = obj.get_i(x)              # Returns current
         obj.convergence_helpers          # list of functions that can be used
                                          # to solve equations
 
