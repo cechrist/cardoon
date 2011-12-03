@@ -10,16 +10,12 @@ Contents
 --------
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    intro
    usage
-   device_library
-   analysis_library
-   coding
-   adding_devices
-   circuit_ref
-   design
+   catalogs
+   internal
    references   
 
 Indices and tables

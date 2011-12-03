@@ -13,7 +13,7 @@ import numpy as np
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
 import nodal as nd
-from fsolve import solve
+from fsolve import solve, NoConvergenceError
 
 class Analysis(ParamSet):
     """
@@ -56,21 +56,31 @@ class Analysis(ParamSet):
         The state of all devices is determined by the values of the
         voltages at the controlling ports.
         """
-        # Create nodal object
-        nd.make_nodal_circuit(circuit)
-        dc = nd.DCNodal(circuit)
-        x0 = dc.get_guess()
-        sV = dc.get_source()
-        # solve equations
-        (x, res, iterations) = solve(x0, sV, dc)
-        dc.save_OP(x)
-
         # for now just print some fixed stuff
         print('******************************************************')
         print('             Operating point analysis')
         print('******************************************************')
         if hasattr(circuit, 'title'):
             print('\n', circuit.title, '\n')
+
+        # Only works with flattened circuits
+        if not circuit._flattened:
+            circuit.flatten()
+            circuit.init()
+
+        # Create nodal object
+        nd.make_nodal_circuit(circuit)
+        dc = nd.DCNodal(circuit)
+        x0 = dc.get_guess()
+        sV = dc.get_source()
+        # solve equations
+        try: 
+            (x, res, iterations) = solve(x0, sV, dc)
+        except NoConvergenceError as ce:
+            print(ce)
+            return
+        dc.save_OP(x)
+
         print('Number of iterations = ', iterations)
         print('Residual = ', res)
 

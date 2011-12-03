@@ -1,18 +1,33 @@
 """
-devices package
----------------
-
-This package contains a library with device models.  Device classes
-are imported into a dictionary. Keys are the device types. So to
-create a new device just use::
+The ``devices`` package contains a library with device models.  Device
+classes are imported into a dictionary. Keys are the device types. To
+create a new device use the following::
 
     devices.devClass['devType']('instancename')
 
-Examples::
+Example (from python)::
 
     from devices import devClass
     # Create device instance
     m1 = devClass['mosacm']('m1n')
+
+Example (from netlist)::
+
+    mosacm:m1n <nodes> <parameters>
+
+Making the device model recognized by this package
+--------------------------------------------------
+
+Suppose the new model is implemented in a file named
+``newmodel.py``. Save this file in the ``devices`` directory and edit
+``devices/__init__.py``. Add your module name to ``netElemList`` as
+shown below::
+
+    # Regular 'netlist' elements must be listed here
+    netElemList = ['mosACM', 'resistor', 'capacitor', 'inductor', 'idc', 'vdc', 
+                   'diode', 'svdiode', 'mosEKV', 'bjt', 'svbjt', 'newelem']
+
+That's all!
 
 """
 import autoThermal

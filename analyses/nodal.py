@@ -34,7 +34,7 @@ statements as this is done only once.
 """
 
 import numpy as np
-from fsolve import fsolve, NoConvergenceError
+from fsolve import fsolve_Newton, NoConvergenceError
 
 # ****************** Stand-alone functions to be optimized ****************
 
@@ -105,7 +105,7 @@ def make_nodal_circuit(ckt, reference='gnd'):
     """
     Add attributes to Circuit/Elements/Terminals for nodal analysis
 
-    This functionalyty should be useful for any kind of nodal-based
+    This functionality should be useful for any kind of nodal-based
     analysis (DC, AC, TRAN, HB, etc.)
 
     Takes a Circuit instance (ckt) as an argument. If the circuit
@@ -382,7 +382,7 @@ class DCNodal:
             iVec = self.get_i(x) 
             return iVec - sV
     
-        return fsolve(x0, f_Jac_eval, f_eval)
+        return fsolve_Newton(x0, f_Jac_eval, f_eval)
     
 
     def solve_homotopy_gmin(self, x0, sV):
@@ -404,13 +404,14 @@ class DCNodal:
                 iVec = self.get_i(xvec)
                 iVec[idx] += gmin * xvec[idx]
                 return iVec - sV
-            (x, res, iterations) = fsolve(x0, f_Jac_eval, f_eval)
+            (x, res, iterations) = fsolve_Newton(x0, f_Jac_eval, f_eval)
             print('gmin = {0}, res = {1}, iter = {2}'.format(
                     gmin, res, iterations))
             totIter += iterations
 
         # Call solve_simple with better initial guess
         (x, res, iterations) = self.solve_simple(x, sV)
+        print('gmin = 0, res = {0}, iter = {1}'.format(res, iterations))
         totIter += iterations
 
         return (x, res, totIter)
@@ -435,7 +436,7 @@ class DCNodal:
             def f_eval(x):
                 iVec = self.get_i(x) 
                 return iVec - lambda_ * sV
-            (x, res, iterations) = fsolve(x, f_Jac_eval, f_eval)
+            (x, res, iterations) = fsolve_Newton(x, f_Jac_eval, f_eval)
             print('lambda = {0}, res = {1}, iter = {2}'.format(lambda_, 
                                                                res, iterations))
             totIter += iterations

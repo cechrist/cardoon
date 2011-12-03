@@ -10,7 +10,6 @@
 from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
-#from globalVars import glVar
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
 
@@ -69,99 +68,102 @@ class Analysis(ParamSet):
         # get device 
         try:
             dev = circuit.elemDict[self.device]
-        except: 
+        except KeyError: 
             raise AnalysisError('Could not find: {0}'.format(self.device))
-        else:
-            nports = len(self.ports_bias)
+            return
 
-            # Check that parameters make some sense
-            if not dev.isNonlinear:
-                raise AnalysisError(self.device + ' is linear')
-            if nports != len(dev.controlPorts):
-                raise AnalysisError('ports_bias for ' + self.device 
-                                    + ': wrong number of control ports given')
-            if self.sweep_num < 1:
-                raise AnalysisError('sweep_num = ' + str(self.num)
-                                    + ': wrong number')
-            if self.sweep_port >= nports:
-                raise AnalysisError('sweep_port = ' + str(self.port)
-                                    + ': wrong number (starts from zero)')
-            param = False
-            paramunit = None
-            if self.param:
-                try:
-                    pinfo = dev.paramDict[self.param]
-                except KeyError:
-                    raise AnalysisError('Unrecognized parameter: ' 
-                                        + self.param)
-                else:
-                    if not ((pinfo[2] == float) or (pinfo[2] == int)):
-                        raise AnalysisError('Parameter must be numeric: ' 
-                                            + self.param)
-                    paramunit = ' ' + pinfo[1]
-                    param = True
-                
-            # Print some info about what is being tested
-            vports  = np.array(self.ports_bias)
-            # Generate operating point info
-            if self.useAD:
-                dev.get_OP(vports)
-            print('******************************************************')
-            print('Nonlinear device internal source test analysis')
-            print('******************************************************')
-            print(dev)
-            print('\nPort bias voltages:',  self.ports_bias, 'V')
-            print('Inner sweep port:', self.sweep_port, ', start:', 
-                  self.start, ', stop:', self.stop)
+        # Initialize device
+        dev.init()
 
-            if param:
-                npsweep = len(self.param_val)
-                print('Parameter sweep: {0} = {1}'.format(self.param, 
-                                                          self.param_val))
+        nports = len(self.ports_bias)
+        # Check that parameters make some sense
+        if not dev.isNonlinear:
+            raise AnalysisError(self.device + ' is linear')
+        if nports != len(dev.controlPorts):
+            raise AnalysisError('ports_bias for ' + self.device 
+                                + ': wrong number of control ports given')
+        if self.sweep_num < 1:
+            raise AnalysisError('sweep_num = ' + str(self.num)
+                                + ': wrong number')
+        if self.sweep_port >= nports:
+            raise AnalysisError('sweep_port = ' + str(self.port)
+                                + ': wrong number (starts from zero)')
+        param = False
+        paramunit = None
+        if self.param:
+            try:
+                pinfo = dev.paramDict[self.param]
+            except KeyError:
+                raise AnalysisError('Unrecognized parameter: ' 
+                                    + self.param)
             else:
-                npsweep = 1
-            # Print element variables
-            dev.print_vars()
+                if not ((pinfo[2] == float) or (pinfo[2] == int)):
+                    raise AnalysisError('Parameter must be numeric: ' 
+                                        + self.param)
+                paramunit = ' ' + pinfo[1]
+                param = True
+            
+        # Print some info about what is being tested
+        vports  = np.array(self.ports_bias)
+        # Generate operating point info
+        if self.useAD:
+            dev.get_OP(vports)
+        print('******************************************************')
+        print('Nonlinear device internal source test analysis')
+        print('******************************************************')
+        print(dev)
+        print('\nPort bias voltages:',  self.ports_bias, 'V')
+        print('Inner sweep port:', self.sweep_port, ', start:', 
+              self.start, ', stop:', self.stop)
 
-            vsweep = np.linspace(self.start, self.stop, self.sweep_num)
-            nsamples = np.shape(vsweep)[0]
-            ncurrents = len(dev.csOutPorts)
-            iout = None
-            if ncurrents: 
-                iout = np.zeros((npsweep, nsamples, ncurrents))
-            ncharges = len(dev.qsOutPorts)
-            qout = None
-            if ncharges:
-                qout = np.zeros((npsweep, nsamples, ncharges))
-            for j in range(npsweep):
-                if param:
-                    setattr(dev, self.param, self.param_val[j])
-                    # re-process parameters
-                    dev.process_params()
-                for i in range(np.shape(vsweep)[0]):
-                    vports[self.sweep_port] = vsweep[i]
-                    if self.useAD:
-                        # Use AD tape to evaluate function
-                        outvars = dev.eval(vports)
-                    else:
-                        # The one below is slower as it does not use tapes:
-                        outvars = np.concatenate(dev.eval_cqs(vports), axis=0)
-                    # The function below in addition calculates derivatives
-                    #(outvars, Jac) = dev.eval_and_deriv(vports)
-                    # Convert current, charge to vectors
-                    if ncurrents: 
-                        iout[j,i,:] = outvars[0:ncurrents]
-                    if ncharges:
-                        qout[j,i,:] = outvars[ncurrents:]
+        if param:
+            npsweep = len(self.param_val)
+            print('Parameter sweep: {0} = {1}'.format(self.param, 
+                                                      self.param_val))
+        else:
+            npsweep = 1
+        # Print element variables
+        dev.print_vars()
 
-            # Reset device attributes
-            dev.clean_attributes()
-            dev.set_attributes()
-            # Plot currents and voltages if requested
-            if self.plot:
-                self.plot_all(vsweep, iout, qout, param, npsweep, paramunit)
+        vsweep = np.linspace(self.start, self.stop, self.sweep_num)
+        nsamples = np.shape(vsweep)[0]
+        ncurrents = len(dev.csOutPorts)
+        iout = None
+        if ncurrents: 
+            iout = np.zeros((npsweep, nsamples, ncurrents))
+        ncharges = len(dev.qsOutPorts)
+        qout = None
+        if ncharges:
+            qout = np.zeros((npsweep, nsamples, ncharges))
+        for j in range(npsweep):
+            if param:
+                setattr(dev, self.param, self.param_val[j])
+                # re-process parameters
+                dev.process_params()
+            for i in range(np.shape(vsweep)[0]):
+                vports[self.sweep_port] = vsweep[i]
+                if self.useAD:
+                    # Use AD tape to evaluate function
+                    outvars = dev.eval(vports)
+                else:
+                    # The one below is slower as it does not use tapes:
+                    outvars = np.concatenate(dev.eval_cqs(vports), axis=0)
+                # The function below in addition calculates derivatives
+                #(outvars, Jac) = dev.eval_and_deriv(vports)
+                # Convert current, charge to vectors
+                if ncurrents: 
+                    iout[j,i,:] = outvars[0:ncurrents]
+                if ncharges:
+                    qout[j,i,:] = outvars[ncurrents:]
 
-            ipython_drop(globals(), locals())
+        # Reset device attributes
+        dev.clean_attributes()
+        dev.set_attributes()
+        # Plot currents and voltages if requested
+        if self.plot:
+            self.plot_all(vsweep, iout, qout, param, npsweep, paramunit)
+
+        ipython_drop(globals(), locals())
 
 
     def plot_all(self, vsweep, iout, qout, param, npsweep, paramunit):

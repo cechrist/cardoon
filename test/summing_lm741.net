@@ -114,6 +114,6 @@ ne=0.5 nc=0.5 tr=3000e-9 vje=0.55 vjc=0.55)
 *  rc=100  re=10
 
 .analysis op intvars=0
-.options maxiter=300 shell=0 gyr=1e-5
+.options maxiter=300 shell=0 gyr=1e-3
 
 .end

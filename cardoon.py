@@ -20,10 +20,6 @@ def parse_net(filename, ckt = None):
     if not ckt:
         ckt = cir.get_mainckt()
     parse_file(filename, ckt)
-    ckt.flatten()
-    ckt.init()
-    # The following is slow, so we may want to remove/change it later
-    #ckt.check_sanity()
     return analysisQueue
 
 
@@ -44,7 +40,7 @@ def run_analyses(analysisQueue, ckt = None):
                 print(ae)
     else:
         print('Nothing to do. Printing circuit:\n')
-        print(ckt)
+        print(ckt.netlist_string())
         print(ckt.globals_to_str())
 
 def device_catalog():
@@ -134,9 +130,9 @@ if __name__ == "__main__":
         # Use 'main' circuit
         try:
             analysisQueue = parse_net(sys.argv[1])
+            run_analyses(analysisQueue)
         except (ParseError, cir.CircuitError, ParamError) as ex:
             print(ex)
             exit(1)
-        else:
-            run_analyses(analysisQueue)
+
 

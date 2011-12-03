@@ -505,6 +505,15 @@ class Circuit:
 
     def __str__(self):
         """
+        Generates a short descriptive string
+        """
+        desc = 'Circuit: {0}\n'.format(self.name)
+        if hasattr(self, 'title'):
+            desc = self.title + '\n'
+        return desc
+
+    def netlist_string(self):
+        """
         Generates a 'netlist-like' description of the circuit
         """
         desc = ''
@@ -525,7 +534,7 @@ class Circuit:
                 usedSubCKTs.add(subckt.cktName)
             desc += '#                     *** Subcircuit Definitions ***\n'
             for cktName in usedSubCKTs:
-                desc += Circuit.cktDict[cktName].__str__()
+                desc += Circuit.cktDict[cktName].netlist_string()
 
         desc += '\n'
         return desc
@@ -793,7 +802,7 @@ class SubCircuit(Circuit):
             # Save terminal connection number here
             terminal.subCKTconnection = i
 
-    def __str__(self):
+    def netlist_string(self):
         """
         Just adds an extra .subckt line
         """
@@ -802,7 +811,7 @@ class SubCircuit(Circuit):
         for termName in self.extConnectionList:
             desc += ' ' + termName
         desc += '\n'
-        desc += Circuit.__str__(self)
+        desc += Circuit.netlist_string(self)
         desc += '.ends\n\n'
         return desc
 
