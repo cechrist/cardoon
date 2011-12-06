@@ -802,6 +802,13 @@ class SubCircuit(Circuit):
             # Save terminal connection number here
             terminal.subCKTconnection = i
 
+    def get_connections(self):
+        """
+        Returns a list of subcircuit terminals
+        """
+        return [self.get_term(termName) 
+                for termName in enumerate(self.extConnectionList)]
+
     def netlist_string(self):
         """
         Just adds an extra .subckt line

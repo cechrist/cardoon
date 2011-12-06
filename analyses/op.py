@@ -3,7 +3,7 @@
 -------------------------------------
 
 .. module:: op
-.. moduleauthor:: Carlos Christoffersen and others
+.. moduleauthor:: Carlos Christoffersen
 
 """
 
@@ -93,7 +93,7 @@ class Analysis(ParamSet):
         print('----------------------------------------')
         for key in sorted(circuit.termDict.iterkeys()):
             term = circuit.termDict[key]
-            print('{0:10} | {1:20} | {2}'.format(key, term.nD_v, term.unit))
+            print('{0:10} | {1:20} | {2}'.format(key, term.nD_vOP, term.unit))
 
         if self.intvars or self.elemop:
             for elem in circuit.nD_nlinElem:
@@ -102,7 +102,7 @@ class Analysis(ParamSet):
                     print('\n    Internal nodal variables:\n')
                     for term in elem.get_internal_terms():
                         print('    {0:10} : {1:20} {2}'.format(
-                                term.nodeName, term.nD_v, term.unit))
+                                term.nodeName, term.nD_vOP, term.unit))
                 if self.elemop:
                     print('\n    Operating point info:\n')
                     for line in elem.format_OP().splitlines():

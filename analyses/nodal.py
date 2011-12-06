@@ -23,7 +23,9 @@ soon as this code starts working:
 
 * The second is to create a giant AD tape for the whole circuit. The
   nodalAD module implements this. In principle it does not seem to be
-  faster, at least for the small netlists tried so far.
+  faster, at least for the small netlists tried so far. Also tape
+  generation seems to require a dense matrix multiplication (G *
+  x). This possibly rules out the approach for large circuits.
 
 The current solution is described here: Nonlinear (and
 frequency-defined) elements are added vectors nD_?pos and nD_?neg that
@@ -121,8 +123,7 @@ def make_nodal_circuit(ckt, reference='gnd'):
     New attributes are added in Circuit/Element/Terminal
     instances. All new attributes start with "nD_"
 
-    In the future this should also work with subcircuits. External
-    connections have to handled for that.
+    Works with subcircuits too (see nD_namRClist attribute)
     """
     # get ground node
     ckt.nD_ref = ckt.get_term(reference)
@@ -219,8 +220,14 @@ def make_nodal_circuit(ckt, reference='gnd'):
             n2 = rcList[elem.sourceOutput[1]]
             elem.nD_sourceOut = (n1, n2)
 
-        
-
+    # Subcircuit-connection processing
+    try:
+        connectTerms = ckt.get_connections()
+        # List of RC numbers of external connections
+        ckt.nD_namRClist = [term.nD_namRC for term in connectTerms]
+    except AttributeError:
+        # Not a subcircuit
+        pass
 
 # ****************** Classes ****************
 
@@ -254,6 +261,9 @@ class DCNodal:
         self.Jac = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
         self.sVec = np.zeros(self.ckt.nD_dimension)
         self.iVec = np.zeros(self.ckt.nD_dimension)
+        if hasattr(self.ckt, 'nD_namRClist'):
+            # Allocate external currents vector
+            self.extSVec = np.zeros(self.ckt.nD_dimension)
 
         # Generate G matrix (never changes)
         for elem in self.ckt.nD_elemList:
@@ -265,6 +275,23 @@ class DCNodal:
             set_Jac(self.G, elem.nD_fpos, elem.nD_fneg, 
                     elem.nD_fpos, elem.nD_fneg, elem.get_G_matrix())
             
+    def set_ext_currents(self, extIvec):
+        """
+        Set external currents applied to subcircuit
+
+        extIvec: vector of external currents. Length of this vector
+        should be equal to the number of external connections. The sum
+        of all currents must be equal to zero (KCL)
+
+        This will fail if not a subcircuit
+        """
+        # This idea still needs some testing
+        assert sum(extIvec[:ncurrents]) == 0
+        ncurrents = len(self.ckt.nD_namRClist)
+        # Must do the loop in case there are repeated connections
+        for val,rcnum in zip(extIvec, self.ckt.nD_namRClist):
+            self.extSVec[rcnum] = val
+
     def get_guess(self):
         """
         Retrieve guesses from vPortGuess in each nonlinear device
@@ -289,7 +316,12 @@ class DCNodal:
         Get the source vector considering only the DC source components
         """
         # Erase vector first. 
-        self.sVec[:] = 0.
+        try:
+            # If subcircuit add external currents
+            self.sVec = self.extSVec
+        except AttributeError:
+            # Not a subcircuit
+            self.sVec[:] = 0.
         for elem in self.ckt.nD_sourceDCElem:
             # first get the destination row/columns 
             outTerm = elem.nD_sourceOut
@@ -366,9 +398,9 @@ class DCNodal:
         Save nodal voltages in terminals and set OP in elements
         """
         # Set nodal voltage of reference to zero
-        self.ckt.nD_ref.nD_v = 0.
+        self.ckt.nD_ref.nD_vOP = 0.
         for v,term in zip(xVec, self.ckt.nD_termList):
-            term.nD_v = v
+            term.nD_vOP = v
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(len(elem.controlPorts))
@@ -463,7 +495,6 @@ class TransientNodal(DCNodal):
     """
 
     def __init__(self, nodalCircuit):
-
         DCNodal.nD_init__(self, nodalCircuit)
         # Generate C here 
         self.C = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
@@ -471,7 +502,7 @@ class TransientNodal(DCNodal):
             for vcqs in elem.nD_linVCQS:
                 set_quad(self.C, *vcqs)
 
-    def get_source(self):
+    def get_source(self, time):
         """
         Add time-domain component to DC
         """
