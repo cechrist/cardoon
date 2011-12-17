@@ -104,7 +104,7 @@ class Analysis(ParamSet):
         x = dc.get_guess()
 
         pvalues = np.linspace(start = self.start, stop = self.stop, 
-                              num = self.sweep_num):
+                              num = self.sweep_num)
         
         xVec = np.zeros((circuit.nD_dimension, self.sweep_num))
         for i, value in enumerate(pvalues):
@@ -122,7 +122,7 @@ class Analysis(ParamSet):
             # Save result
             xVec[:,i] = x
             if self.verbose:
-                print('{0} = {1}'.format(self.param , value)
+                print('{0} = {1}'.format(self.param , value))
                 print('Number of iterations = ', iterations)
                 print('Residual = ', res)
 

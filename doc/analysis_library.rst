@@ -2,6 +2,37 @@
 Analysis Library Catalog
 ========================
  
+dc
+--
+
+
+DC Sweep Calculation
+
+Calculates a DC sweep of a circuit using the nodal approach. Nodal
+voltages are saved after the analysis is complete.
+
+Convergence parameters for the Newton method are controlled using
+the global variables in ``.options``.
+
+After completion the analysis drops to an interactive shell if the
+``shell`` global variable is set to ``True``
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ device                                 Instance name of device to sweep variable            
+ fullAD       0                         Use CPPAD for entire nonlinear part                  
+ param                                  Device parameter to sweep                            
+ start        0.0          V            Sweep start value                                    
+ stop         0.0          V            Sweep stop value                                     
+ sweep_num    50                        Number of points in sweep                            
+ verbose      0                         Show iterations for each point                       
+ =========== ============ ============ ===================================================== 
+
 op
 --
 
@@ -30,6 +61,7 @@ Parameters
  Name         Default      Unit         Description                                          
  =========== ============ ============ ===================================================== 
  elemop       0                         Print element operating points                       
+ fullAD       0                         Use CPPAD for entire nonlinear part                  
  intvars      0                         Print internal element nodal variables               
  =========== ============ ============ ===================================================== 
 

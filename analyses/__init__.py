@@ -18,7 +18,7 @@ http://www.gnu.org/licenses/gpl.html
 """
 
 # Regular 'analysis' modules listed here
-analysisList = ['testdev', 'op']
+analysisList = ['testdev', 'op', 'dc']
 
 # Add here any modules to be imported in addition to analysisList
 __all__ = analysisList 

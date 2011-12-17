@@ -411,7 +411,8 @@ class DCNodal:
     # The following functions used to solve equations, originally from
     # pycircuit
     def solve_simple(self, x0, sV):
-        """Simple Newton's method"""
+        #"""Simple Newton's method"""
+        # Docstring removed to avoid printing this all the time
         def f_Jac_eval(x):
             (iVec, Jac) = self.get_i_Jac(x) 
             return (iVec - sV, Jac)
