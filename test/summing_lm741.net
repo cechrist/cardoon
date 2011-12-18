@@ -2,7 +2,7 @@
 *Summing Amplifier with Opamp 741 
 *Opamp 741 contains 26 BJT
 * Original freeda netlist by Muhammad Kabir
-* Does not work yet: removed substrate connections, rc, re
+* Modifications: removed substrate connections, rc, re (not implemented yet)
 
 ***Input***
 vdc:v2 153 0 
@@ -89,19 +89,19 @@ svbjt:q24 25 25 2 model = mynpn area=1
 res:r12 25 2 r=50e3
 
 ***Dummy Resistors
-res:rdummy1 4 0 r=20e6
-res:rdummy2 5 0 r=20e6
-res:rdummy3 6 0 r=20e6
-res:rdummy4 7 0 r=20e6
-res:rdummy5 9 0 r=20e6
-res:rdummy6 10 0 r=20e6
-res:rdummy7 11 0 r=20e6
-res:rdummy8 3 0 r=20e6
-res:rdummy9 12 0 r=20e6
-res:rdummy13 15 0 r=20e6
-res:rdummy14 16 0 r=20e6
-res:rdummy18 21 0 r=20e6
-res:rdummy21 24 0 r=20e6
+* res:rdummy1 4 0 r=20e6
+* res:rdummy2 5 0 r=20e6
+* res:rdummy3 6 0 r=20e6
+* res:rdummy4 7 0 r=20e6
+* res:rdummy5 9 0 r=20e6
+* res:rdummy6 10 0 r=20e6
+* res:rdummy7 11 0 r=20e6
+* res:rdummy8 3 0 r=20e6
+* res:rdummy9 12 0 r=20e6
+* res:rdummy13 15 0 r=20e6
+* res:rdummy14 16 0 r=20e6
+* res:rdummy18 21 0 r=20e6
+* res:rdummy21 24 0 r=20e6
 
 .model mynpn svbjt(type=npn isat=5e-15 rb=200 bf=200 \
 br=2 vaf=130 tf=0.35e-9 cje=1e-12 cjc=0.3e-12 \
@@ -113,7 +113,10 @@ bf=50 br=4 vaf=50 tf=30e-9 cje=0.3e-12 cjc=1e-12 \
 ne=0.5 nc=0.5 tr=3000e-9 vje=0.55 vjc=0.55)
 *  rc=100  re=10
 
-.analysis op intvars=0
+*.analysis op intvars=0
+.analysis dc device=vdc:v2 param=vdc start=-7. stop=7. sweep_num=50 
 .options maxiter=300 shell=0 gyr=1e-3
+
+.plot dc 202 201 
 
 .end

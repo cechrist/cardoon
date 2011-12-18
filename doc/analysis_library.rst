@@ -14,6 +14,12 @@ voltages are saved after the analysis is complete.
 Convergence parameters for the Newton method are controlled using
 the global variables in ``.options``.
 
+Output variables are stored in circuit and terminals with the
+'dC_' prefix.
+
+One plot window is generated for each ``.plot`` statement. Use
+'dc' type for this analysis.
+
 After completion the analysis drops to an interactive shell if the
 ``shell`` global variable is set to ``True``
 

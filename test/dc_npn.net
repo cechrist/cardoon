@@ -2,7 +2,7 @@
 
 .options temp=29.1439  shell=False
 .vars beta1 = 99.655
-.analysis dc device=vdc:vb param=vdc start=-.5 stop=.95 sweep_num=200
+.analysis dc device=svbjt:q1 param=bf start=10 stop=150 sweep_num=200
 
 .model t122 svbjt (type=npn isat=0.480e-15 nf=1.008 bf=beta1 vaf=90.000 \
 ikf=0.190 \
@@ -17,13 +17,14 @@ eg=1.110 xti=3.000)
 
 vdc:vce 10 gnd vdc=12
 res:rc 10 1 r=1k
-vdc:vb 2 0 vdc=.6
+vdc:vb 3 0 vdc=10
+res:rb 3 2 r=96k
 
 res:reint 1000 0 r=1
 res:rcint 100 1 r=1
 svbjt:q1 100 2 1000 model=t122
 
-.plot dc v(2) v(100) 
+.plot dc 2 100 
 
 .end
 

@@ -374,7 +374,7 @@ def parse_file(filename, ckt):
     nodes = pp.OneOrMore(identifier + ~pp.FollowedBy("="))
 
     # Output variables (for .plot, .save)
-    outVars = pp.OneOrMore(pp.Suppress('v(') + identifier + pp.Suppress(')'))
+    outVars = pp.OneOrMore(identifier)
 
     # Comment line: any line that starts with # , * or //
     commentline = pp.Suppress(((pp.Literal('*') ^ pp.Literal('#')) 
@@ -421,7 +421,7 @@ def parse_file(filename, ckt):
         + identifier.setResultsName('anType') \
         + pp.Optional(parameters.setResultsName('parameters'))
 
-    # example: .plot dc v(10) v(out1)
+    # example: .plot dc 10 out1
     plotline = pp.Suppress(pp.Keyword('.plot', caseless=True)) \
         + identifier.setResultsName('plotType') \
         + outVars.setResultsName('plotVars') 

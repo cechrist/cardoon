@@ -35,9 +35,11 @@ Just unpack the zip file in some directory.
 Usage
 -----
 
-At this moment the main program is very simple. It just reads a
-netlist file, builds the circuit described there and runs any
-specified analyses.
+At this moment the main program is very simple. It reads a netlist
+file, builds the circuit described there and runs any specified
+analyses. Optionally some analyses can drop to an ipython shell after
+calculations are finished for interactive work. For this, set the
+``shell`` variable to ``True`` in the ``.options`` line.
 
 After the source is installed, change into the cardoon directory and
 run the program with no arguments for a brief help message::
@@ -176,7 +178,21 @@ one circuit element, an analysis to perform or another command.
   and analysis lines. ``.var`` definitions can be placed anywhere in the
   netlist.
 
-* For now there are no output commands defined.
+* Output commands: the only command to control output defined so far
+  is ``.plot``. Examples::
+
+    .plot dc in out
+    .plot tran 5 out3
+    # In general:
+    .plot <type> <list of terminals>
+
+  In the examples, ``dc`` and ``tran`` are the type of output to
+  plot. Planned types are the following: ``dc``, ``ac``, ``tran``,
+  ``hb`` (only ``dc`` implemented at this time). Other types may be
+  implemented in the future. Each recognized plot line generates a new
+  figure. Results stored in terminals listed in a single plot line are
+  grouped in a single figure. If an analysis does not recognize the
+  plot type, the request is ignored.
 
 
 Generating this documentation

@@ -18,7 +18,6 @@ import nodal as nd
 from nodalAD import DCNodalAD
 from fsolve import solve, NoConvergenceError
 import matplotlib.pyplot as plt
-from pycircuit.post.waveform import Waveform
 
 class Analysis(ParamSet):
     """
@@ -33,10 +32,8 @@ class Analysis(ParamSet):
     Output variables are stored in circuit and terminals with the
     'dC_' prefix.
 
-    Currently ``pycircuit.post.waveform`` is used to handle plots. One
-    plot is generated for each ``.plot`` statement. Y labels do not
-    work well with multiple traces in a plot (could not figure how to
-    solve this with waveform yet).
+    One plot window is generated for each ``.plot`` statement. Use
+    'dc' type for this analysis.
 
     After completion the analysis drops to an interactive shell if the
     ``shell`` global variable is set to ``True``
@@ -113,7 +110,8 @@ class Analysis(ParamSet):
         pvalues = np.linspace(start = self.start, stop = self.stop, 
                               num = self.sweep_num)
         circuit.dC_sweep = pvalues
-        circuit.dC_var = self.param
+        circuit.dC_var = 'Device: ' + dev.nodeName \
+            + '  Parameter: ' + self.param
         circuit.dC_unit = pinfo[1]
         
         xVec = np.zeros((circuit.nD_dimension, self.sweep_num))
@@ -146,13 +144,17 @@ class Analysis(ParamSet):
             if outreq.type == 'dc':
                 plt.figure()
                 plt.grid(True)
+                plt.xlabel('{0} [{1}]'.format(circuit.dC_var, pinfo[1]))
                 for termname in outreq.varlist:
                     term = circuit.termDict[termname]
-                    w = Waveform(pvalues, term.dC_v, 
-                                 xlabels=(self.param,), xunits=(pinfo[1],),
-                                 ylabel='Term: ' + term.nodeName, 
-                                 yunit=term.unit)
-                    w.plot()
+                    plt.plot(pvalues, term.dC_v, 
+                             label = 'Term: {0} [{1}]'.format(
+                            term.nodeName, term.unit)) 
+                if len(outreq.varlist) == 1:
+                    plt.ylabel(
+                        'Term: {0} [{1}]'.format(term.nodeName, term.unit))
+                else:
+                    plt.legend()
         plt.show()
 
         ipython_drop(globals(), locals())
