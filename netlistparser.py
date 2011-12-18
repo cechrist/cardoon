@@ -316,7 +316,14 @@ def parse_analysis(tok):
     an.set_attributes()
     # Add analysis to queue
     analysisQueue.append(an)
-    
+
+
+def parse_plot(tok):
+    # Create output request and add to circuit
+    outreq = cir.OutRequest(tok.plotType, tok.plotVars)
+    cktStack[-1].add_out_request(outreq)
+
+        
 def parse_ends(tok):
     # First make sure that we were indeed processing a subcircuit
     if (len(cktStack) > 1) and (hasattr(cktStack[-1], 'extConnectionList')):
@@ -366,6 +373,9 @@ def parse_file(filename, ckt):
     
     nodes = pp.OneOrMore(identifier + ~pp.FollowedBy("="))
 
+    # Output variables (for .plot, .save)
+    outVars = pp.OneOrMore(pp.Suppress('v(') + identifier + pp.Suppress(')'))
+
     # Comment line: any line that starts with # , * or //
     commentline = pp.Suppress(((pp.Literal('*') ^ pp.Literal('#')) 
                                + pp.Regex('.*')) ^ pp.dblSlashComment)
@@ -411,6 +421,11 @@ def parse_file(filename, ckt):
         + identifier.setResultsName('anType') \
         + pp.Optional(parameters.setResultsName('parameters'))
 
+    # example: .plot dc v(10) v(out1)
+    plotline = pp.Suppress(pp.Keyword('.plot', caseless=True)) \
+        + identifier.setResultsName('plotType') \
+        + outVars.setResultsName('plotVars') 
+
     endsline = pp.Keyword('.ends', caseless=True)
     
     endline = pp.Keyword('.end', caseless=True)
@@ -424,6 +439,7 @@ def parse_file(filename, ckt):
         | subcktInstLine.setParseAction(parse_subcktInst) \
         | includeline.setParseAction(parse_include) \
         | analysisline.setParseAction(parse_analysis) \
+        | plotline.setParseAction(parse_plot) \
         | endsline.setParseAction(parse_ends) \
         | endline.setParseAction(parse_end)
 

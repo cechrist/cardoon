@@ -17,6 +17,8 @@ from analysis import AnalysisError, ipython_drop
 import nodal as nd
 from nodalAD import DCNodalAD
 from fsolve import solve, NoConvergenceError
+import matplotlib.pyplot as plt
+from pycircuit.post.waveform import Waveform
 
 class Analysis(ParamSet):
     """
@@ -27,6 +29,14 @@ class Analysis(ParamSet):
 
     Convergence parameters for the Newton method are controlled using
     the global variables in ``.options``.
+
+    Output variables are stored in circuit and terminals with the
+    'dC_' prefix.
+
+    Currently ``pycircuit.post.waveform`` is used to handle plots. One
+    plot is generated for each ``.plot`` statement. Y labels do not
+    work well with multiple traces in a plot (could not figure how to
+    solve this with waveform yet).
 
     After completion the analysis drops to an interactive shell if the
     ``shell`` global variable is set to ``True``
@@ -77,7 +87,6 @@ class Analysis(ParamSet):
             raise AnalysisError('Could not find: {0}'.format(self.device))
             return
 
-        param = False
         paramunit = None
         if self.param:
             try:
@@ -89,8 +98,6 @@ class Analysis(ParamSet):
                 if not pinfo[2] == float:
                     raise AnalysisError('Parameter must be float: ' 
                                         + self.param)
-                paramunit = ' ' + pinfo[1]
-                param = True
         else:
             raise AnalysisError("Don't know what parameter to sweep!")
 
@@ -105,6 +112,9 @@ class Analysis(ParamSet):
 
         pvalues = np.linspace(start = self.start, stop = self.stop, 
                               num = self.sweep_num)
+        circuit.dC_sweep = pvalues
+        circuit.dC_var = self.param
+        circuit.dC_unit = pinfo[1]
         
         xVec = np.zeros((circuit.nD_dimension, self.sweep_num))
         for i, value in enumerate(pvalues):
@@ -127,9 +137,23 @@ class Analysis(ParamSet):
                 print('Residual = ', res)
 
         # Save results in nodes
-        circuit.nD_ref.nD_vDC = np.zeros(self.sweep_num)
+        circuit.nD_ref.dC_v = np.zeros(self.sweep_num)
         for i,term in enumerate(circuit.nD_termList):
-            term.nD_vDC = xVec[i,:]
+            term.dC_v = xVec[i,:]
+
+        # Process output requests
+        for outreq in circuit.outReqList:
+            if outreq.type == 'dc':
+                plt.figure()
+                plt.grid(True)
+                for termname in outreq.varlist:
+                    term = circuit.termDict[termname]
+                    w = Waveform(pvalues, term.dC_v, 
+                                 xlabels=(self.param,), xunits=(pinfo[1],),
+                                 ylabel='Term: ' + term.nodeName, 
+                                 yunit=term.unit)
+                    w.plot()
+        plt.show()
 
         ipython_drop(globals(), locals())
 

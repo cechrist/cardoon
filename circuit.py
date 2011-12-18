@@ -454,6 +454,23 @@ class Xsubckt(GraphNode):
 
 
 #---------------------------------------------------------------------
+class OutRequest:
+    """
+    Holds a set of output variables requests
+
+    Output request consist in: 
+
+      1. Type of of request: dc, ac, tran, etc.
+
+      2. List of variables. For now these are terminal names.
+
+    """
+    def __init__(self, reqtype, varlist):
+        self.type = reqtype
+        self.varlist = varlist
+
+
+#---------------------------------------------------------------------
 class Circuit:
     """
     Holds a circuit. 
@@ -479,6 +496,8 @@ class Circuit:
     to be the same. If a circuit does not contain a ground node then
     it is up to the user to set a reference.
 
+    Output requests are stored in a list: outReqList
+
     In the future we may implement topology checking utilities here.
     """
 
@@ -500,6 +519,7 @@ class Circuit:
         self.termDict = dict()
         self.elemDict = dict()
         self.subcktDict = dict()
+        self.outReqList = list()
 
     # Printing stuff ---------------------------------------------
 
@@ -535,8 +555,13 @@ class Circuit:
             desc += '#                     *** Subcircuit Definitions ***\n'
             for cktName in usedSubCKTs:
                 desc += Circuit.cktDict[cktName].netlist_string()
-
+        
+        for outreq in self.outReqList:
+            desc += '\n.plot ' + outreq.type 
+            for name in outreq.varlist:
+                desc += ' ' + name
         desc += '\n'
+
         return desc
 
     def globals_to_str(self):
@@ -570,6 +595,9 @@ class Circuit:
 
         2. If not flattened, checks that subcircuit definitions exist
            and checks number of terminal connections.
+
+        3. Checks that output requests contain valid terminal names
+
         """
         # Can only initialize once
         if self._initialized:
@@ -582,6 +610,16 @@ class Circuit:
                 xsubckt.check_terms()
                 # Initialize subcircuit definition
                 Circuit.cktDict[xsubckt.cktName].init()
+
+        # Check output requests
+        for outreq in self.outReqList:
+            for termname in outreq.varlist:
+                if termname == '0':
+                    # Special treatment for ground terminal
+                    termname = 'gnd'
+                if not self.termDict.has_key(termname):
+                    raise CircuitError(
+                        'Output request for nonexistent terminal: ' + termname)
 
         self._initialized = True
 
@@ -757,8 +795,9 @@ class Circuit:
     
     def get_term(self, termName):
         """ 
-        Returns an external terminal instance with the given name. The
-        instance is created if necessary
+        Returns an external terminal instance with the given name. 
+
+        A new instance is created if necessary
         """
         if termName == '0':
             # Special treatment for ground terminal
@@ -769,6 +808,18 @@ class Circuit:
             term = self.termDict[termName] = Terminal(termName)
     
         return term
+
+    def has_term(self, termName):
+        """ 
+        Returns True if terminal present in circuit
+        """
+        if termName == '0':
+            # Special treatment for ground terminal
+            termName = 'gnd'
+        if self.termDict.has_key(termName):
+            return True
+        else:
+            return False
             
     def remove_term(self, termName):
         """
@@ -781,7 +832,8 @@ class Circuit:
         except KeyError:
             raise CircuitError(termName + ': Terminal not found' )
     
-
+    def add_out_request(self, outreq):
+        self.outReqList.append(outreq)
 
 #---------------------------------------------------------------------
 class SubCircuit(Circuit):
