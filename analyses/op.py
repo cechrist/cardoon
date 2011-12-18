@@ -21,8 +21,10 @@ class Analysis(ParamSet):
     DC Operating Point Calculation
 
     Calculates the DC operating point of a circuit using the nodal
-    approach. Nodal voltages and nonlinear device operating points are
-    saved after the analysis is complete.
+    approach. After the analysis is complete, nodal voltages are saved
+    in circuit and terminals with the ``nD_`` prefix.  After this the
+    analysis drops to an interactive shell if the ``shell`` global
+    variable is set to ``True``.
 
     By default the voltage at all external voltages is printed after
     the analysis is complete. Optionally the operating points of
@@ -30,9 +32,6 @@ class Analysis(ParamSet):
 
     Convergence parameters for the Newton method are controlled using
     the global variables in ``.options``.
-
-    After completion the analysis drops to an interactive shell if the
-    ``shell`` global variable is set to ``True``
     """
 
     # antype is the netlist name of the analysis: .analysis tran tstart=0 ...

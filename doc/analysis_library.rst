@@ -8,20 +8,17 @@ dc
 
 DC Sweep Calculation
 
-Calculates a DC sweep of a circuit using the nodal approach. Nodal
-voltages are saved after the analysis is complete.
+Calculates a DC sweep of a circuit using the nodal approach. After
+the analysis is complete, nodal voltages are saved in circuit and
+terminals with the ``dC_`` prefix.  After this the analysis drops
+to an interactive shell if the ``shell`` global variable is set to
+``True``.
 
 Convergence parameters for the Newton method are controlled using
 the global variables in ``.options``.
 
-Output variables are stored in circuit and terminals with the
-'dC_' prefix.
-
 One plot window is generated for each ``.plot`` statement. Use
 'dc' type for this analysis.
-
-After completion the analysis drops to an interactive shell if the
-``shell`` global variable is set to ``True``
 
 
 Parameters
@@ -46,8 +43,10 @@ op
 DC Operating Point Calculation
 
 Calculates the DC operating point of a circuit using the nodal
-approach. Nodal voltages and nonlinear device operating points are
-saved after the analysis is complete.
+approach. After the analysis is complete, nodal voltages are saved
+in circuit and terminals with the ``nD_`` prefix.  After this the
+analysis drops to an interactive shell if the ``shell`` global
+variable is set to ``True``.
 
 By default the voltage at all external voltages is printed after
 the analysis is complete. Optionally the operating points of
@@ -55,9 +54,6 @@ nonlinear elements can be printed.
 
 Convergence parameters for the Newton method are controlled using
 the global variables in ``.options``.
-
-After completion the analysis drops to an interactive shell if the
-``shell`` global variable is set to ``True``
 
 
 Parameters

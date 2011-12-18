@@ -204,7 +204,7 @@ possible but not tested) the following packages are needed:
 
 * Sphinx (http://sphinx.pocoo.org/)
 
-* pyreverse from the pylint package yo generate UML diagrams
+* pyreverse from the pylint package to generate UML diagrams
   (http://www.logilab.org/2560)
 
 The documentation can be generated as follows::
