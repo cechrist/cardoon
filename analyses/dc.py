@@ -136,7 +136,9 @@ class Analysis(ParamSet):
         for i,term in enumerate(circuit.nD_termList):
             term.dC_v = xVec[i,:]
 
-        # Process output requests
+        # Process output requests.  In the future this should be moved
+        # to a common module that processes output requests such as
+        # plot, print, save, etc.
         for outreq in circuit.outReqList:
             if outreq.type == 'dc':
                 plt.figure()
