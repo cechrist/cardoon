@@ -47,7 +47,8 @@ class Analysis(ParamSet):
         stop = ('Sweep stop value', 'V', float, 0.),
         sweep_num = ('Number of points in sweep', '', int, 50),
         verbose = ('Show iterations for each point', '', bool, False),
-        fullAD = ('Use CPPAD for entire nonlinear part', '', bool, False)
+        fullAD = ('Use CPPAD for entire nonlinear part', '', bool, False),
+        shell = ('Drop to ipython shell after calculation', '', bool, False)
         )
 
 
@@ -104,15 +105,17 @@ class Analysis(ParamSet):
             dc = nd.DCNodal(circuit)
         x = dc.get_guess()
 
-        pvalues = np.linspace(start = self.start, stop = self.stop, 
+        sweepvar = np.linspace(start = self.start, stop = self.stop, 
                               num = self.sweep_num)
-        circuit.dC_sweep = pvalues
+        circuit.dC_sweep = sweepvar
         circuit.dC_var = 'Device: ' + dev.nodeName \
             + '  Parameter: ' + self.param
         circuit.dC_unit = pinfo[1]
         
         xVec = np.zeros((circuit.nD_dimension, self.sweep_num))
-        for i, value in enumerate(pvalues):
+        tIter = 0
+        tRes = 0.
+        for i, value in enumerate(sweepvar):
             setattr(dev, self.param, value)
             # re-process parameters (topology must not change, for now at least)
             dev.process_params()
@@ -126,10 +129,19 @@ class Analysis(ParamSet):
                 return
             # Save result
             xVec[:,i] = x
+            # Keep some info about iterations
+            tIter += iterations
+            tRes += res
             if self.verbose:
                 print('{0} = {1}'.format(self.param , value))
                 print('Number of iterations = ', iterations)
                 print('Residual = ', res)
+
+        # Calculate average residual and iterations
+        avei = tIter / len(sweepvar)
+        aver = tRes / len(sweepvar)
+        print('Average iterations: {0}'.format(avei))
+        print('Average residual: {0}\n'.format(aver))
 
         # Save results in nodes
         circuit.nD_ref.dC_v = np.zeros(self.sweep_num)
@@ -139,14 +151,16 @@ class Analysis(ParamSet):
         # Process output requests.  In the future this should be moved
         # to a common module that processes output requests such as
         # plot, print, save, etc.
+        flag = False
         for outreq in circuit.outReqList:
             if outreq.type == 'dc':
+                flag = True
                 plt.figure()
                 plt.grid(True)
                 plt.xlabel('{0} [{1}]'.format(circuit.dC_var, pinfo[1]))
                 for termname in outreq.varlist:
                     term = circuit.termDict[termname]
-                    plt.plot(pvalues, term.dC_v, 
+                    plt.plot(sweepvar, term.dC_v, 
                              label = 'Term: {0} [{1}]'.format(
                             term.nodeName, term.unit)) 
                 if len(outreq.varlist) == 1:
@@ -154,12 +168,17 @@ class Analysis(ParamSet):
                         'Term: {0} [{1}]'.format(term.nodeName, term.unit))
                 else:
                     plt.legend()
-        plt.show()
+        if flag:
+            plt.show()
 
-        ipython_drop(globals(), locals())
+        def getvec(termname):
+            return circuit.termDict[termname].dC_v
 
-
-
-
-
+        if self.shell:
+            ipython_drop("""
+Available commands:
+    sweepvar: vector with swept parameter
+    getvec(<terminal>) to retrieve results
+    plt.* to access pyplot commands (plt.plot(x,y), plt.show(), etc.)
+""", globals(), locals())
 

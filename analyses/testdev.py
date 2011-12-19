@@ -48,7 +48,8 @@ class Analysis(ParamSet):
         plot = ('Auto-plot currents and charges', '', bool, True),
         useAD = ('Use automatic differentiation', '', bool, True),
         param = ('Parameter for outer sweep', '', str, ''),
-        param_val = ('Vector with parameter values to sweep', '', list, [])
+        param_val = ('Vector with parameter values to sweep', '', list, []),
+        shell = ('Drop to ipython shell after calculation', '', bool, False)
         )
 
 
@@ -163,7 +164,8 @@ class Analysis(ParamSet):
         if self.plot:
             self.plot_all(vsweep, iout, qout, param, npsweep, paramunit)
 
-        ipython_drop(globals(), locals())
+        if self.shell:
+            ipython_drop('', globals(), locals())
 
 
     def plot_all(self, vsweep, iout, qout, param, npsweep, paramunit):

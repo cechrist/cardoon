@@ -41,7 +41,8 @@ class Analysis(ParamSet):
     paramDict = dict(
         intvars = ('Print internal element nodal variables', '', bool, False),
         elemop = ('Print element operating points', '', bool, False),
-        fullAD = ('Use CPPAD for entire nonlinear part', '', bool, False)
+        fullAD = ('Use CPPAD for entire nonlinear part', '', bool, False),
+        shell = ('Drop to ipython shell after calculation', '', bool, False)
         )
 
 
@@ -106,8 +107,16 @@ class Analysis(ParamSet):
                     print('\n    Operating point info:\n')
                     for line in elem.format_OP().splitlines():
                         print('    ' + line.replace('|',':'))
+        print('\n')
 
-        ipython_drop(globals(), locals())
+        def getvar(termname):
+            return circuit.termDict[termname].nD_vOP
+
+        if self.shell:
+            ipython_drop("""
+Available commands:
+    getvar(<terminal>) returns variable at <terminal>
+""", globals(), locals())
 
 
 

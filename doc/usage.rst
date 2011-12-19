@@ -35,11 +35,10 @@ Just unpack the zip file in some directory.
 Usage
 -----
 
-At this moment the main program is very simple. It reads a netlist
-file, builds the circuit described there and runs any specified
-analyses. Optionally some analyses can drop to an ipython shell after
-calculations are finished for interactive work. For this, set the
-``shell`` variable to ``True`` in the ``.options`` line.
+At this moment the main program reads a netlist file, builds the
+circuit described there and runs any specified analyses. Optionally
+some analyses can drop to an ipython shell with access to internal
+variables after calculations are finished for interactive work.
 
 After the source is installed, change into the cardoon directory and
 run the program with no arguments for a brief help message::
@@ -144,7 +143,6 @@ one circuit element, an analysis to perform or another command.
  gyr          0.01         S            Default gain in internal gyrators                    
  maxiter      100                       Maximum number of Newton iterations                  
  reltol       1.0e-08                   Relative tolerance                                   
- shell        0                         Drop to ipython shell after calculation              
  temp         27.0         C            Ambient temperature                                  
  =========== ============ ============ =====================================================  
 

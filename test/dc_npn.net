@@ -1,6 +1,6 @@
 # Test of a transistor device
 
-.options temp=29.1439  shell=False
+.options temp=29.1439  
 .vars beta1 = 99.655
 .analysis dc device=svbjt:q1 param=bf start=10 stop=150 sweep_num=200
 
