@@ -57,28 +57,28 @@ class Device(cir.Element):
     requires two additional variables (nodes) but eliminates large
     positive exponentials from the model::
 
-                                  3 (x2)
+                                  0_i(x2)
                       +--------------------------+
                       |                          |
                      /|\                        /^\ 
                     ( | ) gyr v2               ( | ) gyr vbc(x)
                      \V/                        \|/  
-             lref     |                          |
-             (5) ,----+--------------------------+ 
+            (lref)    |                          |
+             2_i ,----+--------------------------+ 
                  |    |                          |               
                  |   /^\                        /|\              
                  |  ( | ) gyr v1               ( | ) gyr vbe(x)  
                 ---  \|/                        \V/  
                  V    |                          |
                       +--------------------------+
-                                   4 (x1)               
+                                  1_i (x1)               
                                                   
     All currents/charges in the model are functions of voltages v3
     (x2) and v4 (x1). Note that vbc and vbe are now also functions of
     x1, x2.
 
     In addition we may need 2 additional nodes (plus gnd) if rb is not
-    zero: Bi(3) for the internal base node and ib(4) to measure the
+    zero: Bi(3i) for the internal base node and ib(4) to measure the
     internal base current and calculate Rb(ib).
 
     1. If RB == 0::
@@ -102,23 +102,23 @@ class Device(cir.Element):
                                      +----------------+--o 0 (C)
                                 -    |                |
                                     /^\               |
-                    gyr v75    v2  ( | ) ibc(x2)      |
+                  gyr v(4_i)   v2  ( | ) ibc(x2)      |
                                     \|/               |       
                      ,---,      +    |               /|\       
-         (B) 1 o----( --> )----------+ 6 (Bi)       ( | ) ice(x1,x2)
+         (B) 1 o----( --> )----------+ 3_i(Bi)      ( | ) ice(x1,x2)
                      `---`      +    |               \V/      
                                     /|\               |       
                                v1  ( | ) ibe(x1)      |
                                     \V/               |
                                 -    |                |
-                     gyr v16         +----------------+--o 2 (E)
+                   gyr v(1,3_i)      +----------------+--o 2 (E)
                                   
                       ,---,       
                  +---( <-- ) -----+
                  |    `---`       |
-          lref   |                | ib/gyr
-          (5) ,--+                |
-              |  |    ,---,       | 7 (ib)
+         (lref)  |                | ib/gyr
+          2_i ,--+                |
+              |  |    ,---,       | 4_i (ib)
               |  +---( --> )------+
               |       `---`       
              --- 
@@ -180,15 +180,6 @@ class Device(cir.Element):
         area = ('Current multiplier', '', float, 1.)
         )
 
-    # Default configuration assumes rb == 0
-    # ibe, vbe, ibc, vbc, ice 
-    csOutPorts = [(1, 2), (5, 4), (1, 0), (5, 3), (0, 2)]
-    # Controling voltages are x1, x2
-    controlPorts = [(4, 5), (3, 5)]
-    vPortGuess = np.array([0., 0.])
-    # qbe, qbc
-    qsOutPorts = [(1, 2), (1, 0)]
-
     def __init__(self, instanceName):
         """
         Here the Element constructor must be called. Do not connect
@@ -212,29 +203,42 @@ class Device(cir.Element):
         ad.delete_tape(self)
 
         # Define topology first. Add state variable nodes
-        self.add_internal_term('x2','s.v.')                     # 3
-        self.add_internal_term('x1','s.v.')                     # 4
-        self.add_reference_term()                               # 5
+        self.add_internal_term('x2','s.v.')                     # 0_i
+        self.add_internal_term('x1','s.v.')                     # 1_i
+        self.add_reference_term()                               # 2_i
+        # Shorthand to index internal terminals
+        def i(n):
+            return self.numTerms + n
+        # Default configuration assumes rb == 0
+        # ibe, vbe, ibc, vbc, ice 
+        self.csOutPorts = [(1, 2), (i(2), i(1)), (1, 0), (i(2), i(0)), (0, 2)]
+        # Controling voltages are x1, x2
+        self.controlPorts = [(i(1), i(2)), (i(0), i(2))]
+        self.vPortGuess = np.array([0., 0.])
+        # qbe, qbc
+        self.qsOutPorts = [(1, 2), (1, 0)]
+
         # Flag to signal if the extra charge Qbx is needed or not
         self._qbx = False
         # Default state-variable VCCSs
-        self.linearVCCS = [((1, 2), (4, 5), glVar.gyr),
-                           ((1, 0), (3, 5), glVar.gyr)]
+        self.linearVCCS = [((1, 2), (i(1), i(2)), glVar.gyr),
+                           ((1, 0), (i(0), i(2)), glVar.gyr)]
         if self.rb:
             # rb is not zero: add internal terminals
-            self.add_internal_term('Bi', 'V')                       # 6
-            self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) # 7
+            self.add_internal_term('Bi', 'V')                       # 3_i
+            self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) # 4_i
             # Add Linear VCCS for gyrator(s)
-            self.linearVCCS = [((6, 2), (4, 5), glVar.gyr),
-                               ((6, 0), (3, 5), glVar.gyr),
-                               ((1, 6), (7, 5), glVar.gyr),
-                               ((7, 5), (1, 6), glVar.gyr)]
+            self.linearVCCS = [((i(3), 2), (i(1), i(2)), glVar.gyr),
+                               ((i(3), 0), (i(0), i(2)), glVar.gyr),
+                               ((1, i(3)), (i(4), i(2)), glVar.gyr),
+                               ((i(4), i(2)), (1, i(3)), glVar.gyr)]
             # ibe, vbe, ibc, vbc, ice, Rb(ib) * ib
-            self.csOutPorts = [(6, 0), (5, 4), (6, 2), (5, 3), (0, 2), (5, 7)]
+            self.csOutPorts = [(i(3), 0), (i(2), i(1)), (i(3), 2), 
+                               (i(2), i(0)), (0, 2), (i(2), i(4))]
             # Controling voltages are x1, x2 and gyrator port
-            self.controlPorts = [(4, 5), (3, 5), (7, 5)]
+            self.controlPorts = [(i(1), i(2)), (i(0), i(2)), (i(4), i(2))]
             # qbie, qbic
-            self.qsOutPorts = [(6, 2), (6, 0)]
+            self.qsOutPorts = [(i(3), 2), (i(3), 0)]
             # Now check if Cjbc must be splitted (since rb != 0)
             if self.cjc and (self.xcjc < 1.):
                 # add extra charge source and control voltage
@@ -332,8 +336,8 @@ class Device(cir.Element):
         parameter values::
 
           vPort = [xbe, xbc]
-          vPort = [xbe, xbc, v4gnd] (gyrator voltage, irb != 0)
-          vPort = [xbe, xbc, v4gnd, vbc] (xcjc < 1)
+          vPort = [xbe, xbc, v4_i] (gyrator voltage, irb != 0)
+          vPort = [xbe, xbc, v4_i, vbc] (xcjc < 1)
 
         Output also depends on parameter values. Charges only present
         if parameters make them different than 0 (i.e., cje, tf, cjc,

@@ -46,10 +46,11 @@ Internal Terminal Handling
 ++++++++++++++++++++++++++
 
 Internal terminals are not tracked directly by the circuit. One of the
-advantages that a device can process parameters independently of the
-containing circuit (a reference to the circuit is no longer needed in
-``process_params()``). Another advantage is that the terminal name is
-just the internal connection number and does not need to be unique.
+advantages of this is that a device can process parameters
+independently of the containing circuit (a reference to the circuit is
+no longer needed in ``process_params()``). Another advantage is that
+the terminal name is just the internal connection number and does not
+need to be unique.
 
 By default the last external terminal in a device is taken as the
 local reference. Internal voltages are always referred to that local
@@ -58,8 +59,38 @@ internal terminal.
 
 The ``Circuit`` class has now a function to retrieve all internal
 terminals, which (as explained above) are not present in the
-``termDict`` attribute.
+``termDict`` dictionary.
 
+
+Internal Terminal Indexing
+++++++++++++++++++++++++++
+
+Internal terminals could be internally indexed by its position in the
+terminal list, but for devices that are derived from a base device
+(such as autothermal devices) the internal terminal indexes change if
+the number of external terminals change. This problem can be avoided
+by indexing internal terminals separately and refer to internal
+terminals as ``(self.numTerms + number)`` instead of using fixed
+numbers.
+
+This solution however would not work for a 'hardwired'
+subcircuit. Hardwired subcircuits would also present other problems
+with parameter lists and can easily be replacede with regular
+subcircuits. For this reason no support for them is planned. Just for
+the record a possible solution is presented here: have a function in
+the Element class that returns terminal indexes. External terminal
+indexes would also change in this case::
+
+     class Element:
+     	   ...
+	   def term_idx(n):
+	       return self.baseIndex + n
+
+	   def int_term_idx(n):
+	       return self.baseIndex + self.numTerms + n
+
+``baseIndex`` is set to the starting terminal number for a particular
+element. 
 
 
 Separation of current and charge return vectors in eval_cqs()

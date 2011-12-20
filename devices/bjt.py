@@ -50,8 +50,8 @@ class Device(cir.Element):
     +++++++++++++++++
 
     Internally may add 2 additional nodes (plus gnd) if rb is not
-    zero: Bi(3) for the internal base node and ib(4) to measure the
-    internal base current and calculate Rb(ib). The possible
+    zero: Bi(0_i) for the internal base node and ib(1_i) to measure
+    the internal base current and calculate Rb(ib). The possible
     configurations are described here.
 
     1. If RB == 0::
@@ -78,20 +78,20 @@ class Device(cir.Element):
                        ib          ( | ) ibc(vbc)     |
                                     \|/               |       
                      ,---,           |               /|\       
-         (B) 1 o----( --> )----------+ 3 (Bi)       ( | ) ice    
+         (B) 1 o----( --> )----------+ 0_i (Bi)     ( | ) ice    
                      `---`           |               \V/      
                                     /|\               |       
                                    ( | ) ibe(vbe)     |
                                     \V/               |
                                      |                |
-                     gyr v13         +----------------+--o 2 (E)
+                     gyr v(1,0_i)    +----------------+--o 2 (E)
                                   
                       ,---,       
-                 +---( <-- ) -----+
+                 +---( <-- )------+
                  |    `---`       |
-         lref    |                | ib/gyr
-         (5) ,---+                |
-             |   |    ,---,       | 4 (ib)
+      (lref)     |                | ib/gyr
+        2_i  ,---+                |
+             |   |    ,---,       | 1_i (ib)
              |   +---( --> )------+
              |        `---`       
             ---
@@ -104,7 +104,7 @@ class Device(cir.Element):
 
     devType = "bjt"
     
-    numTerms = 3  # for now
+    numTerms = 3  
 
     # Create electrothermal device
     makeAutoThermal = True
@@ -190,19 +190,22 @@ class Device(cir.Element):
         self._qbx = False
         if self.rb:
             # rb is not zero: add internal terminals
-            self.add_internal_term('Bi', 'V')                       # 3
-            self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) # 4
-            self.add_reference_term()                               # 5
+            self.add_internal_term('Bi', 'V')                       #  0_i
+            self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) #  1_i
+            self.add_reference_term()                               #  2_i
+            # Shorthand to index internal terminals
+            def i(n):
+                return self.numTerms + n
             # Linear VCCS for gyrator(s)
-            self.linearVCCS = [((1, 3), (4, 5), glVar.gyr),
-                               ((4, 5), (1, 3), glVar.gyr)]
+            self.linearVCCS = [((1, i(0)), (i(1), i(2)), glVar.gyr),
+                               ((i(1), i(2)), (1, i(0)), glVar.gyr)]
             # ibe, ibc, ice, Rb(ib) * ib
-            self.csOutPorts = [(3, 2), (3, 0), (0, 2), (5, 4)]
+            self.csOutPorts = [(i(0), 2), (i(0), 0), (0, 2), (i(2), i(1))]
             # Controling voltages are vbie, vbic and gyrator port
-            self.controlPorts = [(3, 2), (3, 0), (4, 5)]
+            self.controlPorts = [(i(0), 2), (i(0), 0), (i(1), i(2))]
             self.vPortGuess = np.array([0., 0., 0.])
             # qbie, qbic
-            self.qsOutPorts = [(3, 2), (3, 0)]
+            self.qsOutPorts = [(i(0), 2), (i(0), 0)]
             # Now check if Cjbc must be splitted (since rb != 0)
             if self.cjc and (self.xcjc < 1.):
                 # add extra charge source and control voltage
@@ -300,8 +303,8 @@ class Device(cir.Element):
         parameter values::
 
           vPort = [vbe, vbc]
-          vPort = [vbie, vbic, v4gnd] (gyrator voltage, rb != 0)
-          vPort = [vbie, vbic, v4gnd, vbc] (xcjc < 1)
+          vPort = [vbie, vbic, v1_i] (gyrator voltage, rb != 0)
+          vPort = [vbie, vbic, v1_i, vbc] (xcjc < 1)
 
         Output also depends on parameter values. Charges only present
         if parameters make them different than 0 (i.e., cje, tf, cjc,

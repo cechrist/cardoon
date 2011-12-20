@@ -347,11 +347,13 @@ class Device(cir.Element):
             VD = outV[1] / glVar.gyr,
             ID = outV[0],
             gd = glVar.gyr * jac[0,0] / jac[1,0],
-            Cd = jac[-1,0],
             Sthermal = self._Sthermal,
             Sshot = 2. * const.q * outV[0],
             kFliker = self.kf * outV[0]
             )
+        # Add capacitor
+        if self._qd:
+            self.OP['Cd'] = jac[-1,0] / jac[1,0]
 
         return self.OP
                    

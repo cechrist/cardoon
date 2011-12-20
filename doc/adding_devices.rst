@@ -210,6 +210,24 @@ follows::
         # Set unit for terminal 6
         self.neighbour[6].unit = 'C'
 
+Important note
+++++++++++++++
+
+For models that are used as a base class for other devices such as
+electrothermal models or extrinsic models, it is necessary to index
+internal terminals relative to the number of external terminals. For
+example in the following code from the BJT model an auxiliary function
+``i(n)`` is defined to index internal terminals::
+
+     self.add_internal_term('Bi', 'V')                       #  0_i
+     self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) #  1_i
+     self.add_reference_term()                               #  2_i
+     # Shorthand to index internal terminals
+     def i(n):
+         return self.numTerms + n
+     # Linear VCCS for gyrator(s). Here i(0) is 0_i, etc.
+     self.linearVCCS = [((1, i(0)), (i(1), i(2)), glVar.gyr),
+                        ((i(1), i(2)), (1, i(0)), glVar.gyr)]
 
 
 Temperature Dependence
@@ -240,9 +258,8 @@ function::
 
 Note that linear devices may be temperature-dependent. In that case
 this function would modify the conductances and capacitances in
-``linearVCCS`` and ``linearVCQS`` lists.
-This function may be called multiple times and may be used to
-auto-generate an electrothermal device (described in next section).
+``linearVCCS`` and ``linearVCQS`` lists.  This function may be called
+multiple times and is used to auto-generate electrothermal models.
 
 Operating Point
 ---------------
