@@ -41,8 +41,8 @@ Internal Topology
 +++++++++++++++++
 
 Internally may add 2 additional nodes (plus gnd) if rb is not
-zero: Bi(3) for the internal base node and ib(4) to measure the
-internal base current and calculate Rb(ib). The possible
+zero: Bi(0_i) for the internal base node and ib(1_i) to measure
+the internal base current and calculate Rb(ib). The possible
 configurations are described here.
 
 1. If RB == 0::
@@ -69,20 +69,20 @@ configurations are described here.
                    ib          ( | ) ibc(vbc)     |
                                 \|/               |       
                  ,---,           |               /|\       
-     (B) 1 o----( --> )----------+ 3 (Bi)       ( | ) ice    
+     (B) 1 o----( --> )----------+ 0_i (Bi)     ( | ) ice    
                  `---`           |               \V/      
                                 /|\               |       
                                ( | ) ibe(vbe)     |
                                 \V/               |
                                  |                |
-                 gyr v13         +----------------+--o 2 (E)
+                 gyr v(1,0_i)    +----------------+--o 2 (E)
                               
                   ,---,       
-             +---( <-- ) -----+
+             +---( <-- )------+
              |    `---`       |
-     lref    |                | ib/gyr
-     (5) ,---+                |
-         |   |    ,---,       | 4 (ib)
+     (lref)  |                | ib/gyr
+     2_i ,---+                |
+         |   |    ,---,       | 1_i (ib)
          |   +---( --> )------+
          |        `---`       
         ---
@@ -604,28 +604,28 @@ BC diodes (Ibf, Ibr) with state-variable based diodes. This
 requires two additional variables (nodes) but eliminates large
 positive exponentials from the model::
 
-                              3 (x2)
+                              0_i(x2)
                   +--------------------------+
                   |                          |
                  /|\                        /^\ 
                 ( | ) gyr v2               ( | ) gyr vbc(x)
                  \V/                        \|/  
-         lref     |                          |
-         (5) ,----+--------------------------+ 
+        (lref)    |                          |
+         2_i ,----+--------------------------+ 
              |    |                          |               
              |   /^\                        /|\              
              |  ( | ) gyr v1               ( | ) gyr vbe(x)  
             ---  \|/                        \V/  
              V    |                          |
                   +--------------------------+
-                               4 (x1)               
+                              1_i (x1)               
                                               
 All currents/charges in the model are functions of voltages v3
 (x2) and v4 (x1). Note that vbc and vbe are now also functions of
 x1, x2.
 
 In addition we may need 2 additional nodes (plus gnd) if rb is not
-zero: Bi(3) for the internal base node and ib(4) to measure the
+zero: Bi(3i) for the internal base node and ib(4) to measure the
 internal base current and calculate Rb(ib).
 
 1. If RB == 0::
@@ -649,23 +649,23 @@ internal base current and calculate Rb(ib).
                                  +----------------+--o 0 (C)
                             -    |                |
                                 /^\               |
-                gyr v75    v2  ( | ) ibc(x2)      |
+              gyr v(4_i)   v2  ( | ) ibc(x2)      |
                                 \|/               |       
                  ,---,      +    |               /|\       
-     (B) 1 o----( --> )----------+ 6 (Bi)       ( | ) ice(x1,x2)
+     (B) 1 o----( --> )----------+ 3_i(Bi)      ( | ) ice(x1,x2)
                  `---`      +    |               \V/      
                                 /|\               |       
                            v1  ( | ) ibe(x1)      |
                                 \V/               |
                             -    |                |
-                 gyr v16         +----------------+--o 2 (E)
+               gyr v(1,3_i)      +----------------+--o 2 (E)
                               
                   ,---,       
              +---( <-- ) -----+
              |    `---`       |
-      lref   |                | ib/gyr
-      (5) ,--+                |
-          |  |    ,---,       | 7 (ib)
+     (lref)  |                | ib/gyr
+      2_i ,--+                |
+          |  |    ,---,       | 4_i (ib)
           |  +---( --> )------+
           |       `---`       
          --- 

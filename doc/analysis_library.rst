@@ -30,6 +30,7 @@ Parameters
  device                                 Instance name of device to sweep variable            
  fullAD       0                         Use CPPAD for entire nonlinear part                  
  param                                  Device parameter to sweep                            
+ shell        0                         Drop to ipython shell after calculation              
  start        0.0          V            Sweep start value                                    
  stop         0.0          V            Sweep stop value                                     
  sweep_num    50                        Number of points in sweep                            
@@ -65,6 +66,7 @@ Parameters
  elemop       0                         Print element operating points                       
  fullAD       0                         Use CPPAD for entire nonlinear part                  
  intvars      0                         Print internal element nodal variables               
+ shell        0                         Drop to ipython shell after calculation              
  =========== ============ ============ ===================================================== 
 
 testdev
@@ -99,6 +101,7 @@ Parameters
  param_val    []                        Vector with parameter values to sweep                
  plot         1                         Auto-plot currents and charges                       
  ports_bias   []           V            Vector with default values of port voltages          
+ shell        0                         Drop to ipython shell after calculation              
  start        0.0          V            Sweep start value                                    
  stop         0.0          V            Sweep stop value                                     
  sweep_num    0                         Number of points in sweep                            

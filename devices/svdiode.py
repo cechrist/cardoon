@@ -150,8 +150,8 @@ class Device(cir.Element):
            / Rs
            \ 
            / 
-           |                                     2
-        4  o---------+                  +----------------+
+           |  2_i                                0_i
+           o---------+                  +----------------+
                      | i(x)+dq/dt       |                |
           +         /|\                /|\ gyr vin      /^\ 
         vin        | | |              | | |            | | | gyr v(x)
@@ -159,10 +159,10 @@ class Device(cir.Element):
                      |                  |                |
         1  o---------+                  +--------+-------+
                                                  |
-                                                --- lref (3)
+                                                --- lref (1_i)
                                                  V
 
-    Terminal 4 not present if Rs = 0
+    Terminal 2_i not present if Rs = 0
     """
 
     # devtype is the 'model' name
@@ -225,22 +225,25 @@ class Device(cir.Element):
         self.clean_internal_terms()
         # Define topology first
         # Needs at least one internal terminal: 
-        self.add_internal_term('x', 's.v.') # 2
-        self.add_reference_term()           # 3
-        self.linearVCCS = [((0, 1), (2, 3), glVar.gyr)]
+        self.add_internal_term('x', 's.v.') # 0_i
+        self.add_reference_term()           # 1_i
+        # Shorthand to index internal terminals
+        def i(n):
+            return self.numTerms + n
+        self.linearVCCS = [((0, 1), (i(0), i(1)), glVar.gyr)]
         # Nonlinear device attributes
-        self.csOutPorts = [(0, 1), (3, 2)]
+        self.csOutPorts = [(0, 1), (i(1), i(0))]
         self.noisePorts = [(0, 1)]
-        self.controlPorts = [(2, 3)]
+        self.controlPorts = [(i(0), i(1))]
 
         if self.rs:
             # Needs one more terminal
-            self.add_internal_term('Vd_int', 'V') # 4
+            self.add_internal_term('Vd_int', 'V') # 2_i
             g = 1. / self.rs / self.area
-            self.linearVCCS.append(((0, 4), (0, 4), g))
+            self.linearVCCS.append(((0, i(2)), (0, i(2)), g))
             # Nonlinear device outputs change
-            self.csOutPorts = [(4, 1), (3, 2)]
-            self.noisePorts = [(4, 1), (0, 4)]
+            self.csOutPorts = [(i(2), 1), (i(1), i(0))]
+            self.noisePorts = [(i(2), 1), (0, i(2))]
 
         self._qd = False
         if self.tt or self.cj0:

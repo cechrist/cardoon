@@ -118,7 +118,7 @@ ne=0.5 nc=0.5 tr=3000e-9 vje=0.55 vjc=0.55)
 
 *.analysis op intvars=0
 .analysis dc device=vdc:v1 param=vdc start=-2. stop=2. sweep_num=50 
-.options maxiter=400 gyr=1e-5
+.options maxiter=300 gyr=1e-5
 
 .plot dc 153 151 23
 

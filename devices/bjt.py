@@ -89,8 +89,8 @@ class Device(cir.Element):
                       ,---,       
                  +---( <-- )------+
                  |    `---`       |
-      (lref)     |                | ib/gyr
-        2_i  ,---+                |
+         (lref)  |                | ib/gyr
+         2_i ,---+                |
              |   |    ,---,       | 1_i (ib)
              |   +---( --> )------+
              |        `---`       
@@ -208,10 +208,6 @@ class Device(cir.Element):
             self.qsOutPorts = [(i(0), 2), (i(0), 0)]
             # Now check if Cjbc must be splitted (since rb != 0)
             if self.cjc and (self.xcjc < 1.):
-                # add extra charge source and control voltage
-                self.controlPorts.append((1, 0))
-                self.vPortGuess = np.concatenate((self.vPortGuess, [0.]), 
-                                                 axis=0)
                 self.qsOutPorts.append((1, 0))
                 self._qbx = True
 
@@ -304,7 +300,6 @@ class Device(cir.Element):
 
           vPort = [vbe, vbc]
           vPort = [vbie, vbic, v1_i] (gyrator voltage, rb != 0)
-          vPort = [vbie, vbic, v1_i, vbc] (xcjc < 1)
 
         Output also depends on parameter values. Charges only present
         if parameters make them different than 0 (i.e., cje, tf, cjc,
@@ -358,7 +353,7 @@ class Device(cir.Element):
         # RB
         if self.rb:
             # Using gyrator
-            # vPort1[2] not defined if irb == 0
+            # vPort1[2] not defined if rb == 0
             # ib has area effect included (removed by _ck1 and _ck2)
             ib = vPort1[2] * glVar.gyr
             if self.irb:
@@ -375,6 +370,7 @@ class Device(cir.Element):
             # compensate that the whole vector is multiplied by area
             # at the end
             iVec[3] = glVar.gyr * ib * rb / pow(self.area, 2)
+            vbcx = ib * rb / self.area + vPort1[1]
 
         # Charges ----------------------------------------------- 
 
@@ -400,7 +396,7 @@ class Device(cir.Element):
             if self.cjc:
                 qVec[-2] += self.jir.get_qd(vPort1[1]) * self.xcjc 
                 # qbx
-                qVec[-1] = self.jir.get_qd(vPort1[-1]) * (1. - self.xcjc)
+                qVec[-1] = self.jir.get_qd(vbcx) * (1. - self.xcjc)
         else:
             if self.tr:
                 qVec[-1] = self.tr * ibr

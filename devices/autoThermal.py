@@ -64,7 +64,6 @@ def thermal_device(nle):
             Here the base class constructor is called
             """
             nle.__init__(self, instanceName)
-            self.__thermalFlag = False
     
         def process_params(self):
             """
@@ -75,8 +74,8 @@ def thermal_device(nle):
             nle.process_params(self)
 
             # Add thermal terminals to control and output tuples only
-            # once
-            if not self.__thermalFlag:
+            # once. Make sure the last port is the thermal one.
+            if self.csOutPorts[-1][0] != (self.numTerms-1):
                 thermalPort = (self.numTerms-1, self.numTerms-2)
                 # Add units to thermal port
                 self.neighbour[-1].unit = 'C'
@@ -88,8 +87,6 @@ def thermal_device(nle):
                 self.__ton = len(self.csOutPorts) - 1
                 # Thermal control port number
                 self.__tpn = len(self.controlPorts) - 1
-                # Mark this instance to avoid repeating this
-                self.__thermalFlag = True
 
         def eval_cqs(self, vPort, saveOP = False):
             """

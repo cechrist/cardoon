@@ -233,7 +233,7 @@ class Device(cir.Element):
                                ((1, i(3)), (i(4), i(2)), glVar.gyr),
                                ((i(4), i(2)), (1, i(3)), glVar.gyr)]
             # ibe, vbe, ibc, vbc, ice, Rb(ib) * ib
-            self.csOutPorts = [(i(3), 0), (i(2), i(1)), (i(3), 2), 
+            self.csOutPorts = [(i(3), 2), (i(2), i(1)), (i(3), 0), 
                                (i(2), i(0)), (0, 2), (i(2), i(4))]
             # Controling voltages are x1, x2 and gyrator port
             self.controlPorts = [(i(1), i(2)), (i(0), i(2)), (i(4), i(2))]
@@ -241,8 +241,7 @@ class Device(cir.Element):
             self.qsOutPorts = [(i(3), 2), (i(3), 0)]
             # Now check if Cjbc must be splitted (since rb != 0)
             if self.cjc and (self.xcjc < 1.):
-                # add extra charge source and control voltage
-                self.controlPorts.append((1, 0))
+                # add extra charge source
                 self.qsOutPorts.append((1, 0))
                 self._qbx = True
         
@@ -337,7 +336,6 @@ class Device(cir.Element):
 
           vPort = [xbe, xbc]
           vPort = [xbe, xbc, v4_i] (gyrator voltage, irb != 0)
-          vPort = [xbe, xbc, v4_i, vbc] (xcjc < 1)
 
         Output also depends on parameter values. Charges only present
         if parameters make them different than 0 (i.e., cje, tf, cjc,
@@ -394,7 +392,7 @@ class Device(cir.Element):
         # RB
         if self.rb:
             # Using gyrator
-            # vPort1[2] not defined if irb == 0
+            # vPort1[2] not defined if rb == 0
             # ib has area effect included (removed by _ck1 and _ck2)
             ib = vPort1[2] * glVar.gyr
             if self.irb:
@@ -411,6 +409,7 @@ class Device(cir.Element):
             # compensate that the whole vector is multiplied by area
             # at the end
             iVec[5] = glVar.gyr * ib * rb / pow(self.area, 2)
+            vbcx = ib * rb / self.area + vbc
 
         # Charges ----------------------------------------------- 
 
@@ -438,7 +437,7 @@ class Device(cir.Element):
             if self.cjc:
                 qVec[-2] += self.jir.get_qd(vbc) * self.xcjc 
                 # qbx
-                qVec[-1] = self.jir.get_qd(vPort1[-1]) * (1. - self.xcjc)
+                qVec[-1] = self.jir.get_qd(vbcx) * (1. - self.xcjc)
         else:
             if self.tr:
                 qVec[-1] = self.tr * ibr
