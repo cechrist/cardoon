@@ -223,6 +223,9 @@ class Device(cir.Element):
             self.noisePorts = [(0, 1)]
             self.controlPorts = [(0, 1)]
 
+        # Set flag to add thermal ports if needed
+        self.__addThermalPorts = True
+
         self._qd = False
         if self.tt or self.cj0:
             # Add charge source (otherwise the charge calculation is ignored)

@@ -1,0 +1,18 @@
+# Simple netlist with transmission line
+*.analysis op elemop=1 intvars=1
+.analysis dc device=res:rth param=r start=1k stop=5k sweep_num=10 shell=0
+
+idc:i1 gnd 3 idc=2e-3
+res:r1 3 gnd r=1k
+diode_t:d1 3 gnd 1000 gnd rs=50.
+#diode:d1 3 gnd rs=50. temp=100.
+
+res:rth 1000 1001 r=100.
+vdc:tamb 1001 gnd vdc=20.C
+
+.plot dc 3 
+.plot dc 1000 
+
+.end
+
+

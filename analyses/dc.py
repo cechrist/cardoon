@@ -119,8 +119,11 @@ class Analysis(ParamSet):
             setattr(dev, self.param, value)
             # re-process parameters (topology must not change, for now at least)
             dev.process_params()
-            # Re-generate nodal attributes
-            nd.process_nodal_element(dev)
+            # Re-generate nodal attributes. Have no choice because
+            # elements erase internal terminals and we lose the RC
+            # numbers stored there. One solution would be to store RC
+            # numbers elsewhere.
+            nd.make_nodal_circuit(circuit)
             # re-process circuit
             dc.refresh()
 

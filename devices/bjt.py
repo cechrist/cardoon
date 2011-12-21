@@ -207,6 +207,9 @@ class Device(cir.Element):
             if self.cjc and (self.xcjc < 1.):
                 self.qsOutPorts.append((1, 0))
                 self._qbx = True
+            
+            # Set flag to add thermal ports if needed
+            self.__addThermalPorts = True
 
         # In principle we may not need any charge
         keepPorts = [ ]

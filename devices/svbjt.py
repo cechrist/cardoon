@@ -202,6 +202,9 @@ class Device(cir.Element):
         # Remove tape if present
         ad.delete_tape(self)
 
+        # Set flag to add thermal ports if needed
+        self.__addThermalPorts = True
+
         # Define topology first. Add state variable nodes
         x2 = self.add_internal_term('x2','s.v.')
         x1 = self.add_internal_term('x1','s.v.')

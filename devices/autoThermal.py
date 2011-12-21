@@ -52,18 +52,13 @@ def thermal_device(nle):
         # Force nonlinear behaviour (even if base class is linear, see
         # resistor.py)
         isNonlinear = True
-        # Initial guess for input ports:
-        try:
-            vPortGuess = np.concatenate((nle.vPortGuess,[27.]), axis=0)
-        except AttributeError:
-            # Ignore if vPortGuess not provided
-            pass
         
         def __init__(self, instanceName):
             """
             Here the base class constructor is called
             """
             nle.__init__(self, instanceName)
+            self.__addThermalPorts = True
     
         def process_params(self):
             """
@@ -73,20 +68,30 @@ def thermal_device(nle):
             # Let the base class do its stuff first
             nle.process_params(self)
 
-            # Add thermal terminals to control and output tuples only
-            # once. Make sure the last port is the thermal one.
-            if self.csOutPorts[-1][0] != (self.numTerms-1):
-                thermalPort = (self.numTerms-1, self.numTerms-2)
-                # Add units to thermal port
-                self.neighbour[-1].unit = 'C'
-                self.neighbour[-2].unit = 'C'
+            # Add units to thermal port
+            self.neighbour[self.numTerms-1].unit = 'C'
+            self.neighbour[self.numTerms-2].unit = 'C'
 
-                self.csOutPorts.append(thermalPort)
-                self.controlPorts.append(thermalPort)
+            # Add thermal terminals to control and output tuples only
+            # if needed. Base class must reset __addThermalPorts to
+            # True if needed.
+            if self.__addThermalPorts:
+                self.csOutPorts.append((self.numTerms-1, self.numTerms-2))
+                self.controlPorts.append((self.numTerms-2, self.numTerms-1))
                 # Thermal output number
                 self.__ton = len(self.csOutPorts) - 1
                 # Thermal control port number
                 self.__tpn = len(self.controlPorts) - 1
+                self.__addThermalPorts = False
+
+            # Initial guess for input ports: 
+            try:
+                if len(self.vPortGuess) < len(self.controlPorts):
+                    self.vPortGuess = np.concatenate(
+                        (self.vPortGuess,[27.]), axis=0)
+            except AttributeError:
+                # Ignore if vPortGuess not provided
+                pass
 
         def eval_cqs(self, vPort, saveOP = False):
             """

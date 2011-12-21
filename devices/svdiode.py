@@ -223,6 +223,10 @@ class Device(cir.Element):
     def process_params(self):
         # Remove internal terminals
         self.clean_internal_terms()
+
+        # Set flag to add thermal ports if needed
+        self.__addThermalPorts = True
+
         # Define topology first
         # Needs at least one internal terminal: 
         tx = self.add_internal_term('x', 's.v.')
