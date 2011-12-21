@@ -146,6 +146,11 @@ def make_nodal_circuit(ckt, reference='gnd'):
     for i, term in enumerate(ckt.nD_termList):
         term.nD_namRC = i
 
+    # Store internal RC numbers for later use
+    for elem in ckt.nD_elemList:
+        elem.nD_intRC = [term.nD_namRC for term in 
+                         elem.neighbour[elem.numTerms:]]
+
     # Dimension is the number of unknowns to solve for
     ckt.nD_dimension = len(ckt.nD_termList)
     # Number of external terminals excluding reference
@@ -170,6 +175,15 @@ def make_nodal_circuit(ckt, reference='gnd'):
     except AttributeError:
         # Not a subcircuit
         pass
+
+def restore_RCnumbers(elem):
+    """
+    Restore RC numbers in internal terminals
+
+    Assumption is number of internal terminals is the same
+    """
+    for term, i in zip(elem.neighbour[elem.numTerms:], elem.nD_intRC):
+        term.nD_namRC = i
 
 def process_nodal_element(elem):
     """
