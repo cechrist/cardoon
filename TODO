@@ -2,19 +2,21 @@
 Action Plan
 -----------
 
-* Implement OP/DC analysis. (OP working already)
+* Implement extrinsic models for BJT using a template class
+  (cf. autothermal)
 
 * Consider adding next_event() for TD sources
 
-* Implement AC analysis (noise too?)
+* Implement Transient/AC analysis
 
 * Add support for convolution of freq-defined elements
 
-* Implement Transient analysis
 
 Longer term:
 
-* Implement extrinsic models for MOS and BJT using template classes
+* Improve Newton method
+
+* Implement extrinsic models for MOS and BJT using a template class
   (cf. autothermal)
 
 * Add "+" notation for multiple lines in parser 
