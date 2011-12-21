@@ -119,6 +119,10 @@ class Analysis(ParamSet):
             setattr(dev, self.param, value)
             # re-process parameters (topology must not change, for now at least)
             dev.process_params()
+            # Re-generate nodal attributes
+            nd.process_nodal_element(dev)
+            # re-process circuit
+            dc.refresh()
 
             sV = dc.get_source()
             # solve equations

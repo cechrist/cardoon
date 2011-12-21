@@ -160,65 +160,7 @@ def make_nodal_circuit(ckt, reference='gnd'):
 
     # Map row/column numbers directly into VC*S descriptions
     for elem in ckt.nD_elemList:
-        # Create list with RC numbers (choose one)
-        # rcList = map(lambda x: x.nD_namRC, elem.neighbour)
-        rcList = [x.nD_namRC for x in elem.neighbour]
-
-        # Translate linear VCCS/VCQS format
-        def convert_vcs(x):
-            """
-            Converts format of VC*S 
-
-            input: [(contn1, contn2), (outn1, outn2), g]
-            output: [row1, col1, row2, col2, g]
-            """
-            col1 = rcList[x[0][0]]
-            col2 = rcList[x[0][1]]
-            row1 = rcList[x[1][0]]
-            row2 = rcList[x[1][1]]
-            return [row1, col1, row2, col2, x[2]]
-        elem.nD_linVCCS = map(convert_vcs, elem.linearVCCS)
-        elem.nD_linVCQS = map(convert_vcs, elem.linearVCQS)
-
-        # Translate positive and negative terminal numbers
-        def create_list(portlist):
-            """
-            Converts an internal port list into 2 lists with (+-) nodes
-
-            The format of each list is: 
-
-                (internal term number, namRC number)
-            """
-            tmp0 = [rcList[x1[0]] for x1 in portlist]
-            tmp1 = [rcList[x1[1]] for x1 in portlist]
-            return ([(i, j) for i,j in enumerate(tmp0) if j > -1],
-                    [(i, j) for i,j in enumerate(tmp1) if j > -1])
-
-        # Convert nonlinear device descriptions to a format more
-        # readily usable for the NA approach
-        if elem.isNonlinear:
-            # Control voltages
-            (elem.nD_vpos, elem.nD_vneg) = create_list(elem.controlPorts)
-            # Current source terminals
-            (elem.nD_cpos, elem.nD_cneg) = create_list(elem.csOutPorts)
-            # Charge source terminals
-            (elem.nD_qpos, elem.nD_qneg) = create_list(elem.qsOutPorts)
-# Disabled since not needed for now
-#            # Create list with external ports for gmin calculation
-#            nports = elem.numTerms - 1
-#            elem.nD_extPorts = [(i, nports) for i in range(nports)]
-#            (elem.nD_epos, elem.nD_eneg) = create_list(elem.nD_extPorts)
-
-        # Convert frequency-defined elements
-        if elem.isFreqDefined:
-            (elem.nD_fpos, elem.nD_fneg) =  create_list(elem.fPortsDefinition)
-
-        # Translate source output terms
-        if elem.isDCSource or elem.isTDSource or elem.isFDSource:
-            # first get the destination row/columns 
-            n1 = rcList[elem.sourceOutput[0]]
-            n2 = rcList[elem.sourceOutput[1]]
-            elem.nD_sourceOut = (n1, n2)
+        process_nodal_element(elem)
 
     # Subcircuit-connection processing
     try:
@@ -228,6 +170,71 @@ def make_nodal_circuit(ckt, reference='gnd'):
     except AttributeError:
         # Not a subcircuit
         pass
+
+def process_nodal_element(elem):
+    """
+    Process element for nodal analysis
+    """
+    # Create list with RC numbers (choose one)
+    # rcList = map(lambda x: x.nD_namRC, elem.neighbour)
+    rcList = [x.nD_namRC for x in elem.neighbour]
+
+    # Translate linear VCCS/VCQS format
+    def convert_vcs(x):
+        """
+        Converts format of VC*S 
+
+        input: [(contn1, contn2), (outn1, outn2), g]
+        output: [row1, col1, row2, col2, g]
+        """
+        col1 = rcList[x[0][0]]
+        col2 = rcList[x[0][1]]
+        row1 = rcList[x[1][0]]
+        row2 = rcList[x[1][1]]
+        return [row1, col1, row2, col2, x[2]]
+    elem.nD_linVCCS = map(convert_vcs, elem.linearVCCS)
+    elem.nD_linVCQS = map(convert_vcs, elem.linearVCQS)
+
+    # Translate positive and negative terminal numbers
+    def create_list(portlist):
+        """
+        Converts an internal port list into 2 lists with (+-) nodes
+
+        The format of each list is: 
+
+            (internal term number, namRC number)
+        """
+        tmp0 = [rcList[x1[0]] for x1 in portlist]
+        tmp1 = [rcList[x1[1]] for x1 in portlist]
+        return ([(i, j) for i,j in enumerate(tmp0) if j > -1],
+                [(i, j) for i,j in enumerate(tmp1) if j > -1])
+
+    # Convert nonlinear device descriptions to a format more
+    # readily usable for the NA approach
+    if elem.isNonlinear:
+        # Control voltages
+        (elem.nD_vpos, elem.nD_vneg) = create_list(elem.controlPorts)
+        # Current source terminals
+        (elem.nD_cpos, elem.nD_cneg) = create_list(elem.csOutPorts)
+        # Charge source terminals
+        (elem.nD_qpos, elem.nD_qneg) = create_list(elem.qsOutPorts)
+# Disabled since not needed for now
+#            # Create list with external ports for gmin calculation
+#            nports = elem.numTerms - 1
+#            elem.nD_extPorts = [(i, nports) for i in range(nports)]
+#            (elem.nD_epos, elem.nD_eneg) = create_list(elem.nD_extPorts)
+
+    # Convert frequency-defined elements
+    if elem.isFreqDefined:
+        (elem.nD_fpos, elem.nD_fneg) =  create_list(elem.fPortsDefinition)
+
+    # Translate source output terms
+    if elem.isDCSource or elem.isTDSource or elem.isFDSource:
+        # first get the destination row/columns 
+        n1 = rcList[elem.sourceOutput[0]]
+        n2 = rcList[elem.sourceOutput[1]]
+        elem.nD_sourceOut = (n1, n2)
+
 
 # ****************** Classes ****************
 
@@ -264,7 +271,15 @@ class DCNodal:
         if hasattr(self.ckt, 'nD_namRClist'):
             # Allocate external currents vector
             self.extSVec = np.zeros(self.ckt.nD_dimension)
+        self.refresh()
 
+    def refresh(self):
+        """
+        Re-generate linear matrices
+
+        Used for parameter sweeps
+        """
+        self.G *= 0.
         # Generate G matrix (never changes)
         for elem in self.ckt.nD_elemList:
             # All elements have nD_linVCCS (perhaps empty)
