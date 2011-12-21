@@ -416,37 +416,50 @@ Similar vectors are required for output ports of charge sources
      eval_and_deriv = ad.eval_and_deriv
      eval = ad.eval
 
-* Automatic electrothermal model generation allows to implement one
-  nonlinear model with two different netlist names: the normal one
-  with electrical terminals only (e.g., "bjt") and an electrothermal
-  model that has an additional pair of thermal terminals. The voltage
-  in this thermal port is the temperature and the current is
-  proportional to the power dissipated in the device. The netlist name
-  for the electrothermal model is formed by adding "_t" to the
-  original name (e.g., "bjt_t").
+Automatic Eletro-Thermal Models
++++++++++++++++++++++++++++++++
 
-  To implement an automatic electrothermal model, set the following
-  attribute::
+Automatic electrothermal model generation allows to implement one
+nonlinear model with two different netlist names: the normal one
+with electrical terminals only (e.g., "bjt") and an electrothermal
+model that has an additional pair of thermal terminals. The voltage
+in this thermal port is the temperature and the current is
+proportional to the power dissipated in the device. The netlist name
+for the electrothermal model is formed by adding "_t" to the
+original name (e.g., "bjt_t").
 
-      makeAutoThermal = True
+To implement an automatic electrothermal model, set the following
+attribute::
 
-  In addition, the following function must be implemented::
+    makeAutoThermal = True
 
-     def power(self, vPort, currV):
-         """ 
-         Returns total instantaneous power 
-     
-         Input: input (vPort) and output vectors in the format from 
-	 eval_cqs()
-         """
-         vds = vPort[0] - vPort[2]
-         # pout = vds*ids + vdb*idb + vsb*isb
-         pout = vds*currV[0] + vPort[0] * currV[1] + vPort[2] * currV[2] 
-         return pout
+In addition, the following function must be implemented::
+
+   def power(self, vPort, currV):
+       """ 
+       Returns total instantaneous power 
    
-   This function takes the input vector and the results from
-   ``eval_cqs()`` and returns the total power dissipated at the
-   nonlinear current sources.
+       Input: input (vPort) and output vectors in the format from 
+	 eval_cqs()
+       """
+       vds = vPort[0] - vPort[2]
+       # pout = vds*ids + vdb*idb + vsb*isb
+       pout = vds*currV[0] + vPort[0] * currV[1] + vPort[2] * currV[2] 
+       return pout
+ 
+This function takes the input vector and the results from
+``eval_cqs()`` and returns the total power dissipated at the
+nonlinear current sources.
+
+Important note: set the ``__addThermalPorts`` flag to ``True`` in
+``process_params()`` if one of ``csOutPorts`` or ``controlPorts`` is
+changed/reassigned. For example::
+
+     self.csOutPorts = [(tBi, 2), (tBi, 0), (0, 2), (tref, tib)]
+     self.controlPorts = [(tBi, 2), (tBi, 0), (tib, tref)]
+     
+     # Set flag to re-add thermal port
+     self.__addThermalPorts = True
 
 
 Independent Sources
