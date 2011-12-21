@@ -30,7 +30,7 @@ class Device(cir.Element):
 
     Implemented using a gyrator if Rint is zero::
 
-                                       i/gyr (2)
+                                       i/gyr       ti
         0  o---------+            +----------------+
                      | gyr V23    |                |
           +         /|\          /|\              /^\ 
@@ -39,7 +39,7 @@ class Device(cir.Element):
                      |            |                |
         1  o---------+            +----------------+
                                           |
-                                         --- lref (3)
+                                         --- tref
                                           V
 
     """
@@ -70,9 +70,6 @@ class Device(cir.Element):
     # qsContPorts = ( )
     # csDelayedContPorts = ( )
 
-    # Independent source attribute: output port (assuming rint=0)
-    sourceOutput = (1, 2)
-
     paramDict = dict(
         cir.Element.tempItem,
         vdc = ('DC current', 'V', float, 0.),
@@ -100,18 +97,22 @@ class Device(cir.Element):
         self.clean_internal_terms()
         # Access to global variables is through the glVar 
         if self.rint:
+            # Independent source attribute: output port 
+            self.sourceOutput = (1, 0)
             # Can use Norton equivalent, no need for internal terminals
-            self.idc = self.vdc / self.rint
+            self._idc = self.vdc / self.rint
             self.linearVCCS = [((0,1), (0,1), 1. / self.rint)]
         else:
             # Connect internal terminal
-            self.add_internal_term('i', '{0} A'.format(glVar.gyr)) # 2
-            self.add_reference_term()                              # 3
+            ti = self.add_internal_term('i', '{0} A'.format(glVar.gyr))
+            tref = self.add_reference_term()
+            # Independent source attribute: output port 
+            self.sourceOutput = (tref, ti)
             # Setup gyrator
             # Access to global variables is through the glVar (e.g.,
             # glVar.u0)
-            self.linearVCCS = [((0,1), (2,3), glVar.gyr), 
-                               ((2,3), (0,1), glVar.gyr)]
+            self.linearVCCS = [((0, 1), (ti, tref), glVar.gyr), 
+                               ((ti, tref), (0, 1), glVar.gyr)]
             # sourceOutput should be already OK
             self._idc = glVar.gyr * self.vdc
 

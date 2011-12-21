@@ -64,8 +64,8 @@ class defined as follows::
 
 	    # This adds one internal terminal (in addition to any
 	    # existing ones). First argument is the internal variable
-	    # name and second is the variable unit.
-	    self.add_internal_terms('i1', 'A')
+	    # name and second is the variable unit. Returns terminal index
+	    ti1 = self.add_internal_terms('i1', 'A')
     
             # Ambient temperature (temp) by default set to 27 C 
             # Calculate temperature-dependent variables (if any)
@@ -173,61 +173,59 @@ additional independent variables that can be be obtained by defining
 internal terminals. For example, an inductor can be implemented using
 current sources as shown below::
 
-        0  o---------+            +----------------+ 2 (il)
-                     | V2-V3      |                |
+        0  o---------+            +----------------+ til
+                     | til-tref   |                |
           +         /|\          /^\               |
         Vin        ( | )        ( | ) Vin        ----- L
           -         \V/          \|/             -----
                      |            |                |
         1  o---------+            +----------------+
                                           |
-                                         --- lref (3)
+                                         --- tref
                                           V
 
 The additional variable is the inductor current, which in this circuit
-can be obtained as ``V2 - V3``. Here Node 3 is used as a local
-reference. Internal references are merged with the global reference in
-nodal analysis and so do not add additional unknowns.  Both nodes 2
-and 3 are implemented using internal terminals. Note that terminals in
-a device are internally numbered consecutively. If a model has 2
-external terminals (i.e., 0 to 1), the first internal terminal would
-be 3.  Internal terminals are normally created in ``process_params()``
-as follows::
+can be obtained as ``til - tref``. Here Node ``tref`` is used as a
+local reference. Internal references are merged with the global
+reference in nodal analysis and so do not add additional unknowns.
+Both nodes ``til`` and ``tref`` are implemented using internal
+terminals. Note that terminals in a device are internally numbered
+consecutively after external terminals. If a model has 2 external
+terminals (i.e., 0 to 1), the first internal terminal would be 3.
+Internal terminals are normally created in ``process_params()`` as
+follows::
 
 	# This adds one internal terminal. Assume only 2 external
 	# terminals are connected so far
-	self.add_internal_terms('i1', 'A') # internal number: 2
+	til = self.add_internal_terms('i1', 'A') # til = 2
 	# Add local reference terminal
-	self.add_reference_term() # internal number: 3
+	tref = self.add_reference_term() # tref = 3
 
 The first argument in ``add_internal_terms()`` is the internal
 variable name and second is the variable unit. Internal terminals can
 be directly accessed from the terminal list of the device
-(``self.neighbour``). Terminals have an attribute called ``unit``.
-The unit of any existing terminal variable can be manually changed as
-follows::
+(``self.neighbour``). The return value is the internal terminal index.
+For models that are used as a base class for other devices such as
+electrothermal models or extrinsic models, the number of external
+terminals may change. For that reason it is *strongly recommended* to
+use the return value from ``add_internal_terms()`` and
+``add_reference_term()`` instead of fixed numbers. Example from BJT
+model::
+
+       # rb is not zero: add internal terminals
+       tBi = self.add_internal_term('Bi', 'V')
+       tib = self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) 
+       tref = self.add_reference_term()
+       # Linear VCCS for gyrator(s)
+       self.linearVCCS = [((1, tBi), (tib, tref), glVar.gyr),
+                          ((tib, tref), (1, tBi), glVar.gyr)]
+
+
+Terminals have an attribute called ``unit``.  The unit of any existing
+terminal variable can be manually changed as follows::
 
         # Set unit for terminal 6
         self.neighbour[6].unit = 'C'
-
-Important note
-++++++++++++++
-
-For models that are used as a base class for other devices such as
-electrothermal models or extrinsic models, it is necessary to index
-internal terminals relative to the number of external terminals. For
-example in the following code from the BJT model an auxiliary function
-``i(n)`` is defined to index internal terminals::
-
-     self.add_internal_term('Bi', 'V')                       #  0_i
-     self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) #  1_i
-     self.add_reference_term()                               #  2_i
-     # Shorthand to index internal terminals
-     def i(n):
-         return self.numTerms + n
-     # Linear VCCS for gyrator(s). Here i(0) is 0_i, etc.
-     self.linearVCCS = [((1, i(0)), (i(1), i(2)), glVar.gyr),
-                        ((i(1), i(2)), (1, i(0)), glVar.gyr)]
 
 
 Temperature Dependence

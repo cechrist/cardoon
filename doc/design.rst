@@ -71,7 +71,9 @@ terminal list, but for devices that are derived from a base device
 the number of external terminals change. This problem can be avoided
 by indexing internal terminals separately and refer to internal
 terminals as ``(self.numTerms + number)`` instead of using fixed
-numbers.
+numbers. A more convenient solution currently implemented is to have
+the ``add_internal_terminal()`` and ``add_reference_term()`` functions
+return the internal terminal index.
 
 This solution however would not work for a 'hardwired'
 subcircuit. Hardwired subcircuits would also present other problems

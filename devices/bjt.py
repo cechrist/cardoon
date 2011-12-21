@@ -49,9 +49,9 @@ class Device(cir.Element):
     Internal Topology
     +++++++++++++++++
 
-    Internally may add 2 additional nodes (plus gnd) if rb is not
-    zero: Bi(0_i) for the internal base node and ib(1_i) to measure
-    the internal base current and calculate Rb(ib). The possible
+    Internally may add 2 additional nodes (plus reference) if rb is
+    not zero: Bi for the internal base node and tib to measure the
+    internal base current and calculate Rb(ib). The possible
     configurations are described here.
 
     1. If RB == 0::
@@ -75,27 +75,27 @@ class Device(cir.Element):
                                      +----------------+--o 0 (C)
                                      |                |
                                     /^\               |
-                       ib          ( | ) ibc(vbc)     |
-                                    \|/               |       
+                                   ( | ) ibc(vbc)     |
+                    gyr * tib       \|/               |       
                      ,---,           |               /|\       
-         (B) 1 o----( --> )----------+ 0_i (Bi)     ( | ) ice    
+         (B) 1 o----( --> )----------+ Bi           ( | ) ice    
                      `---`           |               \V/      
                                     /|\               |       
                                    ( | ) ibe(vbe)     |
                                     \V/               |
                                      |                |
-                     gyr v(1,0_i)    +----------------+--o 2 (E)
-                                  
+                                     +----------------+--o 2 (E)
+                     gyr v(1,Bi)  
                       ,---,       
                  +---( <-- )------+
                  |    `---`       |
-         (lref)  |                | ib/gyr
-         2_i ,---+                |
-             |   |    ,---,       | 1_i (ib)
-             |   +---( --> )------+
+          tref   |                | voltage: ib/gyr
+             ,---+                |
+             |   |    ,---,       |         
+             |   +---( --> )------+ tib
              |        `---`       
-            ---
-             V      gyr ib Rb(ib)
+            ---     gyr ib Rb(ib)
+             V      
                                            
     Charge sources are connected between internal nodes defined
     above. If xcjc is not 1 but RB is zero, xcjc is ignored.
@@ -190,22 +190,19 @@ class Device(cir.Element):
         self._qbx = False
         if self.rb:
             # rb is not zero: add internal terminals
-            self.add_internal_term('Bi', 'V')                       #  0_i
-            self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) #  1_i
-            self.add_reference_term()                               #  2_i
-            # Shorthand to index internal terminals
-            def i(n):
-                return self.numTerms + n
+            tBi = self.add_internal_term('Bi', 'V')
+            tib = self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) 
+            tref = self.add_reference_term()
             # Linear VCCS for gyrator(s)
-            self.linearVCCS = [((1, i(0)), (i(1), i(2)), glVar.gyr),
-                               ((i(1), i(2)), (1, i(0)), glVar.gyr)]
+            self.linearVCCS = [((1, tBi), (tib, tref), glVar.gyr),
+                               ((tib, tref), (1, tBi), glVar.gyr)]
             # ibe, ibc, ice, Rb(ib) * ib
-            self.csOutPorts = [(i(0), 2), (i(0), 0), (0, 2), (i(2), i(1))]
+            self.csOutPorts = [(tBi, 2), (tBi, 0), (0, 2), (tref, tib)]
             # Controling voltages are vbie, vbic and gyrator port
-            self.controlPorts = [(i(0), 2), (i(0), 0), (i(1), i(2))]
+            self.controlPorts = [(tBi, 2), (tBi, 0), (tib, tref)]
             self.vPortGuess = np.array([0., 0., 0.])
             # qbie, qbic
-            self.qsOutPorts = [(i(0), 2), (i(0), 0)]
+            self.qsOutPorts = [(tBi, 2), (tBi, 0)]
             # Now check if Cjbc must be splitted (since rb != 0)
             if self.cjc and (self.xcjc < 1.):
                 self.qsOutPorts.append((1, 0))

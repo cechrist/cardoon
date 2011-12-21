@@ -133,7 +133,7 @@ class Device(cir.Element):
            / Rs
            \ 
            / 
-           |   0_i                   
+           |   t2
            o---------+            
                      | i(vin)+dq/dt 
           +         /|\           
@@ -145,7 +145,7 @@ class Device(cir.Element):
                                   
                                   
 
-    Terminal 0_i not present if Rs = 0
+    Terminal t2 not present if Rs = 0
     """
 
     # devtype is the 'model' name
@@ -210,13 +210,13 @@ class Device(cir.Element):
         # Define topology first
         if self.rs:
             # Need 1 internal terminal
-            self.add_internal_term('Vd_int', 'V')
+            t2 = self.add_internal_term('Vd_int', 'V')
             g = 1. / self.rs / self.area
-            self.linearVCCS = [((0,self.numTerms), (0,self.numTerms), g)]
+            self.linearVCCS = [((0, t2), (0, t2), g)]
             # Nonlinear device attributes
-            self.csOutPorts = [(self.numTerms, 1)]
-            self.noisePorts = [(self.numTerms, 1), (0, self.numTerms)]
-            self.controlPorts = [(self.numTerms, 1)]
+            self.csOutPorts = [(t2, 1)]
+            self.noisePorts = [(t2, 1), (0, t2)]
+            self.controlPorts = [(t2, 1)]
         else:
             # Nonlinear device attributes
             self.csOutPorts = [(0, 1)]

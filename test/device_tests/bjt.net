@@ -7,7 +7,7 @@
 #	  param = temp param_val = [0., 27., 50]
 
 .analysis testdev useAD=1 plot=1 ports_bias = [-.7V, 5V, -.01, 27] \
-	  sweep_port=1 start = 0V stop= 5V sweep_num=1100 \
+	  sweep_port=3 start = 0C stop= 50C sweep_num=1100 \
 	  device = bjt_t:q2
 
 

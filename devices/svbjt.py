@@ -57,28 +57,28 @@ class Device(cir.Element):
     requires two additional variables (nodes) but eliminates large
     positive exponentials from the model::
 
-                                  0_i(x2)
+                                      x2 
                       +--------------------------+
                       |                          |
                      /|\                        /^\ 
                     ( | ) gyr v2               ( | ) gyr vbc(x)
                      \V/                        \|/  
-            (lref)    |                          |
-             2_i ,----+--------------------------+ 
+             tref     |                          |
+                 ,----+--------------------------+ 
                  |    |                          |               
                  |   /^\                        /|\              
                  |  ( | ) gyr v1               ( | ) gyr vbe(x)  
                 ---  \|/                        \V/  
                  V    |                          |
                       +--------------------------+
-                                  1_i (x1)               
+                                       x1                
                                                   
     All currents/charges in the model are functions of voltages v3
     (x2) and v4 (x1). Note that vbc and vbe are now also functions of
     x1, x2.
 
-    In addition we may need 2 additional nodes (plus gnd) if rb is not
-    zero: Bi(3i) for the internal base node and ib(4) to measure the
+    In addition we may need 2 additional nodes (plus reference) if rb
+    is not zero: Bi for the internal base node and tib to measure the
     internal base current and calculate Rb(ib).
 
     1. If RB == 0::
@@ -102,23 +102,23 @@ class Device(cir.Element):
                                      +----------------+--o 0 (C)
                                 -    |                |
                                     /^\               |
-                  gyr v(4_i)   v2  ( | ) ibc(x2)      |
+                  gyr tib      v2  ( | ) ibc(x2)      |
                                     \|/               |       
                      ,---,      +    |               /|\       
-         (B) 1 o----( --> )----------+ 3_i(Bi)      ( | ) ice(x1,x2)
+         (B) 1 o----( --> )----------+ Bi           ( | ) ice(x1,x2)
                      `---`      +    |               \V/      
                                     /|\               |       
                                v1  ( | ) ibe(x1)      |
                                     \V/               |
                                 -    |                |
-                   gyr v(1,3_i)      +----------------+--o 2 (E)
+                   gyr v(1,Bi)       +----------------+--o 2 (E)
                                   
                       ,---,       
                  +---( <-- ) -----+
                  |    `---`       |
-         (lref)  |                | ib/gyr
-          2_i ,--+                |
-              |  |    ,---,       | 4_i (ib)
+          tref   |                | ib/gyr
+              ,--+                |
+              |  |    ,---,       | tib
               |  +---( --> )------+
               |       `---`       
              --- 
@@ -203,17 +203,14 @@ class Device(cir.Element):
         ad.delete_tape(self)
 
         # Define topology first. Add state variable nodes
-        self.add_internal_term('x2','s.v.')                     # 0_i
-        self.add_internal_term('x1','s.v.')                     # 1_i
-        self.add_reference_term()                               # 2_i
-        # Shorthand to index internal terminals
-        def i(n):
-            return self.numTerms + n
+        x2 = self.add_internal_term('x2','s.v.')
+        x1 = self.add_internal_term('x1','s.v.')
+        tref = self.add_reference_term()
         # Default configuration assumes rb == 0
         # ibe, vbe, ibc, vbc, ice 
-        self.csOutPorts = [(1, 2), (i(2), i(1)), (1, 0), (i(2), i(0)), (0, 2)]
+        self.csOutPorts = [(1, 2), (tref, x1), (1, 0), (tref, x2), (0, 2)]
         # Controling voltages are x1, x2
-        self.controlPorts = [(i(1), i(2)), (i(0), i(2))]
+        self.controlPorts = [(x1, tref), (x2, tref)]
         self.vPortGuess = np.array([0., 0.])
         # qbe, qbc
         self.qsOutPorts = [(1, 2), (1, 0)]
@@ -221,24 +218,24 @@ class Device(cir.Element):
         # Flag to signal if the extra charge Qbx is needed or not
         self._qbx = False
         # Default state-variable VCCSs
-        self.linearVCCS = [((1, 2), (i(1), i(2)), glVar.gyr),
-                           ((1, 0), (i(0), i(2)), glVar.gyr)]
+        self.linearVCCS = [((1, 2), (x1, tref), glVar.gyr),
+                           ((1, 0), (x2, tref), glVar.gyr)]
         if self.rb:
             # rb is not zero: add internal terminals
-            self.add_internal_term('Bi', 'V')                       # 3_i
-            self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) # 4_i
+            tBi = self.add_internal_term('Bi', 'V') 
+            tib = self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) 
             # Add Linear VCCS for gyrator(s)
-            self.linearVCCS = [((i(3), 2), (i(1), i(2)), glVar.gyr),
-                               ((i(3), 0), (i(0), i(2)), glVar.gyr),
-                               ((1, i(3)), (i(4), i(2)), glVar.gyr),
-                               ((i(4), i(2)), (1, i(3)), glVar.gyr)]
+            self.linearVCCS = [((tBi, 2), (x1, tref), glVar.gyr),
+                               ((tBi, 0), (x2, tref), glVar.gyr),
+                               ((1, tBi), (tib, tref), glVar.gyr),
+                               ((tib, tref), (1, tBi), glVar.gyr)]
             # ibe, vbe, ibc, vbc, ice, Rb(ib) * ib
-            self.csOutPorts = [(i(3), 2), (i(2), i(1)), (i(3), 0), 
-                               (i(2), i(0)), (0, 2), (i(2), i(4))]
+            self.csOutPorts = [(tBi, 2), (tref, x1), (tBi, 0), 
+                               (tref, x2), (0, 2), (tref, tib)]
             # Controling voltages are x1, x2 and gyrator port
-            self.controlPorts = [(i(1), i(2)), (i(0), i(2)), (i(4), i(2))]
+            self.controlPorts = [(x1, tref), (x2, tref), (tib, tref)]
             # qbie, qbic
-            self.qsOutPorts = [(i(3), 2), (i(3), 0)]
+            self.qsOutPorts = [(tBi, 2), (tBi, 0)]
             # Now check if Cjbc must be splitted (since rb != 0)
             if self.cjc and (self.xcjc < 1.):
                 # add extra charge source

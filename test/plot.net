@@ -8,7 +8,7 @@ idc:i1 gnd 20 idc=iin
 res:r1 20 2 r=10k
 tlinps4:tline1 2 gnd 3 gnd alpha=0
 res:r2 3 gnd r=1k
-svdiode:d1 3 gnd
+svdiode:d1 3 gnd rs=100.
 
 .plot dc 20
 .plot dc 2 

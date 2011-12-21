@@ -40,9 +40,9 @@ Netlist examples::
 Internal Topology
 +++++++++++++++++
 
-Internally may add 2 additional nodes (plus gnd) if rb is not
-zero: Bi(0_i) for the internal base node and ib(1_i) to measure
-the internal base current and calculate Rb(ib). The possible
+Internally may add 2 additional nodes (plus reference) if rb is
+not zero: Bi for the internal base node and tib to measure the
+internal base current and calculate Rb(ib). The possible
 configurations are described here.
 
 1. If RB == 0::
@@ -66,27 +66,27 @@ configurations are described here.
                                  +----------------+--o 0 (C)
                                  |                |
                                 /^\               |
-                   ib          ( | ) ibc(vbc)     |
-                                \|/               |       
+                               ( | ) ibc(vbc)     |
+                gyr * tib       \|/               |       
                  ,---,           |               /|\       
-     (B) 1 o----( --> )----------+ 0_i (Bi)     ( | ) ice    
+     (B) 1 o----( --> )----------+ Bi           ( | ) ice    
                  `---`           |               \V/      
                                 /|\               |       
                                ( | ) ibe(vbe)     |
                                 \V/               |
                                  |                |
-                 gyr v(1,0_i)    +----------------+--o 2 (E)
-                              
+                                 +----------------+--o 2 (E)
+                 gyr v(1,Bi)  
                   ,---,       
              +---( <-- )------+
              |    `---`       |
-     (lref)  |                | ib/gyr
-     2_i ,---+                |
-         |   |    ,---,       | 1_i (ib)
-         |   +---( --> )------+
+      tref   |                | voltage: ib/gyr
+         ,---+                |
+         |   |    ,---,       |         
+         |   +---( --> )------+ tib
          |        `---`       
-        ---
-         V      gyr ib Rb(ib)
+        ---     gyr ib Rb(ib)
+         V      
                                        
 Charge sources are connected between internal nodes defined
 above. If xcjc is not 1 but RB is zero, xcjc is ignored.
@@ -204,8 +204,8 @@ The internal representation is the following::
        / Rs
        \ 
        / 
-       |                      
-    2  o---------+            
+       |   t2
+       o---------+            
                  | i(vin)+dq/dt 
       +         /|\           
     vin        | | |          
@@ -216,7 +216,7 @@ The internal representation is the following::
                               
                               
 
-Terminal 2 not present if Rs = 0
+Terminal t2 not present if Rs = 0
 
 
 Parameters
@@ -302,7 +302,7 @@ Internal Topology
 
 Internal implementation uses a gyrator (adds one internal node)::
 
-                                    il/gyr  (2)
+                                    il/gyr    til
     0  o---------+            +----------------+
                  | gyr V23    |                |
       +         /|\          /^\               |
@@ -311,7 +311,7 @@ Internal implementation uses a gyrator (adds one internal node)::
                  |            |                |
     1  o---------+            +----------------+
                                       |
-                                     --- lref (3)
+                                     --- tref 
                                       V
 
 
@@ -604,28 +604,28 @@ BC diodes (Ibf, Ibr) with state-variable based diodes. This
 requires two additional variables (nodes) but eliminates large
 positive exponentials from the model::
 
-                              0_i(x2)
+                                  x2 
                   +--------------------------+
                   |                          |
                  /|\                        /^\ 
                 ( | ) gyr v2               ( | ) gyr vbc(x)
                  \V/                        \|/  
-        (lref)    |                          |
-         2_i ,----+--------------------------+ 
+         tref     |                          |
+             ,----+--------------------------+ 
              |    |                          |               
              |   /^\                        /|\              
              |  ( | ) gyr v1               ( | ) gyr vbe(x)  
             ---  \|/                        \V/  
              V    |                          |
                   +--------------------------+
-                              1_i (x1)               
+                                   x1                
                                               
 All currents/charges in the model are functions of voltages v3
 (x2) and v4 (x1). Note that vbc and vbe are now also functions of
 x1, x2.
 
-In addition we may need 2 additional nodes (plus gnd) if rb is not
-zero: Bi(3i) for the internal base node and ib(4) to measure the
+In addition we may need 2 additional nodes (plus reference) if rb
+is not zero: Bi for the internal base node and tib to measure the
 internal base current and calculate Rb(ib).
 
 1. If RB == 0::
@@ -649,23 +649,23 @@ internal base current and calculate Rb(ib).
                                  +----------------+--o 0 (C)
                             -    |                |
                                 /^\               |
-              gyr v(4_i)   v2  ( | ) ibc(x2)      |
+              gyr tib      v2  ( | ) ibc(x2)      |
                                 \|/               |       
                  ,---,      +    |               /|\       
-     (B) 1 o----( --> )----------+ 3_i(Bi)      ( | ) ice(x1,x2)
+     (B) 1 o----( --> )----------+ Bi           ( | ) ice(x1,x2)
                  `---`      +    |               \V/      
                                 /|\               |       
                            v1  ( | ) ibe(x1)      |
                                 \V/               |
                             -    |                |
-               gyr v(1,3_i)      +----------------+--o 2 (E)
+               gyr v(1,Bi)       +----------------+--o 2 (E)
                               
                   ,---,       
              +---( <-- ) -----+
              |    `---`       |
-     (lref)  |                | ib/gyr
-      2_i ,--+                |
-          |  |    ,---,       | 4_i (ib)
+      tref   |                | ib/gyr
+          ,--+                |
+          |  |    ,---,       | tib
           |  +---( --> )------+
           |       `---`       
          --- 
@@ -764,8 +764,8 @@ The internal representation is the following::
        / Rs
        \ 
        / 
-       |                                     2
-    4  o---------+                  +----------------+
+       |  t2                                 tx
+       o---------+                  +----------------+
                  | i(x)+dq/dt       |                |
       +         /|\                /|\ gyr vin      /^\ 
     vin        | | |              | | |            | | | gyr v(x)
@@ -773,10 +773,10 @@ The internal representation is the following::
                  |                  |                |
     1  o---------+                  +--------+-------+
                                              |
-                                            --- lref (3)
+                                            --- tref
                                              V
 
-Terminal 4 not present if Rs = 0
+Terminal t2 not present if Rs = 0
 
 
 Parameters
@@ -908,7 +908,7 @@ Netlist Examples::
 Internal Topology
 +++++++++++++++++
 
-The internal schematic is the following::
+The internal schematic when nsect = 0 is the following::
              
       0 o----+------,               ,-----+-------o 2
    +         |      |               |     |              +
@@ -961,7 +961,7 @@ Internal Topology
 
 Implemented using a gyrator if Rint is zero::
 
-                                   i/gyr (2)
+                                   i/gyr       ti
     0  o---------+            +----------------+
                  | gyr V23    |                |
       +         /|\          /|\              /^\ 
@@ -970,7 +970,7 @@ Implemented using a gyrator if Rint is zero::
                  |            |                |
     1  o---------+            +----------------+
                                       |
-                                     --- lref (3)
+                                     --- tref
                                       V
 
 

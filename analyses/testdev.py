@@ -192,11 +192,12 @@ class Analysis(ParamSet):
             
         for k in range(len(var)):
             plt.ioff()
-            plt.figure(k+1)
+            #plt.figure(k+1)
             # sweep for each output var first
             nvars = np.shape(var[k])[2]
             for i in range(nvars):
-                plt.subplot(nvars, 1, i+1)
+                #plt.subplot(nvars, 1, i+1)
+                plt.figure()
                 plt.grid(True)
                 # Now go though samples
                 for j in range(npsweep):
@@ -210,8 +211,8 @@ class Analysis(ParamSet):
                            + ' Voltage (V)')
                 if param and not i:
                     plt.legend(loc = 'upper left')
-                if i == 0:
-                    plt.title('Device ' + self.device )
+                #if i == 0:
+                plt.title('Device ' + self.device )
 
         plt.show()
 

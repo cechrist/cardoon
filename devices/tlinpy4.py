@@ -40,7 +40,7 @@ class Device(cir.Element):
     Internal Topology
     +++++++++++++++++
 
-    The internal schematic is the following::
+    The internal schematic when nsect = 0 is the following::
                  
           0 o----+------,               ,-----+-------o 2
        +         |      |               |     |              +
@@ -141,8 +141,8 @@ class Device(cir.Element):
 
             # Gyrated inductor cap
             indcap = L * glVar.gyr * glVar.gyr
-            # Reference for all gyrators is term 4
-            self.add_reference_term()  # 4
+            # Reference for all gyrators
+            tref = self.add_reference_term()
             # nps: nodes added by one section
             if R:
                 nps = 3
@@ -155,39 +155,32 @@ class Device(cir.Element):
             for i in range(self.nsect):
                 # input node number
                 if i:
-                    inn = nps*i + 4
+                    inn = nps*i + tref
                 else:
                     inn = 0
                 # add gyrator node
-                self.add_internal_term('il{0}'.format(i), 
-                                       '{0} A'.format(glVar.gyr))
-                # Gyrator node number
-                gnn = nps*i + 5
-                if R:
-                    rnn = gnn + 1
-                else:
-                    rnn = gnn
+                gnn = self.add_internal_term('il{0}'.format(i), 
+                                             '{0} A'.format(glVar.gyr))
                 # The last section does not add cap node
                 if i < self.nsect - 1:
                     # Add capacitor terminal
-                    self.add_internal_term('c{0}'.format(i), 'V')
-                    cnn = rnn + 1
+                    cnn = self.add_internal_term('c{0}'.format(i), 'V')
                 else:
                     cnn = 2
                 if R:
                     # add resistor node
-                    self.add_internal_term('r{0}'.format(i), 'V')
+                    rnn = self.add_internal_term('r{0}'.format(i), 'V')
                     # Add gyrator
-                    self.linearVCCS += [((inn, rnn), (4, gnn), glVar.gyr), 
-                                        ((gnn, 4), (inn, rnn), glVar.gyr)]
+                    self.linearVCCS += [((inn, rnn), (tref, gnn), glVar.gyr), 
+                                        ((gnn, tref), (inn, rnn), glVar.gyr)]
                     # Add resistor
                     self.linearVCCS.append(((rnn, cnn), (rnn, cnn), 1./R))
                 else:
                     # Add gyrator
-                    self.linearVCCS += [((inn, cnn), (4, gnn), glVar.gyr), 
-                                        ((gnn, 4), (inn, cnn), glVar.gyr)]
+                    self.linearVCCS += [((inn, cnn), (tref, gnn), glVar.gyr), 
+                                        ((gnn, tref), (inn, cnn), glVar.gyr)]
                 # Add inductor
-                self.linearVCQS.append(((gnn, 4), (gnn, 4), indcap))
+                self.linearVCQS.append(((gnn, tref), (gnn, tref), indcap))
                 # Add capacitor
                 self.linearVCQS.append(((cnn, 1), (cnn, 1), C))
                 if G:

@@ -360,10 +360,13 @@ class Element(GraphNode, ParamSet):
 
         name: internal terminal name
         unit: internal variable unit
+
+        Returns internal terminal index
         """
         # Create internal term (connects automatically)
         term = InternalTerminal(self, name)
         term.unit = unit
+        return len(self.neighbour) - 1
 
     def add_reference_term(self):
         """
@@ -376,6 +379,7 @@ class Element(GraphNode, ParamSet):
         term.unit = '-'
         # Set to reference terminal number
         self.localReference = len(self.neighbour) - 1
+        return self.localReference
 
     def get_internal_terms(self):
         """

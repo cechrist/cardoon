@@ -16,7 +16,7 @@ eg=1.110 xti=3.000)
 
 .model t122 bjt (bf=200 vaf=100 ikf=10e-3 rb=1k)
 
-vdc:vce 10 gnd vdc=12
+vdc:vce 10 gnd vdc=12 rint=10.
 res:rc 10 1 r=1k
 vdc:vb 3 0 vdc=10
 res:rb 3 2 r=96k
