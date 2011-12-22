@@ -469,7 +469,13 @@ class OutRequest:
       2. List of variables. For now these are terminal names.
 
     """
+    validTypes = ['dc', 'ac', 'tran', 'hb']
+
     def __init__(self, reqtype, varlist):
+        if reqtype not in self.validTypes:
+            raise CircuitError(
+                'Not a valid output request type: {0}'.format(reqtype)
+                + '\nValid types: {0}'.format(self.validTypes))
         self.type = reqtype
         self.varlist = varlist
 
