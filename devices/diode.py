@@ -202,7 +202,7 @@ class Device(cir.Element):
         cir.Element.__init__(self, instanceName)
         self.jtn = Junction()
 
-    def process_params(self):
+    def process_params(self, thermal = False):
         # Called once the external terminals have been connected and
         # the non-default parameters have been set. Make sanity checks
         # here. Internal terminals/devices should also be defined
@@ -243,8 +243,9 @@ class Device(cir.Element):
         # Calculate variables in junction
         self.jtn.process_params(self.isat, self.n, self.fc, self.cj0, self.vj, 
                                 self.m, self.xti, self.eg0, self.Tnomabs)
-        # Calculate temperature-dependent variables
-        self.set_temp_vars(self.temp)
+        if not thermal:
+            # Calculate temperature-dependent variables
+            self.set_temp_vars(self.temp)
         # Make sure tape is re-generated
         ad.delete_tape(self)
 

@@ -433,6 +433,27 @@ attribute::
 
     makeAutoThermal = True
 
+The ``process_params()`` function must be modified to accept an
+additional argument as follows::
+
+    def process_params(self, thermal = False):
+        # Set flag to re-add thermal port
+        self.__addThermalPorts = True
+        ...
+	self.csOutPorts = [(tBi, 2), (tBi, 0), (0, 2), (tref, tib)]
+        self.controlPorts = [(tBi, 2), (tBi, 0), (tib, tref)]
+        ...
+        if not thermal:
+            # Calculate temperature-dependent variables
+            self.set_temp_vars(self.temp)
+
+The ``thermal`` flag is set to ``True`` for electrothermal devices. In
+this example the temperature-dependent variables are not calculated
+during parameter processing if ``thermal == True`` since this
+calculation would be redundant. Set the ``__addThermalPorts`` flag to
+``True`` in this function if one of ``csOutPorts`` or ``controlPorts``
+is changed/reassigned.
+
 In addition, the following function must be implemented::
 
    def power(self, vPort, currV):
@@ -450,16 +471,6 @@ In addition, the following function must be implemented::
 This function takes the input vector and the results from
 ``eval_cqs()`` and returns the total power dissipated at the
 nonlinear current sources.
-
-Important note: set the ``__addThermalPorts`` flag to ``True`` in
-``process_params()`` if one of ``csOutPorts`` or ``controlPorts`` is
-changed/reassigned. For example::
-
-     self.csOutPorts = [(tBi, 2), (tBi, 0), (0, 2), (tref, tib)]
-     self.controlPorts = [(tBi, 2), (tBi, 0), (tib, tref)]
-     
-     # Set flag to re-add thermal port
-     self.__addThermalPorts = True
 
 
 Independent Sources

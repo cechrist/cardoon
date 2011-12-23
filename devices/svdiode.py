@@ -226,7 +226,7 @@ class Device(cir.Element):
         # Add statements as needed
         self.jtn = SVJunction()
 
-    def process_params(self):
+    def process_params(self, thermal = False):
         # Remove internal terminals
         self.clean_internal_terms()
 
@@ -266,8 +266,9 @@ class Device(cir.Element):
         # Calculate variables in junction
         self.jtn.process_params(self.isat, self.n, self.fc, self.cj0, self.vj, 
                                 self.m, self.xti, self.eg0, self.Tnomabs)
-        # Calculate temperature-dependent variables
-        self.set_temp_vars(self.temp)
+        if not thermal:
+            # Calculate temperature-dependent variables
+            self.set_temp_vars(self.temp)
         # Make sure tape is re-generated
         ad.delete_tape(self)
 

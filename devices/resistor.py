@@ -82,7 +82,7 @@ class Device(cir.Element):
         cir.Element.__init__(self, instanceName)
 
 
-    def process_params(self):
+    def process_params(self, thermal = False):
         # Called once the external terminals have been connected and
         # the non-default parameters have been set. Make sanity checks
         # here. Internal terminals/devices should also be defined
@@ -98,8 +98,11 @@ class Device(cir.Element):
             self.g = 1. / self.r
         else:
             self.g = (self.w-self.narrow) / (self.l-self.narrow) / self.rsh
-        # Adjust according to temperature
-        self.set_temp_vars(self.temp)
+
+        if not thermal:
+            # Adjust according to temperature
+            self.set_temp_vars(self.temp)
+
         self.linearVCCS = [((0, 1), (0, 1), self.g)]
         # Delete AD tape (if any)
         ad.delete_tape(self)

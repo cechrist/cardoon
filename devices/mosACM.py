@@ -79,15 +79,18 @@ class Device(cir.Element):
         """
         cir.Element.__init__(self, instanceName)
 
-    def process_params(self):
+    def process_params(self, thermal = False):
         # Called once the external terminals have been connected and
         # the non-default parameters have been set. Make sanity checks
         # here. Internal terminals/devices should also be defined
         # here.  Raise cir.CircuitError if a fatal error is found.
 
-        # Calculate temperature-dependent variables
-        self.set_temp_vars(self.temp)
+        if not thermal:
+            # Calculate temperature-dependent variables
+            self.set_temp_vars(self.temp)
+
         ad.delete_tape(self)
+
 
     def set_temp_vars(self, temp):
         """

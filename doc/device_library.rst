@@ -6,39 +6,128 @@ bjt
 ---
 
 
-    Generic extrinsic bipolar transistor (BJT)
+Bipolar Junction Transistor (BJT)
 
-    Netlist examples::
+This device accepts 3 or 4 terminal connections.
+
+Netlist examples::
+
+    bjt:q1 2 3 4 1 model = mypnp isat=4e-17 bf=147 iss=10fA
+    bjt:q2 2 3 4  model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
+    svbjt:q3 2 3 4 1 model = mypnp vaf=80 ikf=4m iss=15fA
+
+    # Electro-thermal versions
+    bjt_t:q2 2 3 5 1 pout gnd model = mypnp
+    svbjt_t:q3 2 3 5 1 pout gnd model = mypnp
+
+    # Model statement
+    .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
+
+Extrinsic Internal Topology
++++++++++++++++++++++++++++
+
+RC, RE and a Collector-Bulk connection are added to intrinsic
+BJT models::
+
+              RC      ct             et    RE
+  C (0) o---/\/\/\/--+-----,         4----/\/\/\/----o  E (2)
+                     |      \       /
+                     |       \     /     
+                   -----    ---------
+                    / \         |
+                   /   \        o 
+                   -----
+                     |          B (1)
+                     o Bulk (3)
+
+If RE or RC are zero the internal nodes (ct, et) are not
+created. If only 3 connections are specified then the
+Bulk-Collector junction is not connected.
+
+Important Note
+++++++++++++++
+
+This implementation does not account for the power dissipation
+in RE, RC. Use external thermal resistors if that is needed.
+
+Intrinsic Model Information
++++++++++++++++++++++++++++
+
     
-        bjt:q1 2 3 4 1 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
-        svbjt:q1 2 3 4 1 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
+Gummel-Poon intrinsic BJT model
+
+This implementation based mainly on previous implementation in
+carrot and some equations from Pspice manual.
+
+Terminal order: 0 Collector, 1 Base, 2 Emitter::
+
+                  
+      C (0) o----,         4----o  E (2)
+                  \       /
+                   \     /
+                  ---------
+                      |
+                      o 
     
-        # Electro-thermal versions
-        bjt_t:q2 2 3 5 1 pout gnd model = mypnp
-        svbjt_t:q2 2 3 5 1 pout gnd model = mypnp
-    
-        # Model statement
-        .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
+                      B (1)
 
-    Internal Topology
-    +++++++++++++++++
+Can be used for NPN or PNP transistors.
 
-    Adds RC, RE and a C-Bulk connection to intrinsic bjt models
-    (bjti or svbjti)::
+Intrinsic Internal Topology
++++++++++++++++++++++++++++
 
-                  RC      ct             et    RE
-      C (0) o---/\/\/\/--+-----,         4----/\/\/\/----o  E (2)
-                         |      \       /
-                         |       \     /     
-                       -----    ---------
-                        / \         |
-                       /   \        o 
-                       -----
-                         |          B (1)
-                         o Bulk (3)
+Internally may add 2 additional nodes (plus reference) if rb is
+not zero: Bi for the internal base node and tib to measure the
+internal base current and calculate Rb(ib). The possible
+configurations are described here.
 
-    If RE or RC are zero the internal nodes (ct, et) are not created.
-    
+1. If RB == 0::
+
+                     +----------------+--o 0 (C)
+                     |                |
+                    /^\               |
+                   ( | ) ibc(vbc)     |
+                    \|/               |       
+                     |               /|\       
+     (B) 1 o---------+              ( | ) ice    
+                     |               \V/      
+                    /|\               |       
+                   ( | ) ibe(vbe)     |
+                    \V/               |
+                     |                |
+                     +----------------+--o 2 (E)
+
+2. If RB != 0::
+
+                                 +----------------+--o 0 (C)
+                                 |                |
+                                /^\               |
+                               ( | ) ibc(vbc)     |
+                gyr * tib       \|/               |       
+                 ,---,           |               /|\       
+     (B) 1 o----( --> )----------+ Bi           ( | ) ice    
+                 `---`           |               \V/      
+                                /|\               |       
+                               ( | ) ibe(vbe)     |
+                                \V/               |
+                                 |                |
+                                 +----------------+--o 2 (E)
+                 gyr v(1,Bi)  
+                  ,---,       
+             +---( <-- )------+
+             |    `---`       |
+      tref   |                | voltage: ib/gyr
+         ,---+                |
+         |   |    ,---,       |         
+         |   +---( --> )------+ tib
+         |        `---`       
+        ---     gyr ib Rb(ib)
+         V      
+                                       
+Charge sources are connected between internal nodes defined
+above. If xcjc is not 1 but RB is zero, xcjc is ignored.
+
+
 
 Parameters
 ++++++++++
@@ -167,10 +256,13 @@ The internal representation is the following::
                  |            
     1  o---------+            
                               
-                              
-                              
-
 Terminal t2 not present if Rs = 0
+
+Important Note
+++++++++++++++
+
+This implementation does not account for the power dissipation
+in Rs. Use an external thermal resistor if that is needed.
 
 
 Parameters
@@ -518,39 +610,152 @@ svbjt
 -----
 
 
-    Generic extrinsic bipolar transistor (BJT)
+Bipolar Junction Transistor (BJT)
 
-    Netlist examples::
+This device accepts 3 or 4 terminal connections.
+
+Netlist examples::
+
+    bjt:q1 2 3 4 1 model = mypnp isat=4e-17 bf=147 iss=10fA
+    bjt:q2 2 3 4  model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
+    svbjt:q3 2 3 4 1 model = mypnp vaf=80 ikf=4m iss=15fA
+
+    # Electro-thermal versions
+    bjt_t:q2 2 3 5 1 pout gnd model = mypnp
+    svbjt_t:q3 2 3 5 1 pout gnd model = mypnp
+
+    # Model statement
+    .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
+
+Extrinsic Internal Topology
++++++++++++++++++++++++++++
+
+RC, RE and a Collector-Bulk connection are added to intrinsic
+BJT models::
+
+              RC      ct             et    RE
+  C (0) o---/\/\/\/--+-----,         4----/\/\/\/----o  E (2)
+                     |      \       /
+                     |       \     /     
+                   -----    ---------
+                    / \         |
+                   /   \        o 
+                   -----
+                     |          B (1)
+                     o Bulk (3)
+
+If RE or RC are zero the internal nodes (ct, et) are not
+created. If only 3 connections are specified then the
+Bulk-Collector junction is not connected.
+
+Important Note
+++++++++++++++
+
+This implementation does not account for the power dissipation
+in RE, RC. Use external thermal resistors if that is needed.
+
+Intrinsic Model Information
++++++++++++++++++++++++++++
+
     
-        bjt:q1 2 3 4 1 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
-        svbjt:q1 2 3 4 1 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
-    
-        # Electro-thermal versions
-        bjt_t:q2 2 3 5 1 pout gnd model = mypnp
-        svbjt_t:q2 2 3 5 1 pout gnd model = mypnp
-    
-        # Model statement
-        .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
+State-variable-based Gummel-Poon intrinsic BJT model based
 
-    Internal Topology
-    +++++++++++++++++
+This implementation based mainly on previous implementation in
+carrot and some equations from Pspice manual, with the addition of
+the state-variable definitions.
 
-    Adds RC, RE and a C-Bulk connection to intrinsic bjt models
-    (bjti or svbjti)::
+Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
 
-                  RC      ct             et    RE
-      C (0) o---/\/\/\/--+-----,         4----/\/\/\/----o  E (2)
-                         |      \       /
-                         |       \     /     
-                       -----    ---------
-                        / \         |
-                       /   \        o 
-                       -----
-                         |          B (1)
-                         o Bulk (3)
+                  
+  C (0) o----,         4----o  E (2)
+              \       /
+               \     /
+              ---------
+                  |
+                  o 
 
-    If RE or RC are zero the internal nodes (ct, et) are not created.
-    
+                  B (1)
+
+Can be used for NPN or PNP transistors.
+
+Intrinsic Internal Topology
++++++++++++++++++++++++++++
+
+The state variable formulation is achieved by replacing the BE and
+BC diodes (Ibf, Ibr) with state-variable based diodes. This
+requires two additional variables (nodes) but eliminates large
+positive exponentials from the model::
+
+                                  x2 
+                  +--------------------------+
+                  |                          |
+                 /|\                        /^\ 
+                ( | ) gyr v2               ( | ) gyr vbc(x)
+                 \V/                        \|/  
+         tref     |                          |
+             ,----+--------------------------+ 
+             |    |                          |               
+             |   /^\                        /|\              
+             |  ( | ) gyr v1               ( | ) gyr vbe(x)  
+            ---  \|/                        \V/  
+             V    |                          |
+                  +--------------------------+
+                                   x1                
+                                              
+All currents/charges in the model are functions of voltages v3
+(x2) and v4 (x1). Note that vbc and vbe are now also functions of
+x1, x2.
+
+In addition we may need 2 additional nodes (plus reference) if rb
+is not zero: Bi for the internal base node and tib to measure the
+internal base current and calculate Rb(ib).
+
+1. If RB == 0::
+
+                       +----------------+--o 0 (C)
+                -      |                |
+                      /^\               |
+               v2    ( | ) ibc(x2)      |
+                      \|/               |       
+                +      |               /|\       
+       (B) 1 o---------+              ( | ) ice(x1,x2)
+                +      |               \V/      
+                      /|\               |       
+               v1    ( | ) ibe(x1)      |
+                      \V/               |
+                -      |                |
+                       +----------------+--o 2 (E)
+
+2. If RB != 0 and IRB != 0::
+
+                                 +----------------+--o 0 (C)
+                            -    |                |
+                                /^\               |
+              gyr tib      v2  ( | ) ibc(x2)      |
+                                \|/               |       
+                 ,---,      +    |               /|\       
+     (B) 1 o----( --> )----------+ Bi           ( | ) ice(x1,x2)
+                 `---`      +    |               \V/      
+                                /|\               |       
+                           v1  ( | ) ibe(x1)      |
+                                \V/               |
+                            -    |                |
+               gyr v(1,Bi)       +----------------+--o 2 (E)
+                              
+                  ,---,       
+             +---( <-- ) -----+
+             |    `---`       |
+      tref   |                | ib/gyr
+          ,--+                |
+          |  |    ,---,       | tib
+          |  +---( --> )------+
+          |       `---`       
+         --- 
+          V     gyr ib Rb(ib)
+                                       
+Charge sources are connected between internal nodes defined
+above. If xcjc is not 1 but RB is zero, xcjc is ignored.
+
 
 Parameters
 ++++++++++
@@ -661,6 +866,12 @@ The internal representation is the following::
                                              V
 
 Terminal t2 not present if Rs = 0
+
+Important Note
+++++++++++++++
+
+This implementation does not account for the power dissipation
+in Rs. Use an external thermal resistor if that is needed.
 
 
 Parameters

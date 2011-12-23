@@ -65,7 +65,10 @@ def device_catalog():
                 continue
             val = devices.devClass[key]
             # Print doc string
-            doc = val.__doc__.split(os.linesep)
+            doc = val.__doc__
+            if hasattr(val,'extraDoc'):
+                doc += val.extraDoc
+            doc = doc.split(os.linesep)
             for line in doc:
               print(line[4:], file=f)
             print('\nParameters', file=f)

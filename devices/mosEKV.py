@@ -184,7 +184,7 @@ class Device(cir.Element):
         # If qox code is disabled, qox is zero by default
         self.qox = 0.
 
-    def process_params(self):
+    def process_params(self, thermal = False):
         # Called once the external terminals have been connected and
         # the non-default parameters have been set. Make sanity checks
         # here. Internal terminals/devices should also be defined
@@ -266,8 +266,9 @@ class Device(cir.Element):
         self._lmin = self.ns * self._leff / 10.
         self._Cox = self.cox * self.np * self._weff * self.ns * self._leff
 
-        # Calculate temperature-dependent variables
-        self.set_temp_vars(self.temp)
+        if not thermal:
+            # Calculate temperature-dependent variables
+            self.set_temp_vars(self.temp)
         # Delete AD tape (if any)
         ad.delete_tape(self)
 

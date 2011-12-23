@@ -41,14 +41,7 @@ def thermal_device(nle):
     
         # devtype is the 'model' name
         devType = nle.devType + '_t'
-    
-        # Number of terminals. If numTerms is set here, the parser knows
-        # in advance how many external terminals to expect. By default the
-        # parser makes no assumptions and allows any number of connections
-        #
-        # Add two thermal terminals
-        numTerms = nle.numTerms + 2
-        
+            
         # Force nonlinear behaviour (even if base class is linear, see
         # resistor.py)
         isNonlinear = True
@@ -56,6 +49,12 @@ def thermal_device(nle):
         def __init__(self, instanceName):
             nle.__init__(self, instanceName)
             self.__addThermalPorts = True
+            if nle.numTerms:
+                # Add two thermal terminals
+                self.numTerms = nle.numTerms + 2
+                self.__varTerms = False
+            else:
+                self.__varTerms = True
     
         def process_params(self):
             """
@@ -63,8 +62,8 @@ def thermal_device(nle):
 
             Add extra thermal terminals if __addThermalPorts is True
             """
-            # Let the base class do its stuff first
-            nle.process_params(self)
+            # Process parameters in base class
+            nle.process_params(self, thermal = True)
 
             # Add thermal terminals to control and output tuples only
             # if needed. Base class must reset __addThermalPorts to
