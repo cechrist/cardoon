@@ -6,92 +6,39 @@ bjt
 ---
 
 
-Gummel-Poon intrinsic BJT model
+    Generic extrinsic bipolar transistor (BJT)
 
-This implementation based mainly on previous implementation in
-carrot and some equations from Pspice manual.
-
-Terminal order: 0 Collector, 1 Base, 2 Emitter::
-
-                  
-      C (0) o----,         4----o  E (2)
-                  \       /
-                   \     /
-                  ---------
-                      |
-                      o 
+    Netlist examples::
     
-                      B (1)
+        bjt:q1 2 3 4 1 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
+        svbjt:q1 2 3 4 1 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
+    
+        # Electro-thermal versions
+        bjt_t:q2 2 3 5 1 pout gnd model = mypnp
+        svbjt_t:q2 2 3 5 1 pout gnd model = mypnp
+    
+        # Model statement
+        .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
 
-Can be used for NPN or PNP transistors.
+    Internal Topology
+    +++++++++++++++++
 
-Bulk connection, RC, RE are not included here.
+    Adds RC, RE and a C-Bulk connection to intrinsic bjt models
+    (bjti or svbjti)::
 
-Netlist examples::
+                  RC      ct             et    RE
+      C (0) o---/\/\/\/--+-----,         4----/\/\/\/----o  E (2)
+                         |      \       /
+                         |       \     /     
+                       -----    ---------
+                        / \         |
+                       /   \        o 
+                       -----
+                         |          B (1)
+                         o Bulk (3)
 
-    bjt:q1 2 3 4 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
-
-    # Electro-thermal version
-    bjt_t:q2 2 3 5 pout gnd model = mypnp
-
-    # Model statement
-    .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
-
-Internal Topology
-+++++++++++++++++
-
-Internally may add 2 additional nodes (plus reference) if rb is
-not zero: Bi for the internal base node and tib to measure the
-internal base current and calculate Rb(ib). The possible
-configurations are described here.
-
-1. If RB == 0::
-
-                     +----------------+--o 0 (C)
-                     |                |
-                    /^\               |
-                   ( | ) ibc(vbc)     |
-                    \|/               |       
-                     |               /|\       
-     (B) 1 o---------+              ( | ) ice    
-                     |               \V/      
-                    /|\               |       
-                   ( | ) ibe(vbe)     |
-                    \V/               |
-                     |                |
-                     +----------------+--o 2 (E)
-
-2. If RB != 0::
-
-                                 +----------------+--o 0 (C)
-                                 |                |
-                                /^\               |
-                               ( | ) ibc(vbc)     |
-                gyr * tib       \|/               |       
-                 ,---,           |               /|\       
-     (B) 1 o----( --> )----------+ Bi           ( | ) ice    
-                 `---`           |               \V/      
-                                /|\               |       
-                               ( | ) ibe(vbe)     |
-                                \V/               |
-                                 |                |
-                                 +----------------+--o 2 (E)
-                 gyr v(1,Bi)  
-                  ,---,       
-             +---( <-- )------+
-             |    `---`       |
-      tref   |                | voltage: ib/gyr
-         ,---+                |
-         |   |    ,---,       |         
-         |   +---( --> )------+ tib
-         |        `---`       
-        ---     gyr ib Rb(ib)
-         V      
-                                       
-Charge sources are connected between internal nodes defined
-above. If xcjc is not 1 but RB is zero, xcjc is ignored.
-
-
+    If RE or RC are zero the internal nodes (ct, et) are not created.
+    
 
 Parameters
 ++++++++++
@@ -104,6 +51,7 @@ Parameters
  br           1.0                       Ideal maximum reverse beta                           
  cjc          0.0          F            Base collector zero bias p-n capacitance             
  cje          0.0          F            Base emitter zero bias p-n capacitance               
+ cjs          0.0          F            Collector substrate capacitance                      
  eg           1.11         eV           Badgap voltage                                       
  fc           0.5                       Forward bias depletion capacitor coefficient         
  ikf          0.0          A            Forward-beta high current roll-off knee current      
@@ -112,15 +60,20 @@ Parameters
  isat         1.0e-16      A            Transport saturation current                         
  isc          0.0          A            Base collector leakage saturation current            
  ise          0.0          A            Base-emitter leakage saturation current              
+ iss          0.0          A            Substrate saturation current                         
  itf          0.0          A            Transit time dependency on ic                        
  mjc          0.33                      Base collector p-n grading factor                    
  mje          0.33                      Base emitter p-n grading factor                      
+ mjs          0.0                       substrate junction exponential factor                
  nc           2.0                       Base-collector leakage emission coefficient          
  ne           1.5                       Base-emitter leakage emission coefficient            
  nf           1.0                       Forward current emission coefficient                 
  nr           1.0                       Reverse current emission coefficient                 
+ ns           1.0                       substrate p-n coefficient                            
  rb           0.0          W            Zero bias base resistance                            
  rbm          0.0          W            Minimum base resistance                              
+ rc           0.0          W            Collector ohmic resistance                           
+ re           0.0          W            Emitter ohmic resistance                             
  temp         None         C            Device temperature                                   
  tf           0.0          S            Ideal forward transit time                           
  tnom         27.0         C            Nominal temperature                                  
@@ -130,6 +83,7 @@ Parameters
  var          0.0          V            Reverse early voltage                                
  vjc          0.75         V            Base collector built in potential                    
  vje          0.75         V            Base emitter built in potential                      
+ vjs          0.75         V            substrate junction built in potential                
  vtf          0.0          V            Transit time dependency on vbc                       
  xcjc         1.0                       Fraction of cbc connected internal to rb             
  xtb          0.0                       Forward and reverse beta temperature coefficient     
@@ -564,116 +518,39 @@ svbjt
 -----
 
 
-State-variable-based Gummel-Poon intrinsic BJT model based
+    Generic extrinsic bipolar transistor (BJT)
 
-This implementation based mainly on previous implementation in
-carrot and some equations from Pspice manual, with the addition of
-the state-variable definitions.
+    Netlist examples::
+    
+        bjt:q1 2 3 4 1 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
+        svbjt:q1 2 3 4 1 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
+    
+        # Electro-thermal versions
+        bjt_t:q2 2 3 5 1 pout gnd model = mypnp
+        svbjt_t:q2 2 3 5 1 pout gnd model = mypnp
+    
+        # Model statement
+        .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
 
-Terminal order: 0 Collector, 1 Base, 2 Emitter, (3 Bulk, not included)::
+    Internal Topology
+    +++++++++++++++++
 
-                  
-  C (0) o----,         4----o  E (2)
-              \       /
-               \     /
-              ---------
-                  |
-                  o 
+    Adds RC, RE and a C-Bulk connection to intrinsic bjt models
+    (bjti or svbjti)::
 
-                  B (1)
+                  RC      ct             et    RE
+      C (0) o---/\/\/\/--+-----,         4----/\/\/\/----o  E (2)
+                         |      \       /
+                         |       \     /     
+                       -----    ---------
+                        / \         |
+                       /   \        o 
+                       -----
+                         |          B (1)
+                         o Bulk (3)
 
-Can be used for NPN or PNP transistors.
-
-Bulk connection, RC, RE are not included for now.
-
-Netlist examples::
-
-    bjt:q1 2 3 4 model = mypnp isat=4e-17 bf=147 vaf=80 ikf=4m
-
-    # Electro-thermal version
-    bjt_t:q2 2 3 5 pout gnd model = mypnp
-
-    # Model statement
-    .model mypnp bjt_t (type=pnp isat=5e-17 cje=60fF vje=0.83 mje=0.35)
-
-Internal Topology
-+++++++++++++++++
-
-The state variable formulation is achieved by replacing the BE and
-BC diodes (Ibf, Ibr) with state-variable based diodes. This
-requires two additional variables (nodes) but eliminates large
-positive exponentials from the model::
-
-                                  x2 
-                  +--------------------------+
-                  |                          |
-                 /|\                        /^\ 
-                ( | ) gyr v2               ( | ) gyr vbc(x)
-                 \V/                        \|/  
-         tref     |                          |
-             ,----+--------------------------+ 
-             |    |                          |               
-             |   /^\                        /|\              
-             |  ( | ) gyr v1               ( | ) gyr vbe(x)  
-            ---  \|/                        \V/  
-             V    |                          |
-                  +--------------------------+
-                                   x1                
-                                              
-All currents/charges in the model are functions of voltages v3
-(x2) and v4 (x1). Note that vbc and vbe are now also functions of
-x1, x2.
-
-In addition we may need 2 additional nodes (plus reference) if rb
-is not zero: Bi for the internal base node and tib to measure the
-internal base current and calculate Rb(ib).
-
-1. If RB == 0::
-
-                       +----------------+--o 0 (C)
-                -      |                |
-                      /^\               |
-               v2    ( | ) ibc(x2)      |
-                      \|/               |       
-                +      |               /|\       
-       (B) 1 o---------+              ( | ) ice(x1,x2)
-                +      |               \V/      
-                      /|\               |       
-               v1    ( | ) ibe(x1)      |
-                      \V/               |
-                -      |                |
-                       +----------------+--o 2 (E)
-
-2. If RB != 0 and IRB != 0::
-
-                                 +----------------+--o 0 (C)
-                            -    |                |
-                                /^\               |
-              gyr tib      v2  ( | ) ibc(x2)      |
-                                \|/               |       
-                 ,---,      +    |               /|\       
-     (B) 1 o----( --> )----------+ Bi           ( | ) ice(x1,x2)
-                 `---`      +    |               \V/      
-                                /|\               |       
-                           v1  ( | ) ibe(x1)      |
-                                \V/               |
-                            -    |                |
-               gyr v(1,Bi)       +----------------+--o 2 (E)
-                              
-                  ,---,       
-             +---( <-- ) -----+
-             |    `---`       |
-      tref   |                | ib/gyr
-          ,--+                |
-          |  |    ,---,       | tib
-          |  +---( --> )------+
-          |       `---`       
-         --- 
-          V     gyr ib Rb(ib)
-                                       
-Charge sources are connected between internal nodes defined
-above. If xcjc is not 1 but RB is zero, xcjc is ignored.
-
+    If RE or RC are zero the internal nodes (ct, et) are not created.
+    
 
 Parameters
 ++++++++++
@@ -686,6 +563,7 @@ Parameters
  br           1.0                       Ideal maximum reverse beta                           
  cjc          0.0          F            Base collector zero bias p-n capacitance             
  cje          0.0          F            Base emitter zero bias p-n capacitance               
+ cjs          0.0          F            Collector substrate capacitance                      
  eg           1.11         eV           Badgap voltage                                       
  fc           0.5                       Forward bias depletion capacitor coefficient         
  ikf          0.0          A            Forward-beta high current roll-off knee current      
@@ -694,15 +572,20 @@ Parameters
  isat         1.0e-16      A            Transport saturation current                         
  isc          0.0          A            Base collector leakage saturation current            
  ise          0.0          A            Base-emitter leakage saturation current              
+ iss          0.0          A            Substrate saturation current                         
  itf          0.0          A            Transit time dependency on ic                        
  mjc          0.33                      Base collector p-n grading factor                    
  mje          0.33                      Base emitter p-n grading factor                      
+ mjs          0.0                       substrate junction exponential factor                
  nc           2.0                       Base-collector leakage emission coefficient          
  ne           1.5                       Base-emitter leakage emission coefficient            
  nf           1.0                       Forward current emission coefficient                 
  nr           1.0                       Reverse current emission coefficient                 
+ ns           1.0                       substrate p-n coefficient                            
  rb           0.0          W            Zero bias base resistance                            
  rbm          0.0          W            Minimum base resistance                              
+ rc           0.0          W            Collector ohmic resistance                           
+ re           0.0          W            Emitter ohmic resistance                             
  temp         None         C            Device temperature                                   
  tf           0.0          S            Ideal forward transit time                           
  tnom         27.0         C            Nominal temperature                                  
@@ -712,6 +595,7 @@ Parameters
  var          0.0          V            Reverse early voltage                                
  vjc          0.75         V            Base collector built in potential                    
  vje          0.75         V            Base emitter built in potential                      
+ vjs          0.75         V            substrate junction built in potential                
  vtf          0.0          V            Transit time dependency on vbc                       
  xcjc         1.0                       Fraction of cbc connected internal to rb             
  xtb          0.0                       Forward and reverse beta temperature coefficient     

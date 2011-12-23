@@ -12,7 +12,7 @@ res_t:rt1 1 gnd 1000 gnd r=100.
 diode:d1 2 gnd model=mydiode1
 diode:d2 2 3 model=mydiode1 isat=is2 cj0=1pF rs=100
 mosekv:m1 2 3 4 gnd
-bjt:q1 2 3 4
+bjt:q1 2 3 4 gnd
 x1 2 3 4 LM741
 x2 2 gnd 3 LM741
 x3 2 gnd 3 testckt
