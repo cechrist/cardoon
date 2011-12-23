@@ -163,6 +163,12 @@ class Device(cir.Element):
                                                  V
 
     Terminal t2 not present if Rs = 0
+
+    Important Note
+    ++++++++++++++
+
+    This implementation does not account for the power dissipation
+    in Rs. Use an external thermal resistor if that is needed.
     """
 
     # devtype is the 'model' name

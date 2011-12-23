@@ -54,28 +54,25 @@ def thermal_device(nle):
         isNonlinear = True
         
         def __init__(self, instanceName):
-            """
-            Here the base class constructor is called
-            """
             nle.__init__(self, instanceName)
             self.__addThermalPorts = True
     
         def process_params(self):
             """
-            Basically do whatever the base class needs and add extra
-            thermal terminals
+            Process parameters as in base class
+
+            Add extra thermal terminals if __addThermalPorts is True
             """
             # Let the base class do its stuff first
             nle.process_params(self)
-
-            # Add units to thermal port
-            self.neighbour[self.numTerms-1].unit = 'C'
-            self.neighbour[self.numTerms-2].unit = 'C'
 
             # Add thermal terminals to control and output tuples only
             # if needed. Base class must reset __addThermalPorts to
             # True if needed.
             if self.__addThermalPorts:
+                # Add units to thermal port
+                self.neighbour[self.numTerms-1].unit = 'C'
+                self.neighbour[self.numTerms-2].unit = 'C'
                 self.csOutPorts.append((self.numTerms-1, self.numTerms-2))
                 self.controlPorts.append((self.numTerms-2, self.numTerms-1))
                 # Thermal output number
@@ -95,11 +92,7 @@ def thermal_device(nle):
 
         def eval_cqs(self, vPort, saveOP = False):
             """
-            vPort is a vector with control voltages (last port is
-            thermal)
-        
-            Returns a numpy vector: currents first, thermal and then
-            charges.
+            vPort is a vector with control voltages (last port is thermal)
             """
             # set temperature in base class first
             nle.set_temp_vars(self, vPort[self.__tpn])

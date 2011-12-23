@@ -142,10 +142,13 @@ class Device(cir.Element):
                      |            
         1  o---------+            
                                   
-                                  
-                                  
-
     Terminal t2 not present if Rs = 0
+
+    Important Note
+    ++++++++++++++
+
+    This implementation does not account for the power dissipation
+    in Rs. Use an external thermal resistor if that is needed.
     """
 
     # devtype is the 'model' name
@@ -207,6 +210,9 @@ class Device(cir.Element):
         
         # Remove internal terminals
         self.clean_internal_terms()
+        # Set flag to add thermal ports if needed
+        self.__addThermalPorts = True
+
         # Define topology first
         if self.rs:
             # Need 1 internal terminal
@@ -222,9 +228,6 @@ class Device(cir.Element):
             self.csOutPorts = [(0, 1)]
             self.noisePorts = [(0, 1)]
             self.controlPorts = [(0, 1)]
-
-        # Set flag to add thermal ports if needed
-        self.__addThermalPorts = True
 
         self._qd = False
         if self.tt or self.cj0:
