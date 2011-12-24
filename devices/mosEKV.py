@@ -78,22 +78,22 @@ class Device(cir.Element):
 
     The internal topology is the following::
 
-                                      +-------------+--o 0 (D)
-                                      |             |
-                                      |             |
-                                    -----           |
-                                    ----- qd        |       
-                                      |            /|\       
-         (G) 1 o---------+            |           | | | ids    
-                         |            |            \V/      
-                         |            |             |       
-                       -----          |             |
-                       ----- qg       |      qs     |
-                         |            |      ||     |
-         (B) 3 o---------+------------+------||-----+--o 2 (S)
-                                             ||
+             ,----------------------------+-------------+--o 0 (D)
+             |                            |             |
+            /|\                           |             |
+           ( | ) idb (Vds > 0)          -----           |
+            \V/                         ----- qd        |       
+             |             1 (G)          |            /|\       
+             |               o            |           ( | ) ids    
+             |               |            |            \V/      
+             |               |            |             |       
+             |             -----          |             |
+             |             ----- qg       |      qs     |
+             |               |            |      ||     |
+     (B) 3 o-+---------------+------------+------||-----+--o 2 (S)
+                                                 ||
 
-    The impact ionization current is normally added to the drain
+    The impact ionization current (idb) is normally added to the drain
     current, but if the device is in reverse (Vds < 0 for N-channel)
     mode, it is added to the source current.
     """

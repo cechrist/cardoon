@@ -409,6 +409,7 @@ Parameters
  temp         None         C            Device temperature                                   
  theta        0.814        1/V          Mobility Saturation Parameter                        
  tox          7.5e-09      m            Oxide Thickness                                      
+ type         n                         N- or P-channel MOS (n or p)                         
  vsat         80000.0      m/s          Saturation Velocity                                  
  vt0          0.532        V            Threshold Voltage                                    
  w            1.0e-05      m            Channel width                                        
@@ -487,22 +488,22 @@ Internal Topology
 
 The internal topology is the following::
 
-                                  +-------------+--o 0 (D)
-                                  |             |
-                                  |             |
-                                -----           |
-                                ----- qd        |       
-                                  |            /|\       
-     (G) 1 o---------+            |           | | | ids    
-                     |            |            \V/      
-                     |            |             |       
-                   -----          |             |
-                   ----- qg       |      qs     |
-                     |            |      ||     |
-     (B) 4 o---------+------------+------||-----+--o 2 (S)
-                                         ||
+         ,----------------------------+-------------+--o 0 (D)
+         |                            |             |
+        /|\                           |             |
+       ( | ) idb (Vds > 0)          -----           |
+        \V/                         ----- qd        |       
+         |             1 (G)          |            /|\       
+         |               o            |           ( | ) ids    
+         |               |            |            \V/      
+         |               |            |             |       
+         |             -----          |             |
+         |             ----- qg       |      qs     |
+         |               |            |      ||     |
+ (B) 3 o-+---------------+------------+------||-----+--o 2 (S)
+                                             ||
 
-The impact ionization current is normally added to the drain
+The impact ionization current (idb) is normally added to the drain
 current, but if the device is in reverse (Vds < 0 for N-channel)
 mode, it is added to the source current.
 
