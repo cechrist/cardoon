@@ -90,7 +90,7 @@ class Device(cir.Element):
                        -----          |             |
                        ----- qg       |      qs     |
                          |            |      ||     |
-         (B) 4 o---------+------------+------||-----+--o 2 (S)
+         (B) 3 o---------+------------+------||-----+--o 2 (S)
                                              ||
 
     The impact ionization current is normally added to the drain
@@ -211,10 +211,12 @@ class Device(cir.Element):
         if self.type == 'n':
             self.eta = 0.5
             self._tf = 1.
-        else:
-            # type = 'p'
+        elif self.type == 'p':
             self.eta = 1./3.
             self._tf = -1.
+        else:
+            raise cir.CircuitError(
+                '{0}: unrecognized type: {1}. Valid types are "n" or "p"'.format(self.nodeName, self.type))
         #---------------------------------------------------------------
         # Calculate any missing parameters from user-defined settings
         # COX
@@ -471,11 +473,13 @@ class Device(cir.Element):
         
         # Drain-to-source current
         ids = IS * (i_f - irprime)
+
+        # import pdb; pdb.set_trace()        
         
         # Impact ionization current
         vib =  vPort1[0] - vPort1[2] - 2. * self.ibn * vdss
         idb1 = ids * self.iba * vib / self._t_ibb
-        idb1 *= np.exp(-self._t_ibb * self._lc / vib) 
+        idb1 *= ad.safe_exp(-self._t_ibb * self._lc / vib) 
         idb = ad.condassign(vib, idb1, 0.)
         
         # -------------------------------------------------------------

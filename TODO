@@ -2,9 +2,6 @@
 Action Plan
 -----------
 
-* Implement extrinsic models for BJT using a template class
-  (cf. autothermal)
-
 * Consider adding next_event() for TD sources
 
 * Implement Transient/AC analysis

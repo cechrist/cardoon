@@ -1,0 +1,16 @@
+# CMOS inverter using the ACM model
+
+.options maxdelta = 2.
+.analysis dc device=vdc:vin param=vdc start=0 stop=3V verbose=0 sweep_num=100
+
+vdc:vdd 1 gnd vdc=3V 
+vdc:vin in gnd 
+
+mosacm:m1 out in 1 1 type = p
+mosacm:m2 out in gnd gnd type = n
+
+.plot dc out
+
+.end
+
+

@@ -45,6 +45,7 @@ class Device(cir.Element):
     devType = "mosacm"
     paramDict = dict(
         cir.Element.tempItem,
+        type = ('N- or P-channel MOS (n or p)', '', str, 'n'),
         w = ('Channel width', 'm', float, 10e-6),
         l = ('Channel length', 'm', float, 10e-6),
         vt0 = ('Threshold Voltage', 'V', float, 0.532),
@@ -85,6 +86,14 @@ class Device(cir.Element):
         # here. Internal terminals/devices should also be defined
         # here.  Raise cir.CircuitError if a fatal error is found.
 
+        if self.type == 'n':
+            self._tf = 1.
+        elif self.type == 'p':
+            self._tf = -1.
+        else:
+            raise cir.CircuitError(
+                '{0}: unrecognized type: {1}. Valid types are "n" or "p"'.format(self.nodeName, self.type))
+
         if not thermal:
             # Calculate temperature-dependent variables
             self.set_temp_vars(self.temp)
@@ -109,15 +118,17 @@ class Device(cir.Element):
 
         saveOP is ignored for now but it will be needed
         """
+        # Invert all voltages in case of a P-channel device
+        vPort1 = self._tf * vPort
         # The following formula (11.2.10) seems to work better
         # but it is just an approximation
-        vp = pow(np.sqrt(vPort[1]-self.vt0 \
+        vp = pow(np.sqrt(vPort1[1]-self.vt0 \
                              + pow(np.sqrt(2.*self.phi)+\
                                        .5*self.gamma, 2))\
                      - .5*self.gamma, 2) - 2.*self.phi
         
-        i_f = solve_ifr(vPort[2],vp, self.Vt)
-        i_r = solve_ifr(vPort[0],vp, self.Vt)
+        i_f = solve_ifr(vPort1[2],vp, self.Vt)
+        i_r = solve_ifr(vPort1[0],vp, self.Vt)
         
         # Calculate IS at this point
         # All this not needed if we just want IS
@@ -139,8 +150,8 @@ class Device(cir.Element):
         # 1/(1 + chi * abs(sqrt(1+i_f)-sqrt(1+i_r))) is the velocity
         # saturation factor. It needs absolute value to work with
         # reverse biasing
-        idrain = IS*(i_f - i_r) \
-            / (1. + chi * np.abs(np.sqrt(1.+i_f)-np.sqrt(1.+i_r)))
+        idrain = IS * (i_f - i_r) \
+            / (1. + chi * np.abs(np.sqrt(1.+i_f)-np.sqrt(1.+i_r))) * self._tf
         # Return numpy array with one element per current source.
         return (np.array([idrain]), np.array([]))
 
