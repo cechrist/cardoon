@@ -47,7 +47,6 @@ class Analysis(ParamSet):
         stop = ('Sweep stop value', 'V', float, 0.),
         sweep_num = ('Number of points in sweep', '', int, 50),
         verbose = ('Show iterations for each point', '', bool, False),
-        fullAD = ('Use CPPAD for entire nonlinear part', '', bool, False),
         shell = ('Drop to ipython shell after calculation', '', bool, False)
         )
 
@@ -99,10 +98,7 @@ class Analysis(ParamSet):
         # Create nodal object: for now assume devices do not change
         # topology during sweep
         nd.make_nodal_circuit(circuit)
-        if self.fullAD:
-            dc = DCNodalAD(circuit)
-        else:
-            dc = nd.DCNodal(circuit)
+        dc = nd.DCNodal(circuit)
         x = dc.get_guess()
 
         sweepvar = np.linspace(start = self.start, stop = self.stop, 
