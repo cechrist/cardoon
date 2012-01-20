@@ -6,35 +6,36 @@ Cardoon is a circuit simulator program being developed using
 Python. The design was originally inspired from several ideas in
 fREEDA (http://www.freeda.org/) and carrot
 (http://vision.lakeheadu.ca/research.html), plus some improvements
-that take advantage of the flexibility in Python. The main
-documentation page for this project can be found at:
-
-  http://vision.lakeheadu.ca/cardoon/
+that take advantage of the flexibility in Python.
 
 One of the main goals of this project is to obtain a program which is
 easy to modify and test to experiment new simulation
-algorithms/models. A secondary objective is to add features and make
-the program efficient enough to be useful for general use, if
-possible.
+algorithms/models. Following good software engineering practices, the
+program and the documentation are being developed at the same
+time. Thus all implemented features are documented. Complete
+documentation for this project is included with the source and can
+also be found at:
 
-The program is still at the early development stage.  At this time
-only a few models are implemented, but some of them are already more
-complete than the equivalents in freeda and carrot (such as MOS EKV
-2.6 and the BJT intrinsic models). State-variable nonlinear device
-modeling (in the fREEDA sense) is supported. Currently a
+  http://vision.lakeheadu.ca/cardoon/
+
+A secondary objective is to add features and make the program
+efficient enough to be useful for general use, if possible.
+
+The program is still at the early development stage but it has already
+enough functionality to be useful for some tasks.  State-variable
+nonlinear device modeling (in the fREEDA sense) is supported. A
 state-variable PN junction model is included. This junction is used to
 implement a diode (svdiode) and a bipolar transistor device
 (svbjt). Regular voltage controlled models for the diode and BJT are
 also available.  Electro-thermal models are automatically generated
 from electrical models.  Nonlinear models use automatic
-differentiation for jacobian calculation. In addition, automatic
+differentiation for Jacobian calculation. In addition, automatic
 differentiation can also be used to calculate sensitivities.
 
 Please see the list of supported analysis types in the analysis
 library catalog. The immediate plan is to implement basic
 DC/AC/Transient(/noise?) analyses to finish testing the model library
-and study the performance and explore the performance that can be
-achieved.
+and explore the performance that can be achieved with this approach.
 
 Cardoon is being developed with Python 2.6 on Debian Squeeze, but it
 should work OK with Python 2.7 under other operating systems.

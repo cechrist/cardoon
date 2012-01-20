@@ -2,18 +2,24 @@
 Action Plan (TODO file)
 -----------------------
 
-* Implement Transient analysis
+1. Implement basic transient analysis with fixed time step.
 
-* Add support for convolution of freq-defined elements
+2. Add sparse matrix support and optimize inner loops to improve
+   speed: modify nodal.py to use pytrilinos
+   (http://trilinos.sandia.gov/packages/pytrilinos/) to access the KLU
+   sparse matrix library
+   (http://www.cise.ufl.edu/research/sparse/klu/). Inner loop
+   functions (``set_*`` in ``nodal.py``) will be re-implemented using
+   cython (http://cython.org/).
 
-* Add sparse matrix support
+3. Add support for convolution of freq-defined elements
 
-Longer term:
+Other tasks to be done at some time:
 
-* Improve Newton method
+* Improve convergence control in Newton method
 
-* Implement extrinsic models for MOS and BJT using a template class
-  (cf. autothermal)
+* Implement extrinsic model for MOS trasistors using an approach
+  similar to the BJT implementation.
 
 * Add "+" notation for multiple lines in parser 
 
