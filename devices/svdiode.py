@@ -190,9 +190,6 @@ class Device(cir.Element):
     # Initial guess for state variable
     vPortGuess = np.array([0.])
 
-    # Nonlinear device attributes (defined in process_params())
-    qsOutPorts = [ ]
-
     # Independent source attribute: output port
     # sourceOutput = (0, 1)
 
@@ -252,6 +249,8 @@ class Device(cir.Element):
             self.csOutPorts = [(t2, 1), (tref, tx)]
             self.noisePorts = [(t2, 1), (0, t2)]
 
+        # Nonlinear device attributes (defined in process_params())
+        self.qsOutPorts = [ ]
         self._qd = False
         if self.tt or self.cj0:
             # Add charge source (otherwise the charge calculation is ignored)

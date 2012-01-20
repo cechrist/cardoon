@@ -372,6 +372,42 @@ Parameters
  l            0.0          H            Inductance                                           
  =========== ============ ============ ===================================================== 
 
+isin
+----
+
+
+(Co-)Sinusoidal current source::
+
+                       
+               ,---,  iout
+    0 o-------( --> )---------o 1
+               '---'    
+
+    iout = idc + mag * cos(2 * pi * freq + phase)
+
+This source works for time and frequency domain. For AC analysis,
+the 'acmag' parameter is provided. By default acmag = mag.
+
+Netlist example::
+
+    isin:vdd gnd 4 idc=2mA amp=2mA freq=1GHz phase=90 
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ acmag        None         A            Amplitude for AC analysis only                       
+ freq         1000.0       Hz           Frequency                                            
+ idc          0.0          A            DC current                                           
+ mag          0.0          A            Amplitude                                            
+ phase        0.0          degrees      Phase                                                
+ temp         None         C            Device temperature                                   
+ =========== ============ ============ ===================================================== 
+
 mosacm
 ------
 
@@ -1082,6 +1118,62 @@ Parameters
  tc2          0.0          1/C^2        Voltage temperature coefficient 2                    
  temp         None         C            Device temperature                                   
  tnom         27.0         C            Nominal temperature                                  
- vdc          0.0          V            DC current                                           
+ vdc          0.0          V            DC voltage                                           
+ =========== ============ ============ ===================================================== 
+
+vsin
+----
+
+
+(Co-)Sinusoidal voltage source. 
+
+Includes temperature dependence in vdc only::
+                      
+               ,---,  vout       Rint
+   0 o--------( - + )---------/\/\/\/\--------o 1
+               '---'  
+             
+       vout = vdc + mag * cos(2 * pi * freq + phase)
+
+This source works for time and frequency domain. For AC analysis,
+the 'acmag' parameter is provided. By default acmag = mag.
+
+Netlist example::
+
+    vsin:vdd gnd 4 vdc=2V amp=1V freq=1GHz phase=90 
+
+
+Internal Topology
++++++++++++++++++
+
+Implemented using a gyrator if Rint is zero::
+
+                                   i/gyr       ti
+    0  o---------+            +----------------+
+                 | gyr V23    |                |
+      +         /|\          /|\              /^\ 
+    vin        | | |        | | | gyr vin    | | | gyr vout
+      -         \V/          \V/              \|/  
+                 |            |                |
+    1  o---------+            +----------------+
+                                      |
+                                     --- tref
+                                      V
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ acmag        None         A            Amplitude for AC analysis only                       
+ freq         1000.0       Hz           Frequency                                            
+ mag          0.0          A            Amplitude                                            
+ phase        0.0          degrees      Phase                                                
+ rint         0.0          Ohms         Internal resistance                                  
+ temp         None         C            Device temperature                                   
+ vdc          0.0          V            DC voltage                                           
  =========== ============ ============ ===================================================== 
 

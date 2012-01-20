@@ -249,8 +249,99 @@ def process_nodal_element(elem):
         n2 = rcList[elem.sourceOutput[1]]
         elem.nD_sourceOut = (n1, n2)
 
+#----------------------------------------------------------------------    
 
-# ****************** Classes ****************
+def run_AC(ckt, fvec):
+    """
+    Set up and solve AC equations
+
+    ckt: nodal-ready Circuit instance (ckt) instance with OP already set
+    fvec: frequency vector. All frequencies must be different from zero
+
+    DC solution not calculated here as it needs special treatment and
+    that solution is already obtained by the OP analysis.
+
+    Set results in ckt. Prefix: aC_
+
+    Returns a matrix with results. Dimension: (nvars x nfreq)
+
+    """
+    # Number of frequencies
+    nfreq = np.shape(fvec)[0]
+    # Allocate matrices/vectors. 
+    # G is used for G + dI/dv
+    G = np.zeros((ckt.nD_dimension, ckt.nD_dimension))
+    # C is used for C + dQ/dv
+    C = np.zeros((ckt.nD_dimension, ckt.nD_dimension))
+
+    # Linear contributions G and C in AC formulation
+    for elem in ckt.nD_elemList:
+        # All elements have nD_linVCCS (perhaps empty)
+        for vccs in elem.nD_linVCCS:
+            set_quad(G, *vccs)
+        # All elements have nD_linVCQS (perhaps empty)
+        for vcqs in elem.nD_linVCQS:
+            set_quad(C, *vcqs)
+    # Calculate dI/dx and dQ/dx and add to G and C
+    for elem in ckt.nD_nlinElem:
+        (outV, outJac) = elem.eval_and_deriv(elem.nD_xOP)
+        set_Jac(G, elem.nD_cpos, elem.nD_cneg, 
+                elem.nD_vpos, elem.nD_vneg, outJac)
+        if len(elem.qsOutPorts):
+            # import pdb; pdb.set_trace()
+            # Get charge derivatives from outJac
+            qJac = outJac[len(elem.csOutPorts):,:]
+            set_Jac(C, elem.nD_qpos, elem.nD_qneg, 
+                    elem.nD_vpos, elem.nD_vneg, qJac)
+
+    # Frequency-dependent matrices: a matrix of complex vectors, each
+    # vector conatins the values for all frequencies. This format is
+    # compatible with the format returned by elem.get_Y_matrix(fvec)
+    Y = np.zeros((ckt.nD_dimension, ckt.nD_dimension, nfreq), dtype=complex)
+    # Frequency-defined elements
+    for elem in ckt.nD_freqDefinedElem:
+        # get first Y matrix for all frequencies. 
+        set_Jac(Y, elem.nD_fpos, elem.nD_fneg, 
+                elem.nD_fpos, elem.nD_fneg, elem.get_Y_matrix(fvec))
+
+    # Sources
+    sVec = np.zeros(ckt.nD_dimension, dtype = complex)
+    for source in ckt.nD_sourceFDElem:
+        try:
+            current = source.get_AC()
+            outTerm = source.nD_sourceOut
+            # This may not need optimization because we usually do not
+            # have too many independent sources
+            if outTerm[0] >= 0:
+                sVec[outTerm[0]] -= current
+            if outTerm[1] >= 0:
+                sVec[outTerm[1]] += current
+        except AttributeError:
+            # AC routine not implemented, ignore
+            pass
+
+#    if hasattr(ckt, 'nD_namRClist'):
+#        # Allocate external currents vector
+#        extSVec = np.zeros(ckt.nD_dimension)
+
+    # Loop for each frequency: create and solve linear system
+    j = complex(0., 1.)
+    omegaVec = 2. * np.pi * fvec
+    xVec = np.zeros((ckt.nD_dimension, nfreq), dtype=complex)
+    for k, omega in enumerate(omegaVec):
+        N = G + j * omega * C + Y[:,:,k] 
+        xVec[:,k] = np.linalg.solve(N, sVec)
+        
+    # Save results in circuit
+    # Set nodal voltage of reference to zero
+    ckt.nD_ref.aC_V = 0.
+    for k,term in enumerate(ckt.nD_termList):
+        term.aC_V = xVec[k, :]
+
+    return xVec
+
+
+# ****************************** Classes *********************************
 
 #------------------------------------------------------------------------
 
@@ -425,9 +516,22 @@ class DCNodal:
     def save_OP(self, xVec):
         """
         Save nodal voltages in terminals and set OP in elements
+
+        The following information is saved:
+
+          * The nodal voltage vector for the circuit (self.xop)
+
+          * The nodal voltage in each terminal (term.nD_vOP)
+
+          * The port voltages in each nonlinear device (elem.nD_xOP)
+
+          * The operating point (OP) information in nonlinear devices
+
         """
         # Set nodal voltage of reference to zero
         self.ckt.nD_ref.nD_vOP = 0.
+        # Save nodal vector
+        self.xop = xVec
         for v,term in zip(xVec, self.ckt.nD_termList):
             term.nD_vOP = v
         for elem in self.ckt.nD_nlinElem:
@@ -435,6 +539,7 @@ class DCNodal:
             xin = np.zeros(len(elem.controlPorts))
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             # Set OP in element (discard return value)
+            elem.nD_xOP = xin
             elem.get_OP(xin)
 
     # The following functions used to solve equations, originally from

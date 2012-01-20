@@ -1,28 +1,34 @@
 """
-:mod:`vdc` -- DC voltage source
--------------------------------
+:mod:`vsin` -- Sinusoidal voltage source
+----------------------------------------
 
-.. module:: vdc
+.. module:: vsin
 .. moduleauthor:: Carlos Christoffersen
 """
 
+import cmath as cm
 import numpy as np
 from globalVars import glVar
 import circuit as cir
 
 class Device(cir.Element):
     """
-    DC voltage source. 
+    (Co-)Sinusoidal voltage source. 
 
     Includes temperature dependence in vdc only::
                           
-                   ,---,  vdc       Rint
+                   ,---,  vout       Rint
        0 o--------( - + )---------/\/\/\/\--------o 1
                    '---'  
+                 
+           vout = vdc + mag * cos(2 * pi * freq + phase)
    
+    This source works for time and frequency domain. For AC analysis,
+    the 'acmag' parameter is provided. By default acmag = mag.
+
     Netlist example::
 
-        vdc:vdd 1 0 vdc=3V
+        vsin:vdd gnd 4 vdc=2V amp=1V freq=1GHz phase=90 
 
 
     Internal Topology
@@ -34,7 +40,7 @@ class Device(cir.Element):
         0  o---------+            +----------------+
                      | gyr V23    |                |
           +         /|\          /|\              /^\ 
-        vin        | | |        | | | gyr vin    | | | gyr vdc
+        vin        | | |        | | | gyr vin    | | | gyr vout
           -         \V/          \V/              \|/  
                      |            |                |
         1  o---------+            +----------------+
@@ -45,7 +51,7 @@ class Device(cir.Element):
     """
 
     # devtype is the 'model' name
-    devType = "vdc"
+    devType = "vsin"
 
     # Number of terminals. If numTerms is set here, the parser knows
     # in advance how many external terminals to expect. By default the
@@ -60,8 +66,8 @@ class Device(cir.Element):
     # needsDelays = True
     # isFreqDefined = True
     isDCSource = True
-    # isTDSource = True
-    # isFDSource = True
+    isTDSource = True
+    isFDSource = True
 
     # Nonlinear device attributes
     # csOutPorts = ((0, 2), )
@@ -74,9 +80,10 @@ class Device(cir.Element):
         cir.Element.tempItem,
         vdc = ('DC voltage', 'V', float, 0.),
         rint = ('Internal resistance', 'Ohms', float, 0.),
-        tnom = ('Nominal temperature', 'C', float, 27.),
-        tc1 = ('Voltage temperature coefficient 1', '1/C', float, 0.),
-        tc2 = ('Voltage temperature coefficient 2', '1/C^2', float, 0.)
+        mag = ('Amplitude', 'A', float, 0.),
+        acmag = ('Amplitude for AC analysis only', 'A', float, None),
+        phase = ('Phase', 'degrees', float, 0.),
+        freq = ('Frequency', 'Hz', float, 1e3)
         )
 
     def __init__(self, instanceName):
@@ -95,12 +102,25 @@ class Device(cir.Element):
 
         # remove any existing internal connections
         self.clean_internal_terms()
-        # Access to global variables is through the glVar 
+
+        if self.acmag == None:
+            # Use regular amplitude instead
+            self._acmag = self.mag
+        else:
+            # Use AC amplitude
+            self._acmag = self.acmag
+            
+        self._omega = 2. * np.pi * self.freq
+        self._phase = self.phase * np.pi / 180.
+
         if self.rint:
             # Independent source attribute: output port 
             self.sourceOutput = (1, 0)
             # Can use Norton equivalent, no need for internal terminals
             self._idc = self.vdc / self.rint
+            self._imag = self.mag / self.rint
+            self._acimag = self._acmag / self.rint
+
             self.linearVCCS = [((0,1), (0,1), 1. / self.rint)]
         else:
             # Connect internal terminal
@@ -115,27 +135,46 @@ class Device(cir.Element):
                                ((ti, tref), (0, 1), glVar.gyr)]
             # sourceOutput should be already OK
             self._idc = glVar.gyr * self.vdc
+            self._imag = glVar.gyr * self.mag
+            self._acimag = glVar.gyr * self._acmag
 
-        # Adjust according to temperature
-        self.set_temp_vars(self.temp)
-
-
-    def set_temp_vars(self, temp):
-        """
-        Calculate temperature-dependent variables for temp given in C
-        """
-        # Absolute temperature (note temp is in deg. C)
-        # T = const.T0 + temp
-        deltaT = temp - self.tnom
-        self._adjIdc = self._idc \
-            * (1. + (self.tc1 + self.tc2 * deltaT) * deltaT)
+#    def set_temp_vars(self, temp):
+#        """
+#        Calculate temperature-dependent variables for temp given in C
+#        """
+#        # Absolute temperature (note temp is in deg. C)
+#        # T = const.T0 + temp
+#        deltaT = temp - self.tnom
+#        self._adjIdc = self._idc \
+#            * (1. + (self.tc1 + self.tc2 * deltaT) * deltaT)
 
     #---------------------------------------------------------------
     # Sources: DC always is always added to TD or FD
     #---------------------------------------------------------------
 
     def get_DCsource(self):
-        return self._adjIdc
+        return self._idc
+
+    def get_FDsource(self):
+        """
+        Returns a tuple with a frequency and a current phasor vectors
+    
+          (fvec, currentVec)
+    
+        """
+        # used if isFDSource = True. fvec is defined by the source
+        # parameters. 
+        
+        # Only one frequency component for sinusoidal wave
+        fvec = np.array([self.freq])
+        currentVec = np.array([cm.rect(self.imag, self._phase)])
+        return (fvec, currentVec)
+
+    def get_AC(self):
+        """ 
+        Returns AC magnitude and phase
+        """
+        return cm.rect(self._acimag, self._phase)
 
 
 

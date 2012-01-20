@@ -19,6 +19,7 @@ from fsolve import solve, NoConvergenceError
 class Analysis(ParamSet):
     """
     DC Operating Point Calculation
+    ++++++++++++++++++++++++++++++
 
     Calculates the DC operating point of a circuit using the nodal
     approach. After the analysis is complete, nodal voltages are saved
@@ -32,6 +33,54 @@ class Analysis(ParamSet):
 
     Convergence parameters for the Newton method are controlled using
     the global variables in ``.options``.
+
+    OP/DC Equations
+    +++++++++++++++
+
+    In the following discussion we assume that :math:`v` is the vector
+    of nodal variables. There are 4 types of devices to consider for
+    DC operating point:
+    
+      1. Linear VCCS: considered in the :math:`G` matrix.
+      
+      2. Nonlinear VCCS: considered in the :math:`I(v)` vector. This and
+         its Jacobian (:math:`dI/dv`) are returned by
+         ``eval_and_deriv()``.
+      
+      3. Frequency-defined devices: their DC contribution is added to
+         the :math:`G` matrix.
+      
+      4. Sources: contribute the source vector, :math:`S`. 
+    
+    The analysis solves the following nonlinear equation iteratively
+    using Newton's method:
+    
+    .. math::
+    
+        G v + I(v) - S = 0
+    
+    The iteration is defined by linearizing :math:`I(v)` as follows:
+
+    .. math::
+
+        G v_{n+1} + I(v_n) + dI(v_n)/dv \, (v_{n+1} - v_n) - S = 0 \; ,
+
+    where the :math:`n` suffix indicated the iteration
+    number. :math:`v_n` is assumed to be known and :math:`v_{n+1}` is
+    the unknown to solve for. The initial guess (:math:`v_0`) is set
+    to the values suggested by the nonlinear devices, if any, or
+    otherwise to zero. The previous equation can be re-arranged as
+    as the following system of linear equations:
+
+    .. math::
+
+         (G + dI(v_n)/dv) \, v_{n+1} = S - I(v_n) + (dI(v_n)/dv) \, v_n \; ,
+
+    This equation can be seen as the nodal equation of a circuit
+    obtained by substituting the nonlinear devices by current sources
+    and transcunductances that are dependent of the guess of the nodal
+    voltages (:math:`v_n`).
+
     """
 
     # antype is the netlist name of the analysis: .analysis tran tstart=0 ...
@@ -112,10 +161,18 @@ class Analysis(ParamSet):
         def getvar(termname):
             return circuit.termDict[termname].nD_vOP
 
+        def getterm(termname):
+            return circuit.termDict[termname]
+
+        def getdev(elemname):
+            return circuit.elemDict[elemname]
+
         if self.shell:
             ipython_drop("""
 Available commands:
-    getvar(<terminal>) returns variable at <terminal>
+    getvar(<terminal name>) returns variable at <terminal name>
+    getterm(<terminal name>) returns terminal reference
+    getdev(<device name>) returns device reference
 """, globals(), locals())
 
 

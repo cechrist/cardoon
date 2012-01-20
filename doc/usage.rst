@@ -110,17 +110,23 @@ one circuit element, an analysis to perform or another command.
       <element type>:<name> <node list> [<model>] <parameter list>
 
   <model> is optional. Parameters specified in the element line
-  override parameters in model. In this example, ``tc1`` is set to
-  1e-5::
+  override parameters in model. In the following example, ``tc1`` is
+  set to 1e-5::
 
       res:r1 1 gnd model = mymodel r=50. tc1=1e-5
       .model mymodel res (tc1=1e-4)
+
+  Elements are documented in the :doc:`device_library`.
 
 * Analysis lines::
 
      .analysis <analysis type> <parameter list>
 
-  Example::
+  Available analyses are documented in the :doc:`analysis_library`.
+
+  Examples::
+
+      .analysis ac start=.1GHz stop=10GHz sweep_num=200 log=True shell=0
 
       .analysis testdev plot=1 ports_bias = [.7V] sweep_port=0 \
       start = .1V stop= .8V sweep_num=1100 device = diode:d2 \
@@ -185,12 +191,12 @@ one circuit element, an analysis to perform or another command.
     .plot <type> <list of terminals>
 
   In the examples, ``dc`` and ``tran`` are the type of output to
-  plot. Planned types are the following: ``dc``, ``ac``, ``tran``,
-  ``hb`` (only ``dc`` implemented at this time). Other types may be
-  implemented in the future. Each recognized plot line generates a new
-  figure. Results stored in terminals listed in a single plot line are
-  grouped in a single figure. If an analysis does not recognize the
-  plot type, the request is ignored.
+  plot. Some possible types are the following: ``dc``, ``ac_mag``,
+  ``ac_phase``, ``tran``. Check the :doc:`analysis_library` to see what
+  types of requests are accepted by each analysis.  Each recognized
+  plot line generates a new figure. Results stored in terminals listed
+  in a single plot line are grouped in a single figure. If an analysis
+  does not recognize a request type, the request is ignored.
 
 
 Generating this documentation

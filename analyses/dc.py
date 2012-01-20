@@ -5,8 +5,6 @@
 .. module:: dc
 .. moduleauthor:: Carlos Christoffersen
 
-*****   Untested   *****
-
 """
 
 from __future__ import print_function
@@ -22,6 +20,7 @@ import matplotlib.pyplot as plt
 class Analysis(ParamSet):
     """
     DC Sweep Calculation
+    ++++++++++++++++++++
 
     Calculates a DC sweep of a circuit using the nodal approach. After
     the analysis is complete, nodal voltages are saved in circuit and
@@ -33,7 +32,13 @@ class Analysis(ParamSet):
     the global variables in ``.options``.
 
     One plot window is generated for each ``.plot`` statement. Use
-    'dc' type for this analysis.
+    ``dc`` request type for this analysis.
+
+    DC Equations
+    ++++++++++++
+
+    The formulation is the same as for the OP analysis.
+
     """
 
     # antype is the netlist name of the analysis: .analysis tran tstart=0 ...

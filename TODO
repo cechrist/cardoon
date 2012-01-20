@@ -1,13 +1,12 @@
 
-Action Plan
------------
+Action Plan (TODO file)
+-----------------------
 
-* Consider adding next_event() for TD sources
-
-* Implement Transient/AC analysis
+* Implement Transient analysis
 
 * Add support for convolution of freq-defined elements
 
+* Add sparse matrix support
 
 Longer term:
 

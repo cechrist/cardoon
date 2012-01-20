@@ -505,14 +505,20 @@ Must provide the following arguments/functions:
            # return current at ctime
 	   pass
       
-       def get_FDsource(self, fvec):
+       def get_FDsource(self):
            """
-	   fvec: frequency vector
-	   May not work for f=0
+	   Returns a tuple with a frequency and a current phasor vectors
+
+	   	   (fvec, currentVec)
+
            """
-           # used if isFDSource = True
-           # should return a np.array with currents for each frequency
-	   pass
+           # used if isFDSource = True. fvec is defined by the source
+           # parameters. 
+
+	   # Example for cos wave:
+	   fvec = np.array([self.freq])
+	   currentVec = np.array([self.magnitude], dtype=complex)
+	   return (fvec, currentVec)
 
    These functions are used with the following conventions:
 
@@ -528,6 +534,24 @@ Must provide the following arguments/functions:
        dimensions. The interface may have to be extended to handle
        that. The safest approach seems to be to define a new function
        for each case.
+
+   Optionally, some time-domain sources may implement the following
+   function to help controlling time-step size::
+   
+       def get_next_event(self, ctime):
+           """
+           Returns time of next discontinuity in function/derivative
+           """
+           pass
+
+   Also optionally, frequency-domain sources may implement the
+   following function to be used for AC analysis::
+
+       def get_AC(self):
+           """ 
+           Returns AC magnitude and phase
+           """
+           return cm.rect(self._acmag, self._phase)
 
 
 Linear frequency-defined 

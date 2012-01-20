@@ -169,9 +169,6 @@ class Device(cir.Element):
     isNonlinear = True
     vPortGuess = np.array([0.])
 
-    # Nonlinear device attributes (defined in process_params())
-    qsOutPorts = [ ]
-
     # Define parameters (note most parameters defined in Junction)
     paramDict = dict(
         cir.Element.tempItem,
@@ -229,6 +226,7 @@ class Device(cir.Element):
             self.noisePorts = [(0, 1)]
             self.controlPorts = [(0, 1)]
 
+        self.qsOutPorts = [ ]
         self._qd = False
         if self.tt or self.cj0:
             # Add charge source (otherwise the charge calculation is ignored)

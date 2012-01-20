@@ -15,8 +15,8 @@ Example (from netlist)::
 
     mosacm:m1n <nodes> <parameters>
 
-Making the device model recognized by this package
---------------------------------------------------
+Making a device model to be recognized by this package
+------------------------------------------------------
 
 Suppose the new model is implemented in a file named
 ``newmodel.py``. Save this file in the ``devices`` directory and edit
@@ -35,7 +35,7 @@ import autoThermal
 # Regular 'netlist' elements must be listed here
 netElemList = ['mosACM', 'resistor', 'capacitor', 'inductor', 'idc', 'vdc', 
                'diode', 'svdiode', 'mosEKV', 'bjt', 'svbjt', 
-               'tlinpy4', 'tlinps4']
+               'tlinpy4', 'tlinps4', 'isin', 'vsin']
 
 # Add here any modules to be imported in addition to netElemList
 __all__ = netElemList + ['cppaddev']

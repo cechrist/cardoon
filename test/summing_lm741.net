@@ -5,9 +5,9 @@
 * Modifications: removed substrate connections (not used anyway)
 
 ***Input***
-vdc:v2 153 0 vdc=1.
+vsin:v2 153 0 vdc=1. acmag=.1
 res:r2s 153 154 r=10.
-vdc:v1 151 0 
+vsin:v1 151 0 acmag=.2
 res:r1s 151 152 r=10.
 
 res:r1ext 152 202 r=5e3
@@ -115,9 +115,12 @@ bf=50 br=4 vaf=50 tf=30e-9 cje=0.3e-12 cjc=1e-12 \
 ne=0.5 nc=0.5 tr=3000e-9 vje=0.55 vjc=0.55 rc=100  re=10)
 
 *.analysis op intvars=0
-.analysis dc device=vdc:v1 param=vdc start=-2. stop=2. sweep_num=50 
-.options maxiter=300 gyr=1e-5 maxdelta=10.
+*.analysis dc device=vsin:v1 param=vdc start=-2. stop=2. sweep_num=50 
+.analysis ac start=100. stop=1MEG sweep_num=100 log=True
+.options maxiter=300 gyr=1e-5 maxdelta=5.
 
 .plot dc 153 151 23
+.plot ac_dB 153 151 23
+.plot ac_phase 23
 
 .end

@@ -1,12 +1,22 @@
 # Simple netlist with transmission line (test of nsect parameter)
 
-idc:i1 gnd 20 idc=2m
-res:r1 20 2 r=10k
-tlinpy4:tline1 2 gnd 3 gnd nsect=10 tand=1e-3
-res:r2 3 gnd r=1k
-#svdiode:d1 3 gnd
+isin:i1 gnd 4 idc=2m acmag=1.
+res:r1 4 2 r=100
+tlinpy4:tline1 2 gnd 3 gnd nsect=20 tand=1e-3 z0mag=50
+res:r2 3 gnd r=100
+svdiode:d1 3 gnd cj0=1e-12
 
-.analysis op elemop=True
+isin:i10 gnd 40 idc=2m acmag=1.
+res:r10 40 20 r=100
+tlinpy4:tline10 20 gnd 30 gnd tand=1e-3 z0mag=50
+res:r20 30 gnd r=100
+svdiode:d10 30 gnd cj0=1e-12
+
+#.analysis op elemop=True shell=1
+.analysis ac start=.1GHz stop=10GHz sweep_num=200 log=True shell=0
+
+.plot ac_mag 2 20
+.plot ac_mag 3 30
 
 .end
 

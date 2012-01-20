@@ -8,8 +8,7 @@ Example of how to use this module
 +++++++++++++++++++++++++++++++++
 
 The following example shows how to create and add devices from the
-point of view of a parser. Later another example from the point of
-view of an analysis will be added::
+point of view of a parser::
 
     import circuit as cir
     from devices import devClass
@@ -53,6 +52,47 @@ view of an analysis will be added::
     dev.override = [('l', 2e-9)] 
     amp1.add_elem(dev)
     amp1.connect(dev, ['in', 'n1'])
+
+The following example taken from ``analyses/nodal.py``. Here ``ckt``
+is a reference to a ``Circuit`` object::
+
+    # get ground node
+    ckt.nD_ref = ckt.get_term(reference)
+
+    # make a list of all non-reference terminals in circuit 
+    ckt.nD_termList = ckt.termDict.values() + ckt.get_internal_terms()
+    # remove ground node from terminal list
+    ckt.nD_termList.remove(ckt.nD_ref)
+    # Assign a number (0-inf) to all nodes. For reference nodes
+    # assign -1 
+    ckt.nD_ref.nD_namRC = -1
+    # Make a list of all elements
+    ckt.nD_elemList = ckt.elemDict.values()
+    # Set RC number of reference terminals to -1
+    for elem in ckt.nD_elemList:
+        if elem.localReference:
+            elem.neighbour[elem.localReference].nD_namRC = -1
+    # For the future: use graph techniques to find the optimum
+    # terminal order
+    for i, term in enumerate(ckt.nD_termList):
+        term.nD_namRC = i
+
+    # Store internal RC numbers for later use
+    for elem in ckt.nD_elemList:
+        elem.nD_intRC = [term.nD_namRC for term in 
+                         elem.neighbour[elem.numTerms:]]
+
+    # Dimension is the number of unknowns to solve for
+    ckt.nD_dimension = len(ckt.nD_termList)
+    # Number of external terminals excluding reference
+    ckt.nd_nterms = len(ckt.termDict.values()) - 1
+
+    # Create specialized element lists
+    ckt.nD_nlinElem = filter(lambda x: x.isNonlinear, ckt.nD_elemList)
+    ckt.nD_freqDefinedElem = filter(lambda x: x.isFreqDefined, ckt.nD_elemList)
+    ckt.nD_sourceDCElem = filter(lambda x: x.isDCSource, ckt.nD_elemList)
+    ckt.nD_sourceTDElem = filter(lambda x: x.isTDSource, ckt.nD_elemList)
+    ckt.nD_sourceFDElem = filter(lambda x: x.isFDSource, ckt.nD_elemList)
 
 
 Notes
@@ -464,12 +504,12 @@ class OutRequest:
 
     Output request consist in: 
 
-      1. Type of of request: dc, ac, tran, etc.
+      1. Type of of request: dc, ac_*, tran, etc.
 
       2. List of variables. For now these are terminal names.
 
     """
-    validTypes = ['dc', 'ac', 'tran', 'hb']
+    validTypes = ['dc', 'ac_mag', 'ac_phase', 'ac_dB', 'tran', 'hb']
 
     def __init__(self, reqtype, varlist):
         if reqtype not in self.validTypes:
