@@ -2,11 +2,8 @@
 Device Library Catalog
 ======================
  
-bjt
----
-
-
-Bipolar Junction Transistor (BJT)
+bjt: Bipolar Junction Transistor
+--------------------------------
 
 This device accepts 3 or 4 terminal connections.
 
@@ -180,16 +177,13 @@ Parameters
  xti          3.0                       IS temperature effect exponent                       
  =========== ============ ============ ===================================================== 
 
-bjt_t
------
 
-Electro-thermal version of bjt (extra thermal port)
+Electro-thermal version with extra thermal port: bjt_t 
 
-cap
----
+cap: Linear Capacitor
+---------------------
 
-
-Linear Capacitor::
+Connection diagram::
 
                || C
   0 o----------||---------o 1
@@ -210,11 +204,10 @@ Parameters
  c            0.0          F            Capacitance                                          
  =========== ============ ============ ===================================================== 
 
-diode
------
+diode: Junction Diode
+---------------------
 
-
-Diode device (based on spice model)::
+Based on the Spice model. Connection diagram::
 
            o  1                           
            |                            
@@ -290,16 +283,11 @@ Parameters
  xti          3.0                       Is temperature exponent                              
  =========== ============ ============ ===================================================== 
 
-diode_t
--------
 
-Electro-thermal version of diode (extra thermal port)
+Electro-thermal version with extra thermal port: diode_t 
 
-idc
----
-
-
-DC current source. 
+idc: DC current source
+----------------------
 
 Includes temperature dependence::
 
@@ -327,11 +315,10 @@ Parameters
  tnom         27.0         C            Nominal temperature                                  
  =========== ============ ============ ===================================================== 
 
-ind
----
+ind: Inductor
+-------------
 
-
-Linear inductor::
+Connection diagram::
 
              __  __  __  _ 
     0       /  \/  \/  \/ \          1
@@ -372,12 +359,10 @@ Parameters
  l            0.0          H            Inductance                                           
  =========== ============ ============ ===================================================== 
 
-isin
-----
+isin: (Co-)Sinusoidal current source
+------------------------------------
 
-
-(Co-)Sinusoidal current source::
-
+Connection diagram::
                        
                ,---,  iout
     0 o-------( --> )---------o 1
@@ -408,11 +393,8 @@ Parameters
  temp         None         C            Device temperature                                   
  =========== ============ ============ ===================================================== 
 
-mosacm
-------
-
-
-Implements a simplified ACM MOSFET model. 
+mosacm: Simplified ACM MOSFET
+-----------------------------
 
 Only (some) DC equations are considered for now.
 Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
@@ -451,18 +433,13 @@ Parameters
  w            1.0e-05      m            Channel width                                        
  =========== ============ ============ ===================================================== 
 
-mosacm_t
---------
 
-Electro-thermal version of mosacm (extra thermal port)
+Electro-thermal version with extra thermal port: mosacm_t 
 
-mosekv
-------
+mosekv: Intrinsic EPFL EKV 2.6 MOSFET
+-------------------------------------
 
-
-Intrinsic EPFL EKV 2.6 MOSFET::
-
-    Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk
+Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
     
              Drain 0
                      o
@@ -594,16 +571,13 @@ Parameters
  xj           1.0e-07      m            Junction depth                                       
  =========== ============ ============ ===================================================== 
 
-mosekv_t
---------
 
-Electro-thermal version of mosekv (extra thermal port)
+Electro-thermal version with extra thermal port: mosekv_t 
 
-res
----
+res: Resistor
+-------------
 
-
-Resistor::
+Connection diagram::
 
                 R
   0 o--------/\/\/\/---------o 1
@@ -638,16 +612,11 @@ Parameters
  w            0.0          m            Width                                                
  =========== ============ ============ ===================================================== 
 
-res_t
------
 
-Electro-thermal version of res (extra thermal port)
+Electro-thermal version with extra thermal port: res_t 
 
-svbjt
------
-
-
-Bipolar Junction Transistor (BJT)
+svbjt: Bipolar Junction Transistor
+----------------------------------
 
 This device accepts 3 or 4 terminal connections.
 
@@ -845,16 +814,13 @@ Parameters
  xti          3.0                       IS temperature effect exponent                       
  =========== ============ ============ ===================================================== 
 
-svbjt_t
--------
 
-Electro-thermal version of svbjt (extra thermal port)
+Electro-thermal version with extra thermal port: svbjt_t 
 
-svdiode
--------
+svdiode: State-Variable-Based Diode
+-----------------------------------
 
-
-State-Variable-Based Diode device (based on Spice model)::
+Based on spice model. Connection diagram::
 
         o  1                           
         |                            
@@ -936,17 +902,13 @@ Parameters
  xti          3.0                       Is temperature exponent                              
  =========== ============ ============ ===================================================== 
 
-svdiode_t
----------
 
-Electro-thermal version of svdiode (extra thermal port)
+Electro-thermal version with extra thermal port: svdiode_t 
 
-tlinps4
--------
+tlinps4: 4-Terminal Physical Transmission Line
+----------------------------------------------
 
-
-4-terminal physical transmission line model using scattering
-parameters::
+This model uses scattering parameters::
 
          0 o===================================o 2
                            Z0
@@ -1011,12 +973,10 @@ Parameters
  z0mag        50.0         Ohms         Magnitude of characteristic impedance                
  =========== ============ ============ ===================================================== 
 
-tlinpy4
--------
+tlinpy4: 4-Terminal Physical Transmission Line
+----------------------------------------------
 
-
-4-terminal physical transmission line model using Y parameters::
-
+This model uses Y parameters::
 
          0 o===================================o 2
                            Z0
@@ -1071,13 +1031,10 @@ Parameters
  z0mag        50.0         Ohms         Magnitude of characteristic impedance                
  =========== ============ ============ ===================================================== 
 
-vdc
----
+vdc: DC voltage source
+----------------------
 
-
-DC voltage source. 
-
-Includes temperature dependence in vdc only::
+Includes temperature dependence in vdc but not in rint::
                       
                ,---,  vdc       Rint
    0 o--------( - + )---------/\/\/\/\--------o 1
@@ -1121,13 +1078,10 @@ Parameters
  vdc          0.0          V            DC voltage                                           
  =========== ============ ============ ===================================================== 
 
-vsin
-----
+vsin: (Co-)Sinusoidal voltage source
+------------------------------------
 
-
-(Co-)Sinusoidal voltage source. 
-
-Includes temperature dependence in vdc only::
+Connection diagram::
                       
                ,---,  vout       Rint
    0 o--------( - + )---------/\/\/\/\--------o 1

@@ -15,7 +15,10 @@ import cppaddev as ad
 
 class Device(cir.Element):
     """
-    Resistor::
+    Resistor
+    --------
+
+    Connection diagram::
 
                     R
       0 o--------/\/\/\/---------o 1

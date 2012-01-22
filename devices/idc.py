@@ -12,7 +12,8 @@ import circuit as cir
 
 class Device(cir.Element):
     """
-    DC current source. 
+    DC current source
+    -----------------
 
     Includes temperature dependence::
 

@@ -114,7 +114,10 @@ class SVJunction:
 #-----------------------------------------------------------------------
 class Device(cir.Element):
     """
-    State-Variable-Based Diode device (based on Spice model)::
+    State-Variable-Based Diode
+    --------------------------
+
+    Based on spice model. Connection diagram::
 
             o  1                           
             |                            

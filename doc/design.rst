@@ -63,7 +63,7 @@ terminals, which (as explained above) are not present in the
 
 
 Internal Terminal Indexing
-++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Internal terminals could be internally indexed by its position in the
 terminal list, but for devices that are derived from a base device
@@ -77,11 +77,11 @@ return the internal terminal index.
 
 This solution however would not work for a 'hardwired'
 subcircuit. Hardwired subcircuits would also present other problems
-with parameter lists and can easily be replacede with regular
-subcircuits. For this reason no support for them is planned. Just for
-the record a possible solution is presented here: have a function in
-the Element class that returns terminal indexes. External terminal
-indexes would also change in this case::
+with parameter lists. As hardwired subcircuits can be replaced with
+regular subcircuits, no support for them is planned. Just for the
+record a possible solution is presented here: have a function in the
+Element class that returns terminal indexes. External terminal indexes
+would also change in this case::
 
      class Element:
      	   ...
@@ -153,6 +153,105 @@ From the above considerations the current solution requires
 re-visiting all elements and re-generating all equations.  One work
 around is to create a list of elements to be updated when needed in
 the analysis code.
+
+
+Planned Transient Analysis Equations
+------------------------------------
+
+In the following discussion we assume that :math:`v(t)` is the vector
+of nodal variables. There are 4 types of devices to consider for
+transient analysis:
+
+  1. Linear VCCS/QS: considered in the :math:`G` and :math:`C`
+     matrices, respectively.
+  
+  2. Nonlinear VCCS/QS: contribute the :math:`i(v)` and the
+     :math:`q(v)` vector functions. These and their Jacobian
+     (:math:`di/dv` and :math:`dq/dv`) are returned by
+     ``eval_and_deriv()``.
+  
+  3. Frequency-defined devices: contribute the complex,
+     frequency-dependent :math:`Y(f)` matrix. The corresponding
+     impulse-response matrix is denoted :math:`Y(t)`
+  
+  4. Sources: contribute a time-dependent source vector, :math:`s(t)`.
+
+Transient analysis solves the following nonlinear
+algebraic-integral-differential equation:
+
+.. math::
+
+    G v + C \dot{v} + i(v) + \dot{q}(v) + 
+      \int_{0}^t Y(\tau) v(t - \tau) d\tau
+      = s(t)  \; ,
+
+where the dot is used to denote derivative with respect to time.  An
+integration method (such as Backward Euler (BE) or Trapezoidal
+Integration) is applied to transform the differential equation into a
+difference equation by discretizing time and approximating derivatives
+with respect to time. For example, using the BE rule:
+
+.. math::
+
+    \dot{v}(t_n) = \dot{v}_n \approx \frac{v_n - v_{n-1}}{h} \; ,
+
+here, the subscript :math:`n` denotes the time sample number and
+:math:`h` is the time step size. In general,
+
+.. math::
+
+    \dot{v_n} \approx a v_n + b v_{n-1} + c v_{n-2} + \dots \; ,
+
+    \dot{q_n} \approx a q_n + b q_{n-1} + c q_{n-2} + \dots \; ,
+
+where :math:`a`, :math:`b` and :math:`c` are constants that depend on
+the time step size and the integration method. Substituting dotted
+variables and discretizing the convolution operation the resulting
+circuit equation is the follwing:
+
+.. math::
+
+    (G + Y_0) v_n + i_n + a (C v_n + q_n) = r_n \; ,
+
+with
+
+.. math::
+
+   r_n = s_n 
+         - \sum_{m=1}^\infty \textbf{Y}_m v_{n-m}
+         - b (C v_{n-1} + q_{n-1}) 
+         - c (C v_{n-2} + q_{n-2}) - \dots \; ,
+
+where :math:`Y_m = Y(t_m)` and :math:`Y_0 = Y(0)`. Note :math:`r_n` is
+a known vector at the :math:`n^{th}` time step. The unknown in this
+nonlinear equation (:math:`v_n`) is iteratively solved using Newton's
+Method. Iterations are defined by linearizing :math:`i(v)` and
+:math:`q(v)` as follows:
+
+.. math::
+
+    (G + Y_0) v^{k+1}_n + i^k_n + \frac{di}{dv} (v^{k+1}_n - v^k_n) + 
+      a \left[ C v^{k+1}_n + q^k_n + \frac{dq}{dv} (v^{k+1}_n - v^k_n)
+        \right] = r_n \; ,
+
+where the :math:`k` subscript denotes the Newton iteration number.
+This equation is re-arranged as follows:
+
+.. math::
+
+    \left[ 
+        (G + Y_0 + \frac{di}{dv}) + a (C + \frac{dq}{dv}) 
+           \right] v^{k+1}_n =
+      r_n - i^k_n - a q^k_n + (\frac{di}{dv} + a \frac{dq}{dv}) v^k_n \; ,
+
+again, the right-hand side of this equation is known at the :math:`k`
+iteration and so :math:`v^{k+1}_n` can be found by solving a linear
+system of equations. Iterations stop when 
+
+.. math::
+
+   | v^{k+1}_n - v^k_n | < \epsilon
+
 
 
 .. include:: ../TODO

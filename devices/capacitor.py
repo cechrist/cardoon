@@ -13,7 +13,10 @@ import circuit as cir
 
 class Device(cir.Element):
     """
-    Linear Capacitor::
+    Linear Capacitor
+    ----------------
+
+    Connection diagram::
 
                    || C
       0 o----------||---------o 1

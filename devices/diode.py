@@ -100,7 +100,10 @@ class Junction:
 #-----------------------------------------------------------------------
 class Device(cir.Element):
     """
-    Diode device (based on spice model)::
+    Junction Diode
+    --------------
+
+    Based on the Spice model. Connection diagram::
     
                o  1                           
                |                            

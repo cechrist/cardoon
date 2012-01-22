@@ -19,8 +19,8 @@ import matplotlib.pyplot as plt
 
 class Analysis(ParamSet):
     """
-    AC Sweep Calculation
-    ++++++++++++++++++++
+    AC Sweep
+    --------
 
     Calculates a AC sweep of a circuit using the nodal approach. After
     the analysis is complete, nodal voltages are saved in circuit and
@@ -36,8 +36,14 @@ class Analysis(ParamSet):
     following request types for this analysis: ``ac_mag``,
     ``ac_phase`` or ``ac_dB``.
 
-    AC Equations
-    ++++++++++++
+    Example::
+
+        .analysis ac start=100. stop=1MEG num=100 log=True
+        .plot ac_dB 153 151 23
+        .plot ac_phase 23
+
+    Formulation
+    +++++++++++
 
     In the following discussion we assume that :math:`v` is the vector of
     nodal variables in time domain and :math:`V(f)` is the same vector in
@@ -63,7 +69,8 @@ class Analysis(ParamSet):
     
     .. math::
     
-        [(G + dI/dv) + j 2 \pi f (C + dQ/dv) + Y(f)] \, V(f) = S(f)
+        \\left[ (G + \\frac{dI}{dv}) + 
+             j 2 \pi f (C + \\frac{dQ}{dv}) + Y(f) \\right] \, V(f) = S(f)
 
     """
 
@@ -75,7 +82,7 @@ class Analysis(ParamSet):
         start = ('Frequency sweep start value', 'Hz', float, 1.),
         stop = ('Frequency sweep stop value', 'Hz', float, 10.),
         log = ('Use logarithmic scale', '', bool, False),
-        sweep_num = ('Number of points in sweep', '', int, 50),
+        num = ('Number of points in sweep', '', int, 50),
         shell = ('Drop to ipython shell after calculation', '', bool, False)
         )
 
@@ -119,12 +126,12 @@ class Analysis(ParamSet):
         if self.log:
             fvec = np.logspace(start = np.log10(self.start), 
                                stop = np.log10(self.stop), 
-                               num = self.sweep_num)
+                               num = self.num)
             pltfunc = plt.semilogx
         else:
             fvec = np.linspace(start = self.start, 
                                stop = self.stop, 
-                               num = self.sweep_num)
+                               num = self.num)
             pltfunc = plt.plot
 
         # Perform analysis

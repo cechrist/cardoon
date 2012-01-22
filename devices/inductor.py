@@ -12,7 +12,10 @@ import circuit as cir
 
 class Device(cir.Element):
     """
-    Linear inductor::
+    Inductor
+    --------
+
+    Connection diagram::
 
                  __  __  __  _ 
         0       /  \/  \/  \/ \          1

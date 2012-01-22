@@ -15,7 +15,8 @@ from analysis import AnalysisError, ipython_drop
 
 class Analysis(ParamSet):
     """
-    Test equations of one nonlinear device
+    Test Equations Of a Nonlinear Device
+    ------------------------------------
 
     One advantage of using this method over a DC sweep is that no
     Newton iterations are needed. The following internal functions are
@@ -30,6 +31,13 @@ class Analysis(ParamSet):
 
     After completion the analysis drops to an interactive shell if the
     ``shell`` global variable is set to ``True``
+
+    Example::
+
+        .analysis testdev plot=1 ports_bias = [3V, 3.V, 0V] sweep_port=1 \ 
+        	  start = 0V stop= 3V sweep_num=1000 device = mosekv:m1 \ 
+        	  param = temp param_val = [-10, 27, 50]
+
     """
 
     # antype is the netlist name of the analysis: .analysis tran tstart=0 ...

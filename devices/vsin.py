@@ -13,9 +13,10 @@ import circuit as cir
 
 class Device(cir.Element):
     """
-    (Co-)Sinusoidal voltage source. 
+    (Co-)Sinusoidal voltage source
+    ------------------------------
 
-    Includes temperature dependence in vdc only::
+    Connection diagram::
                           
                    ,---,  vout       Rint
        0 o--------( - + )---------/\/\/\/\--------o 1

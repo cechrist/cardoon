@@ -79,31 +79,37 @@ Module documentation
 --------------------
 
 Documentation for the device library catalog goes in the ``Device``
-class docstring in reStructuredText (reST) format. If the device
-contains internal nodes, document the internal topology here.  Example
-for diode device::
+class docstring in reStructuredText (reST) format. Use an underlined
+main title, to be included as an entry in the :doc:`device_library`.
+If the device contains internal nodes, document the internal topology
+here.  Example for diode device::
 
-        Diode device (based on spice model)::
-        
-                   o  1                           
-                   |                            
-                 --+--
-                  / \     
-                 '-+-' 
-                   |                          
-                   o  0 
+    """
+    Junction Diode
+    --------------
+
+    Model based on spice model. Connection diagram::
     
-        Includes depletion and diffusion charges.
+               o  1                           
+               |                            
+             --+--
+              / \     
+             '-+-' 
+               |                          
+               o  0 
     
-        Netlist examples::
+    Includes depletion and diffusion charges.
     
-            diode:d1 1 0 isat=10fA cj0=20fF
+    Netlist examples::
     
-            # Electrothermal device
-            diode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
+        diode:d1 1 0 isat=10fA cj0=20fF
     
-            # Model statement
-            .model dmodel1 diode (cj0 = 10pF tt=1ps)
+        # Electrothermal device
+        diode_t:d2 2 3 1000 gnd cj0=10pF tt=1e-12 rs=100 bv = 4.
+    
+        # Model statement
+        .model dmodel1 diode (cj0 = 10pF tt=1ps)
+    """
 
 
 Attributes and functions description

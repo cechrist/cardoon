@@ -1,7 +1,7 @@
 # Test of a transistor device
 
 .options temp=29.1439  maxdelta=500
-.analysis dc device=bjt:q1 param=bf start=10 stop=150 sweep_num=200
+.analysis dc device=bjt:q1 param=bf start=10 stop=150 num=200
 #.analysis op
 
 .model t122 bjt (type=npn isat=0.480e-15 nf=1.008 bf=99.655 vaf=90.000 \

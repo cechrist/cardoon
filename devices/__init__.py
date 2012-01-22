@@ -33,8 +33,8 @@ That's all!
 import autoThermal
 
 # Regular 'netlist' elements must be listed here
-netElemList = ['mosACM', 'resistor', 'capacitor', 'inductor', 'idc', 'vdc', 
-               'diode', 'svdiode', 'mosEKV', 'bjt', 'svbjt', 
+netElemList = ['resistor', 'capacitor', 'inductor', 'idc', 'vdc', 
+               'diode', 'svdiode', 'mosEKV', 'mosACM', 'bjt', 'svbjt', 
                'tlinpy4', 'tlinps4', 'isin', 'vsin']
 
 # Add here any modules to be imported in addition to netElemList

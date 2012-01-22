@@ -16,7 +16,8 @@ from diode import Junction
 def extrinsic_bjt(IBJT):
     class BJT(IBJT):
         """
-    Bipolar Junction Transistor (BJT)
+    Bipolar Junction Transistor
+    ---------------------------
 
     This device accepts 3 or 4 terminal connections.
 

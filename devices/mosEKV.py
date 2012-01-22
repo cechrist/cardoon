@@ -14,9 +14,10 @@ import cppaddev as ad
 
 class Device(cir.Element):
     """
-    Intrinsic EPFL EKV 2.6 MOSFET::
+    Intrinsic EPFL EKV 2.6 MOSFET
+    -----------------------------
 
-        Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk
+    Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
         
                  Drain 0
                          o

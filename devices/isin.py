@@ -13,8 +13,10 @@ import circuit as cir
 
 class Device(cir.Element):
     """
-    (Co-)Sinusoidal current source::
+    (Co-)Sinusoidal current source
+    ------------------------------
 
+    Connection diagram::
                            
                    ,---,  iout
         0 o-------( --> )---------o 1

@@ -12,9 +12,10 @@ import circuit as cir
 
 class Device(cir.Element):
     """
-    DC voltage source. 
+    DC voltage source
+    -----------------
 
-    Includes temperature dependence in vdc only::
+    Includes temperature dependence in vdc but not in rint::
                           
                    ,---,  vdc       Rint
        0 o--------( - + )---------/\/\/\/\--------o 1

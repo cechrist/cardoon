@@ -13,7 +13,7 @@ res:r20 30 gnd r=100
 svdiode:d10 30 gnd cj0=1e-12
 
 #.analysis op elemop=True shell=1
-.analysis ac start=.1GHz stop=10GHz sweep_num=200 log=True shell=0
+.analysis ac start=.1GHz stop=10GHz num=200 log=True shell=0
 
 .plot ac_mag 2 20
 .plot ac_mag 3 30

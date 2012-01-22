@@ -19,8 +19,8 @@ import matplotlib.pyplot as plt
 
 class Analysis(ParamSet):
     """
-    DC Sweep Calculation
-    ++++++++++++++++++++
+    DC Sweep
+    --------
 
     Calculates a DC sweep of a circuit using the nodal approach. After
     the analysis is complete, nodal voltages are saved in circuit and
@@ -34,8 +34,17 @@ class Analysis(ParamSet):
     One plot window is generated for each ``.plot`` statement. Use
     ``dc`` request type for this analysis.
 
-    DC Equations
-    ++++++++++++
+    Example::
+
+        .analysis dc device=vsin:v1 param=vdc start=-2. stop=2. num=50 
+
+        # Some options that affect convergence properties
+        .options maxiter=300 gyr=1e-5 maxdelta=5.
+        
+        .plot dc 153 151 23
+
+    Formulation
+    +++++++++++
 
     The formulation is the same as for the OP analysis.
 
@@ -50,7 +59,7 @@ class Analysis(ParamSet):
         param = ('Device parameter to sweep', '', str, ''),
         start = ('Sweep start value', 'V', float, 0.),
         stop = ('Sweep stop value', 'V', float, 0.),
-        sweep_num = ('Number of points in sweep', '', int, 50),
+        num = ('Number of points in sweep', '', int, 50),
         verbose = ('Show iterations for each point', '', bool, False),
         shell = ('Drop to ipython shell after calculation', '', bool, False)
         )
@@ -107,13 +116,13 @@ class Analysis(ParamSet):
         x = dc.get_guess()
 
         sweepvar = np.linspace(start = self.start, stop = self.stop, 
-                              num = self.sweep_num)
+                              num = self.num)
         circuit.dC_sweep = sweepvar
         circuit.dC_var = 'Device: ' + dev.nodeName \
             + '  Parameter: ' + self.param
         circuit.dC_unit = pinfo[1]
         
-        xVec = np.zeros((circuit.nD_dimension, self.sweep_num))
+        xVec = np.zeros((circuit.nD_dimension, self.num))
         tIter = 0
         tRes = 0.
         for i, value in enumerate(sweepvar):
@@ -151,7 +160,7 @@ class Analysis(ParamSet):
         print('Average residual: {0}\n'.format(aver))
 
         # Save results in nodes
-        circuit.nD_ref.dC_v = np.zeros(self.sweep_num)
+        circuit.nD_ref.dC_v = np.zeros(self.num)
         for i,term in enumerate(circuit.nD_termList):
             term.dC_v = xVec[i,:]
 

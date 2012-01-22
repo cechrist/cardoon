@@ -1,7 +1,7 @@
 # CMOS inverter chain
 
 .options maxdelta = 2.
-.analysis dc device=vdc:vin param=vdc start=0 stop=3V verbose=0 sweep_num=100
+.analysis dc device=vdc:vin param=vdc start=0 stop=3V verbose=0 num=100
 
 vdc:vdd 1 gnd vdc=3V 
 vdc:vin in gnd 

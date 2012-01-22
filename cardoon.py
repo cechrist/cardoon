@@ -57,11 +57,10 @@ def device_catalog():
         print(" ", file=f)
         # loop through all devices
         for key in sorted(devices.devClass.iterkeys()):
-            print(key, file=f)
-            print('-' * len(key) + '\n', file=f)
             if key[-2:] == '_t':
-                print('Electro-thermal version of', key[:-2], 
-                      '(extra thermal port)\n', file=f)
+                #print('-' * len(key) + '\n', file=f)
+                print('\nElectro-thermal version with extra thermal port:', 
+                      key, '\n', file=f)
                 continue
             val = devices.devClass[key]
             # Print doc string
@@ -69,13 +68,20 @@ def device_catalog():
             if hasattr(val,'extraDoc'):
                 doc += val.extraDoc
             doc = doc.split(os.linesep)
+            # Remove empty first line 
+            doc.pop(0)
+            # Add header with netlist name to title
+            print(key + ': ' + doc.pop(0)[4:], file=f)
+            print('-' * (len(key)+2) + doc.pop(0)[4:], file=f)
             for line in doc:
               print(line[4:], file=f)
+
             print('\nParameters', file=f)
             print('++++++++++\n', file=f)
             # create parameter set from device dictionary
             pset = ps.ParamSet(val.paramDict)
             print(pset.describe_parameters(), file=f)
+            
 
 def analysis_catalog():
     """
@@ -91,11 +97,14 @@ def analysis_catalog():
         print(" ", file=f)
         # loop through all analyses
         for key in sorted(analyses.anClass.iterkeys()):
-            print(key, file=f)
-            print('-' * len(key) + '\n', file=f)
             val = analyses.anClass[key]
             # Print doc string
             doc = val.__doc__.split(os.linesep)
+            # Remove empty first line 
+            doc.pop(0)
+            # Add header with netlist name to title
+            print(key + ': ' + doc.pop(0)[4:], file=f)
+            print('-' * (len(key)+2) + doc.pop(0)[4:], file=f)
             for line in doc:
               print(line[4:], file=f)
             print('\nParameters', file=f)

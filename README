@@ -22,15 +22,19 @@ A secondary objective is to add features and make the program
 efficient enough to be useful for general use, if possible.
 
 The program is still at the early development stage but it has already
-enough functionality to be useful for some tasks.  State-variable
-nonlinear device modeling (in the fREEDA sense) is supported. A
-state-variable PN junction model is included. This junction is used to
-implement a diode (svdiode) and a bipolar transistor device
-(svbjt). Regular voltage controlled models for the diode and BJT are
-also available.  Electro-thermal models are automatically generated
-from electrical models.  Nonlinear models use automatic
-differentiation for Jacobian calculation. In addition, automatic
-differentiation can also be used to calculate sensitivities.
+enough functionality to be useful for some tasks. If you plan to use
+this program please be aware that as it is developed interfaces may
+have to be changed, sometimes *breaking compatibility with earlier
+versions*.
+
+State-variable nonlinear device modeling (in the fREEDA sense) is
+supported. A state-variable PN junction model is included. This
+junction is used to implement a diode (svdiode) and a bipolar
+transistor device (svbjt). Regular voltage controlled models for the
+diode and BJT are also available.  Electro-thermal models are
+automatically generated from electrical models.  Nonlinear models use
+automatic differentiation for Jacobian calculation. In addition,
+automatic differentiation can also be used to calculate sensitivities.
 
 Please see the list of supported analysis types in the analysis
 library catalog. The immediate plan is to implement basic

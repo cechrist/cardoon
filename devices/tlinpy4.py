@@ -15,8 +15,10 @@ from globalVars import const, glVar
 
 class Device(cir.Element):
     """
-    4-terminal physical transmission line model using Y parameters::
-    
+    4-Terminal Physical Transmission Line
+    -------------------------------------
+
+    This model uses Y parameters::
 
              0 o===================================o 2
                                Z0

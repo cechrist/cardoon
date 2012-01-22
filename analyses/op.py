@@ -18,8 +18,8 @@ from fsolve import solve, NoConvergenceError
 
 class Analysis(ParamSet):
     """
-    DC Operating Point Calculation
-    ++++++++++++++++++++++++++++++
+    DC Operating Point
+    ------------------
 
     Calculates the DC operating point of a circuit using the nodal
     approach. After the analysis is complete, nodal voltages are saved
@@ -34,8 +34,12 @@ class Analysis(ParamSet):
     Convergence parameters for the Newton method are controlled using
     the global variables in ``.options``.
 
-    OP/DC Equations
-    +++++++++++++++
+    Example::
+
+        .analysis op intvars=1 shell=1
+
+    OP/DC formulation
+    +++++++++++++++++
 
     In the following discussion we assume that :math:`v` is the vector
     of nodal variables. There are 4 types of devices to consider for
@@ -43,43 +47,44 @@ class Analysis(ParamSet):
     
       1. Linear VCCS: considered in the :math:`G` matrix.
       
-      2. Nonlinear VCCS: considered in the :math:`I(v)` vector. This and
-         its Jacobian (:math:`dI/dv`) are returned by
+      2. Nonlinear VCCS: considered in the :math:`i(v)` vector. This and
+         its Jacobian (:math:`di/dv`) are returned by
          ``eval_and_deriv()``.
       
       3. Frequency-defined devices: their DC contribution is added to
          the :math:`G` matrix.
       
-      4. Sources: contribute the source vector, :math:`S`. 
+      4. Sources: contribute the source vector, :math:`s`. 
     
     The analysis solves the following nonlinear equation iteratively
     using Newton's method:
     
     .. math::
     
-        G v + I(v) - S = 0
+        G v + i(v) - s = 0
     
-    The iteration is defined by linearizing :math:`I(v)` as follows:
+    The iteration is defined by linearizing :math:`i(v)` as follows:
 
     .. math::
 
-        G v_{n+1} + I(v_n) + dI(v_n)/dv \, (v_{n+1} - v_n) - S = 0 \; ,
+        G v_{k+1} + i_k + \\frac{di_k}{dv} \, (v_{k+1} - v_k) - s = 0 \; ,
 
-    where the :math:`n` suffix indicated the iteration
-    number. :math:`v_n` is assumed to be known and :math:`v_{n+1}` is
+    where the :math:`k` suffix indicates the iteration
+    number. :math:`v_k` is assumed to be known and :math:`v_{k+1}` is
     the unknown to solve for. The initial guess (:math:`v_0`) is set
     to the values suggested by the nonlinear devices, if any, or
-    otherwise to zero. The previous equation can be re-arranged as
-    as the following system of linear equations:
+    otherwise to zero. The previous equation can be re-arranged as as
+    the following system of linear equations:
 
     .. math::
 
-         (G + dI(v_n)/dv) \, v_{n+1} = S - I(v_n) + (dI(v_n)/dv) \, v_n \; ,
+         (G + \\frac{di_k}{dv}) \, v_{k+1} = 
+                s - i_k + \\frac{di_k}{dv} \, v_k \; ,
 
     This equation can be seen as the nodal equation of a circuit
     obtained by substituting the nonlinear devices by current sources
-    and transcunductances that are dependent of the guess of the nodal
-    voltages (:math:`v_n`).
+    and transcunductances that are dependent of the current
+    approximation for the nodal voltages (:math:`v_k`).
 
     """
 

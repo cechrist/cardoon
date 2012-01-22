@@ -4,7 +4,7 @@ vsin:vin 1 0 vdc=2V mag=1. rint=10. phase=0
 res:r1 1 2 r=1k
 cap:c1 2 0 c=10n
 
-.analysis ac start=10. stop=10MEGHz sweep_num=100 log=True shell=0
+.analysis ac start=10. stop=10MEGHz num=100 log=True shell=0
 
 .plot ac_mag 1 2
 .plot ac_phase 1 2

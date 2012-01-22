@@ -6,8 +6,8 @@
 Cardoon Electronic Circuit Simulator
 ====================================
 
-Contents
---------
+User's Manual
+-------------
 
 .. toctree::
    :maxdepth: 2
@@ -15,8 +15,19 @@ Contents
    intro
    usage
    catalogs
-   internal
+
+Developer's Manual
+------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   coding
+   adding_devices
+   circuit_ref
+   design
    references   
+
 
 Indices and tables
 ==================

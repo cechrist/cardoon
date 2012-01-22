@@ -22,7 +22,8 @@ import cppaddev as ad
 
 class Device(cir.Element):
     """
-    Implements a simplified ACM MOSFET model. 
+    Simplified ACM MOSFET
+    ---------------------
 
     Only (some) DC equations are considered for now.
     Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
