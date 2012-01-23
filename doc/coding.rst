@@ -38,4 +38,12 @@ models is automatically generated from the doc string of the
 ``Device`` class. Similarly, for analyses use the doctring from the
 ``Analysis`` class in the corresponding module.
 
+Version Numbers
++++++++++++++++
 
+The initial release of the program was version 0.1.1 and had no basic
+analysis implemented. Starting from version 0.2.dev, versions are finished
+with a ``.dev`` tag to indicate that the program is still being
+developed and interfaces may change.  Version 1.0 will be released
+after the basic analyses (DC/AC/Transient/HB) are implemented and
+validated and program interfaces become stable enough.

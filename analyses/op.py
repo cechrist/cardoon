@@ -17,7 +17,7 @@ from nodalAD import DCNodalAD
 from fsolve import solve, NoConvergenceError
 
 class Analysis(ParamSet):
-    """
+    r"""
     DC Operating Point
     ------------------
 
@@ -67,7 +67,7 @@ class Analysis(ParamSet):
 
     .. math::
 
-        G v_{k+1} + i_k + \\frac{di_k}{dv} \, (v_{k+1} - v_k) - s = 0 \; ,
+        G v_{k+1} + i_k + \frac{di_k}{dv} \, (v_{k+1} - v_k) - s = 0 \; ,
 
     where the :math:`k` suffix indicates the iteration
     number. :math:`v_k` is assumed to be known and :math:`v_{k+1}` is
@@ -78,8 +78,8 @@ class Analysis(ParamSet):
 
     .. math::
 
-         (G + \\frac{di_k}{dv}) \, v_{k+1} = 
-                s - i_k + \\frac{di_k}{dv} \, v_k \; ,
+         (G + \frac{di_k}{dv}) \, v_{k+1} = 
+                s - i_k + \frac{di_k}{dv} \, v_k \; ,
 
     This equation can be seen as the nodal equation of a circuit
     obtained by substituting the nonlinear devices by current sources

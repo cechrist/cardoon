@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 
 class Analysis(ParamSet):
-    """
+    r"""
     AC Sweep
     --------
 
@@ -69,8 +69,8 @@ class Analysis(ParamSet):
     
     .. math::
     
-        \\left[ (G + \\frac{dI}{dv}) + 
-             j 2 \pi f (C + \\frac{dQ}{dv}) + Y(f) \\right] \, V(f) = S(f)
+        \left[ (G + \frac{dI}{dv}) + 
+             j 2 \pi f (C + \frac{dQ}{dv}) + Y(f) \right] \, V(f) = S(f)
 
     """
 
