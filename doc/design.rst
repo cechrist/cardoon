@@ -11,14 +11,15 @@ simulators and improvements that take advantage of the flexibility in
 Python. 
 
 
-Agnostic Simulation-Approach Circuit Representation
----------------------------------------------------
+Formulation-Independent Circuit Representation
+----------------------------------------------
 
 The internal circuit representation and the device library attempt to
-be agnostic regarding to simulation methods. The ``Circuit`` class has
-no methods to obtain nodal voltages or calculate the Jacobian of the
-circuit. This is delegated to other classes that handle particular
-circuit analysis approaches such as nodal, sparse tableau, etc.
+be independent of the formulation used for simulation. The ``Circuit``
+class has no methods to obtain nodal voltages or calculate the
+Jacobian of the circuit. This is delegated to other classes that
+handle particular circuit analysis approaches such as nodal, sparse
+tableau, etc.
 
 Element Interfaces
 ++++++++++++++++++
@@ -182,7 +183,7 @@ algebraic-integral-differential equation:
 .. math::
 
     G v + C \dot{v} + i(v) + \dot{q}(v) + 
-      \int_{0}^t Y(\tau) v(t - \tau) d\tau
+      \int_{0}^\infty Y(\tau) v(t - \tau) d\tau
       = s(t)  \; ,
 
 where the dot is used to denote derivative with respect to time.  An
@@ -196,57 +197,64 @@ with respect to time. For example, using the BE rule:
     \dot{v}(t_n) = \dot{v}_n \approx \frac{v_n - v_{n-1}}{h} \; ,
 
 here, the subscript :math:`n` denotes the time sample number and
-:math:`h` is the time step size. In general,
+:math:`h` is the time step size. For implicit methods in general,
 
 .. math::
 
-    \dot{v_n} \approx a v_n + b v_{n-1} + c v_{n-2} + \dots \; ,
+    \dot{v_n} \approx a_0 v_n + f_{n-1}(v) \; ,
 
-    \dot{q_n} \approx a q_n + b q_{n-1} + c q_{n-2} + \dots \; ,
-
-where :math:`a`, :math:`b` and :math:`c` are constants that depend on
-the time step size and the integration method. Substituting dotted
-variables and discretizing the convolution operation the resulting
-circuit equation is the follwing:
+with :math:`f_{n-1}(v)` being a function that depends on the previous
+samples of :math:`v`:
 
 .. math::
 
-    (G + Y_0) v_n + i_n + a (C v_n + q_n) = r_n \; ,
+    f_{n-1}(v) = a_1 v_{n-1} + a_2 v_{n-2} + \dots \; .
+
+The :math:`a_i; i=0,1,\dots` coefficients depend on the time step size
+and the integration method. Substituting dotted variables and
+discretizing the convolution operation the resulting circuit equation
+is the following:
+
+.. math::
+
+    G_1 v_n + i_1(v_n) = s_1 \; ,
 
 with
 
 .. math::
 
-   r_n = s_n 
-         - \sum_{m=1}^\infty \textbf{Y}_m v_{n-m}
-         - b (C v_{n-1} + q_{n-1}) 
-         - c (C v_{n-2} + q_{n-2}) - \dots \; ,
+   G_1 = G + Y_0 + a_0 C
 
-where :math:`Y_m = Y(t_m)` and :math:`Y_0 = Y(0)`. Note :math:`r_n` is
-a known vector at the :math:`n^{th}` time step. The unknown in this
-nonlinear equation (:math:`v_n`) is iteratively solved using Newton's
-Method. Iterations are defined by linearizing :math:`i(v)` and
-:math:`q(v)` as follows:
+   i_1(v_n) = i(v_n) + a_0 q(v_n)
+
+   s_1 = s_n - \sum_{m=1}^\infty \textbf{Y}_m v_{n-m} 
+             - C f_{n-1}(v) + f_{n-1}(q) \; ,
+
+where :math:`Y_m = Y(t_m)` and :math:`Y_0 = Y(0)`. Note :math:`s_1` is
+a known vector at the :math:`n^{th}` time step. This is the equation
+of a DC circuit with a conductance matrix equal to :math:`G1`, a set
+of nonlinear currents given by the :math:`i_1(v_n)` function and a
+source vector given by :math:`s_1`. The unknown (:math:`v_n`) is
+iteratively solved using Newton's Method (similarly as in OP/DC
+analysis). Iterations are defined by linearizing :math:`i_1(v)` as
+follows:
 
 .. math::
 
-    (G + Y_0) v^{k+1}_n + i^k_n + \frac{di}{dv} (v^{k+1}_n - v^k_n) + 
-      a \left[ C v^{k+1}_n + q^k_n + \frac{dq}{dv} (v^{k+1}_n - v^k_n)
-        \right] = r_n \; ,
+    G_1 v^{k+1}_n + i_1(v^k_n) + \frac{di_1}{dv} (v^{k+1}_n - v^k_n)
+        = s_1 \; ,
 
 where the :math:`k` subscript denotes the Newton iteration number.
 This equation is re-arranged as follows:
 
 .. math::
 
-    \left[ 
-        (G + Y_0 + \frac{di}{dv}) + a (C + \frac{dq}{dv}) 
-           \right] v^{k+1}_n =
-      r_n - i^k_n - a q^k_n + (\frac{di}{dv} + a \frac{dq}{dv}) v^k_n \; ,
+    \left( G_1 + \frac{di_1}{dv} \right) v^{k+1}_n =
+      s_1 - i_1(v^k_n) + \frac{di_1}{dv} v^k_n \; ,
 
-again, the right-hand side of this equation is known at the :math:`k`
-iteration and so :math:`v^{k+1}_n` can be found by solving a linear
-system of equations. Iterations stop when 
+as the right-hand side of this equation is known at the :math:`k^{th}`
+iteration, :math:`v^{k+1}_n` can be found by solving a linear system
+of equations. Iterations stop when
 
 .. math::
 
