@@ -1,4 +1,7 @@
 """
+:mod:`devices` -- Device Library
+--------------------------------
+
 The ``devices`` package contains a library with device models.  Device
 classes are imported into a dictionary. Keys are the device types. To
 create a new device use the following::
@@ -16,7 +19,7 @@ Example (from netlist)::
     mosacm:m1n <nodes> <parameters>
 
 Making a device model to be recognized by this package
-------------------------------------------------------
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Suppose the new model is implemented in a file named
 ``newmodel.py``. Save this file in the ``devices`` directory and edit

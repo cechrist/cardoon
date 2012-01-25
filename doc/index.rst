@@ -25,6 +25,8 @@ Developer's Manual
    coding
    adding_devices
    circuit_ref
+   analysis
+   analyses_classes
    design
    references   
 

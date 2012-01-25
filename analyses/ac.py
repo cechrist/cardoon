@@ -36,41 +36,13 @@ class Analysis(ParamSet):
     following request types for this analysis: ``ac_mag``,
     ``ac_phase`` or ``ac_dB``.
 
+    AC formulation documented in :doc:`analysis`
+
     Example::
 
         .analysis ac start=100. stop=1MEG num=100 log=True
         .plot ac_dB 153 151 23
         .plot ac_phase 23
-
-    Formulation
-    +++++++++++
-
-    In the following discussion we assume that :math:`v` is the vector of
-    nodal variables in time domain and :math:`V(f)` is the same vector in
-    frequency domain.  There are 4 types of devices to consider for AC
-    analysis (so far, must add later time-delayed nonlinear CS):
-    
-      1. Linear VCCS/QS: considered in the real, frequency-independent
-      :math:`G` and :math:`C` matrices, respectively.
-      
-      2. Nonlinear VCCS/QS: an OP analysis is performed to obtain the
-      operating point. The Jacobian returned by ``eval_and_deriv()`` is used
-      to generate the real, frequency-independent :math:`dI/dv` and
-      :math:`dQ/dv` matrices, respectively.
-      
-      3. Frequency-defined devices: contribute the complex,
-      frequency-dependent :math:`Y(f)` matrix.
-      
-      4. Sources: contribute a complex frequency-dependent vector,
-      :math:`S(f)`. 
-    
-    The analysis solves for :math:`V(f)` for all requested frequencies
-    using the following equation:
-    
-    .. math::
-    
-        \left[ (G + \frac{dI}{dv}) + 
-             j 2 \pi f (C + \frac{dQ}{dv}) + Y(f) \right] \, V(f) = S(f)
 
     """
 

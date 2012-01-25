@@ -34,6 +34,8 @@ class Analysis(ParamSet):
     One plot window is generated for each ``.plot`` statement. Use
     ``dc`` request type for this analysis.
 
+    DC formulation documented in :doc:`analysis`
+
     Example::
 
         .analysis dc device=vsin:v1 param=vdc start=-2. stop=2. num=50 
@@ -42,11 +44,6 @@ class Analysis(ParamSet):
         .options maxiter=300 gyr=1e-5 maxdelta=5.
         
         .plot dc 153 151 23
-
-    Formulation
-    +++++++++++
-
-    The formulation is the same as for the OP analysis.
 
     """
 

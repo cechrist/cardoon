@@ -1,44 +1,14 @@
 """
-:mod:`nodal` -- Nodal Approach
+:mod:`nodal` -- Nodal Analysis
 ------------------------------
 
 .. module:: nodal
 .. moduleauthor:: Carlos Christoffersen
 
-************** This is experimental/incomplete ****************
+This module contains basic classes/functions for nodal analysis. These
+are part of the standard netlist analyses but they can also be used
+independently.
 
-Some working comments to include in doc:
-
-Tried advanced numpy indexing to avoid loops for each element of the
-matrices but unfortunately G[obj] += Jac does not work when some of
-the elements selected by obj are repeated (see tentative numpy
-tutorial at http://www.scipy.org/NumPy_Tutorial)
-
-So far there seem to be two ways to overcome this, to be tested as
-soon as this code starts working: 
-
-* The first is to use a few cython functions doing the inner
-  loops. Will try that when sparse matrix support is added. Otherwise
-  it makes no sense.
-
-* The second is to create a giant AD tape for the whole circuit. The
-  nodalAD module implements this. In principle it does not seem to be
-  faster, at least for the small netlists tried so far. Also tape
-  generation seems to require a dense matrix multiplication (G *
-  x). This possibly rules out the approach for large circuits.
-
-The current solution is described here: Nonlinear (and
-frequency-defined) elements are added vectors nD_?pos and nD_?neg that
-contain the non-reference terminal RC numbers where the internal
-current sources are connected. This requires some pre-processing but
-in this way we can avoid ``if`` statements in all functions. For
-regular linear transconductances this is not necessary as we only have
-to fill the matrix once.
-
-Note about storing nodal voltages in Terminals: currently voltages are
-not stored by default. The main reason for this is efficiency as it is
-less work to operate directly from the vector of unknowns in the
-equation-solving routine.
 """
 
 import numpy as np
@@ -121,9 +91,9 @@ def make_nodal_circuit(ckt, reference='gnd'):
     reference node must be indicated.
 
     New attributes are added in Circuit/Element/Terminal
-    instances. All new attributes start with "nD_"
+    instances. All new attributes start with ``nD_``
 
-    Works with subcircuits too (see nD_namRClist attribute)
+    Works with subcircuits too (see ``nD_namRClist`` attribute)
     """
     # get ground node
     ckt.nD_ref = ckt.get_term(reference)
@@ -199,6 +169,7 @@ def process_nodal_element(elem):
         Converts format of VC*S 
 
         input: [(contn1, contn2), (outn1, outn2), g]
+
         output: [row1, col1, row2, col2, g]
         """
         col1 = rcList[x[0][0]]
@@ -214,7 +185,7 @@ def process_nodal_element(elem):
         """
         Converts an internal port list into 2 lists with (+-) nodes
 
-        The format of each list is: 
+        The format of each list is::
 
             (internal term number, namRC number)
         """
@@ -256,12 +227,13 @@ def run_AC(ckt, fvec):
     Set up and solve AC equations
 
     ckt: nodal-ready Circuit instance (ckt) instance with OP already set
+
     fvec: frequency vector. All frequencies must be different from zero
 
     DC solution not calculated here as it needs special treatment and
     that solution is already obtained by the OP analysis.
 
-    Set results in ckt. Prefix: aC_
+    Set results in terminals in vectors named ``aC_V``
 
     Returns a matrix with results. Dimension: (nvars x nfreq)
 
@@ -462,6 +434,7 @@ class DCNodal:
         returns iVec = G xVec + i(xVec)
 
         xVec: input vector of nodal voltages. 
+
         iVec: output vector of currents
         """
         # Erase arrays
@@ -483,13 +456,15 @@ class DCNodal:
         """
         Calculate total current and Jacobian
 
-        Returns: (iVec, Jac)
+        Returns (iVec, Jac)::
 
             iVec = G xVec + i(xVec)
             Jac = G + Ji(xVec)
 
         xVec: input vector of nodal voltages. 
+
         iVec: output vector of currents
+
         Jac: system Jacobian
         """
         # Erase arrays

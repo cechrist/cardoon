@@ -25,13 +25,15 @@ def solve(x0, sV, obj):
     Attempt solving circuit equations using several strategies
 
     x0: initial guess
+
     sV: source vector
+
     obj: object that provides the following attribute::
 
         obj.convergence_helpers          # list of functions that can be used
                                          # to solve equations
 
-    Example of helper functions:
+    Example of helper functions::
 
         obj.solve_simple(x0, sV)
         obj.solve_homotopy_gmin(x0, sV)
@@ -59,21 +61,24 @@ def solve(x0, sV, obj):
 
 
 def fsolve_Newton(x0, f_Jac_eval, f_eval):
-    """
+    r"""
     Solve a multidimensional non-linear equation with Newton-Raphson's method
 
     In each iteration the linear system:
+    
+    .. math::
 
-            J(x_n)(x_{n+1}-x_n) + F(xn) = 0
+            J(x_n)(x_{n+1}-x_n) + F(x_n) = 0 \; ,
 
-    is solved and a new value for x is obtained (x_{n+1})
+    is solved and a new value for :math:`x_{n+1}` is obtained. Arguments:
 
     x0: initial guess
-    sV: source vector
+
     f_Jac_eval(x): function that returns (f, Jac) (error function and Jacobian)
+
     f_eval(x): function that returns error function
 
-    Returns: (x, res, niter)
+    Returns (x, res, niter)
 
     This function originally adapted from pycircuit
     (https://github.com/henjo/pycircuit)

@@ -155,110 +155,42 @@ re-visiting all elements and re-generating all equations.  One work
 around is to create a list of elements to be updated when needed in
 the analysis code.
 
+Efficiency notes for nodal analysis
+-----------------------------------
 
-Planned Transient Analysis Equations
-------------------------------------
+For efficiency we should avoid directly indexing from Python
+individual elements in matrices and vectors as much as possible.
+Tried advanced numpy indexing to avoid loops for each element of the
+matrices but unfortunately G[obj] += Jac does not work when some of
+the elements selected by obj are repeated (see tentative numpy
+tutorial at http://www.scipy.org/NumPy_Tutorial)
 
-In the following discussion we assume that :math:`v(t)` is the vector
-of nodal variables. There are 4 types of devices to consider for
-transient analysis:
+Two possible approaches to overcome this are the following: 
 
-  1. Linear VCCS/QS: considered in the :math:`G` and :math:`C`
-     matrices, respectively.
-  
-  2. Nonlinear VCCS/QS: contribute the :math:`i(v)` and the
-     :math:`q(v)` vector functions. These and their Jacobian
-     (:math:`di/dv` and :math:`dq/dv`) are returned by
-     ``eval_and_deriv()``.
-  
-  3. Frequency-defined devices: contribute the complex,
-     frequency-dependent :math:`Y(f)` matrix. The corresponding
-     impulse-response matrix is denoted :math:`Y(t)`
-  
-  4. Sources: contribute a time-dependent source vector, :math:`s(t)`.
+1. Use a few cython functions doing the inner loops. Will try that
+   when sparse matrix support is added. Otherwise it makes no sense.
 
-Transient analysis solves the following nonlinear
-algebraic-integral-differential equation:
+2. Create a giant AD tape for the whole circuit. The nodalAD module
+   implements this. 
 
-.. math::
+The second approach is simpler but in practice test results (see
+nodalAD module) show that it does not improve efficiency. Also tape
+generation seems to require a dense matrix multiplication (G *
+x). This rules out the approach for large circuits.
 
-    G v + C \dot{v} + i(v) + \dot{q}(v) + 
-      \int_{0}^\infty Y(\tau) v(t - \tau) d\tau
-      = s(t)  \; ,
+The current solution is described here: Nonlinear (and
+frequency-defined) elements are added new attribute vectors
+``nD_?pos`` and ``nD_?neg`` that contain the non-reference terminal RC
+numbers where the internal current sources are connected. This
+requires some pre-processing but in this way we can avoid ``if``
+statements in inner loop functions. For regular linear
+transconductances this does not seem necessary as we only have to fill
+the matrix once.
 
-where the dot is used to denote derivative with respect to time.  An
-integration method (such as Backward Euler (BE) or Trapezoidal
-Integration) is applied to transform the differential equation into a
-difference equation by discretizing time and approximating derivatives
-with respect to time. For example, using the BE rule:
+Currently voltages are not stored in terminals by default. The main
+reason for this is efficiency as it is less work to operate directly
+from the vector of unknowns in the equation-solving routine.
 
-.. math::
-
-    \dot{v}(t_n) = \dot{v}_n \approx \frac{v_n - v_{n-1}}{h} \; ,
-
-here, the subscript :math:`n` denotes the time sample number and
-:math:`h` is the time step size. For implicit methods in general,
-
-.. math::
-
-    \dot{v_n} \approx a_0 v_n + f_{n-1}(v) \; ,
-
-with :math:`f_{n-1}(v)` being a function that depends on the previous
-samples of :math:`v`:
-
-.. math::
-
-    f_{n-1}(v) = a_1 v_{n-1} + a_2 v_{n-2} + \dots \; .
-
-The :math:`a_i; i=0,1,\dots` coefficients depend on the time step size
-and the integration method. Substituting dotted variables and
-discretizing the convolution operation the resulting circuit equation
-is the following:
-
-.. math::
-
-    G_1 v_n + i_1(v_n) = s_1 \; ,
-
-with
-
-.. math::
-
-   G_1 = G + Y_0 + a_0 C
-
-   i_1(v_n) = i(v_n) + a_0 q(v_n)
-
-   s_1 = s_n - \sum_{m=1}^\infty \textbf{Y}_m v_{n-m} 
-             - C f_{n-1}(v) + f_{n-1}(q) \; ,
-
-where :math:`Y_m = Y(t_m)` and :math:`Y_0 = Y(0)`. Note :math:`s_1` is
-a known vector at the :math:`n^{th}` time step. This is the equation
-of a DC circuit with a conductance matrix equal to :math:`G1`, a set
-of nonlinear currents given by the :math:`i_1(v_n)` function and a
-source vector given by :math:`s_1`. The unknown (:math:`v_n`) is
-iteratively solved using Newton's Method (similarly as in OP/DC
-analysis). Iterations are defined by linearizing :math:`i_1(v)` as
-follows:
-
-.. math::
-
-    G_1 v^{k+1}_n + i_1(v^k_n) + \frac{di_1}{dv} (v^{k+1}_n - v^k_n)
-        = s_1 \; ,
-
-where the :math:`k` subscript denotes the Newton iteration number.
-This equation is re-arranged as follows:
-
-.. math::
-
-    \left( G_1 + \frac{di_1}{dv} \right) v^{k+1}_n =
-      s_1 - i_1(v^k_n) + \frac{di_1}{dv} v^k_n \; ,
-
-as the right-hand side of this equation is known at the :math:`k^{th}`
-iteration, :math:`v^{k+1}_n` can be found by solving a linear system
-of equations. Iterations stop when
-
-.. math::
-
-   | v^{k+1}_n - v^k_n | < \epsilon
 
 
 

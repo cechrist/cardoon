@@ -32,11 +32,12 @@ not possible/practical to follow these rules.
 Documentation
 +++++++++++++
 
-Keep doctrings for modules up to date. That documentation will be
-included in the module reference. The user manual entry for device
-models is automatically generated from the doc string of the
-``Device`` class. Similarly, for analyses use the doctring from the
-``Analysis`` class in the corresponding module.
+Keep doctrings for modules up to date. Consider writing some
+preliminary documentation before implementing a new feature.  That
+documentation will be included in the module reference. The User's
+Manual entry for device models is automatically generated from the doc
+string of the ``Device`` class. Similarly, for analyses use the
+doctring from the ``Analysis`` class in the corresponding module.
 
 Version Numbers
 +++++++++++++++
