@@ -13,7 +13,6 @@ import numpy as np
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
 import nodal as nd
-from nodalAD import DCNodalAD
 from fsolve import solve, NoConvergenceError
 import matplotlib.pyplot as plt
 
@@ -136,7 +135,7 @@ class Analysis(ParamSet):
             sV = dc.get_source()
             # solve equations
             try: 
-                (x, res, iterations) = solve(x, sV, dc)
+                (x, res, iterations) = solve(x, sV, dc.convergence_helpers)
             except NoConvergenceError as ce:
                 print(ce)
                 return

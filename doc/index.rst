@@ -15,6 +15,8 @@ User's Manual
    intro
    usage
    catalogs
+   examples/examples
+
 
 Developer's Manual
 ------------------

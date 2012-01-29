@@ -104,13 +104,11 @@ class Device(cir.Element):
     def get_DCsource(self):
         return self.idc
 
-    def get_TDsource(self, ctime):
+    def get_TDsource(self, time):
         """
-        ctime is the current time
+        Returns source value at ctime
         """
-        # used if isTDSource = True
-        # return current at ctime
-        return self.amp * np.cos(self._omega * ctime + self._phase)
+        return self._imag * np.cos(self._omega * time + self._phase)
 
 #    def get_next_event(self, ctime):
 #        """

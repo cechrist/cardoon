@@ -18,8 +18,8 @@ The internal circuit representation and the device library attempt to
 be independent of the formulation used for simulation. The ``Circuit``
 class has no methods to obtain nodal voltages or calculate the
 Jacobian of the circuit. This is delegated to other classes that
-handle particular circuit analysis approaches such as nodal, sparse
-tableau, etc.
+handle particular circuit analysis approaches such as nodal,
+port-based, linear/nonlinear separation, *etc.*
 
 Element Interfaces
 ++++++++++++++++++

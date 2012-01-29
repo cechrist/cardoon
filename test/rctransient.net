@@ -1,0 +1,13 @@
+### Simple RC transient netlist ###
+
+vsin:vin 1 0 mag=2.
+
+#diode:d1 1 2 rs = 10.
+res:r1 1 2 r=1k
+cap:c1 2 0 c=1u
+
+.analysis tran tstop=10m tstep=.02m
+
+.plot tran 1 2
+
+.end

@@ -88,7 +88,7 @@ class Analysis(ParamSet):
         sV = dc.get_source()
         # solve equations
         try: 
-            (x, res, iterations) = solve(x0, sV, dc)
+            (x, res, iterations) = solve(x0, sV, dc.convergence_helpers)
         except NoConvergenceError as ce:
             print(ce)
             return

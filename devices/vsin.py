@@ -156,6 +156,13 @@ class Device(cir.Element):
     def get_DCsource(self):
         return self._idc
 
+    def get_TDsource(self, time):
+        """
+        Returns source value at ctime
+        """
+        return self._imag * np.cos(self._omega * time + self._phase)
+
+
     def get_FDsource(self):
         """
         Returns a tuple with a frequency and a current phasor vectors

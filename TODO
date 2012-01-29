@@ -2,9 +2,11 @@
 Action Plan (TODO file)
 -----------------------
 
-1. Implement basic transient analysis with fixed time step.
+1. Implement basic transient analysis with fixed time step
 
-2. Add sparse matrix support and optimize inner loops to improve
+2. Add simulation examples in documentation
+
+3. Add sparse matrix support and optimize inner loops to improve
    speed: modify nodal.py to use pytrilinos
    (http://trilinos.sandia.gov/packages/pytrilinos/) to access the KLU
    sparse matrix library
@@ -12,7 +14,7 @@ Action Plan (TODO file)
    functions (``set_*`` in ``nodal.py``) will be re-implemented using
    cython (http://cython.org/).
 
-3. Add support for convolution of freq-defined elements
+4. Add support for convolution of freq-defined elements
 
 Other tasks to be done at some time:
 

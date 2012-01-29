@@ -20,7 +20,7 @@ from globalVars import glVar
 class NoConvergenceError(Exception):
     pass
 
-def solve(x0, sV, obj):
+def solve(x0, sV, convergence_helpers):
     """
     Attempt solving circuit equations using several strategies
 
@@ -28,21 +28,18 @@ def solve(x0, sV, obj):
 
     sV: source vector
 
-    obj: object that provides the following attribute::
-
-        obj.convergence_helpers          # list of functions that can be used
-                                         # to solve equations
+    convergence_helpers: list of functions that can be used to solve equations
 
     Example of helper functions::
 
-        obj.solve_simple(x0, sV)
-        obj.solve_homotopy_gmin(x0, sV)
-        obj.solve_homotopy_source(x0, sV)
+        solve_simple(x0, sV)
+        solve_homotopy_gmin(x0, sV)
+        solve_homotopy_source(x0, sV)
 
     This function originally adapted from pycircuit
     (https://github.com/henjo/pycircuit)
     """
-    for algorithm in obj.convergence_helpers:
+    for algorithm in convergence_helpers:
         if algorithm == None:
             raise NoConvergenceError(
                 'Giving up. No convergence with any method')
