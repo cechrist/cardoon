@@ -78,10 +78,11 @@ the nodal voltages (:math:`x_k`). Iterations stop when
 AC Formulation
 --------------
 
-Here :math:`X(f)` is the nodal vector in frequency domain. The
-incremental conductances and capacitances are given by :math:`di/dx`
-and :math:`dq/dx`, respectively.  The analysis solves for :math:`X(f)`
-for all requested frequencies using the following equation:
+Here :math:`X(f)` is the nodal vector in frequency domain. A DC
+operating point analysis is performed first to obtain the incremental
+conductances and capacitances given by :math:`di/dx` and
+:math:`dq/dx`, respectively.  The analysis solves for :math:`X(f)` for
+all requested frequencies using the following equation:
 
 .. math::
 
