@@ -2,7 +2,7 @@
 Action Plan (TODO file)
 -----------------------
 
-1. Implement basic transient analysis with fixed time step
+1. Test more and refine basic transient analysis with fixed time step
 
 2. Add simulation examples in documentation
 

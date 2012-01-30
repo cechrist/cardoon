@@ -90,8 +90,8 @@ for all requested frequencies using the following equation:
 
 
 
-Planned Transient Analysis Equations
-------------------------------------
+Transient Analysis Equations
+----------------------------
 
 Transient analysis solves the following nonlinear
 algebraic-integral-differential equation:

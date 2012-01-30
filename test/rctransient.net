@@ -1,12 +1,12 @@
-### Simple RC transient netlist ###
+### RC plus diode transient netlist ###
 
-vsin:vin 1 0 mag=2.
+vsin:vin 1 0 mag=10. freq=100MEGHz phase=120
 
-#diode:d1 1 2 rs = 10.
-res:r1 1 2 r=1k
-cap:c1 2 0 c=1u
+diode:d1 1 2 rs = 200. cj0=1p
+res:r1 1 2 r=5k
+cap:c1 2 0 c=2p
 
-.analysis tran tstop=10m tstep=.02m
+.analysis tran tstop=.02u tstep=.1n im=trap verbose=0
 
 .plot tran 1 2
 

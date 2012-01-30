@@ -12,6 +12,7 @@ import numpy as np
 
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
+from integration import BEuler, Trapezoidal
 import nodal as nd
 from fsolve import solve, NoConvergenceError
 import matplotlib.pyplot as plt
@@ -24,8 +25,8 @@ class Analysis(ParamSet):
     Solves nodal equations starting from ``t=0`` to ``tstop`` with a
     fixed time step (at least for now) equal to ``tstep``. Two
     integration methods are supported: Backwards Euler (``im = BE``)
-    and trapezoidal (``im=trap``, not ready yet). Support for
-    frequency-defined elements is not yet included.
+    and trapezoidal (``im=trap``). Support for frequency-defined
+    elements is not yet included.
 
     Convergence parameters for the Newton method are controlled using
     the global variables in ``.options``.
@@ -75,10 +76,19 @@ class Analysis(ParamSet):
             circuit.flatten()
             circuit.init()
 
+        # Select integration method
+        if self.im == 'BE':
+            imo = BEuler()
+        elif self.im == 'trap':
+            imo = Trapezoidal()
+        else:
+            raise AnalysisError(
+                'Unknown integration method: {0}'.format(self.im))
+
         # Create nodal objects and solve for initial state
         nd.make_nodal_circuit(circuit)
         dc = nd.DCNodal(circuit)
-        tran = nd.TransientNodal(circuit, 0., self.tstep)
+        tran = nd.TransientNodal(circuit, 0., self.tstep, imo)
         x = dc.get_guess()
         # Use sources including transient values for t == 0
         sV = tran.get_source(0.)
@@ -104,6 +114,10 @@ class Analysis(ParamSet):
         xVec[:,0] = x
         tIter = 0
         tRes = 0.
+        if self.verbose:
+            print('--------------------------------------')
+            print(' Time (s)    | Iter.    | Residual    ')
+            print('--------------------------------------')
         for i in range(1, nsamples):
             sV = tran.advance(xVec[:,i-1])
             # solve equations: use previous time-step solution as an
@@ -120,14 +134,13 @@ class Analysis(ParamSet):
             tIter += iterations
             tRes += res
             if self.verbose:
-                print('Time = {1} s'.format(timeVec[i]))
-                print('Number of iterations = ', iterations)
-                print('Residual = ', res)
+                print('{0:12} | {1:8} | {2:12}'.format(
+                        timeVec[i], iterations, res))
 
         # Calculate average residual and iterations
         avei = tIter / nsamples
         aver = tRes / nsamples
-        print('Average iterations: {0}'.format(avei))
+        print('\nAverage iterations: {0}'.format(avei))
         print('Average residual: {0}\n'.format(aver))
 
         # Save results in nodes

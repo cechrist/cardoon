@@ -11,3 +11,5 @@ Utility classes from the analyses package are documented here.
 .. automodule:: analyses.fsolve
        :members:
 
+.. automodule:: analyses.integration
+       :members:

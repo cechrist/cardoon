@@ -647,7 +647,9 @@ class TransientNodal(_NLFunction):
 
         if im == None:
             self.im = BEuler()
-            self.im.set_h(self.h)
+        else:
+            self.im = im
+        self.im.set_h(self.h)
 
         # Allocate matrices/vectors
         # G' and C
@@ -711,7 +713,8 @@ class TransientNodal(_NLFunction):
                   outV[len(elem.csOutPorts):])
         # Add linear charges
         self.qVec += np.dot(self.C, xVec)
-        self.im.set_q(self.qVec)
+        # Do this to store qvec in im (if needed)
+        self.im.f_n1(self.qVec)
 
 
     def advance(self, xVec):
@@ -740,8 +743,7 @@ class TransientNodal(_NLFunction):
         # Add linear charges
         self.qVec += np.dot(self.C, xVec)
 
-        self.im.set_q(self.qVec)
-        self.sVec += self.im.f_n1()
+        self.sVec += self.im.f_n1(self.qVec)
 
         return self.sVec
 

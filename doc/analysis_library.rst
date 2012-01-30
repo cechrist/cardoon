@@ -165,3 +165,41 @@ Parameters
  useAD        1                         Use automatic differentiation                        
  =========== ============ ============ ===================================================== 
 
+tran: Transient Analysis
+------------------------
+
+Solves nodal equations starting from ``t=0`` to ``tstop`` with a
+fixed time step (at least for now) equal to ``tstep``. Two
+integration methods are supported: Backwards Euler (``im = BE``)
+and trapezoidal (``im=trap``). Support for frequency-defined
+elements is not yet included.
+
+Convergence parameters for the Newton method are controlled using
+the global variables in ``.options``.
+
+One plot window is generated for each ``.plot`` statement. Use
+``tran`` request type for this analysis.
+
+Transient analysis formulation documented in :doc:`analysis`
+
+Example::
+
+    .analysis tran tstop=1ms tstep=.01ms im=BE
+
+    .plot tran vin vout
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ im           BE                        Integration method                                   
+ shell        0                         Drop to ipython shell after calculation              
+ tstep        1.0e-05      s            Time step size                                       
+ tstop        0.001        s            Simulation stop time                                 
+ verbose      0                         Show iterations for each point                       
+ =========== ============ ============ ===================================================== 
+
