@@ -1,6 +1,6 @@
 ### RC plus diode transient netlist ###
 
-vsin:vin 1 0 mag=10. freq=100MEGHz phase=120
+vsin:vin 1 0 mag=10. freq=150MEGHz phase=90
 
 diode:d1 1 2 rs = 200. cj0=1p
 res:r1 1 2 r=5k

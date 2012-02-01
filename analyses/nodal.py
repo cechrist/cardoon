@@ -447,7 +447,7 @@ class DCNodal(_NLFunction):
 
         Used for parameter sweeps
         """
-        self.G *= 0.
+        self.G[:,:] = 0.
         # Generate G matrix (never changes)
         for elem in self.ckt.nD_elemList:
             # All elements have nD_linVCCS (perhaps empty)
@@ -501,7 +501,7 @@ class DCNodal(_NLFunction):
         # Erase vector first. 
         try:
             # If subcircuit add external currents
-            self.sVec = self.extSVec
+            self.sVec[:] = self.extSVec[:]
         except AttributeError:
             # Not a subcircuit
             self.sVec[:] = 0.
@@ -615,6 +615,10 @@ class TransientNodal(_NLFunction):
     """
     Keeps track of transient analysis equations. 
 
+    This class only sets up transient equations. Equations are solved
+    elsewhere. Circuit history required for numerical integration is
+    kept by an integration method class. 
+
     Matrices and vectors (G, C, JacI, JacQ, s, etc.) are allocated
     here. This is to centralize all allocations and avoid repetitions.
 
@@ -622,17 +626,14 @@ class TransientNodal(_NLFunction):
     make_nodal_circuit())
     """
 
-    def __init__(self, ckt, t0, h, im = None):
+    def __init__(self, ckt, im = None):
         """
-        Set up everything to be ready for a time step.
+        Arguments:
 
         ckt: circuit instance
 
-        t0: start time
-
-        h: (initial) time step
-
         im: Integration method instance. Defaults to BE
+
         """
         # Init base class
         _NLFunction.__init__(self)
@@ -641,28 +642,27 @@ class TransientNodal(_NLFunction):
         self.ckt = ckt
         # Make sure circuit is ready (analysis should take care)
         assert ckt.nD_ref
-        # Time variables: current time and time step
-        self.ctime = t0
-        self.h = h
 
         if im == None:
             self.im = BEuler()
         else:
             self.im = im
-        self.im.set_h(self.h)
 
         # Allocate matrices/vectors
-        # G' and C
-        self.Gp = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        # G, C and G'
+        self.G = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
         self.C = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.Gp = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
         # iVec = G' x + i'(x)   total current
         self.iVec = np.zeros(self.ckt.nD_dimension)
         # System Jacobian: G' + di'/dx
         self.Jac = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
         # Total charge: C x + q(x)
         self.qVec = np.zeros(self.ckt.nD_dimension)
-        # Source vector at current time s(ctime) or sometimes s'(ctime)
+        # Source vector at current time s(t) 
         self.sVec = np.zeros(self.ckt.nD_dimension)
+        # Source vector plus initial conditions: s'(t)
+        self.spVec = np.zeros(self.ckt.nD_dimension)
 
 #        if hasattr(self.ckt, 'nD_namRClist'):
 #            # Allocate external currents vector
@@ -675,27 +675,37 @@ class TransientNodal(_NLFunction):
 
         Used for parametric sweeps
         """
-        self.Gp *= 0.
+        self.G[:,:] = 0.
+        self.C[:,:] = 0.
         # Generate G matrix (never changes)
         for elem in self.ckt.nD_elemList:
             # All elements have nD_linVCCS (perhaps empty)
             for vccs in elem.nD_linVCCS:
-                set_quad(self.Gp, *vccs)
+                set_quad(self.G, *vccs)
             for vccs in elem.nD_linVCQS:
                 set_quad(self.C, *vccs)
-
-        # In the future we may have to modify set_quad to accept a
-        # scaling factor
-        self.Gp += self.im.a0 * self.C
-
 #        # Frequency-defined elements not included for now
 #        for elem in self.ckt.nD_freqDefinedElem:
 #            set_Jac(self.G, elem.nD_fpos, elem.nD_fneg, 
 #                    elem.nD_fpos, elem.nD_fneg, elem.get_G_matrix())
 
-    def set_IC(self):
+    def set_h(self, h):
+        """
+        Change time step to h
+
+        This function updates internal variables dependent on h and
+        also changes h in ``im``.  It is assumed that the integration
+        method allows this.
+        """
+        self.im.set_h(h)
+        self.Gp[:,:] = self.G[:,:] + self.im.a0 * self.C[:,:]
+
+
+    def set_IC(self, h):
         """
         Set initial conditions (ICs)
+
+        h: (initial) time step
 
         Retrieves ICs from DC operating point info in elements
         """
@@ -705,7 +715,7 @@ class TransientNodal(_NLFunction):
         for i,term in enumerate(self.ckt.nD_termList):
             xVec[i] = term.nD_vOP
         # Get nonlinear charges
-        self.qVec *= 0.
+        self.qVec[:] = 0.
         for elem in self.ckt.nD_nlinElem:
             # Get OP from element
             outV = elem.eval(elem.nD_xOP)
@@ -713,26 +723,28 @@ class TransientNodal(_NLFunction):
                   outV[len(elem.csOutPorts):])
         # Add linear charges
         self.qVec += np.dot(self.C, xVec)
-        # Do this to store qvec in im (if needed)
-        self.im.f_n1(self.qVec)
+        # initialize integration element
+        self.im.init(h, self.qVec)
+        # Generate Gp 
+        self.Gp[:,:] = self.G[:,:] + self.im.a0 * self.C[:,:]
 
 
-    def advance(self, xVec):
+    def get_sprime(self, xVec, tnp1):
         """ 
-        Advance one time step 
+        Advance one time step and return s'
 
         Set up equations for next time step to be solved by
         fsolve. Returns the right-hand side source vector plus the
         effect of charges (s' in derivation).
 
         xVec: solution from current time step
+        tnp1: time for new time step to get s(t_{n+1})
         """
-        # Advance time
-        self.ctime += self.h
-        self.get_source()
+        # Copy source vector in spVec
+        self.spVec[:] = self.get_source(tnp1)[:]
 
         # Calculate total q vector
-        self.qVec *= 0.
+        self.qVec[:] = 0.
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(len(elem.controlPorts))
@@ -743,23 +755,21 @@ class TransientNodal(_NLFunction):
         # Add linear charges
         self.qVec += np.dot(self.C, xVec)
 
-        self.sVec += self.im.f_n1(self.qVec)
+        self.spVec += self.im.f_n1(self.qVec)
 
-        return self.sVec
+        return self.spVec
 
             
-    def get_source(self, ctime = None):
+    def get_source(self, ctime):
         """
         Get the source vector considering DC and TD source components
 
-        ctime: current time. Defaults to internal ctime variable
+        ctime: current time.
         """
-        if ctime == None:
-            ctime = self.ctime
         # Erase vector first. 
         try:
             # If subcircuit add external currents
-            self.sVec = self.extSVec
+            self.sVec[:] = self.extSVec[:]
         except AttributeError:
             # Not a subcircuit
             self.sVec[:] = 0.

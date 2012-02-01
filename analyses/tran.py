@@ -88,7 +88,7 @@ class Analysis(ParamSet):
         # Create nodal objects and solve for initial state
         nd.make_nodal_circuit(circuit)
         dc = nd.DCNodal(circuit)
-        tran = nd.TransientNodal(circuit, 0., self.tstep, imo)
+        tran = nd.TransientNodal(circuit, imo)
         x = dc.get_guess()
         # Use sources including transient values for t == 0
         sV = tran.get_source(0.)
@@ -99,9 +99,9 @@ class Analysis(ParamSet):
             print(ce)
             return
         dc.save_OP(x)
-        tran.set_IC()
+        tran.set_IC(self.tstep)
         # Release memory in dc object?
-        dc = None
+        del(dc)
 
         # Create time vector
         timeVec = np.arange(start=0., stop = self.tstop, step = self.tstep, 
@@ -119,7 +119,7 @@ class Analysis(ParamSet):
             print(' Time (s)    | Iter.    | Residual    ')
             print('--------------------------------------')
         for i in range(1, nsamples):
-            sV = tran.advance(xVec[:,i-1])
+            sV = tran.get_sprime(xVec[:,i-1], timeVec[i])
             # solve equations: use previous time-step solution as an
             # initial guess
             try: 

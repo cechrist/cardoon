@@ -19,9 +19,17 @@ class BEuler:
         \dot{q_{n+1}} = (q_{n+1} - q_n) / h
 
     """
+    def init(self, h, q):
+        """
+        Initialize for integration
+
+        Set time step size to h. q is ignored as it is not needed
+        """
+        self.a0 = 1. / h
+
     def set_h(self, h):
         """
-        Set time step size to h
+        Change time step size to h
         """
         self.a0 = 1. / h
 
@@ -41,17 +49,25 @@ class Trapezoidal:
         \dot{q_{n+1}} = \frac{2}{h} (q_{n+1} - q_n) - \dot{q_n}
 
     """
-    def __init__(self):
+    def init(self, h, q, dq = None):
         """
-        For now assume we always start from equilibrium
+        Initialize for integration
+
+        Set time step size to h, previous charge to q previous
+        derivative to dq
         """
-        self.qnm1 = None
+        self.a0 = 2. / h    
+        self.qnm1 = np.copy(q)
+        if dq == None:
+            self.dqnm1 = np.zeros(len(q))
+        else:
+            self.dqnm1 = np.copy(dq)
 
     def set_h(self, h):
         """
-        Set time step size to h
+        Change time step size to h in next call to f_n1
         """
-        self.a0 = 2. / h    
+        self.a0 = 1. / h
 
     def f_n1(self, q):
         r"""
@@ -59,13 +75,10 @@ class Trapezoidal:
         
         Also stores q vector and calculates :math:`\dot{q}_{n-1}`
         """
-        if self.qnm1 == None:
-            self.dqnm1 = np.zeros(len(q))
-        else:
-            # dqnm1 = \dot{q_{n-1}}
-            self.dqnm1 = self.a0 * (q - self.qnm1) - self.dqnm1
+        # dqnm1 = \dot{q_{n-1}}
+        self.dqnm1 = self.a0 * (q - self.qnm1) - self.dqnm1
         # qnm1 = q_{n-1}
-        self.qnm1 = np.copy(q)
+        self.qnm1[:] = q[:]
         return self.a0 * q + self.dqnm1
 
 
