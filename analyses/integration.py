@@ -33,11 +33,17 @@ class BEuler:
         """
         self.a0 = 1. / h
 
-    def f_n1(self, q):
+    def accept(self, q):
+        """
+        Accept q as last valid value
+        """
+        self.qn1 = np.copy(q)
+
+    def f_n1(self):
         r"""
         Returns :math:`f_{n-1}(q)`
         """
-        return self.a0 * q
+        return self.a0 * self.qn1
 
 
 class Trapezoidal:
@@ -69,16 +75,20 @@ class Trapezoidal:
         """
         self.a0 = 1. / h
 
-    def f_n1(self, q):
-        r"""
-        Returns :math:`f_{n-1}(q)`
-        
-        Also stores q vector and calculates :math:`\dot{q}_{n-1}`
+    def accept(self, q):
+        """
+        Accept q as last valid value
         """
         # dqnm1 = \dot{q_{n-1}}
-        self.dqnm1 = self.a0 * (q - self.qnm1) - self.dqnm1
+        self.dqnm1 *= -1.
+        self.dqnm1 += self.a0 * (q - self.qnm1)
         # qnm1 = q_{n-1}
         self.qnm1[:] = q[:]
-        return self.a0 * q + self.dqnm1
+
+    def f_n1(self):
+        r"""
+        Returns :math:`f_{n-1}(q)`
+        """
+        return self.a0 * self.qnm1 + self.dqnm1
 
 

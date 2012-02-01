@@ -119,7 +119,10 @@ class Analysis(ParamSet):
             print(' Time (s)    | Iter.    | Residual    ')
             print('--------------------------------------')
         for i in range(1, nsamples):
-            sV = tran.get_sprime(xVec[:,i-1], timeVec[i])
+            qVec = tran.update_q(xVec[:,i-1])
+            imo.accept(qVec)
+            sV = imo.f_n1()
+            sV += tran.get_source(timeVec[i])
             # solve equations: use previous time-step solution as an
             # initial guess
             try: 
