@@ -22,14 +22,14 @@ class Device(cir.Element):
         0 o-------( --> )---------o 1
                    '---'    
 
-        iout = idc + mag * cos(2 * pi * freq + phase)
+        iout = idc + mag * cos(2 * pi * freq * t + phase)
 
     This source works for time and frequency domain. For AC analysis,
     the 'acmag' parameter is provided. By default acmag = mag.
 
     Netlist example::
 
-        isin:vdd gnd 4 idc=2mA amp=2mA freq=1GHz phase=90 
+        isin:i1 gnd 4 idc=2mA amp=2mA freq=1GHz phase=90 
 
     """
 

@@ -22,14 +22,14 @@ class Device(cir.Element):
        0 o--------( - + )---------/\/\/\/\--------o 1
                    '---'  
                  
-           vout = vdc + mag * cos(2 * pi * freq + phase)
+           vout = vdc + mag * cos(2 * pi * freq * t + phase)
    
     This source works for time and frequency domain. For AC analysis,
     the 'acmag' parameter is provided. By default acmag = mag.
 
     Netlist example::
 
-        vsin:vdd gnd 4 vdc=2V amp=1V freq=1GHz phase=90 
+        vsin:vin gnd 4 vdc=2V amp=1V freq=1GHz phase=90 
 
 
     Internal Topology
@@ -81,8 +81,8 @@ class Device(cir.Element):
         cir.Element.tempItem,
         vdc = ('DC voltage', 'V', float, 0.),
         rint = ('Internal resistance', 'Ohms', float, 0.),
-        mag = ('Amplitude', 'A', float, 0.),
-        acmag = ('Amplitude for AC analysis only', 'A', float, None),
+        mag = ('Amplitude', 'V', float, 0.),
+        acmag = ('Amplitude for AC analysis only', 'V', float, None),
         phase = ('Phase', 'degrees', float, 0.),
         freq = ('Frequency', 'Hz', float, 1e3)
         )
