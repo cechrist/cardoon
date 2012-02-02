@@ -6,10 +6,10 @@
 .. moduleauthor:: Carlos Christoffersen
 """
 
-import cmath as cm
 import numpy as np
 from globalVars import glVar
 import circuit as cir
+import ipulse
 
 class Device(cir.Element):
     """
@@ -35,19 +35,7 @@ class Device(cir.Element):
     Internal Topology
     +++++++++++++++++
 
-    Implemented using a gyrator if Rint is zero::
-
-                                       i/gyr       ti
-        0  o---------+            +----------------+
-                     | gyr V23    |                |
-          +         /|\          /|\              /^\ 
-        vin        | | |        | | | gyr vin    | | | gyr vout
-          -         \V/          \V/              \|/  
-                     |            |                |
-        1  o---------+            +----------------+
-                                          |
-                                         --- tref
-                                          V
+    Same as vdc.
 
     """
 
@@ -78,7 +66,7 @@ class Device(cir.Element):
     # csDelayedContPorts = ( )
 
     paramDict = dict(
-        cir.Element.tempItem,
+#        cir.Element.tempItem,
         v1 = ('Initial value', 'V', float, 0.),
         v2 = ('Pulsed value', 'V', float, 0.),
         td = ('Delay time', 's', float, 0.),
@@ -155,75 +143,6 @@ class Device(cir.Element):
 #    def get_DCsource(self):
 #        return self._i1
 
-    def get_TDsource(self, time):
-        """
-        Returns source value at ctime
-        """
-        if time > self.per:
-            # Remove whole periods from time
-            t = time % self.per
-        else:
-            t = time
-
-        if t <= self.td:
-            return self._i1
-        else:
-            t -= self.td
-            
-        if t < self.tr:
-            # Ramp up
-            iout = self._i1 + self._deltai * t / self.tr
-            return iout
-        else:
-            t -= self.tr
-
-        if t < self.pw:
-            return self._i2
-        else:
-            t -= self.pw
-
-        # import pdb; pdb.set_trace()
-        if t < self.tf:
-            # Ramp down
-            iout = self._i2 - self._deltai * t / self.tf
-            return iout
-
-        return self._i1
-
-
-    def get_next_event(self, time):
-        """
-        Returns time of next event
-        """
-        if time > self.per:
-            # Remove whole periods from time
-            t = time % self.per
-        else:
-            t = time
-
-        if t <= self.td:
-            return time -t + self.td
-        else:
-            t -= self.td
-            
-        if t < self.tr:
-            # Ramp up
-            return time - t + self.tr
-        else:
-            t -= self.tr
-
-        if t < self.pw:
-            return time - t + self.pw
-        else:
-            t -= self.pw
-
-        # import pdb; pdb.set_trace()
-        if t < self.tf:
-            # Ramp down
-            return time - t + self.tf
-
-        t = t - self.tf
-
-        return time - t + self._rem
-
-
+    # Use current-source functions for easier maintenance
+    get_TDsource = ipulse.get_TDsource
+    get_next_event = ipulse.get_next_event

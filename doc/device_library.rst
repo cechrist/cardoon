@@ -359,6 +359,41 @@ Parameters
  l            0.0          H            Inductance                                           
  =========== ============ ============ ===================================================== 
 
+ipulse: Pulse current source
+----------------------------
+
+Connection diagram::
+                       
+               ,---,  iout
+    0 o-------( --> )---------o 1
+               '---'    
+
+    iout = pulse(t)
+
+This source only works for time domain. It is equivalent to an
+open circuit for DC or frequency-domain.
+
+Netlist example::
+
+    ipulse:i1 gnd 4 i1=-1V i2=1V td=1ms pw=10ms per=20ms
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ i1           0.0          A            Initial value                                        
+ i2           0.0          A            Pulsed value                                         
+ per          .0inf        s            Period                                               
+ pw           .0inf        s            Pulse width                                          
+ td           0.0          s            Delay time                                           
+ tf           0.0          s            Fall time                                            
+ tr           0.0          s            Rise time                                            
+ =========== ============ ============ ===================================================== 
+
 isin: (Co-)Sinusoidal current source
 ------------------------------------
 
@@ -390,7 +425,6 @@ Parameters
  idc          0.0          A            DC current                                           
  mag          0.0          A            Amplitude                                            
  phase        0.0          degrees      Phase                                                
- temp         None         C            Device temperature                                   
  =========== ============ ============ ===================================================== 
 
 mosacm: Simplified ACM MOSFET
@@ -1048,7 +1082,8 @@ Netlist example::
 Internal Topology
 +++++++++++++++++
 
-Implemented using a gyrator if Rint is zero::
+A gyrator is used to convert a current source into a voltage
+source if Rint is zero::
 
                                    i/gyr       ti
     0  o---------+            +----------------+
@@ -1061,6 +1096,8 @@ Implemented using a gyrator if Rint is zero::
                                       |
                                      --- tref
                                       V
+
+Otherwise a Norton equivalent circuit is used.
 
 
 
@@ -1100,19 +1137,7 @@ Netlist example::
 Internal Topology
 +++++++++++++++++
 
-Implemented using a gyrator if Rint is zero::
-
-                                   i/gyr       ti
-    0  o---------+            +----------------+
-                 | gyr V23    |                |
-      +         /|\          /|\              /^\ 
-    vin        | | |        | | | gyr vin    | | | gyr vout
-      -         \V/          \V/              \|/  
-                 |            |                |
-    1  o---------+            +----------------+
-                                      |
-                                     --- tref
-                                      V
+Same as vdc.
 
 
 
@@ -1126,7 +1151,6 @@ Parameters
  pw           .0inf        s            Pulse width                                          
  rint         0.0          Ohms         Internal resistance                                  
  td           0.0          s            Delay time                                           
- temp         None         C            Device temperature                                   
  tf           0.0          s            Fall time                                            
  tr           0.0          s            Rise time                                            
  v1           0.0          V            Initial value                                        
@@ -1155,19 +1179,7 @@ Netlist example::
 Internal Topology
 +++++++++++++++++
 
-Implemented using a gyrator if Rint is zero::
-
-                                   i/gyr       ti
-    0  o---------+            +----------------+
-                 | gyr V23    |                |
-      +         /|\          /|\              /^\ 
-    vin        | | |        | | | gyr vin    | | | gyr vout
-      -         \V/          \V/              \|/  
-                 |            |                |
-    1  o---------+            +----------------+
-                                      |
-                                     --- tref
-                                      V
+Same as vdc.
 
 
 
@@ -1182,7 +1194,6 @@ Parameters
  mag          0.0          V            Amplitude                                            
  phase        0.0          degrees      Phase                                                
  rint         0.0          Ohms         Internal resistance                                  
- temp         None         C            Device temperature                                   
  vdc          0.0          V            DC voltage                                           
  =========== ============ ============ ===================================================== 
 

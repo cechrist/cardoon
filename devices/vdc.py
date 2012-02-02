@@ -29,7 +29,8 @@ class Device(cir.Element):
     Internal Topology
     +++++++++++++++++
 
-    Implemented using a gyrator if Rint is zero::
+    A gyrator is used to convert a current source into a voltage
+    source if Rint is zero::
 
                                        i/gyr       ti
         0  o---------+            +----------------+
@@ -42,6 +43,8 @@ class Device(cir.Element):
                                           |
                                          --- tref
                                           V
+
+    Otherwise a Norton equivalent circuit is used.
 
     """
 

@@ -63,7 +63,7 @@ class Device(cir.Element):
     sourceOutput = (0, 1)
 
     paramDict = dict(
-        cir.Element.tempItem,
+#        cir.Element.tempItem,
         idc = ('DC current', 'A', float, 0.),
         mag = ('Amplitude', 'A', float, 0.),
         acmag = ('Amplitude for AC analysis only', 'A', float, None),

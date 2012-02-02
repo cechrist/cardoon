@@ -34,20 +34,8 @@ class Device(cir.Element):
 
     Internal Topology
     +++++++++++++++++
-
-    Implemented using a gyrator if Rint is zero::
-
-                                       i/gyr       ti
-        0  o---------+            +----------------+
-                     | gyr V23    |                |
-          +         /|\          /|\              /^\ 
-        vin        | | |        | | | gyr vin    | | | gyr vout
-          -         \V/          \V/              \|/  
-                     |            |                |
-        1  o---------+            +----------------+
-                                          |
-                                         --- tref
-                                          V
+    
+    Same as vdc.
 
     """
 
@@ -78,7 +66,7 @@ class Device(cir.Element):
     # csDelayedContPorts = ( )
 
     paramDict = dict(
-        cir.Element.tempItem,
+#        cir.Element.tempItem,
         vdc = ('DC voltage', 'V', float, 0.),
         rint = ('Internal resistance', 'Ohms', float, 0.),
         mag = ('Amplitude', 'V', float, 0.),

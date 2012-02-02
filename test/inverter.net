@@ -2,10 +2,11 @@
 
 .options maxdelta = 2.
 #.analysis dc device=vsin:vin param=vdc start=0 stop=3V verbose=0 num=100
-.analysis tran tstop=30n tstep=.1n im=trap verbose=0
+.analysis tran tstop=20n tstep=.1n im=trap verbose=0
 
 vdc:vdd 1 gnd vdc=3V 
-vsin:vin in gnd vdc=1 mag=1. freq=100MEGHz phase=120
+*vsin:vin in gnd vdc=1 mag=1. freq=100MEGHz phase=120
+vpulse:vin in gnd v1=0 v2=3 pw=2n per=10n tr=3n tf=3n 
 
 x1 in o1 1 gnd inverter
 x2 o1 o2 1 gnd inverter
