@@ -368,14 +368,14 @@ Connection diagram::
     0 o-------( --> )---------o 1
                '---'    
 
-    iout = idc + mag * cos(2 * pi * freq + phase)
+    iout = idc + mag * cos(2 * pi * freq * t + phase)
 
 This source works for time and frequency domain. For AC analysis,
 the 'acmag' parameter is provided. By default acmag = mag.
 
 Netlist example::
 
-    isin:vdd gnd 4 idc=2mA amp=2mA freq=1GHz phase=90 
+    isin:i1 gnd 4 idc=2mA amp=2mA freq=1GHz phase=90 
 
 
 
@@ -1078,8 +1078,8 @@ Parameters
  vdc          0.0          V            DC voltage                                           
  =========== ============ ============ ===================================================== 
 
-vsin: (Co-)Sinusoidal voltage source
-------------------------------------
+vpulse: Pulse voltage source
+----------------------------
 
 Connection diagram::
                       
@@ -1087,14 +1087,14 @@ Connection diagram::
    0 o--------( - + )---------/\/\/\/\--------o 1
                '---'  
              
-       vout = vdc + mag * cos(2 * pi * freq + phase)
+       vout = vpulse(t)
 
-This source works for time and frequency domain. For AC analysis,
-the 'acmag' parameter is provided. By default acmag = mag.
+This source only works for time domain. It is equivalent to a
+short circuit (or rint) for DC or frequency-domain.
 
 Netlist example::
 
-    vsin:vdd gnd 4 vdc=2V amp=1V freq=1GHz phase=90 
+    vpulse:vin gnd 4 v1=-1V v2=1V td=1ms pw=10ms per=20ms
 
 
 Internal Topology
@@ -1122,9 +1122,64 @@ Parameters
  =========== ============ ============ ===================================================== 
  Name         Default      Unit         Description                                          
  =========== ============ ============ ===================================================== 
- acmag        None         A            Amplitude for AC analysis only                       
+ per          .0inf        s            Period                                               
+ pw           .0inf        s            Pulse width                                          
+ rint         0.0          Ohms         Internal resistance                                  
+ td           0.0          s            Delay time                                           
+ temp         None         C            Device temperature                                   
+ tf           0.0          s            Fall time                                            
+ tr           0.0          s            Rise time                                            
+ v1           0.0          V            Initial value                                        
+ v2           0.0          V            Pulsed value                                         
+ =========== ============ ============ ===================================================== 
+
+vsin: (Co-)Sinusoidal voltage source
+------------------------------------
+
+Connection diagram::
+                      
+               ,---,  vout       Rint
+   0 o--------( - + )---------/\/\/\/\--------o 1
+               '---'  
+             
+       vout = vdc + mag * cos(2 * pi * freq * t + phase)
+
+This source works for time and frequency domain. For AC analysis,
+the 'acmag' parameter is provided. By default acmag = mag.
+
+Netlist example::
+
+    vsin:vin gnd 4 vdc=2V amp=1V freq=1GHz phase=90 
+
+
+Internal Topology
++++++++++++++++++
+
+Implemented using a gyrator if Rint is zero::
+
+                                   i/gyr       ti
+    0  o---------+            +----------------+
+                 | gyr V23    |                |
+      +         /|\          /|\              /^\ 
+    vin        | | |        | | | gyr vin    | | | gyr vout
+      -         \V/          \V/              \|/  
+                 |            |                |
+    1  o---------+            +----------------+
+                                      |
+                                     --- tref
+                                      V
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ acmag        None         V            Amplitude for AC analysis only                       
  freq         1000.0       Hz           Frequency                                            
- mag          0.0          A            Amplitude                                            
+ mag          0.0          V            Amplitude                                            
  phase        0.0          degrees      Phase                                                
  rint         0.0          Ohms         Internal resistance                                  
  temp         None         C            Device temperature                                   

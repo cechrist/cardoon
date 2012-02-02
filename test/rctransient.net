@@ -1,6 +1,6 @@
 ### RC plus diode transient netlist ###
 
-vpulse:vin 1 0 v1=0 v2=5 pw=3n per=10n tr=.5n tf=.5n
+vpulse:vin 1 0 v1=0 v2=5 pw=3n per=10n tr=.5n tf=.5n td=.5n
 
 diode:d1 1 2 rs = 200. cj0=1p
 res:r1 1 2 r=5k

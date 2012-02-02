@@ -24,7 +24,8 @@ class Device(cir.Element):
                  
            vout = vpulse(t)
    
-    This source works for time domain. 
+    This source only works for time domain. It is equivalent to a
+    short circuit (or rint) for DC or frequency-domain.
 
     Netlist example::
 
@@ -81,10 +82,10 @@ class Device(cir.Element):
         v1 = ('Initial value', 'V', float, 0.),
         v2 = ('Pulsed value', 'V', float, 0.),
         td = ('Delay time', 's', float, 0.),
-        tr = ('Rise time', 's', float, None),
-        tf = ('Fall time', 's', float, None),
-        pw = ('Pulse width', 's', float, None),
-        per = ('Period', 's', float, None),
+        tr = ('Rise time', 's', float, 0.),
+        tf = ('Fall time', 's', float, 0.),
+        pw = ('Pulse width', 's', float, np.inf),
+        per = ('Period', 's', float, np.inf),
         rint = ('Internal resistance', 'Ohms', float, 0.)
         )
 
@@ -129,6 +130,10 @@ class Device(cir.Element):
             self._i2 = glVar.gyr * self.v2
 
         self._deltai = self._i2 - self._i1
+        if self.pw < np.inf:
+            self._rem = self.per - self.tr - self.pw - self.tf 
+        else:
+            self._rem = 0.
 
 #    def set_temp_vars(self, temp):
 #        """
@@ -154,36 +159,71 @@ class Device(cir.Element):
         """
         Returns source value at ctime
         """
-        if time <= self.td:
-            return self._i1
-
-        if self.per and (time > self.per):
+        if time > self.per:
             # Remove whole periods from time
-            t = (time - self.td) % self.per
+            t = time % self.per
         else:
-            t = time - self.td
-            
-        if self.tr:
-            if t < self.tr:
-                # Ramp up
-                iout = self._i1 + self._deltai * t / self.tr
-                return iout
-            else:
-                t -= self.tr
+            t = time
 
-        if (self.pw == None) or (t < self.pw):
+        if t <= self.td:
+            return self._i1
+        else:
+            t -= self.td
+            
+        if t < self.tr:
+            # Ramp up
+            iout = self._i1 + self._deltai * t / self.tr
+            return iout
+        else:
+            t -= self.tr
+
+        if t < self.pw:
             return self._i2
         else:
             t -= self.pw
 
         # import pdb; pdb.set_trace()
-        if self.tf:
-            if t < self.tf:
-                # Ramp down
-                iout = self._i2 - self._deltai * t / self.tf
-                return iout
+        if t < self.tf:
+            # Ramp down
+            iout = self._i2 - self._deltai * t / self.tf
+            return iout
 
         return self._i1
+
+
+    def get_next_event(self, time):
+        """
+        Returns time of next event
+        """
+        if time > self.per:
+            # Remove whole periods from time
+            t = time % self.per
+        else:
+            t = time
+
+        if t <= self.td:
+            return time -t + self.td
+        else:
+            t -= self.td
             
+        if t < self.tr:
+            # Ramp up
+            return time - t + self.tr
+        else:
+            t -= self.tr
+
+        if t < self.pw:
+            return time - t + self.pw
+        else:
+            t -= self.pw
+
+        # import pdb; pdb.set_trace()
+        if t < self.tf:
+            # Ramp down
+            return time - t + self.tf
+
+        t = t - self.tf
+
+        return time - t + self._rem
 
 
