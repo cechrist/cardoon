@@ -353,7 +353,7 @@ class _NLFunction:
         x = np.copy(x0)
         totIter = 0
         idx = np.arange(self.ckt.nD_nterms)
-        for gminexp in np.arange(-1., -8., -1):
+        for gminexp in xrange(-1., -8., -1):
             gmin = 10.**gminexp
             # Add gmin from ground to all external nodes. Assumes all
             # external nodes are sorted first in the vector. This will

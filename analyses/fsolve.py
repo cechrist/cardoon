@@ -116,6 +116,6 @@ def fsolve_Newton(x0, f_Jac_eval, f_eval):
         raise NoConvergenceError('No convergence. iter = {0} res = {1}'.format(
                 i, res))
 
-    return (x, res, i)
+    return (x, res, i+1)
 
 

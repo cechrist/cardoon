@@ -116,10 +116,10 @@ class Analysis(ParamSet):
         tIter = 0
         tRes = 0.
         if self.verbose:
-            print('--------------------------------------')
-            print(' Time (s)    | Iter.    | Residual    ')
-            print('--------------------------------------')
-        for i in range(1, nsamples):
+            print('-------------------------------------------------')
+            print(' Step    | Time (s)     | Iter.    | Residual    ')
+            print('-------------------------------------------------')
+        for i in xrange(1, nsamples):
             qVec = tran.update_q(xVec[:,i-1])
             imo.accept(qVec)
             sV = imo.f_n1()
@@ -138,8 +138,8 @@ class Analysis(ParamSet):
             tIter += iterations
             tRes += res
             if self.verbose:
-                print('{0:12} | {1:8} | {2:12}'.format(
-                        timeVec[i], iterations, res))
+                print('{0:8} | {1:12} | {2:8} | {3:12}'.format(
+                        i, timeVec[i], iterations, res))
 
         # Calculate average residual and iterations
         avei = tIter / nsamples
