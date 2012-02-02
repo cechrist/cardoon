@@ -87,6 +87,7 @@ class Analysis(ParamSet):
 
         # Create nodal objects and solve for initial state
         nd.make_nodal_circuit(circuit)
+        print('System dimension: {0}\n'.format(circuit.nD_dimension))
         dc = nd.DCNodal(circuit)
         tran = nd.TransientNodal(circuit, imo)
         x = dc.get_guess()

@@ -211,7 +211,7 @@ class Device(cir.Element):
         eg0 = ('Energy bandgap', 'eV', float, 1.11),
         tnom = ('Nominal temperature', 'C', float, 27.),
         ibv = ('Current at reverse breakdown voltage', 'A', float, 1e-10),
-        bv = ('Breakdown voltage', 'V', float, 0.),
+        bv = ('Breakdown voltage', 'V', float, np.inf),
         area = ('Area multiplier', ' ', float, 1.),
         rs = ('Series resistance', 'Ohms', float, 0.),
         kf = ('Flicker noise coefficient', '', float, 0.),
@@ -311,7 +311,7 @@ class Device(cir.Element):
             qD += self.tt * iD
 
         # add breakdown current
-        if (self.bv > 0.):
+        if (self.bv < np.inf):
             iD -= self.ibv * \
                 ad.safe_exp(-(vD + self.bv) / self.n / self.vt)
 
