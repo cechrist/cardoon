@@ -154,7 +154,7 @@ class Device(cir.Element):
             self.linearVCCS = list()
             self.linearVCQS = list()
             # Expand transmission line sections
-            for i in range(self.nsect):
+            for i in xrange(self.nsect):
                 # input node number
                 if i:
                     inn = nps*i + tref
