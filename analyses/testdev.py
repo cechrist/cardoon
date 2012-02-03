@@ -144,12 +144,12 @@ class Analysis(ParamSet):
         qout = None
         if ncharges:
             qout = np.zeros((npsweep, nsamples, ncharges))
-        for j in range(npsweep):
+        for j in xrange(npsweep):
             if param:
                 setattr(dev, self.param, self.param_val[j])
                 # re-process parameters
                 dev.process_params()
-            for i in range(np.shape(vsweep)[0]):
+            for i in xrange(np.shape(vsweep)[0]):
                 vports[self.sweep_port] = vsweep[i]
                 if self.useAD:
                     # Use AD tape to evaluate function
@@ -198,17 +198,17 @@ class Analysis(ParamSet):
             var.append(qout)
             varlegend.append(' Charge (C)')
             
-        for k in range(len(var)):
+        for k in xrange(len(var)):
             plt.ioff()
             #plt.figure(k+1)
             # sweep for each output var first
             nvars = np.shape(var[k])[2]
-            for i in range(nvars):
+            for i in xrange(nvars):
                 #plt.subplot(nvars, 1, i+1)
                 plt.figure()
                 plt.grid(True)
                 # Now go though samples
-                for j in range(npsweep):
+                for j in xrange(npsweep):
                     if param:
                         label = self.param + ':'\
                             + str(self.param_val[j]) + paramunit
