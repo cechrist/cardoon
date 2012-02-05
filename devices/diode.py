@@ -217,7 +217,7 @@ class Device(cir.Element):
         if self.rs:
             # Need 1 internal terminal
             t2 = self.add_internal_term('Vd_int', 'V')
-            g = 1. / self.rs / self.area
+            g = self.area / self.rs
             self.linearVCCS = [((0, t2), (0, t2), g)]
             # Nonlinear device attributes
             self.csOutPorts = [(t2, 1)]
@@ -279,21 +279,28 @@ class Device(cir.Element):
         """
         # Calculate regular PN junction current and charge
         iD = self.jtn.get_id(vPort[0])
+
         if self.cj0:
             qD = self.jtn.get_qd(vPort[0])
+        else:
+            qD = 0.
+
         if self.tt:
             qD += self.tt * iD
+
         # add breakdown current
         if (self.bv < np.inf):
             iD -= self.ibv * \
                 ad.safe_exp(-(vPort[0] + self.bv) / self.n / self.vt)
-        idV = np.array([iD * self.area])
-        if self._qd:
-            qdV = np.array([qD * self.area])
-        else:
-            qdV = np.array([])
 
-        return (idV, qdV)
+        iD *= self.area
+        idV = np.array([iD])
+        if self._qd:
+            qD *= self.area
+            qdV = np.array([qD])
+            return (idV, qdV)
+        else:
+            return (idV, np.array([]))
 
 
     def power(self, vPort, ioutV):

@@ -266,7 +266,7 @@ Parameters
  =========== ============ ============ ===================================================== 
  af           1.0                       Flicker noise exponent                               
  area         1.0                       Area multiplier                                      
- bv           0.0          V            Breakdown voltage                                    
+ bv           .0inf        V            Breakdown voltage                                    
  cj0          0.0          F            Zero-bias depletion capacitance                      
  eg0          1.11         eV           Energy bandgap                                       
  fc           0.5                       Coefficient for forward-bias depletion capacitance   
@@ -446,6 +446,33 @@ Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
                    |
                    o
           Source 2
+
+Netlist examples::
+
+    mosacm:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
+    mosacm:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+
+Internal topology
++++++++++++++++++
+
+For now only ids is implemented::
+
+                       ,--o 0 (D)
+                       |
+                       |
+                       |
+                       |       
+                      /|\       
+      (G) 2 o-       ( | ) ids(VD, VG, VS, VB)
+                      \V/      
+                       |       
+                       |
+                       |
+                       |
+      (B) 3 o-         `--o 2 (S)
+              
+
+
 
 
 Parameters
@@ -919,7 +946,7 @@ Parameters
  =========== ============ ============ ===================================================== 
  af           1.0                       Flicker noise exponent                               
  area         1.0                       Area multiplier                                      
- bv           0.0          V            Breakdown voltage                                    
+ bv           .0inf        V            Breakdown voltage                                    
  cj0          0.0          F            Zero-bias depletion capacitance                      
  eg0          1.11         eV           Energy bandgap                                       
  fc           0.5                       Coefficient for forward-bias depletion capacitance   

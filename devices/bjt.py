@@ -125,11 +125,13 @@ Can only be {1} or {2}, {3} found.'.format(self.nodeName,
             if self.re:
                 # Add ei node and translate port descriptions
                 self._et = self.add_internal_term('et', 'V')
-                extraVCCS += [((2, self._et), (2, self._et), 1./self.re)]
+                extraVCCS += [((2, self._et), (2, self._et), 
+                               self.area / self.re)]
             if self.rc:
                 # Add ci node and translate port descriptions
                 self._ct = self.add_internal_term('ci', 'V')
-                extraVCCS += [((0, self._ct), (0, self._ct), 1./self.rc)]
+                extraVCCS += [((0, self._ct), (0, self._ct), 
+                               self.area / self.rc)]
 
             # Process parameters from intrinsic device: emitter and
             # collector terminals are already substituted.

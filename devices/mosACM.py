@@ -1,18 +1,12 @@
 """
-Simplified intrinsic ACM MOSFET model
+:mod:`mosACM` -- Simplified intrinsic ACM MOSFET model
+------------------------------------------------------
+
+.. module:: mosACM
+.. moduleauthor:: Carlos Christoffersen
 
 Needs more work: charge calculation, noise equations, etc.
 
----------------------------------------------------------------------
-Copyright Carlos Christoffersen <c.christoffersen@ieee.org>
-
-This file is part of the cardoon electronic circuit simulator.
-
-Cardoon is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3 or later:
-
-http://www.gnu.org/licenses/gpl.html
 """
 
 import numpy as np
@@ -41,6 +35,33 @@ class Device(cir.Element):
                        |
                        o
               Source 2
+
+    Netlist examples::
+
+        mosacm:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
+        mosacm:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+
+    Internal topology
+    +++++++++++++++++
+
+    For now only ids is implemented::
+
+                           ,--o 0 (D)
+                           |
+                           |
+                           |
+                           |       
+                          /|\       
+          (G) 2 o-       ( | ) ids(VD, VG, VS, VB)
+                          \V/      
+                           |       
+                           |
+                           |
+                           |
+          (B) 3 o-         `--o 2 (S)
+                  
+
+
     """
 
     devType = "mosacm"

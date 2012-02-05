@@ -246,8 +246,9 @@ class Device(cir.Element):
         if self.rs:
             # Needs one more terminal
             t2 = self.add_internal_term('Vd_int', 'V')
-            g = 1. / self.rs / self.area
-            self.linearVCCS.append(((0, t2), (0, t2), g))
+            g = self.area / self.rs
+            self.linearVCCS = [((t2, 1), (tx, tref), glVar.gyr),
+                               ((0, t2), (0, t2), g)]
             # Nonlinear device outputs change
             self.csOutPorts = [(t2, 1), (tref, tx)]
             self.noisePorts = [(t2, 1), (0, t2)]
