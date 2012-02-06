@@ -51,28 +51,28 @@ linearizing :math:`i(x)` as follows:
 
 .. math::
 
-    G_1 x_{k+1} + i_k + \frac{di_k}{dx} \, (x_{k+1} - x_k) = s_{DC} \; ,
+    G_1 x^{k+1} + i^k + \frac{di^k}{dx} \, (x^{k+1} - x^k) = s_{DC} \; ,
 
-where the :math:`k` suffix indicates the iteration number. :math:`x_k`
-is assumed to be known and :math:`x_{k+1}` is the unknown to solve
-for. The initial guess (:math:`x_0`) is set to the values suggested by
-the nonlinear devices, if any, or otherwise to zero. The previous
-equation can be re-arranged as as the following system of linear
-equations:
+where the :math:`k` superscript indicates the iteration
+number. :math:`x^k` is assumed to be known and :math:`x^{k+1}` is the
+unknown to solve for. The initial guess (:math:`x_0`) is set to the
+values suggested by the nonlinear devices, if any, or otherwise to
+zero. The previous equation can be re-arranged as as the following
+system of linear equations:
 
 .. math::
 
-     (G_1 + \frac{di_k}{dx}) \, x_{k+1} = 
-            s_{DC} - i_k + \frac{di_k}{dx} \, x_k \; ,
+     (G_1 + \frac{di^k}{dx}) \, x^{k+1} = 
+            s_{DC} - i^k + \frac{di^k}{dx} \, x^k \; ,
 
 This equation can be seen as the nodal equation of a circuit obtained
 by substituting the nonlinear devices by current sources and
 transcunductances that are dependent of the current approximation for
-the nodal voltages (:math:`x_k`). Iterations stop when
+the nodal voltages (:math:`x^k`). Iterations stop when
 
 .. math::
 
-   | x^{k+1}_n - x^k_n | < \epsilon
+   | x^{k+1} - x^k | < \epsilon
 
 
 AC Formulation
