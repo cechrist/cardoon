@@ -83,7 +83,7 @@ class Trapezoidal:
         self.dqnm1 *= -1.
         self.dqnm1 += self.a0 * (q - self.qnm1)
         # qnm1 = q_{n-1}
-        self.qnm1[:] = q[:]
+        self.qnm1[:] = q
 
     def f_n1(self):
         r"""

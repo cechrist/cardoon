@@ -431,14 +431,14 @@ class DCNodal(_NLFunction):
 
         # Allocate matrices/vectors
         # G here is G1 = G + G0 in documentation
-        self.G = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.G = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
         # Jac is di/dv in doc
-        self.Jac = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
-        self.sVec = np.zeros(self.ckt.nD_dimension)
-        self.iVec = np.zeros(self.ckt.nD_dimension)
+        self.Jac = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.sVec = np.empty(self.ckt.nD_dimension)
+        self.iVec = np.empty(self.ckt.nD_dimension)
         if hasattr(self.ckt, 'nD_namRClist'):
             # Allocate external currents vector
-            self.extSVec = np.zeros(self.ckt.nD_dimension)
+            self.extSVec = np.empty(self.ckt.nD_dimension)
         self.refresh()
 
     def refresh(self):
@@ -447,7 +447,7 @@ class DCNodal(_NLFunction):
 
         Used for parameter sweeps
         """
-        self.G[:,:] = 0.
+        self.G.fill(0.)
         # Generate G matrix (never changes)
         for elem in self.ckt.nD_elemList:
             # All elements have nD_linVCCS (perhaps empty)
@@ -501,10 +501,10 @@ class DCNodal(_NLFunction):
         # Erase vector first. 
         try:
             # If subcircuit add external currents
-            self.sVec[:] = self.extSVec[:]
+            self.sVec[:] = self.extSVec
         except AttributeError:
             # Not a subcircuit
-            self.sVec[:] = 0.
+            self.sVec.fill(0.)
         for elem in self.ckt.nD_sourceDCElem:
             # first get the destination row/columns 
             outTerm = elem.nD_sourceOut
@@ -530,7 +530,7 @@ class DCNodal(_NLFunction):
         iVec: output vector of currents
         """
         # Erase arrays
-        self.iVec[:] = 0.
+        self.iVec.fill(0.)
         # Linear contribution
         self.iVec += np.dot(self.G, xVec)
         # Nonlinear contribution
@@ -560,8 +560,8 @@ class DCNodal(_NLFunction):
         Jac: system Jacobian
         """
         # Erase arrays
-        self.iVec[:] = 0.
-        self.Jac[:] = 0.
+        self.iVec.fill(0.)
+        self.Jac.fill(0.)
         # Linear contribution
         self.iVec += np.dot(self.G, xVec)
         self.Jac += self.G
@@ -647,21 +647,21 @@ class TransientNodal(_NLFunction):
 
         # Allocate matrices/vectors
         # G, C and G'
-        self.G = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
-        self.C = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
-        self.Gp = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.G = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.C = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.Gp = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
         # iVec = G' x + i'(x)   total current
-        self.iVec = np.zeros(self.ckt.nD_dimension)
+        self.iVec = np.empty(self.ckt.nD_dimension)
         # System Jacobian: G' + di'/dx
-        self.Jac = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.Jac = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
         # Total charge: C x + q(x)
-        self.qVec = np.zeros(self.ckt.nD_dimension)
+        self.qVec = np.empty(self.ckt.nD_dimension)
         # Source vector at current time s(t) 
-        self.sVec = np.zeros(self.ckt.nD_dimension)
+        self.sVec = np.empty(self.ckt.nD_dimension)
 
 #        if hasattr(self.ckt, 'nD_namRClist'):
 #            # Allocate external currents vector
-#            self.extSVec = np.zeros(self.ckt.nD_dimension)
+#            self.extSVec = np.empty(self.ckt.nD_dimension)
         self.refresh()
 
     def refresh(self):
@@ -670,8 +670,8 @@ class TransientNodal(_NLFunction):
 
         Used for parametric sweeps
         """
-        self.G[:,:] = 0.
-        self.C[:,:] = 0.
+        self.G.fill(0.)
+        self.C.fill(0.)
         # Generate G matrix (never changes)
         for elem in self.ckt.nD_elemList:
             # All elements have nD_linVCCS (perhaps empty)
@@ -710,7 +710,7 @@ class TransientNodal(_NLFunction):
         """
         Recalculate Gp from im information
         """
-        self.Gp[:,:] = self.G[:,:] + self.im.a0 * self.C[:,:]
+        self.Gp[:,:] = self.G + self.im.a0 * self.C
         return self.Gp
 
 
@@ -719,7 +719,7 @@ class TransientNodal(_NLFunction):
         Recalculate qVec for a given value of xVec
         """
         # Calculate total q vector
-        self.qVec[:] = 0.
+        self.qVec.fill(0.)
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(len(elem.controlPorts))
@@ -741,10 +741,10 @@ class TransientNodal(_NLFunction):
         # Erase vector first. 
         try:
             # If subcircuit add external currents
-            self.sVec[:] = self.extSVec[:]
+            self.sVec[:] = self.extSVec
         except AttributeError:
             # Not a subcircuit
-            self.sVec[:] = 0.
+            self.sVec.fill(0.)
         for elem in self.ckt.nD_sourceDCElem:
             # first get the destination row/columns 
             outTerm = elem.nD_sourceOut
@@ -781,7 +781,7 @@ class TransientNodal(_NLFunction):
         iVec: output vector of currents
         """
         # Erase arrays
-        self.iVec[:] = 0.
+        self.iVec.fill(0.)
         # Linear contribution
         self.iVec += np.dot(self.Gp, xVec)
         # Nonlinear contribution
@@ -813,8 +813,8 @@ class TransientNodal(_NLFunction):
         Jac: system Jacobian
         """
         # Erase arrays
-        self.iVec[:] = 0.
-        self.Jac[:] = 0.
+        self.iVec.fill(0.)
+        self.Jac.fill(0.)
         # Linear contribution
         self.iVec += np.dot(self.Gp, xVec)
         self.Jac += self.Gp
