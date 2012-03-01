@@ -1,11 +1,9 @@
 """
-:mod:`mosACM` -- Incomplete intrinsic ACM MOSFET model
+:mod:`mosACM` -- Simplified intrinsic ACM MOSFET model
 ------------------------------------------------------
 
 .. module:: mosACM
 .. moduleauthor:: Carlos Christoffersen
-
-Needs more work: charge calculation, noise equations, etc.
 
 """
 
@@ -16,10 +14,12 @@ import cppaddev as ad
 
 class Device(cir.Element):
     """
-    Incomplete ACM MOSFET
+    Simplified ACM MOSFET
     ---------------------
 
-    Only (some) DC equations are considered for now.
+    This model uses the simple equations for hand analysis. Only DC
+    equations (with temperature dependence) included for now. 
+
     Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
 
                Drain 0
@@ -38,13 +38,13 @@ class Device(cir.Element):
 
     Netlist examples::
 
-        mosacm:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
-        mosacm:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+        mosacms:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
+        mosacms:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
 
     Internal topology
     +++++++++++++++++
 
-    For now only ids is implemented::
+    Only ids is implemented. In the future charges will be added::
 
                            ,--o 0 (D)
                            |
@@ -64,19 +64,20 @@ class Device(cir.Element):
 
     """
 
-    devType = "mosacm"
+    devType = "mosacms"
     paramDict = dict(
         cir.Element.tempItem,
         type = ('N- or P-channel MOS (n or p)', '', str, 'n'),
         w = ('Channel width', 'm', float, 10e-6),
         l = ('Channel length', 'm', float, 10e-6),
-        vt0 = ('Threshold Voltage', 'V', float, 0.532),
-        phi = ('Surface Potential', 'V', float, 0.55),
-        gamma = ('Bulk Threshold Parameter', 'V^(1/2)', float, 0.631),
-        kp = ('Transconductance Parameter', 'A/V^2', float, 510.6e-6),
-        theta = ('Mobility Saturation Parameter', '1/V', float, 0.814),
-        vsat = ('Saturation Velocity', 'm/s', float, 8e4),
-        tox = ('Oxide Thickness', 'm', float, 7.5e-9)
+        vth = ('Threshold Voltage', 'V', float, 0.5),
+        isq = ('Sheet normalization current', 'A/V^2', float, 100e-9),
+        n = ('Subthreshold slope factor', 'F/m^2', float, 1.3),
+        cox = ('Gate oxide capacitance per area', 'F/m^2', float, 0.7e-3),
+        tcv = ('Threshold voltage temperature coefficient', 'V/K', 
+               float, 0.001),
+        bex = ('Mobility temperature exponent', '', float, -1.5),
+        tnom = ('Nominal temperature of model parameters', 'C', float, 27.)
         )
     
     numTerms = 4
@@ -116,6 +117,16 @@ class Device(cir.Element):
             raise cir.CircuitError(
                 '{0}: unrecognized type: {1}. Valid types are "n" or "p"'.format(self.nodeName, self.type))
 
+        # Make sure vth is positive for calculations
+        self._vth = abs(self.vth)
+        self._tcv = np.abs(self.tcv)
+
+        # Nominal abs temperature
+        self._Tn = const.T0 + self.tnom
+        # Nominal Thermal voltage
+        self._Vtn = const.k * self._Tn / const.q
+        self._mu = self.isq * 2. / (self.n * self.cox * self._Vtn**2)
+
         if not thermal:
             # Calculate temperature-dependent variables
             self.set_temp_vars(self.temp)
@@ -130,8 +141,15 @@ class Device(cir.Element):
         # Absolute temperature (note self.temp is in deg. C)
         T = const.T0 + temp
         # Thermal voltage
-        self.Vt = const.k * T / const.q
-        
+        self._Vt = const.k * T / const.q
+        # threshold voltage
+        self._vthT = self._vth - self._tcv * (T - self._Tn)
+        # Mobility
+        muT = self._mu * (T / self._Tn)**self.bex
+        # IS (specific current)
+        s = self.w / self.l
+        self._IS = .5 * s * self.n * muT * self.cox * self._Vt**2
+
 
     def eval_cqs(self, vPort, saveOP = False):
         """
@@ -143,44 +161,24 @@ class Device(cir.Element):
         """
         # Invert all voltages in case of a P-channel device
         vPort1 = self._tf * vPort
-        # The following formula (11.2.10) seems to work better
-        # but it is just an approximation
-        vp = pow(np.sqrt(vPort1[1]-self.vt0 \
-                             + pow(np.sqrt(2.*self.phi)+\
-                                       .5*self.gamma, 2))\
-                     - .5*self.gamma, 2) - 2.*self.phi
+
+        vp = (vPort1[1] - self._vthT) / self.n
         
-        i_f = solve_ifr(vPort1[2],vp, self.Vt)
-        i_r = solve_ifr(vPort1[0],vp, self.Vt)
+        # Normalized currents
+        i_f = solve_ifr((vp - vPort1[2]) / self._Vt)
+        i_r = solve_ifr((vp - vPort1[0]) / self._Vt)
         
-        # Calculate IS at this point
-        # All this not needed if we just want IS
-        eox = 34.5e-12
-        cox = eox / self.tox
-        mu0 = self.kp / cox
-        mus = mu0 / (1. + self.theta * np.sqrt(vp + 2.*self.phi))
-        chi = self.Vt * mus / self.l / self.vsat
-        
-        # From Page 464, also (A.2.3.2d)
-        n = 1. + self.gamma / 2. / np.sqrt(2.*self.phi + vp)
-        
-        # Here kp = u0 Cox
-        # 1 / (1 + theta*sqrt(vp+2*phi)) accounts for effective mobility
-        IS = self.kp / (1. + self.theta*np.sqrt(vp+2.*self.phi))\
-            * n * self.Vt * self.Vt / 2. * self.w/self.l
-        
-        # Get drain current (including vsat effect)
-        # 1/(1 + chi * abs(sqrt(1+i_f)-sqrt(1+i_r))) is the velocity
-        # saturation factor. It needs absolute value to work with
-        # reverse biasing
-        idrain = IS * (i_f - i_r) \
-            / (1. + chi * np.abs(np.sqrt(1.+i_f)-np.sqrt(1.+i_r))) * self._tf
+        idrain = self._IS * (i_f - i_r) 
 
         iVec, qVec = np.array([idrain]), np.array([])
 
         if saveOP:
+            # This is neccesary to keep the AD library happy: all
+            # variables in vector must be adoubles
+            vth = 0. * vp + self._vthT
+            IS = 0. * vp + self._IS
             # Create operating point variables vector
-            opV = np.array([vp, i_f, i_r, IS, n])
+            opV = np.array([vth, vp, i_f, i_r, IS])
             return (iVec, qVec, opV)
         else:
             # Return numpy array with one element per current source.
@@ -212,20 +210,20 @@ class Device(cir.Element):
         Input:  vPort = [vdb , vgb , vsb]
         Output: dictionary with OP variables
         """
-        # First we need the Jacobian
         (outV, jac) = self.eval_and_deriv(vPort)
         opV = self.get_op_vars(vPort)
 
         self.OP = dict(
+            temp = self.temp,
             VD = vPort[0],
             VG = vPort[1],
             VS = vPort[2],
             IDS = outV[0],
-            vp = opV[0],
-            i_f = opV[1],
-            i_r = opV[2],
-            IS = opV[3],
-            n = opV[4]
+            vth = opV[0],
+            vp = opV[1],
+            i_f = opV[2],
+            i_r = opV[3],
+            IS = opV[4]
             )
         return self.OP
 
@@ -240,32 +238,38 @@ class Device(cir.Element):
         return None
 
 
-
-def solve_ifr(vs, vp, Vt):
+def solve_ifr(f):
     """
-    Solve equations to get i_f and i_r using relaxation for now
+    Solve f^(-1)(i_f(r)) to get i_f and i_r using relaxation for now
     """
     i_f = 1.
     deltaif = 10.
-    c1 = (vp - vs) / Vt
     # counter = 0
     # Try fixed-point with fixed number of iterations for easy taping
-    for i in range(30):
-        i_fnew = ad.condassign(c1,
-                    pow(c1 + 2. - np.log(np.sqrt(1.+i_f)-1.), 2.) - 1.,
-                    pow(np.exp(c1-np.sqrt(1.+i_f)+2.) + 1., 2.) - 1.)
+    for i in xrange(10):
+        i_fnew = ad.condassign(
+            f, 
+            (f + 2. - np.log(np.sqrt(1.+i_f)-1.))**2 - 1.,
+            (np.exp(f-np.sqrt(1.+i_f)+2.) + 1.)**2 - 1.)
         i_f = .5 * i_f + .5 * i_fnew
+    return i_f
+
+
+def fifr(i):
+    """
+    f(i_f(r)) from ACM model
+    """
+    return np.sqrt(1. + i) - 2. + np.log(np.sqrt(1. + i) - 1.)
 
 #     # Try fixed-point approach for now
 #     while deltaif > glVar.abstol:
-#         if (c1 > 0.):
-#             i_fnew = pow(c1 + 2. - np.log(np.sqrt(1.+i_f)-1.), 2.) - 1.
+#         if (f > 0.):
+#             i_fnew = pow(f + 2. - np.log(np.sqrt(1.+i_f)-1.), 2.) - 1.
 #         else:
-#             i_fnew = pow(np.exp(c1-np.sqrt(1.+i_f)+2.) + 1., 2.) - 1.
+#             i_fnew = pow(np.exp(f-np.sqrt(1.+i_f)+2.) + 1., 2.) - 1.
 #         deltaif = np.abs(i_fnew - i_f)
 #         i_f = .5 * i_f + .5 * i_fnew
 #         # counter += 1
 #     # print counter
-    return i_f
     
 

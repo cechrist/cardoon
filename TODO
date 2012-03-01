@@ -16,6 +16,10 @@ Action Plan (TODO file)
 
 Other tasks to be done at some time:
 
+* Consider changing saveOP interface (return value?) for nonlinear devices
+
+* Add temperature sweep and netlist variable sweep in DC analysis
+
 * Keep testing existing code with more circuits
 
 * Improve convergence control in Newton method

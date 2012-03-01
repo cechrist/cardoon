@@ -427,7 +427,7 @@ Parameters
  phase        0.0          degrees      Phase                                                
  =========== ============ ============ ===================================================== 
 
-mosacm: Simplified ACM MOSFET
+mosacm: Incomplete ACM MOSFET
 -----------------------------
 
 Only (some) DC equations are considered for now.
@@ -496,6 +496,78 @@ Parameters
 
 
 Electro-thermal version with extra thermal port: mosacm_t 
+
+mosacms: Simplified ACM MOSFET
+------------------------------
+
+This model uses the simple equations for hand analysis. Only DC
+equations (with temperature dependence) included for now. 
+
+Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
+
+           Drain 0
+                   o
+                   |
+                   |
+               |---+
+               |
+  Gate 1 o-----|<-----o 3 Bulk
+               |
+               |---+
+                   |
+                   |
+                   o
+          Source 2
+
+Netlist examples::
+
+    mosacms:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
+    mosacms:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+
+Internal topology
++++++++++++++++++
+
+Only ids is implemented. In the future charges will be added::
+
+                       ,--o 0 (D)
+                       |
+                       |
+                       |
+                       |       
+                      /|\       
+      (G) 2 o-       ( | ) ids(VD, VG, VS, VB)
+                      \V/      
+                       |       
+                       |
+                       |
+                       |
+      (B) 3 o-         `--o 2 (S)
+              
+
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ bex          -1.5                      Mobility temperature exponent                        
+ cox          0.0007       F/m^2        Gate oxide capacitance per area                      
+ isq          1.0e-07      A/V^2        Sheet normalization current                          
+ l            1.0e-05      m            Channel length                                       
+ n            1.3          F/m^2        Subthreshold slope factor                            
+ tcv          0.001        V/K          Threshold voltage temperature coefficient            
+ temp         None         C            Device temperature                                   
+ tnom         27.0         C            Nominal temperature of model parameters              
+ type         n                         N- or P-channel MOS (n or p)                         
+ vth          0.5          V            Threshold Voltage                                    
+ w            1.0e-05      m            Channel width                                        
+ =========== ============ ============ ===================================================== 
+
+
+Electro-thermal version with extra thermal port: mosacms_t 
 
 mosekv: Intrinsic EPFL EKV 2.6 MOSFET
 -------------------------------------
