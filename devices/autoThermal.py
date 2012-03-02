@@ -72,8 +72,10 @@ def thermal_device(nle):
                 # Add units to thermal port
                 self.neighbour[self.numTerms-1].unit = 'C'
                 self.neighbour[self.numTerms-2].unit = 'C'
-                self.csOutPorts.append((self.numTerms-1, self.numTerms-2))
-                self.controlPorts.append((self.numTerms-2, self.numTerms-1))
+                self.csOutPorts = self.csOutPorts + [(self.numTerms-1, 
+                                                      self.numTerms-2)]
+                self.controlPorts = self.controlPorts + [(self.numTerms-2, 
+                                                          self.numTerms-1)]
                 # Thermal output number
                 self.__ton = len(self.csOutPorts) - 1
                 # Thermal control port number
