@@ -5,8 +5,10 @@
 .. module:: mosACM
 .. moduleauthor:: Carlos Christoffersen
 
-Needs more work: charge calculation, noise equations, etc.
+Needs more work: temperature dependence, charge calculation, noise
+equations, etc.
 
+This module also includes ACM utility functions
 """
 
 import numpy as np
@@ -14,13 +16,73 @@ from globalVars import const, glVar
 import circuit as cir
 import cppaddev as ad
 
+# Utility functions ----------------------------------------------------
+
+def inv_f1(f):
+    """
+    Approximately solve f^(-1)(i_f(r)) to get i_f and i_r using relaxation 
+    """
+    i_f = 1.
+    deltaif = 10.
+    # counter = 0
+    # Use fixed number of iterations for easy taping
+    for i in xrange(3):
+        sqi1 = np.sqrt(1. + i_f)
+        # Uses different formulation for f>0 and f<0 for convergence
+        i_fnew = ad.condassign(f, 
+                               (f + 2. - np.log(sqi1 - 1.))**2 - 1.,
+                               (np.exp(f - sqi1 + 2.) + 1.)**2 - 1.)
+        i_f = .5 * i_f + .5 * i_fnew
+    return i_f
+
+def inv_f(f):
+    """
+    Solve f^(-1)(i_f(r)) to get i_f and i_r using Newton's method
+
+    Uses inv_f1() to get a good starting guess. Unfortunately not used
+    as it seems to cause convergence problems.
+    """
+    i_f = inv_f1(f)
+    # Use fixed number of iterations for easy taping. Solution has
+    # good accuracy for all values.
+    for counter in xrange(4):
+        sqi1 = np.sqrt(1. + i_f)
+        sqi11 = abs(sqi1 - 1.)
+        # f > 0
+        fodfp = (sqi1 - 2. + np.log(sqi11) - f) * 2. * sqi11
+        # f < 0
+        fodfn = (sqi1 - 1. - np.exp(f - sqi1 + 2.)) * 2. * sqi1 \
+            / (np.exp(f - sqi1 + 2.) + 1.)
+        # Uses different formulation for f>0 and f<0 to ensure
+        # convergence in few iterations
+        ifnew = ad.condassign(f, i_f - fodfp, i_f - fodfn)
+#        deltai = abs(ifnew - i_f)
+#        print(deltai)
+        i_f = ad.condassign(ifnew, ifnew, 1e-300)
+
+    return i_f
+
+def fifr(i):
+    """
+    f(i_f(r)) from ACM model
+    """
+    if i < 1e-8:
+        # sqi1 = 1 + i/2
+        return -1. + .5 * i + np.log(.5 * i)
+    else:
+        sqi1 = np.sqrt(1. + i)    
+        return sqi1 - 2. + np.log(sqi1 - 1.)
+
+# ------------------------------------------------------------------------
+
 class Device(cir.Element):
     """
     Incomplete ACM MOSFET
     ---------------------
 
-    Only (some) DC equations are considered for now.
-    Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
+    Only (some) DC equations are implemented for now. Temperature
+    dependence is not complete.  Terminal order: 0 Drain, 1 Gate, 2
+    Source, 3 Bulk::
 
                Drain 0
                        o
@@ -150,8 +212,9 @@ class Device(cir.Element):
                                        .5*self.gamma, 2))\
                      - .5*self.gamma, 2) - 2.*self.phi
         
-        i_f = solve_ifr(vPort1[2],vp, self.Vt)
-        i_r = solve_ifr(vPort1[0],vp, self.Vt)
+        # Normalized currents
+        i_f = inv_f((vp - vPort1[2]) / self.Vt)
+        i_r = inv_f((vp - vPort1[0]) / self.Vt)
         
         # Calculate IS at this point
         # All this not needed if we just want IS
@@ -241,31 +304,4 @@ class Device(cir.Element):
 
 
 
-def solve_ifr(vs, vp, Vt):
-    """
-    Solve equations to get i_f and i_r using relaxation for now
-    """
-    i_f = 1.
-    deltaif = 10.
-    c1 = (vp - vs) / Vt
-    # counter = 0
-    # Try fixed-point with fixed number of iterations for easy taping
-    for i in range(30):
-        i_fnew = ad.condassign(c1,
-                    pow(c1 + 2. - np.log(np.sqrt(1.+i_f)-1.), 2.) - 1.,
-                    pow(np.exp(c1-np.sqrt(1.+i_f)+2.) + 1., 2.) - 1.)
-        i_f = .5 * i_f + .5 * i_fnew
-
-#     # Try fixed-point approach for now
-#     while deltaif > glVar.abstol:
-#         if (c1 > 0.):
-#             i_fnew = pow(c1 + 2. - np.log(np.sqrt(1.+i_f)-1.), 2.) - 1.
-#         else:
-#             i_fnew = pow(np.exp(c1-np.sqrt(1.+i_f)+2.) + 1., 2.) - 1.
-#         deltaif = np.abs(i_fnew - i_f)
-#         i_f = .5 * i_f + .5 * i_fnew
-#         # counter += 1
-#     # print counter
-    return i_f
-    
 

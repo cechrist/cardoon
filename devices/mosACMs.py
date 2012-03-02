@@ -11,6 +11,7 @@ import numpy as np
 from globalVars import const, glVar
 import circuit as cir
 import cppaddev as ad
+from mosACM import inv_f, inv_f1
 
 class Device(cir.Element):
     """
@@ -165,8 +166,8 @@ class Device(cir.Element):
         vp = (vPort1[1] - self._vthT) / self.n
         
         # Normalized currents
-        i_f = solve_ifr((vp - vPort1[2]) / self._Vt)
-        i_r = solve_ifr((vp - vPort1[0]) / self._Vt)
+        i_f = inv_f((vp - vPort1[2]) / self._Vt)
+        i_r = inv_f((vp - vPort1[0]) / self._Vt)
         
         idrain = self._IS * (i_f - i_r) 
 
@@ -238,38 +239,56 @@ class Device(cir.Element):
         return None
 
 
-def solve_ifr(f):
-    """
-    Solve f^(-1)(i_f(r)) to get i_f and i_r using relaxation for now
-    """
-    i_f = 1.
-    deltaif = 10.
-    # counter = 0
-    # Try fixed-point with fixed number of iterations for easy taping
-    for i in xrange(10):
-        i_fnew = ad.condassign(
-            f, 
-            (f + 2. - np.log(np.sqrt(1.+i_f)-1.))**2 - 1.,
-            (np.exp(f-np.sqrt(1.+i_f)+2.) + 1.)**2 - 1.)
-        i_f = .5 * i_f + .5 * i_fnew
-    return i_f
-
-
-def fifr(i):
-    """
-    f(i_f(r)) from ACM model
-    """
-    return np.sqrt(1. + i) - 2. + np.log(np.sqrt(1. + i) - 1.)
 
 #     # Try fixed-point approach for now
 #     while deltaif > glVar.abstol:
 #         if (f > 0.):
-#             i_fnew = pow(f + 2. - np.log(np.sqrt(1.+i_f)-1.), 2.) - 1.
+#             i_fnew = pow(f + 2. - np.log(sqi1-1.), 2.) - 1.
 #         else:
-#             i_fnew = pow(np.exp(f-np.sqrt(1.+i_f)+2.) + 1., 2.) - 1.
+#             i_fnew = pow(np.exp(f-sqi1+2.) + 1., 2.) - 1.
 #         deltaif = np.abs(i_fnew - i_f)
 #         i_f = .5 * i_f + .5 * i_fnew
 #         # counter += 1
 #     # print counter
     
+
+# Saved here in case some of the expressions are needed later
+#
+#   def inv_f(f):
+#       """
+#       Solve f^(-1)(i_f(r)) to get i_f and i_r using Newton's method
+#   
+#       Uses inv_f1() to get a good starting guess. Unfortunately not used
+#       as it seems to cause convergence problems.
+#       """
+#       i_f = inv_f1(f)
+#       # Use fixed number of iterations for easy taping. Solution has
+#       # good accuracy for all values.
+#       for counter in xrange(4):
+#           sqi1 = np.sqrt(1. + i_f)
+#           sqi11 = abs(sqi1 - 1.)
+#           # f > 0
+#           fodfp = (sqi1 - 2. + np.log(sqi11) - f) * 2. * sqi11
+#   #        fodfp = ad.condassign(
+#   #            f + 4., 
+#   #            (sqi1 - 2. + np.log(sqi11) - f) * 2. * sqi11,
+#   #            (-1. + .5 * i_f + np.log(.5 * i_f) - f) * i_f)
+#           # f < 0
+#           fodfn = (sqi1 - 1. - np.exp(f - sqi1 + 2.)) * 2. * sqi1 \
+#               / (np.exp(f - sqi1 + 2.) + 1.)
+#   #        fodfn = ad.condassign(
+#   #            80 - f,
+#   #            (sqi1 - 1. - np.exp(f - sqi1 + 2.)) * 2. * sqi1 /
+#   #            (np.exp(f - sqi1 + 2.) + 1.),
+#   #            2. * sqi1)
+#           # Uses different formulation for f>0 and f<0 to ensure
+#           # convergence in few iterations
+#           ifnew = ad.condassign(f, i_f - fodfp, i_f - fodfn)
+#   #        ifnew = i_f - fodfn
+#   #        deltai = abs(ifnew - i_f)
+#   #        print(deltai)
+#           i_f = ad.condassign(ifnew, ifnew, 1e-300)
+#   
+#       return i_f
+#   
 
