@@ -15,6 +15,7 @@ import numpy as np
 from globalVars import const, glVar
 import circuit as cir
 import cppaddev as ad
+from mosEKV import f_simple
 
 # Utility functions ----------------------------------------------------
 
@@ -22,11 +23,10 @@ def inv_f1(f):
     """
     Approximately solve f^(-1)(i_f(r)) to get i_f and i_r using relaxation 
     """
-    i_f = 1.
-    deltaif = 10.
-    # counter = 0
+    # Obtain a good guess first using EKV's simple interpolation function
+    i_f = 4. * f_simple(f)
     # Use fixed number of iterations for easy taping
-    for i in xrange(3):
+    for i in xrange(30):
         sqi1 = np.sqrt(1. + i_f)
         # Uses different formulation for f>0 and f<0 for convergence
         i_fnew = ad.condassign(f, 
@@ -38,16 +38,14 @@ def inv_f1(f):
 def inv_f(f):
     """
     Solve f^(-1)(i_f(r)) to get i_f and i_r using Newton's method
-
-    Uses inv_f1() to get a good starting guess. Unfortunately not used
-    as it seems to cause convergence problems.
     """
-    i_f = inv_f1(f)
+    # Obtain a good guess first using EKV's simple interpolation function
+    i_f = 4. * f_simple(f)
     # Use fixed number of iterations for easy taping. Solution has
     # good accuracy for all values.
     for counter in xrange(4):
         sqi1 = np.sqrt(1. + i_f)
-        sqi11 = abs(sqi1 - 1.)
+        sqi11 = abs(sqi1 - 1.) # Needed to prevent AD library from choking
         # f > 0
         fodfp = (sqi1 - 2. + np.log(sqi11) - f) * 2. * sqi11
         # f < 0
