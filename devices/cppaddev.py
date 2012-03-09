@@ -15,6 +15,10 @@ import cppaddev as ad
         # Add the following at the end to make sure tape is re-generated
         ad.delete_tape(self)
 
+    def set_temp_vars(self, temp):
+        ...
+        # Add the following at the end to make sure tape is re-generated
+        ad.delete_tape(self)
 
     # Use automatic differentiation for eval and deriv function
     eval_and_deriv = ad.eval_and_deriv

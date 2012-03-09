@@ -99,6 +99,9 @@ class Device(cir.Element):
         # here. Internal terminals/devices should also be defined
         # here.  Raise cir.CircuitError if a fatal error is found.
 
+        # if device is based on cppaddev, make sure tape is re-generated
+        # ad.delete_tape(self)
+
         # Use the following to make sure connections to internal
         # terminals are not repeated if this process_params is called
         # many times. 
@@ -110,8 +113,6 @@ class Device(cir.Element):
         # Access to global variables is through const and glVar (e.g.,
         # const.u0)
 
-        # if device is based on cppaddev, make sure tape is re-generated
-        # ad.delete_tape(self)
         pass
 
 
@@ -119,6 +120,9 @@ class Device(cir.Element):
         """
         Calculate temperature-dependent variables for temp given in C
         """
+        # if device is based on cppaddev, make sure tape is re-generated
+        # ad.delete_tape(self)
+
         # Absolute temperature (note temp is in deg. C)
         T = const.T0 + temp
         # Thermal voltage

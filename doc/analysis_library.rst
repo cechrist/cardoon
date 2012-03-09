@@ -51,6 +51,13 @@ terminals with the ``dC_`` prefix.  After this the analysis drops
 to an interactive shell if the ``shell`` global variable is set to
 ``True``.
 
+The following parameters can be swept: 
+
+  * Any device parameter of ``float`` type (device name must be
+    specified in this case)
+
+  * Global temperature (no device specified)
+
 Convergence parameters for the Newton method are controlled using
 the global variables in ``.options``.
 
@@ -59,9 +66,13 @@ One plot window is generated for each ``.plot`` statement. Use
 
 DC formulation documented in :doc:`analysis`
 
-Example::
+Examples::
 
+    # Device parameter sweep
     .analysis dc device=vsin:v1 param=vdc start=-2. stop=2. num=50 
+
+    # Global temperature sweep
+    .analysis dc param=temp start=-20C stop=80C 
 
     # Some options that affect convergence properties
     .options maxiter=300 gyr=1e-5 maxdelta=5.
@@ -78,10 +89,10 @@ Parameters
  =========== ============ ============ ===================================================== 
  device                                 Instance name of device to sweep variable            
  num          50                        Number of points in sweep                            
- param                                  Device parameter to sweep                            
+ param                                  Parameter to sweep                                   
  shell        0                         Drop to ipython shell after calculation              
- start        0.0          V            Sweep start value                                    
- stop         0.0          V            Sweep stop value                                     
+ start        0.0          (variable)   Sweep start value                                    
+ stop         0.0          (variable)   Sweep stop value                                     
  verbose      0                         Show iterations for each point                       
  =========== ============ ============ ===================================================== 
 

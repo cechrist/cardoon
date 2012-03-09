@@ -91,6 +91,8 @@ class Device(cir.Element):
         # here. Internal terminals/devices should also be defined
         # here.  Raise cir.CircuitError if a fatal error is found.
 
+        # Delete AD tape (if any)
+        ad.delete_tape(self)
         # Access to global variables is through the glVar 
         if not self.r and not (self.rsh and self.l and self.w):
             raise cir.CircuitError(self.nodeName 
@@ -106,23 +108,22 @@ class Device(cir.Element):
             # Adjust according to temperature
             self.set_temp_vars(self.temp)
 
-        self.linearVCCS = [((0, 1), (0, 1), self.g)]
-        # Delete AD tape (if any)
-        ad.delete_tape(self)
-
     def set_temp_vars(self, temp):
         """
         Calculate temperature-dependent variables for temp given in C
         """
+        # Delete AD tape (if any)
+        ad.delete_tape(self)
         # Absolute temperature (note temp is in deg. C)
         # T = const.T0 + temp
         deltaT = temp - self.tnom
         self.g /= (1. + (self.tc1 + self.tc2 * deltaT) * deltaT)
         self._St =  4. * const.k * (temp + const.T0) * self.g
+        # Set this here to keep VCCS in sync with temperature 
+        self.linearVCCS = [((0, 1), (0, 1), self.g)]
 
 
-    # Implement nonlinear functions for electrothermal model
-
+    # Implemented nonlinear functions for electrothermal model only:
     def eval_cqs(self, vPort):
         """
         Return current given port voltage. Charge vector is empty

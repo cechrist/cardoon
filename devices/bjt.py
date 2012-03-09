@@ -96,6 +96,9 @@ def extrinsic_bjt(IBJT):
             self.__doc__ += IBJT.__doc__
 
         def process_params(self, thermal = False):
+            # Remove tape if present
+            ad.delete_tape(self)
+
             if thermal:
                 extraTerms = 2
             else:
@@ -116,8 +119,6 @@ Can only be {1} or {2}, {3} found.'.format(self.nodeName,
 
             # Remove internal terminals
             self.clean_internal_terms()
-            # Remove tape if present
-            ad.delete_tape(self)
             # Tell autothermal to re-generate thermal ports
             self.__addThermalPorts = True
 
@@ -167,6 +168,8 @@ Can only be {1} or {2}, {3} found.'.format(self.nodeName,
             """
             Calculate temperature-dependent variables, given temp in deg. C
             """
+            # Remove tape if present
+            ad.delete_tape(self)
             # First calculate variables from base class
             IBJT.set_temp_vars(self, temp)
             # Adjust collector-bulk junction temperature

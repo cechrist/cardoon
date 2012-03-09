@@ -161,7 +161,7 @@ values. Inductors are represented by a combination of VCCS and VCQS
   parameter names can not be Python keywords (unfortunately ``is`` is
   a keyword). If model is dependent on temperature, the first item
   should be ``cir.Element.tempItem``, which contains the description
-  for the device temperature parameter (temp).
+  for the device temperature parameter (``temp``).
 
 * The ``process_params(self)`` function is called once the
   external terminals have been connected and the non-default
@@ -237,13 +237,13 @@ terminal variable can be manually changed as follows::
 Temperature Dependence
 ----------------------
 
-As previously described, it should have a "temp" parameter.  Compared
-with regular parameters, temperature is specially treated: by default
-all devices take the global temperature defined in the ".options"
-card. This can be overriden by the device ".model" line. In turn that
-is overriden by the temperature specified in the element line
-itself. For electrothermal devices, this parameter is ignored and the
-temperature at the thermal port is used. All temperatures are
+As previously described, most devices should have a ``temp`` parameter.
+Compared with regular parameters, temperature is specially treated: by
+default all devices take the global temperature defined in the
+".options" card. This can be overriden by the device ".model" line. In
+turn that is overriden by the temperature specified in the element
+line itself. For electrothermal devices, this parameter is ignored and
+the temperature at the thermal port is used. All temperatures are
 specified in degrees C.
 
 Temperature-related code is included in the following (optional)
@@ -255,6 +255,9 @@ function::
 
 	temp: temperature in degree C
         """
+        # if device is based on cppaddev, make sure tape is re-generated
+        # ad.delete_tape(self)
+
         # Absolute temperature 
         T = const.T0 + temp
         # Thermal voltage

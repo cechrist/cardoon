@@ -27,6 +27,13 @@ class Analysis(ParamSet):
     to an interactive shell if the ``shell`` global variable is set to
     ``True``.
 
+    The following parameters can be swept: 
+
+      * Any device parameter of ``float`` type (device name must be
+        specified in this case)
+
+      * Global temperature (no device specified)
+
     Convergence parameters for the Newton method are controlled using
     the global variables in ``.options``.
 
@@ -35,9 +42,13 @@ class Analysis(ParamSet):
 
     DC formulation documented in :doc:`analysis`
 
-    Example::
+    Examples::
 
+        # Device parameter sweep
         .analysis dc device=vsin:v1 param=vdc start=-2. stop=2. num=50 
+
+        # Global temperature sweep
+        .analysis dc param=temp start=-20C stop=80C 
 
         # Some options that affect convergence properties
         .options maxiter=300 gyr=1e-5 maxdelta=5.
@@ -52,9 +63,9 @@ class Analysis(ParamSet):
     # Define parameters as follows
     paramDict = dict(
         device = ('Instance name of device to sweep variable', '', str, ''),
-        param = ('Device parameter to sweep', '', str, ''),
-        start = ('Sweep start value', 'V', float, 0.),
-        stop = ('Sweep stop value', 'V', float, 0.),
+        param = ('Parameter to sweep', '', str, ''),
+        start = ('Sweep start value', '(variable)', float, 0.),
+        stop = ('Sweep stop value', '(variable)', float, 0.),
         num = ('Number of points in sweep', '', int, 50),
         verbose = ('Show iterations for each point', '', bool, False),
         shell = ('Drop to ipython shell after calculation', '', bool, False)
@@ -84,26 +95,36 @@ class Analysis(ParamSet):
             circuit.flatten()
             circuit.init()
 
-        # get device 
-        try:
-            dev = circuit.elemDict[self.device]
-        except KeyError: 
-            raise AnalysisError('Could not find: {0}'.format(self.device))
-            return
-
+        # get device (if any)
         paramunit = None
-        if self.param:
+        # tempFlag indicates if we are doing a global temperature sweep
+        tempFlag = False
+        if self.device:
+            # Device specified, try to find it
             try:
-                pinfo = dev.paramDict[self.param]
-            except KeyError:
-                raise AnalysisError('Unrecognized parameter: ' 
-                                    + self.param)
-            else:
-                if not pinfo[2] == float:
-                    raise AnalysisError('Parameter must be float: ' 
+                dev = circuit.elemDict[self.device]
+            except KeyError: 
+                raise AnalysisError('Could not find: {0}'.format(self.device))
+            if self.param:
+                try:
+                    pinfo = dev.paramDict[self.param]
+                except KeyError:
+                    raise AnalysisError('Unrecognized parameter: ' 
                                         + self.param)
+                else:
+                    if not pinfo[2] == float:
+                        raise AnalysisError('Parameter must be float: ' 
+                                            + self.param)
+            else:
+                raise AnalysisError("Don't know what parameter to sweep!")
+            paramunit = pinfo[1]
         else:
-            raise AnalysisError("Don't know what parameter to sweep!")
+            # No device, check if temperature sweep
+            if self.param != 'temp':
+                raise AnalysisError(
+                    'Only temperature sweep supported if no device specified')
+            paramunit = 'C'
+            tempFlag = True
 
         # Create nodal object: for now assume devices do not change
         # topology during sweep
@@ -114,20 +135,32 @@ class Analysis(ParamSet):
         sweepvar = np.linspace(start = self.start, stop = self.stop, 
                               num = self.num)
         circuit.dC_sweep = sweepvar
-        circuit.dC_var = 'Device: ' + dev.nodeName \
-            + '  Parameter: ' + self.param
-        circuit.dC_unit = pinfo[1]
+        if tempFlag:
+            circuit.dC_var = 'Global temperature sweep: temp'
+        else:
+            circuit.dC_var = 'Device: ' + dev.nodeName \
+                + '  Parameter: ' + self.param
+        circuit.dC_unit = paramunit
         
         xVec = np.zeros((circuit.nD_dimension, self.num))
         tIter = 0
         tRes = 0.
         for i, value in enumerate(sweepvar):
-            setattr(dev, self.param, value)
-            # re-process parameters (topology must not change, for now at least)
-            dev.process_params()
-            # Re-generate nodal attributes. 
-            nd.restore_RCnumbers(dev)
-            nd.process_nodal_element(dev)
+            if tempFlag:
+                for elem in circuit.nD_elemList:
+                    try:
+                        elem.set_temp_vars(value)
+                    except AttributeError:
+                        # It is OK if element independent of temperature
+                        pass
+            else:
+                setattr(dev, self.param, value)
+                # re-process parameters (topology must not change, for
+                # now at least)
+                dev.process_params()
+                # Re-generate nodal attributes. 
+                nd.restore_RCnumbers(dev)
+                nd.process_nodal_element(dev)
 
             # re-process linear matrix
             dc.refresh()
@@ -169,7 +202,7 @@ class Analysis(ParamSet):
                 flag = True
                 plt.figure()
                 plt.grid(True)
-                plt.xlabel('{0} [{1}]'.format(circuit.dC_var, pinfo[1]))
+                plt.xlabel('{0} [{1}]'.format(circuit.dC_var, circuit.dC_unit))
                 for termname in outreq.varlist:
                     term = circuit.termDict[termname]
                     plt.plot(sweepvar, term.dC_v, 

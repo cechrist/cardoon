@@ -190,8 +190,10 @@ class Device(cir.Element):
         # the non-default parameters have been set. Make sanity checks
         # here. Internal terminals/devices should also be defined
         # here.  Raise cir.CircuitError if a fatal error is found.
-
         # import pdb; pdb.set_trace()
+
+        # Delete AD tape (if any)
+        ad.delete_tape(self)
         # Any value other than zero uses the simple function
         if self.ekvint:
             self.interp = f_simple
@@ -272,13 +274,13 @@ class Device(cir.Element):
         if not thermal:
             # Calculate temperature-dependent variables
             self.set_temp_vars(self.temp)
-        # Delete AD tape (if any)
-        ad.delete_tape(self)
 
     def set_temp_vars(self, temp):
         """
         Calculate temperature-dependent variables, given temp in deg. C
         """
+        # Delete AD tape (if any)
+        ad.delete_tape(self)
         # Absolute temperature (note self.temp is in deg. C)
         T = const.T0 + temp
         # Thermal voltage

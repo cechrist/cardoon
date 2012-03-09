@@ -126,8 +126,6 @@ class Device(cir.Element):
 
         # Calculate temperature-dependent variables
         # self.set_temp_vars(self.temp)
-        # if device is based on cppaddev, make sure tape is re-generated
-        # ad.delete_tape(self)
 
 
     def get_OP(self, vPort):

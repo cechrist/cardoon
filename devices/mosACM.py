@@ -167,6 +167,7 @@ class Device(cir.Element):
         # the non-default parameters have been set. Make sanity checks
         # here. Internal terminals/devices should also be defined
         # here.  Raise cir.CircuitError if a fatal error is found.
+        ad.delete_tape(self)
 
         if self.type == 'n':
             self._tf = 1.
@@ -180,13 +181,13 @@ class Device(cir.Element):
             # Calculate temperature-dependent variables
             self.set_temp_vars(self.temp)
 
-        ad.delete_tape(self)
-
 
     def set_temp_vars(self, temp):
         """
         Calculate temperature-dependent variables, given temp in deg. C
         """
+        ad.delete_tape(self)
+
         # Absolute temperature (note self.temp is in deg. C)
         T = const.T0 + temp
         # Thermal voltage

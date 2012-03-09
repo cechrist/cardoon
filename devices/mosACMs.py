@@ -97,6 +97,7 @@ class Device(cir.Element):
     qsOutPorts = [ ]
     # No time-delayed port voltages required
 
+
     def __init__(self, instanceName):
         """
         Here the Element constructor must be called. Do not connect
@@ -104,12 +105,13 @@ class Device(cir.Element):
         """
         cir.Element.__init__(self, instanceName)
 
+
     def process_params(self, thermal = False):
         # Called once the external terminals have been connected and
         # the non-default parameters have been set. Make sanity checks
         # here. Internal terminals/devices should also be defined
         # here.  Raise cir.CircuitError if a fatal error is found.
-
+        ad.delete_tape(self)
         if self.type == 'n':
             self._tf = 1.
         elif self.type == 'p':
@@ -127,18 +129,16 @@ class Device(cir.Element):
         # Nominal Thermal voltage
         self._Vtn = const.k * self._Tn / const.q
         self._mu = self.isq * 2. / (self.n * self.cox * self._Vtn**2)
-
         if not thermal:
             # Calculate temperature-dependent variables
             self.set_temp_vars(self.temp)
-
-        ad.delete_tape(self)
 
 
     def set_temp_vars(self, temp):
         """
         Calculate temperature-dependent variables, given temp in deg. C
         """
+        ad.delete_tape(self)
         # Absolute temperature (note self.temp is in deg. C)
         T = const.T0 + temp
         # Thermal voltage

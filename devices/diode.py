@@ -208,6 +208,8 @@ class Device(cir.Element):
         # here. Internal terminals/devices should also be defined
         # here.  Raise cir.CircuitError if a fatal error is found.
         
+        # Make sure tape is re-generated
+        ad.delete_tape(self)
         # Remove internal terminals
         self.clean_internal_terms()
         # Set flag to add thermal ports if needed
@@ -247,14 +249,14 @@ class Device(cir.Element):
         if not thermal:
             # Calculate temperature-dependent variables
             self.set_temp_vars(self.temp)
-        # Make sure tape is re-generated
-        ad.delete_tape(self)
 
 
     def set_temp_vars(self, temp):
         """
         Calculate temperature-dependent variables for temp given in C
         """
+        # Make sure tape is re-generated
+        ad.delete_tape(self)
         # Absolute temperature
         self.Tabs = temp + const.T0
         # Thermal voltage
