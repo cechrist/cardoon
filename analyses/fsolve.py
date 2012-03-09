@@ -104,11 +104,11 @@ def fsolve_Newton(x0, f_Jac_eval, f_eval):
         n1 = np.all(errFunc < (glVar.reltol * max(errFunc) + glVar.abstol)) 
         n2 = np.all(abs(deltax) < (abs(glVar.reltol * np.maximum(x, xnew))
                                    + glVar.abstol))
+        x = xnew
         if n1 and n2:
             ier = 1
             break
 
-        x = xnew
 
     res = max(np.linalg.norm(deltax), np.linalg.norm(errFunc))
 
