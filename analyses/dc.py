@@ -32,7 +32,8 @@ class Analysis(ParamSet):
       * Any device parameter of ``float`` type (device name must be
         specified in this case)
 
-      * Global temperature (no device specified)
+      * Global temperature (no device specified): sweep temperature of
+        all devices that do not explicitly have ``temp`` set.
 
     Convergence parameters for the Newton method are controlled using
     the global variables in ``.options``.
@@ -148,11 +149,14 @@ class Analysis(ParamSet):
         for i, value in enumerate(sweepvar):
             if tempFlag:
                 for elem in circuit.nD_elemList:
-                    try:
-                        elem.set_temp_vars(value)
-                    except AttributeError:
-                        # It is OK if element independent of temperature
-                        pass
+                    # Only sweep temperature if not explicitly given
+                    # for a device
+                    if not elem.is_set('temp'):
+                        try:
+                            elem.set_temp_vars(value)
+                        except AttributeError:
+                            # It is OK if element independent of temperature
+                            pass
             else:
                 setattr(dev, self.param, value)
                 # re-process parameters (topology must not change, for
