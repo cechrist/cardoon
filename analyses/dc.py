@@ -197,6 +197,26 @@ class Analysis(ParamSet):
         for i,term in enumerate(circuit.nD_termList):
             term.dC_v = xVec[i,:]
 
+        # Restore original attribute values ------------------------
+        if tempFlag:
+            for elem in circuit.nD_elemList:
+                if not elem.is_set('temp'):
+                    elem.set_attributes()
+                    try:
+                        elem.set_temp_vars(value)
+                    except AttributeError:
+                        # It is OK if element independent of temperature
+                        pass
+        else:
+            dev.set_attributes()
+            # re-process parameters (topology must not change, for
+            # now at least)
+            dev.process_params()
+            # Re-generate nodal attributes. 
+            nd.restore_RCnumbers(dev)
+            nd.process_nodal_element(dev)
+        # -----------------------------------------------------------
+
         # Process output requests.  In the future this should be moved
         # to a common module that processes output requests such as
         # plot, print, save, etc.
