@@ -67,13 +67,11 @@ def set_Jac(M, posRows, negRows, posCols, negCols, Jac):
     for i1, i in posRows:
         for j1, j in posCols:
             M[i,j] += Jac[i1,j1]
-    for i1, i in negRows:
-        for j1, j in negCols:
-            M[i,j] += Jac[i1,j1]
-    for i1, i in posRows:
         for j1, j in negCols:
             M[i,j] -= Jac[i1,j1]
     for i1, i in negRows:
+        for j1, j in negCols:
+            M[i,j] += Jac[i1,j1]
         for j1, j in posCols:
             M[i,j] -= Jac[i1,j1]
 
