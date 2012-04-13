@@ -289,16 +289,24 @@ Electro-thermal version with extra thermal port: diode_t
 idc: DC current source
 ----------------------
 
-Includes temperature dependence::
+Schematic::
 
-                ______ 
-               /      \ idc
-    0 o-------+  --->  +---------o 1
-               \______/  
+                idc
+               ,---,    
+    0 o-------( --> )---------o 1
+               `---`     
+
+Temperature dependence:
+
+.. math::
+    
+  i_{DC}(T) = i_{DC}(T_{nom}) (1 + t_{c1} \Delta T + t_{c2} \Delta T^2)
+
+  \Delta T = T - T_{nom}
 
 Netlist example::
 
-    idc:vdd gnd 4 idc=2mA
+    idc:is1 gnd 4 idc=2mA
 
 
 
@@ -1168,11 +1176,20 @@ Parameters
 vdc: DC voltage source
 ----------------------
 
-Includes temperature dependence in vdc but not in rint::
+Schematic::
                       
                ,---,  vdc       Rint
    0 o--------( - + )---------/\/\/\/\--------o 1
                '---'  
+
+Rint is independent of temperature. Teperature dependence of vdc
+is as follows:
+
+.. math::
+    
+  v_{DC}(T) = v_{DC}(T_{nom}) (1 + t_{c1} \Delta T + t_{c2} \Delta T^2)
+
+  \Delta T = T - T_{nom}
 
 Netlist example::
 
@@ -1189,7 +1206,7 @@ source if Rint is zero::
     0  o---------+            +----------------+
                  | gyr V23    |                |
       +         /|\          /|\              /^\ 
-    vin        | | |        | | | gyr vin    | | | gyr vdc
+    vin        ( | )        ( | ) gyr vin    ( | ) gyr vdc
       -         \V/          \V/              \|/  
                  |            |                |
     1  o---------+            +----------------+

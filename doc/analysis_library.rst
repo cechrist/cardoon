@@ -56,7 +56,8 @@ The following parameters can be swept:
   * Any device parameter of ``float`` type (device name must be
     specified in this case)
 
-  * Global temperature (no device specified)
+  * Global temperature (no device specified): sweep temperature of
+    all devices that do not explicitly have ``temp`` set.
 
 Convergence parameters for the Newton method are controlled using
 the global variables in ``.options``.
