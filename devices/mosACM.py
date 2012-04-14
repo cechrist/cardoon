@@ -112,7 +112,7 @@ class Device(cir.Element):
                            |
                            |       
                           /|\       
-          (G) 2 o-       ( | ) ids(VD, VG, VS, VB)
+          (G) 1 o-       ( | ) ids(VD, VG, VS, VB)
                           \V/      
                            |       
                            |

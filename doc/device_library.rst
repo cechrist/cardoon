@@ -347,7 +347,7 @@ Internal implementation uses a gyrator (adds one internal node)::
     0  o---------+            +----------------+
                  | gyr V23    |                |
       +         /|\          /^\               |
-    Vin        | | |        | | | gyr Vin    ----- gyr^2 * L
+    Vin        ( | )        ( | ) gyr Vin    ----- gyr^2 * L
       -         \V/          \|/             -----
                  |            |                |
     1  o---------+            +----------------+
@@ -472,7 +472,7 @@ For now only ids is implemented::
                        |
                        |       
                       /|\       
-      (G) 2 o-       ( | ) ids(VD, VG, VS, VB)
+      (G) 1 o-       ( | ) ids(VD, VG, VS, VB)
                       \V/      
                        |       
                        |
@@ -544,7 +544,7 @@ Only ids is implemented. In the future charges will be added::
                        |
                        |       
                       /|\       
-      (G) 2 o-       ( | ) ids(VD, VG, VS, VB)
+      (G) 1 o-       ( | ) ids(VD, VG, VS, VB)
                       \V/      
                        |       
                        |
@@ -1171,6 +1171,46 @@ Parameters
  nsect        0                         Enable discrete approximation with n sections        
  tand         0.0                       Loss tangent                                         
  z0mag        50.0         Ohms         Magnitude of characteristic impedance                
+ =========== ============ ============ ===================================================== 
+
+vccs: Voltage-controlled current source
+---------------------------------------
+
+Schematic::
+
+              g Vcont
+               ,---,    
+    0 o-------( --> )---------o 1
+               `---`     
+
+
+    2 o      + Vcont -        o 3
+
+Temperature dependence:
+
+.. math::
+    
+  g(T) = g(T_{nom}) (1 + t_{c1} \Delta T + t_{c2} \Delta T^2)
+
+  \Delta T = T - T_{nom}
+
+Netlist example::
+
+    vccs:g1 gnd 4 3 gnd g=2mS
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ g            0.001        S            Linear transconductance                              
+ tc1          0.0          1/C          Current temperature coefficient 1                    
+ tc2          0.0          1/C^2        Current temperature coefficient 2                    
+ temp         None         C            Device temperature                                   
+ tnom         27.0         C            Nominal temperature                                  
  =========== ============ ============ ===================================================== 
 
 vdc: DC voltage source

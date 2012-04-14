@@ -67,7 +67,7 @@ class Device(cir.Element):
 
     paramDict = dict(
         cir.Element.tempItem,
-        g = ('Linear transconductance', 'S', float, 0.),
+        g = ('Linear transconductance', 'S', float, 1e-3),
         tnom = ('Nominal temperature', 'C', float, 27.),
         tc1 = ('Current temperature coefficient 1', '1/C', float, 0.),
         tc2 = ('Current temperature coefficient 2', '1/C^2', float, 0.)
