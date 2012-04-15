@@ -15,7 +15,7 @@ To reset parameters to netlist values, use the following::
     obj.set_attributes()
 
 """
-
+from __future__ import print_function
 
 class ParamError(Exception):
     """
@@ -326,5 +326,8 @@ class Model(ParamSet):
                         # Use default
                         value = paraminfo[3]
                 setattr(target, key, value)
+        if not self.varDict:
+            print('\nWarning: empty model, name: {0}, type: {1}\n'.format(
+                    self.name, self.modelType))
 
         
