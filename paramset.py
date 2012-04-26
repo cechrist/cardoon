@@ -326,7 +326,7 @@ class Model(ParamSet):
                         # Use default
                         value = paraminfo[3]
                 setattr(target, key, value)
-        if not self.varDict:
+        if not self.valueDict:
             print('\nWarning: empty model, name: {0}, type: {1}\n'.format(
                     self.name, self.modelType))
 
