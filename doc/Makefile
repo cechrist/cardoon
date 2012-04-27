@@ -3,7 +3,8 @@
 
 # Add the parent directory to python path
 
-PYTHONPATH := $(PYTHONPATH):../
+PYTHONPATH := $(PYTHONPATH):$(realpath ../)
+export PYTHONPATH
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
