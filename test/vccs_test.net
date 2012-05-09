@@ -1,6 +1,7 @@
 # CMOS inverter DC Sweep plus VCCS
 
 .analysis dc device=vdc:vin param=vdc start=0 stop=3V shell=0
+.options sparse=0
 
 vdc:vdd 1 gnd vdc=3V 
 vdc:vin in gnd vdc=1 

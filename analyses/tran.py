@@ -13,7 +13,7 @@ import numpy as np
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
 from integration import BEuler, Trapezoidal
-import nodalSP as nd
+from globalVars import glVar
 from fsolve import solve, NoConvergenceError
 import matplotlib.pyplot as plt
 
@@ -26,13 +26,15 @@ class Analysis(ParamSet):
     fixed time step (at least for now) equal to ``tstep``. Two
     integration methods are supported: Backwards Euler (``im = BE``)
     and trapezoidal (``im=trap``). Support for frequency-defined
-    elements is not yet included.
+    elements and time delays is not yet included.
 
     Convergence parameters for the Newton method are controlled using
     the global variables in ``.options``.
 
     One plot window is generated for each ``.plot`` statement. Use
-    ``tran`` request type for this analysis.
+    ``tran`` request type for this analysis. By default, only results
+    for nodes listed in ``.plot`` statements are saved. To save all
+    nodal variables set ``saveall`` to 1.
 
     Transient analysis formulation documented in :doc:`analysis`
 
@@ -53,6 +55,7 @@ class Analysis(ParamSet):
         tstep = ('Time step size', 's', float, 1e-5),
         im = ('Integration method', '', str, 'BE'),
         verbose = ('Show iterations for each point', '', bool, False),
+        saveall = ('Save all nodal voltages', '', bool, False),
         shell = ('Drop to ipython shell after calculation', '', bool, False)
         )
 
@@ -70,6 +73,12 @@ class Analysis(ParamSet):
         print('******************************************************')
         if hasattr(circuit, 'title'):
             print('\n', circuit.title, '\n')
+
+        if glVar.sparse:
+            import nodalSP as nd
+        else:
+            import nodal as nd
+            print('Using dense matrices\n')
 
         # Only works with flattened circuits
         if not circuit._flattened:
@@ -109,10 +118,24 @@ class Analysis(ParamSet):
                             dtype=float)
         nsamples = len(timeVec)
         circuit.tran_timevec = timeVec
-        # Create matrix to store results
-        xVec = np.zeros((circuit.nD_dimension, nsamples))
+
+        # Allocate vectors for results
+        if self.saveall:
+            for term in circuit.nD_termList:
+                term.tran_v = np.empty(nsamples)
+                term.tran_v[0] = x[term.nD_namRC]                
+            circuit.nD_ref.tran_v = np.zeros(nsamples)
+        else:
+            # Only save requested nodes
+            for outreq in circuit.outReqList:
+                if outreq.type == 'tran':
+                    for termname in outreq.varlist:
+                        term = circuit.termDict[termname]
+                        term.tran_v = np.empty(nsamples)
+                        term.tran_v[0] = x[term.nD_namRC]
+
         # Save initial values
-        xVec[:,0] = x
+        xOld = x
         tIter = 0
         tRes = 0.
         if self.verbose:
@@ -120,20 +143,30 @@ class Analysis(ParamSet):
             print(' Step    | Time (s)     | Iter.    | Residual    ')
             print('-------------------------------------------------')
         for i in xrange(1, nsamples):
-            qVec = tran.update_q(xVec[:,i-1])
+            qVec = tran.update_q(xOld)
             imo.accept(qVec)
             sV = imo.f_n1()
             sV += tran.get_source(timeVec[i])
             # solve equations: use previous time-step solution as an
             # initial guess
             try: 
-                (x, res, iterations) = solve(xVec[:,i-1], sV, 
+                (x, res, iterations) = solve(xOld, sV, 
                                              tran.convergence_helpers)
             except NoConvergenceError as ce:
                 print(ce)
                 return
-            # Save result
-            xVec[:,i] = x
+            # Save results
+            xOld[:] = x
+            if self.saveall:
+                for term in circuit.nD_termList:
+                    term.tran_v[i] = x[term.nD_namRC]                
+            else:
+                # Only save requested nodes
+                for outreq in circuit.outReqList:
+                    if outreq.type == 'tran':
+                        for termname in outreq.varlist:
+                            term = circuit.termDict[termname]
+                            term.tran_v[i] = x[term.nD_namRC]
             # Keep some info about iterations
             tIter += iterations
             tRes += res
@@ -147,12 +180,7 @@ class Analysis(ParamSet):
         print('\nAverage iterations: {0}'.format(avei))
         print('Average residual: {0}\n'.format(aver))
 
-        # Save results in nodes
-        circuit.nD_ref.tran_v = np.zeros(nsamples)
-        for i,term in enumerate(circuit.nD_termList):
-            term.tran_v = xVec[i,:]
-
-        # Process output requests.  In the future this should be moved
+        # Process output requests.  In the future this may be moved
         # to a common module that processes output requests such as
         # plot, print, save, etc.
         flag = False
@@ -182,7 +210,7 @@ class Analysis(ParamSet):
             ipython_drop("""
 Available commands:
     timeVec: time vector
-    getvec(<terminal>) to retrieve results
+    getvec(<terminal>) to retrieve results (if result saved)
     plt.* to access pyplot commands (plt.plot(x,y), plt.show(), etc.)
 """, globals(), locals())
 

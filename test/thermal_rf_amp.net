@@ -1,0 +1,74 @@
+*********************************************************
+******** test circuit for LNA (thermal effects)**********
+*********************************************************
+* Originally created by Haiyang Wang <hhywa@uestc.edu.cn>
+*
+cap:c1 0 1 c=96e-12
+cap:c2 vin 2 c=2.5e-12
+ind:l1 3 4 l=0.53e-12
+ind:l2 4 5 l=0.47e-12
+cap:c3 6 4 c=136e-15
+ind:l3 6 7 l=0.23e-12
+ind:l4 0 6 l=0.05e-9
+cap:c4 6 8 c=134e-15
+ind:l5 9 8 l=0.56e-9
+res:r1 0 vout r=50
+res:r2 1 10 r=35e3
+cap:c5 11 vout c=3e-12
+res:r3 12 13 r=20
+cap:c6 10 0 c=23e-12
+cap:c7 0 14 c=100e-12
+
+res:r4 10 14 r=35
+cap:c8 4 8 c=6.9e-15
+ind:l6 8 15 l=0.58e-9
+
+vdc:v6 14 0 vdc=3
+
+res:r5 16 vin r=50
+*cpw:cp6 2 0 17 0 w=0.5e-3 s=0.5e-3 length=4.25e-3 er=3.5 t=0.76e-3 nsect=30
+tlinpy4:cp6 2 0 17 0 z0mag=97.7 length=4.25e-3 k=2.008 nsect=30
+*cpw:cp5 17 0 1 0 w=0.58e-3 s=0.58e-3 length=8.65e-3 er=3.5 t=0.76e-3 nsect=30
+tlinpy4:cp5 17 0 1 0 z0mag=99.68 length=8.65e-3 k=1.98 nsect=30
+*cpw:cp4 17 0 3 0 w=0.5e-3 s=0.5e-3 length=4e-3 er=3.5 t=0.76e-3 nsect=30
+tlinpy4:cp4 17 0 3 0 z0mag=97.7 length=4e-3 k=2.008 nsect=30
+*cpw:cp3 15 0 12 0 w=1.76e-3 s=1.76e-3 length=13e-3 er=3.5 t=0.76e-3 nsect=30
+tlinpy4:cp3 15 0 12 0 z0mag=118 length=13e-3 k=1.5911 nsect=30
+*cpw:cp2 13 0 11 0 w=0.5e-3 s=0.5e-3 length=4.75e-3 er=3.5 t=0.76e-3 nsect=30
+tlinpy4:cp2 13 0 11 0 z0mag=97.7 length=4.75e-3 k=2.008 nsect=30
+*cpw:cp1 13 0 10 0 w=0.5e-3 s=0.5e-3 length=8.65e-3 er=3.5 t=0.76e-3 nsect=30
+tlinpy4:cp1 13 0 10 0 z0mag=97.7 length=8.65e-3 k=2.008 nsect=30
+
+bjt_t:q1 9 5 7 60 gnd type=n isat=0.21024e-15 bf=83.23 ne=1.7763 nc=1.3152  eg=1.11 cje=3.7265e-15 vje=0.70367 mje=0.37747  vjc=0.99532 mjc=0.48652 fc=0.99469 xti=3 tnom=27 vjs=0.75
+
+res:r61 60 61 r=0.103	   
+cap:c61 60 61 c=5.1e-6
+res:r62 61 62 r=0.047
+cap:c62 61 62 c=3.3e-5
+res:r63 62 63 r=0.012
+cap:c63 62 63 c=1.2e-4
+res:r64 63 64 r=0.15
+cap:c64 63 64 c=8e-6
+res:r65 64 65 r=9.9e-3
+cap:c65 64 65 c=1.2e-4
+res:r66 65 66 r=0.205
+cap:c66 65 66 c=2e-5
+
+vdc:tref 66 gnd vdc=27
+
+vsin:v33 16 0 mag=0.01 freq=1.65e9 phase=0  
+
+*.analysis dc device=vdc:v6 param=vdc start=0. stop=3. num=50
+*.analysis ac start=.5GHz stop=4GHz num= 100 log=False
+.analysis tran tstop=10ns tstep=0.02ns verbose=1
+
+.options maxiter=20 abstol=3e-8 reltol=1e-8 
+
+.plot dc 9 5 7
+
+.plot ac_mag vin vout
+
+.plot tran vin vout 
+.plot tran 60
+
+.end

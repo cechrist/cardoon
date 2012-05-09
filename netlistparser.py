@@ -155,13 +155,14 @@ def convert_type(par, ptype):
                                       + '" must be an int: ' + par[1])
         elif ptype == bool:
             # Attempt to convert to a bool
-            if (par[1] == 'False') or (par[1] == '0'):
+            if (par[1].lower() == 'false') or (par[1] == '0'):
                 par[1] = False
-            elif (par[1] == 'True') or (par[1] == '1'):
+            elif (par[1].lower() == 'true') or (par[1] == '1'):
                 par[1] = True
             else:
                 raise NetVarException('Can not convert "' + par[0] 
-                                      + '" value: ' + type(par[1]) + ' to bool')
+                                      + '" value: ' + par[1]
+                                      + ' to bool')
         elif ptype == list:
             raise NetVarException('Can not convert "' + par[0] + '" value: '
                                   + type(par[1]) + ' to list (vector)')

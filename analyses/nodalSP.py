@@ -9,6 +9,13 @@ This module contains basic classes/functions for nodal analysis. These
 are part of the standard netlist analyses but they can also be used
 independently.
 
+This implementation uses pysparse, except for AC analysis because
+there is no complex matrix support in pysparse. It is much more
+efficient than the dense implementation but still a lot could be
+gained with finer control over matrix factorization. At this time the
+main Jacobian is (almost) created and factored from scratch at every
+iteration.
+
 """
 
 import numpy as np
@@ -16,7 +23,7 @@ import pysparse
 from fsolve import fsolve_Newton, NoConvergenceError
 from integration import BEuler
 
-# ****************** Stand-alone functions to be optimized ****************
+# ****************** Stand-alone functions (perhaps to be optimized) **********
 
 def set_quad(G, row1, col1, row2, col2, g):
     """
@@ -24,8 +31,6 @@ def set_quad(G, row1, col1, row2, col2, g):
 
     G: target matrix
     """
-    # good cython candidate
-    #import pdb; pdb.set_trace()
     if col1 >= 0:
         if row1 >= 0:
             G[row1, col1] += g
@@ -42,7 +47,6 @@ def set_xin(xin, posCols, negCols, xVec):
     """
     Calculate input port voltage xin
     """
-    # good candidate for cython
     for i,j in posCols:
         xin[i] += xVec[j]
     for i,j in negCols:
@@ -53,7 +57,6 @@ def set_i(iVec, posRows, negRows, current):
     """
     Set current contributions of current into iVec
     """
-    # good candidate for cython
     for i,j in posRows:
         iVec[j] += current[i]
     for i,j in negRows:
@@ -64,7 +67,6 @@ def set_Jac(M, posRows, negRows, posCols, negCols, Jac):
     """
     Set current contributions of Jac into M
     """
-    # good candidate for cython
     for i1, i in posRows:
         for j1, j in posCols:
             M[i,j] += Jac[i1,j1]
@@ -329,14 +331,15 @@ class _NLFunction:
         # List here the functions that can be used to solve equations
         self.convergence_helpers = [self.solve_simple, 
                                     self.solve_homotopy_source, 
-#                                    self.solve_homotopy_gmin, 
+                                    self.solve_homotopy_gmin, 
                                     None]
 
     def _get_deltax(self, errFunc, Jac):
         """
         Solves linear system: Jac deltax = errFunc
         """
-        umf = pysparse.umfpack.factorize(Jac)
+        umf = pysparse.umfpack.factorize(
+            Jac, strategy="UMFPACK_STRATEGY_UNSYMMETRIC")
         umf.solve(errFunc, self.deltaxVec)
         return self.deltaxVec
 
@@ -381,13 +384,14 @@ class _NLFunction:
         idx = np.arange(self.ckt.nD_nterms)
         for gminexp in np.arange(-1., -8., -1):
             gmin = 10.**gminexp
+            val = gmin * np.ones(self.ckt.nD_nterms)
             # Add gmin from ground to all external nodes. Assumes all
             # external nodes are sorted first in the vector. This will
             # not work if the terminal order is changed.
             def get_deltax(xvec):
                 (iVec, Jac) = self.get_i_Jac(xvec) 
                 iVec[idx] += gmin * xvec[idx]
-                Jac[idx, idx] += gmin
+                Jac.update_add_at(val, idx, idx)
                 return self._get_deltax(iVec - sV, Jac)
             def f_eval(xvec):
                 iVec = self.get_i(xvec)

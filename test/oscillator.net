@@ -23,6 +23,7 @@ tf=56.940e-12 tr=1.000e-9 xtf=68.398 vtf=0.600 itf=0.700 xtb=1.600 \
 eg=1.110 xti=3.000 re=0.500 rc=2.680)
 
 .analysis tran tstop=50ns tstep=20ps im=trap
+.options sparse=0
 
 .plot tran 2 3
 

@@ -18,6 +18,9 @@ a tuple with 2 vectors, a value vector and a column index vector as
 needed by the pytrilinos function ``InsertGlobalValues(lid, values,
 indices)``
 
+For now only DCNodal implements the trilinos interface.  Unfortunately
+it produces segmentation fault every time and is unusable as of
+9/5/2012.
 """
 
 from PyTrilinos import Epetra, EpetraExt, Amesos, IFPACK

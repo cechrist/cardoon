@@ -49,6 +49,7 @@ globDict = dict(
     maxdelta = ('Maximum allowed change in Newton iterations', '', float, 20.),
     errfunc = ("Additional test for error function in Newton's method", '', 
                bool, False),
+    sparse = ("Use sparse matrices in analyses if possible", '', bool, True),
     gyr = ('Default gain in internal gyrators', 'S', float, 1e-3)
 )
 

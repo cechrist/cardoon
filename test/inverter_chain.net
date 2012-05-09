@@ -2,7 +2,7 @@
 
 .options maxdelta = 2.
 *.analysis dc device=vdc:vin param=vdc start=0 stop=3V verbose=0 num=100
-.analysis tran tstop=20n tstep=.1n im=trap verbose=0
+.analysis tran tstop=20n tstep=.1n im=trap verbose=0 saveall=1 shell=0
 
 vdc:vdd 1 gnd vdc=3V 
 *vdc:vin in gnd vdc=1 

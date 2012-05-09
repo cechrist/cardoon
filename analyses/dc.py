@@ -12,8 +12,8 @@ import numpy as np
 
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
-import nodalSP as nd
 from fsolve import solve, NoConvergenceError
+from globalVars import glVar
 import matplotlib.pyplot as plt
 
 class Analysis(ParamSet):
@@ -90,6 +90,12 @@ class Analysis(ParamSet):
         print('******************************************************')
         if hasattr(circuit, 'title'):
             print('\n', circuit.title, '\n')
+
+        if glVar.sparse:
+            import nodalSP as nd
+        else:
+            import nodal as nd
+            print('Using dense matrices\n')
 
         # Only works with flattened circuits
         if not circuit._flattened:

@@ -165,10 +165,13 @@ matrices but unfortunately G[obj] += Jac does not work when some of
 the elements selected by obj are repeated (see tentative numpy
 tutorial at http://www.scipy.org/NumPy_Tutorial)
 
-Two possible approaches to overcome this are the following: 
+Possible approaches to overcome this are the following: 
 
-1. Use a few cython functions doing the inner loops. Will try that
-   when sparse matrix support is added. Otherwise it makes no sense.
+1. Use a few cython functions doing the inner loops or implementing
+   fancy indexing with sparse matrices. Currently simple python
+   functions are used because a profile of the code seems to indicate
+   that most of the time is spent factoring the matrix and evaluating
+   nonlinear devices.
 
 2. Create a giant AD tape for the whole circuit. The nodalAD module
    implements this. 
@@ -187,9 +190,10 @@ statements in inner loop functions. For regular linear
 transconductances this does not seem necessary as we only have to fill
 the matrix once.
 
-Currently voltages are not stored in terminals by default. The main
-reason for this is efficiency as it is less work to operate directly
-from the vector of unknowns in the equation-solving routine.
+Currently voltages are stored in terminals only after the final
+solution is found. The main reason for this is efficiency as it is
+less work to operate directly from the vector of unknowns in the
+equation-solving routine.
 
 
 
