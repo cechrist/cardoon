@@ -2,19 +2,12 @@
 Action Plan (TODO file)
 -----------------------
 
-#. Add sparse matrix support and optimize inner loops to improve
-   speed: modify nodal.py to use pytrilinos
-   (http://trilinos.sandia.gov/packages/pytrilinos/) to access the KLU
-   sparse matrix library
-   (http://www.cise.ufl.edu/research/sparse/klu/). Inner loop
-   functions (``set_*`` in ``nodal.py``) will be re-implemented using
-   cython (http://cython.org/).
-
 #. Add automatic test suite
 
 #. Add support for convolution of freq-defined elements
 
 Other tasks to be done at some time:
+
 
 * Consider changing saveOP interface (return value?) for nonlinear devices
 
@@ -28,6 +21,9 @@ Other tasks to be done at some time:
   similar to the BJT implementation.
 
 * Add "+" notation for multiple lines in parser 
+
+* Fix problem with PyTrilinos library: produces segmentation fault. In
+  the meantime use some alternative library such as pysparse
 
 
 

@@ -56,12 +56,10 @@ def solve(x0, sV, convergence_helpers):
     return (x, res, iterations)
 
 
-
-def fsolve_Newton(x0, f_Jac_eval, f_eval):
+def fsolve_Newton(x0, get_deltax, f_eval):
     r"""
-    Solve a multidimensional non-linear equation with Newton-Raphson's method
-
-    In each iteration the linear system:
+    Solves a multidimensional non-linear equation with
+    Newton-Raphson's method.  In each iteration the linear system:
     
     .. math::
 
@@ -71,7 +69,7 @@ def fsolve_Newton(x0, f_Jac_eval, f_eval):
 
     x0: initial guess
 
-    f_Jac_eval(x): function that returns (f, Jac) (error function and Jacobian)
+    get_deltax(x): function that returns :math:`J(x_n)^{-1} F(x_n)`
 
     f_eval(x): function that returns error function
 
@@ -85,23 +83,25 @@ def fsolve_Newton(x0, f_Jac_eval, f_eval):
     # This overwrites input vector (could use copy(x0))
     x = x0
     for i in xrange(glVar.maxiter):
-        (errFunc, Jac) = f_Jac_eval(x)
-        try:
-            deltax = np.linalg.solve(Jac, errFunc)
-        except:
-            print('Singular Jacobian')
-            # Use pseudo-inverse
-            deltax = np.dot(np.linalg.pinv(Jac), errFunc)
-        # Do not allow updates greater than 10
+
+        deltax = get_deltax(x)
+        
+        # Do not allow updates greater than glVar.maxdelta
         maxDelta = max(abs(deltax))
-        # print(maxDelta)
         if maxDelta > glVar.maxdelta:
             deltax *= glVar.maxdelta/maxDelta
         xnew = x - deltax
 
-        # Verify both error function and deltax
-        errFunc = abs(f_eval(xnew))
-        n1 = np.all(errFunc < (glVar.reltol * max(errFunc) + glVar.abstol)) 
+        if glVar.errfunc:
+            # Check if error function is small
+            errFunc = abs(f_eval(xnew))
+            n1 = np.all(errFunc < (glVar.reltol * max(errFunc) + glVar.abstol))
+            res1 = np.linalg.norm(errFunc)
+        else:
+            # Do not check error function to save time
+            n1 = True
+            res1 = 0.
+        # Check if deltax is small
         n2 = np.all(abs(deltax) < (abs(glVar.reltol * np.maximum(x, xnew))
                                    + glVar.abstol))
         x = xnew
@@ -109,8 +109,7 @@ def fsolve_Newton(x0, f_Jac_eval, f_eval):
             ier = 1
             break
 
-
-    res = max(np.linalg.norm(deltax), np.linalg.norm(errFunc))
+    res = max(res1, np.linalg.norm(deltax))
 
     if ier == 2:
         raise NoConvergenceError('No convergence. iter = {0} res = {1}'.format(

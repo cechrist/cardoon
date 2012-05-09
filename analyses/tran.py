@@ -13,7 +13,7 @@ import numpy as np
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
 from integration import BEuler, Trapezoidal
-import nodal as nd
+import nodalSP as nd
 from fsolve import solve, NoConvergenceError
 import matplotlib.pyplot as plt
 
@@ -142,7 +142,7 @@ class Analysis(ParamSet):
                         i, timeVec[i], iterations, res))
 
         # Calculate average residual and iterations
-        avei = tIter / nsamples
+        avei = float(tIter) / nsamples
         aver = tRes / nsamples
         print('\nAverage iterations: {0}'.format(avei))
         print('Average residual: {0}\n'.format(aver))

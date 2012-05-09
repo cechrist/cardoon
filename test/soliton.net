@@ -28,7 +28,7 @@ vsin:1 202 0 mag=14.V vdc=-6.V freq=f0 phase=90 rint=50
 *
 * Transmission line parameters
 *
-.model tline1 tlinpy4 ( z0mag=75.00 k=7 fscale=10.e9 alpha = 59.9 nsect = 5 fopt=10e9)
+.model tline1 tlinpy4 ( z0mag=75.00 k=7 fscale=10.e9 alpha = 59.9 nsect = 20 fopt=10e9)
 
 *
 * Diodes

@@ -1,8 +1,8 @@
 """
-:mod:`nodal` -- Nodal Analysis
-------------------------------
+:mod:`nodalSP` -- Nodal Analysis using pysparse
+-----------------------------------------------
 
-.. module:: nodal
+.. module:: nodalSP
 .. moduleauthor:: Carlos Christoffersen
 
 This module contains basic classes/functions for nodal analysis. These
@@ -12,6 +12,7 @@ independently.
 """
 
 import numpy as np
+import pysparse
 from fsolve import fsolve_Newton, NoConvergenceError
 from integration import BEuler
 
@@ -328,20 +329,16 @@ class _NLFunction:
         # List here the functions that can be used to solve equations
         self.convergence_helpers = [self.solve_simple, 
                                     self.solve_homotopy_source, 
-                                    self.solve_homotopy_gmin, 
+#                                    self.solve_homotopy_gmin, 
                                     None]
 
     def _get_deltax(self, errFunc, Jac):
         """
         Solves linear system: Jac deltax = errFunc
         """
-        try:
-            deltax = np.linalg.solve(Jac, errFunc)
-        except:
-            print('Singular Jacobian')
-            # Use pseudo-inverse
-            deltax = np.dot(np.linalg.pinv(Jac), errFunc)
-        return deltax
+        umf = pysparse.umfpack.factorize(Jac)
+        umf.solve(errFunc, self.deltaxVec)
+        return self.deltaxVec
 
     # The following functions used to solve equations, originally from
     # pycircuit
@@ -440,12 +437,14 @@ class DCNodal(_NLFunction):
         assert ckt.nD_ref
 
         # Allocate matrices/vectors
-        # G here is G1 = G + G0 in documentation
-        self.G = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        # G here is G1 = G + G0 in documentation (allocated in refresh())
+
         # Jac is (G1 + di/dv) in doc
-        self.Jac = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.Jac = pysparse.spmatrix.ll_mat(self.ckt.nD_dimension, 
+                                            self.ckt.nD_dimension)
         self.sVec = np.empty(self.ckt.nD_dimension)
         self.iVec = np.empty(self.ckt.nD_dimension)
+        self.deltaxVec = np.empty(self.ckt.nD_dimension)
         if hasattr(self.ckt, 'nD_namRClist'):
             # Allocate external currents vector
             self.extSVec = np.empty(self.ckt.nD_dimension)
@@ -457,16 +456,22 @@ class DCNodal(_NLFunction):
 
         Used for parameter sweeps
         """
-        self.G.fill(0.)
+        self.Gll = pysparse.spmatrix.ll_mat(self.ckt.nD_dimension, 
+                                            self.ckt.nD_dimension)
         # Generate G matrix (never changes)
         for elem in self.ckt.nD_elemList:
             # All elements have nD_linVCCS (perhaps empty)
             for vccs in elem.nD_linVCCS:
-                set_quad(self.G, *vccs)
+                set_quad(self.Gll, *vccs)
         # Frequency-defined elements
         for elem in self.ckt.nD_freqDefinedElem:
-            set_Jac(self.G, elem.nD_fpos, elem.nD_fneg, 
+            set_Jac(self.Gll, elem.nD_fpos, elem.nD_fneg, 
                     elem.nD_fpos, elem.nD_fneg, elem.get_G_matrix())
+        # Free unused memory
+        self.Gll.compress()        
+        # Create G in csr form for efficient matrix-vector multiplication
+        self.G = self.Gll.to_csr()
+
             
     def set_ext_currents(self, extIvec):
         """
@@ -539,10 +544,8 @@ class DCNodal(_NLFunction):
 
         iVec: output vector of currents
         """
-        # Erase arrays
-        self.iVec.fill(0.)
         # Linear contribution
-        self.iVec += np.dot(self.G, xVec)
+        self.G.matvec(xVec, self.iVec)
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
@@ -569,12 +572,11 @@ class DCNodal(_NLFunction):
 
         Jac: system Jacobian
         """
-        # Erase arrays
-        self.iVec.fill(0.)
-        self.Jac.fill(0.)
+        # Erase sparse matrix
+        self.Jac.scale(0.)
         # Linear contribution
-        self.iVec += np.dot(self.G, xVec)
-        self.Jac += self.G
+        self.G.matvec(xVec, self.iVec)
+        self.Jac.shift(1., self.Gll)
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
@@ -657,17 +659,20 @@ class TransientNodal(_NLFunction):
 
         # Allocate matrices/vectors
         # G, C and G'
-        self.G = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
-        self.C = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
-        self.Gp = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.Gll = pysparse.spmatrix.ll_mat(self.ckt.nD_dimension, 
+                                            self.ckt.nD_dimension)
+        self.Cll = pysparse.spmatrix.ll_mat(self.ckt.nD_dimension, 
+                                            self.ckt.nD_dimension)
         # iVec = G' x + i'(x)   total current
         self.iVec = np.empty(self.ckt.nD_dimension)
         # System Jacobian: G' + di'/dx
-        self.Jac = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.Jac = pysparse.spmatrix.ll_mat(self.ckt.nD_dimension, 
+                                            self.ckt.nD_dimension)
         # Total charge: C x + q(x)
         self.qVec = np.empty(self.ckt.nD_dimension)
         # Source vector at current time s(t) 
         self.sVec = np.empty(self.ckt.nD_dimension)
+        self.deltaxVec = np.empty(self.ckt.nD_dimension)
 
 #        if hasattr(self.ckt, 'nD_namRClist'):
 #            # Allocate external currents vector
@@ -680,20 +685,22 @@ class TransientNodal(_NLFunction):
 
         Used for parametric sweeps
         """
-        self.G.fill(0.)
-        self.C.fill(0.)
+        self.Gll.scale(0.)
+        self.Cll.scale(0.)
         # Generate G matrix (never changes)
         for elem in self.ckt.nD_elemList:
             # All elements have nD_linVCCS (perhaps empty)
             for vccs in elem.nD_linVCCS:
-                set_quad(self.G, *vccs)
+                set_quad(self.Gll, *vccs)
             for vccs in elem.nD_linVCQS:
-                set_quad(self.C, *vccs)
+                set_quad(self.Cll, *vccs)
 #        # Frequency-defined elements not included for now
 #        for elem in self.ckt.nD_freqDefinedElem:
 #            set_Jac(self.G, elem.nD_fpos, elem.nD_fneg, 
 #                    elem.nD_fpos, elem.nD_fneg, elem.get_G_matrix())
-
+        self.Gll.compress()
+        self.Cll.compress()
+        self.C = self.Cll.to_csr()
 
     def set_IC(self, h):
         """
@@ -720,7 +727,9 @@ class TransientNodal(_NLFunction):
         """
         Recalculate Gp from im information
         """
-        self.Gp[:,:] = self.G + self.im.a0 * self.C
+        self.Gpll = self.Gll.copy()
+        self.Gpll.shift(self.im.a0, self.Cll)
+        self.Gp = self.Gpll.to_csr()
         return self.Gp
 
 
@@ -729,7 +738,8 @@ class TransientNodal(_NLFunction):
         Recalculate qVec for a given value of xVec
         """
         # Calculate total q vector
-        self.qVec.fill(0.)
+        # Calculate linear charges first
+        self.C.matvec(xVec, self.qVec)
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(len(elem.controlPorts))
@@ -737,8 +747,6 @@ class TransientNodal(_NLFunction):
             outV = elem.eval(xin)
             set_i(self.qVec, elem.nD_qpos, elem.nD_qneg, 
                   outV[len(elem.csOutPorts):])
-        # Add linear charges
-        self.qVec += np.dot(self.C, xVec)
         return self.qVec
             
 
@@ -790,10 +798,8 @@ class TransientNodal(_NLFunction):
 
         iVec: output vector of currents
         """
-        # Erase arrays
-        self.iVec.fill(0.)
         # Linear contribution
-        self.iVec += np.dot(self.Gp, xVec)
+        self.Gp.matvec(xVec, self.iVec)
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
@@ -822,12 +828,11 @@ class TransientNodal(_NLFunction):
 
         Jac: system Jacobian
         """
-        # Erase arrays
-        self.iVec.fill(0.)
-        self.Jac.fill(0.)
+        # Erase sparse matrix
+        self.Jac.scale(0.)
         # Linear contribution
-        self.iVec += np.dot(self.Gp, xVec)
-        self.Jac += self.Gp
+        self.Gp.matvec(xVec, self.iVec)
+        self.Jac.shift(1., self.Gpll)
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec

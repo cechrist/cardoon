@@ -1,40 +1,56 @@
 """
-:mod:`nodal` -- Nodal Analysis
-------------------------------
+:mod:`nodalTrilinos` -- Nodal Analysis using PyTrilinos
+-------------------------------------------------------
 
-.. module:: nodal
+.. module:: nodalTrilinos
 .. moduleauthor:: Carlos Christoffersen
 
 This module contains basic classes/functions for nodal analysis. These
 are part of the standard netlist analyses but they can also be used
 independently.
 
+Sparse matrix support provided by the PyTrilinos library.
+
+Matrix filling is treated differently from the dense matrix
+implementation. Elements are initially stored in a matrix NZ
+structure: a vector with one element per row. Each vector element is a
+a tuple with 2 vectors, a value vector and a column index vector as
+needed by the pytrilinos function ``InsertGlobalValues(lid, values,
+indices)``
+
 """
 
+from PyTrilinos import Epetra, EpetraExt, Amesos, IFPACK
 import numpy as np
 from fsolve import fsolve_Newton, NoConvergenceError
 from integration import BEuler
 
-# ****************** Stand-alone functions to be optimized ****************
+# ****************** Stand-alone functions to be optimized? ****************
 
-def set_quad(G, row1, col1, row2, col2, g):
+def set_quad(Gnz, row1, col1, row2, col2, g):
     """
     Set transconductance/transcapacitance quad
 
-    G: target matrix
+    Gnz: target matrix NZ structure
     """
     # good cython candidate
     #import pdb; pdb.set_trace()
-    if col1 >= 0:
-        if row1 >= 0:
-            G[row1, col1] += g
-        if row2 >= 0:
-            G[row2, col1] -= g
-    if col2 >= 0:
-        if row1 >= 0:
-            G[row1, col2] -= g
-        if row2 >= 0:
-            G[row2, col2] += g
+    if row1 >= 0:
+        gRow = Gnz[row1]
+        if col1 >= 0:
+            gRow[0].append(g) 
+            gRow[1].append(col1) 
+        if col2 >= 0:
+            gRow[0].append(-g) 
+            gRow[1].append(col2) 
+    if row2 >= 0:
+        gRow = Gnz[row2]
+        if col1 >= 0:
+            gRow[0].append(-g) 
+            gRow[1].append(col1) 
+        if col2 >= 0:
+            gRow[0].append(g) 
+            gRow[1].append(col2) 
 
 
 def set_xin(xin, posCols, negCols, xVec):
@@ -59,21 +75,30 @@ def set_i(iVec, posRows, negRows, current):
         iVec[j] -= current[i]
 
 
-def set_Jac(M, posRows, negRows, posCols, negCols, Jac):
+def set_Jac(Mnz, posRows, negRows, posCols, negCols, Jac):
     """
     Set current contributions of Jac into M
+
+    This implementation is sub-optimal but should be OK to test the
+    concept (the inner loops could be avoided)
     """
     # good candidate for cython
     for i1, i in posRows:
+        mRow = Mnz[i] 
         for j1, j in posCols:
-            M[i,j] += Jac[i1,j1]
+            # M.SumIntoGlobalValues(i, Jac[i1,j1], j)
+            mRow[0].append(Jac[i1,j1])
+            mRow[1].append(j)
         for j1, j in negCols:
-            M[i,j] -= Jac[i1,j1]
+            mRow[0].append(Jac[i1,j1])
+            mRow[1].append(j)
     for i1, i in negRows:
         for j1, j in negCols:
-            M[i,j] += Jac[i1,j1]
+            mRow[0].append(Jac[i1,j1])
+            mRow[1].append(j)
         for j1, j in posCols:
-            M[i,j] -= Jac[i1,j1]
+            mRow[0].append(Jac[i1,j1])
+            mRow[1].append(j)
 
 
 # ********************** Regular functions *****************************
@@ -311,7 +336,6 @@ def run_AC(ckt, fvec):
 
     return xVec
 
-
 #-------------------------------------------------------------------------
 # ****************************** Classes *********************************
 #-------------------------------------------------------------------------
@@ -322,26 +346,30 @@ class _NLFunction:
 
     This is an abstract class to be use as a base class by other
     nodal-based classes such as DCNodal
+
+    The following attributes are assume to be present:
+
+        * solver: pytrilinos BasicSolver
+        * deltaxVec, errVec: pytrilinos vectors used in solver (x, b)
+
     """
 
     def __init__(self):
         # List here the functions that can be used to solve equations
         self.convergence_helpers = [self.solve_simple, 
                                     self.solve_homotopy_source, 
-                                    self.solve_homotopy_gmin, 
+#                                    self.solve_homotopy_gmin, 
                                     None]
 
-    def _get_deltax(self, errFunc, Jac):
+    def _get_deltax(self):
         """
         Solves linear system: Jac deltax = errFunc
         """
-        try:
-            deltax = np.linalg.solve(Jac, errFunc)
-        except:
-            print('Singular Jacobian')
-            # Use pseudo-inverse
-            deltax = np.dot(np.linalg.pinv(Jac), errFunc)
-        return deltax
+        # For now just use assertions to handle errors
+        # import pdb; pdb.set_trace()
+        print 'AAHHHHH !!!'
+        assert not self.solver.NumericFactorization()
+        assert not self.solver.Solve()
 
     # The following functions used to solve equations, originally from
     # pycircuit
@@ -350,7 +378,9 @@ class _NLFunction:
         # Docstring removed to avoid printing this all the time
         def get_deltax(x):
             (iVec, Jac) = self.get_i_Jac(x) 
-            return self._get_deltax(iVec - sV, Jac)
+            self.errVec[:] = iVec - sV
+            self._get_deltax()
+            return self.deltaxVec
     
         def f_eval(x):
             iVec = self.get_i(x) 
@@ -362,11 +392,13 @@ class _NLFunction:
         """Newton's method with source stepping"""
         x = np.copy(x0)
         totIter = 0
+        # Here some sort of adaptive stepping should be implemented
         for lambda_ in np.linspace(start = .1, stop = 1., num = 10):
             def get_deltax(x):
                 (iVec, Jac) = self.get_i_Jac(x) 
-                return self._get_deltax(iVec - lambda_ * sV, Jac)
-            
+                self.errVec[:] = iVec - lambda_ * sV
+                self._get_deltax()
+                return self.deltaxVec
             def f_eval(x):
                 iVec = self.get_i(x) 
                 return iVec - lambda_ * sV
@@ -377,36 +409,40 @@ class _NLFunction:
 
         return (x, res, totIter)
 
-    def solve_homotopy_gmin(self, x0, sV):
-        """Newton's method with gmin stepping"""
-        x = np.copy(x0)
-        totIter = 0
-        idx = np.arange(self.ckt.nD_nterms)
-        for gminexp in np.arange(-1., -8., -1):
-            gmin = 10.**gminexp
-            # Add gmin from ground to all external nodes. Assumes all
-            # external nodes are sorted first in the vector. This will
-            # not work if the terminal order is changed.
-            def get_deltax(xvec):
-                (iVec, Jac) = self.get_i_Jac(xvec) 
-                iVec[idx] += gmin * xvec[idx]
-                Jac[idx, idx] += gmin
-                return self._get_deltax(iVec - sV, Jac)
-            def f_eval(xvec):
-                iVec = self.get_i(xvec)
-                iVec[idx] += gmin * xvec[idx]
-                return iVec - sV
-            (x, res, iterations) = fsolve_Newton(x0, get_deltax, f_eval)
-            print('gmin = {0}, res = {1}, iter = {2}'.format(
-                    gmin, res, iterations))
-            totIter += iterations
-
-        # Call solve_simple with better initial guess
-        (x, res, iterations) = self.solve_simple(x, sV)
-        print('gmin = 0, res = {0}, iter = {1}'.format(res, iterations))
-        totIter += iterations
-
-        return (x, res, totIter)
+#    def solve_homotopy_gmin(self, x0, sV):
+#        """Newton's method with gmin stepping --- Not used for now"""
+#        x = np.copy(x0)
+#        totIter = 0
+#        idx = np.arange(self.ckt.nD_nterms)
+#        for gminexp in np.arange(-1., -8., -1):
+#            gmin = 10.**gminexp
+#            # Add gmin from ground to all external nodes. Assumes all
+#            # external nodes are sorted first in the vector. This will
+#            # not work if the terminal order is changed.
+#            #
+#            # WARNING: This will fail with pytrilinos, must be
+#            # changed, use ExtractDiagonalCopy() and
+#            # ReplaceDiagonalValues()
+#            def get_deltax(xvec):
+#                (iVec, Jac) = self.get_i_Jac(xvec) 
+#                iVec[idx] += gmin * xvec[idx]
+#                Jac[idx, idx] += gmin
+#                return self.get_deltax(iVec - sV, Jac)
+#            def f_eval(xvec):
+#                iVec = self.get_i(xvec)
+#                iVec[idx] += gmin * xvec[idx]
+#                return iVec - sV
+#            (x, res, iterations) = fsolve_Newton(x0, get_deltax, f_eval)
+#            print('gmin = {0}, res = {1}, iter = {2}'.format(
+#                    gmin, res, iterations))
+#            totIter += iterations
+#
+#        # Call solve_simple with better initial guess
+#        (x, res, iterations) = self.solve_simple(x, sV)
+#        print('gmin = 0, res = {0}, iter = {1}'.format(res, iterations))
+#        totIter += iterations
+#
+#        return (x, res, totIter)
 
 # Old code for gmin homotopy: add conductances in parallel to
 # nonlinear device external ports
@@ -440,33 +476,113 @@ class DCNodal(_NLFunction):
         assert ckt.nD_ref
 
         # Allocate matrices/vectors
+        # Create Epetra CrsMatrix: need communicator and map 
+        comm = Epetra.SerialComm()
+        # Map: numelem, base index, communicator
+        map = Epetra.Map(self.ckt.nD_dimension, 0, comm)
+        # TODO: Find a good estimate for nnzRow
+        nnzRow = min(10, self.ckt.nD_dimension)
         # G here is G1 = G + G0 in documentation
-        self.G = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        self.G = Epetra.CrsMatrix(Epetra.Copy, map, nnzRow)
         # Jac is (G1 + di/dv) in doc
-        self.Jac = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
-        self.sVec = np.empty(self.ckt.nD_dimension)
-        self.iVec = np.empty(self.ckt.nD_dimension)
+        self.Jac = Epetra.CrsMatrix(Epetra.Copy, map, nnzRow)
+        # Allocate several vectors
+        self.xVec = Epetra.Vector(map)
+        self.iVec = Epetra.Vector(map)
+        self.sVec = Epetra.Vector(map)
+        self.errVec = Epetra.Vector(map)
+        self.deltaxVec = Epetra.Vector(map)
+
         if hasattr(self.ckt, 'nD_namRClist'):
             # Allocate external currents vector
             self.extSVec = np.empty(self.ckt.nD_dimension)
-        self.refresh()
+
+        # Generate G and Jac sparse matrices
+        # ----------------------------------
+        self._get_Gnz()
+        self.Jacnz = [([], []) for i in xrange(self.ckt.nD_dimension)]
+
+        # Insert linear contributions into G and Jac (to fix structure)
+        for row, data in enumerate(self.Gnz):
+            self.G.InsertGlobalValues(row, *data)
+            self.Jac.InsertGlobalValues(row, *data)
+
+        # Finalize G (which should not change any more unless parameter sweep)
+        assert not self.G.FillComplete()
+        assert not self.G.OptimizeStorage()
+
+        # Add nonlinear contribution to Jac. Insert ones for now as the
+        # matrix values will be discarded anyway.
+        for elem in self.ckt.nD_nlinElem:
+            outJac = np.ones((len(elem.csOutPorts), len(elem.controlPorts)),
+                             dtype = float)
+            set_Jac(self.Jacnz, elem.nD_cpos, elem.nD_cneg, 
+                    elem.nD_vpos, elem.nD_vneg, outJac)
+
+        for row, data in enumerate(self.Jacnz):
+            self.Jac.InsertGlobalValues(row, *data)
+
+        # Finalize and symbolically factor Jac 
+        assert not self.Jac.FillComplete()
+        assert not self.Jac.OptimizeStorage()
+
+        # Create pytrilinos solver
+        problem = Epetra.LinearProblem(self.Jac, self.deltaxVec, self.errVec)
+        factory = Amesos.Factory()
+        self.solver = factory.Create("Klu", problem)
+        assert not self.solver.SymbolicFactorization()
+
+    def _pirulin(self):
+        """
+        Solves linear system: Jac deltax = errFunc
+        """
+        # For now just use assertions to handle errors
+        import pdb; pdb.set_trace()
+        assert not self.solver.NumericFactorization()
+        assert not self.solver.Solve()
+
+#        self.refresh()
+#        self.get_i_Jac(self.get_guess())
+#        self.get_source()
+#        self.errVec[:] = self.iVec - self.sVec
+#        assert not self.solver.NumericFactorization()
+#        assert not self.solver.Solve()
+#        print self.deltaxVec
+
 
     def refresh(self):
         """
-        Re-generate linear matrices
+        Re-generate G
 
-        Used for parameter sweeps
+        Used for parameter sweeps. The matrix structure is assumed not
+        to change.
         """
-        self.G.fill(0.)
-        # Generate G matrix (never changes)
+        self._get_Gnz()
+        # Erase G
+        self.G.PutScalar(0.)
+        # Add linear contributions into G 
+        for row, data in enumerate(self.Gnz):
+            self.G.SumIntoGlobalValues(row, *data)
+
+
+    def _get_Gnz(self):
+        """
+        (Re-)generates Gnz
+
+        Internally used for example for parameter sweeps
+        """
+        # import pdb; pdb.set_trace()
+        self.Gnz = [([], []) for i in xrange(self.ckt.nD_dimension)]
+        # Generate G matrix 
         for elem in self.ckt.nD_elemList:
             # All elements have nD_linVCCS (perhaps empty)
             for vccs in elem.nD_linVCCS:
-                set_quad(self.G, *vccs)
+                set_quad(self.Gnz, *vccs)
         # Frequency-defined elements
         for elem in self.ckt.nD_freqDefinedElem:
-            set_Jac(self.G, elem.nD_fpos, elem.nD_fneg, 
+            set_Jac(self.Gnz, elem.nD_fpos, elem.nD_fneg, 
                     elem.nD_fpos, elem.nD_fneg, elem.get_G_matrix())
+
             
     def set_ext_currents(self, extIvec):
         """
@@ -491,18 +607,18 @@ class DCNodal(_NLFunction):
         
         Returns a guess vector
         """
-        x0 = np.zeros(self.ckt.nD_dimension)
+        self.xVec.PutScalar(0.)
         for elem in self.ckt.nD_nlinElem:
             try:
                 # Only add to positive side. This is not the only way
                 # and may not work well in some cases but this is a
                 # guess anyway
                 for i,j in elem.nD_vpos:
-                    x0[j] += elem.vPortGuess[i]
+                    self.xVec[j] += elem.vPortGuess[i]
             except AttributeError:
                 # if vPortGuess not given just leave things unchanged
                 pass
-        return x0
+        return self.xVec
 
     def get_source(self):
         """
@@ -541,8 +657,10 @@ class DCNodal(_NLFunction):
         """
         # Erase arrays
         self.iVec.fill(0.)
+        # Copy xVec to pytrilinos vector
+        self.xVec[:] = xVec
         # Linear contribution
-        self.iVec += np.dot(self.G, xVec)
+        self.G.Multiply(False, self.xVec, self.iVec)
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
@@ -569,12 +687,18 @@ class DCNodal(_NLFunction):
 
         Jac: system Jacobian
         """
+        # Copy xVec to pytrilinos vector
+        self.xVec[:] = xVec
         # Erase arrays
         self.iVec.fill(0.)
-        self.Jac.fill(0.)
-        # Linear contribution
-        self.iVec += np.dot(self.G, xVec)
-        self.Jac += self.G
+        # Erase M and add linear contribution to iVec and M
+        self.G.Multiply(False, self.xVec, self.iVec)
+        # For now just re-create. Later this could somehow be
+        # optimized
+        self.Jacnz = [([], []) for i in xrange(self.ckt.nD_dimension)]
+        # Erase Jac and add G in one step
+        EpetraExt.Add(self.G, False, 1., self.Jac, 0.)
+        
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
@@ -584,8 +708,12 @@ class DCNodal(_NLFunction):
             # Update iVec and Jacobian now. outV may have extra charge
             # elements but they are not used in the following
             set_i(self.iVec, elem.nD_cpos, elem.nD_cneg, outV)
-            set_Jac(self.Jac, elem.nD_cpos, elem.nD_cneg, 
+            set_Jac(self.Jacnz, elem.nD_cpos, elem.nD_cneg, 
                     elem.nD_vpos, elem.nD_vneg, outJac)
+
+        # Insert actual elements in M
+        for row, data in enumerate(self.Jacnz):
+            self.Jac.SumIntoGlobalValues(row, *data)
 
         return (self.iVec, self.Jac)
 

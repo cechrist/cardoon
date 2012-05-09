@@ -12,7 +12,7 @@ import numpy as np
 
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
-import nodal as nd
+import nodalSP as nd
 from fsolve import solve, NoConvergenceError
 import matplotlib.pyplot as plt
 
@@ -134,7 +134,7 @@ class Analysis(ParamSet):
         x = dc.get_guess()
 
         sweepvar = np.linspace(start = self.start, stop = self.stop, 
-                              num = self.num)
+                               num = self.num)
         circuit.dC_sweep = sweepvar
         if tempFlag:
             circuit.dC_var = 'Global temperature sweep: temp'
@@ -168,8 +168,8 @@ class Analysis(ParamSet):
 
             # re-process linear matrix
             dc.refresh()
-
             sV = dc.get_source()
+
             # solve equations
             try: 
                 (x, res, iterations) = solve(x, sV, dc.convergence_helpers)
