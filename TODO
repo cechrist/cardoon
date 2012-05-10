@@ -11,7 +11,7 @@ Short-term goals:
   
   #. Finish implementation of nodal analysis of independent subcircuits
 
-Other tasks to be done at some time:
+Longer term goals and other tasks to be done at some time:
 
   * Add more device models
   
@@ -22,6 +22,10 @@ Other tasks to be done at some time:
   
   * Add netlist variable sweep in DC analysis
   
+  * Implement time-step control in transient analysis
+
+  * Implement Harmonic Balance analysis
+
   * Improve convergence control in Newton method
   
   * Implement extrinsic model for MOS trasistors using an approach

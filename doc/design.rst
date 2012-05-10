@@ -5,10 +5,10 @@ Simulator Design Considerations
 Design History
 --------------
 
-The design was originally inspired from the experience with fREEDA
-[freeda]_ and carrot [carrot]_ plus some ideas from other
-simulators and improvements that take advantage of the flexibility in
-Python. 
+Work on the project started in September 2011. The design was
+originally inspired from the experience with fREEDA [freeda]_ and
+carrot [carrot]_ plus some ideas from other simulators and
+improvements that take advantage of the flexibility in Python.
 
 
 Formulation-Independent Circuit Representation

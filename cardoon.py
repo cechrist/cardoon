@@ -128,6 +128,7 @@ if __name__ == "__main__":
 
     if sys.argv[1] == '-c':
         # generate catalogs
+        print('Generating catalogs ...')
         device_catalog()
         analysis_catalog()
     elif sys.argv[1] == '-i':
