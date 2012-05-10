@@ -1,0 +1,32 @@
+### BJT Colpitts Oscillator ###
+
+# Voltage supply: use a pulse to start oscillator
+vpulse:vs 1 0 v1=3 v2=11 tr=10ns
+
+res:rc 1 2 r=2.4e3
+cap:c1 2 0 c=2e-12
+ind:l1 2 5 l=1e-6
+cap:c2 5 0 c=2e-12
+res:re 4 0 r=1.3e3
+cap:ce 4 0 c=100e-12
+bjt:q1 2 3 4 model=t122
+res:r1 1 3 r=8e3
+res:r2 3 0 r=2e3
+cap:cc 5 3 c=400e-12
+
+.model t122 bjt (type=npn isat=0.480e-15 nf=1.008 \
+bf=99.655 vaf=90.000 ikf=0.190 \
+ise=7.490e-15 ne=1.762 nr=1.010 br=38.400 var=7.000 ikr=93.200e-3 \
+isc=0.200e-15 nc=1.042 rb=1.500 irb=0.100e-3 rbm=1.200 cje=1.325e-12 \
+vje=0.700 mje=0.220 fc=0.890 cjc=1.050e-12 vjc=0.610 mjc=0.240 xcjc=0.400 \
+tf=56.940e-12 tr=1.000e-9 xtf=68.398 vtf=0.600 itf=0.700 xtb=1.600 \
+eg=1.110 xti=3.000 re=0.500 rc=2.680)
+
+.analysis tran tstop=50ns tstep=20ps im=trap
+.options sparse=0
+
+.plot tran 2 3
+
+.end
+
+

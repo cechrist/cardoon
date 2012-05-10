@@ -158,37 +158,62 @@ the analysis code.
 Efficiency notes for nodal analysis
 -----------------------------------
 
-For efficiency we should avoid directly indexing from Python
-individual elements in matrices and vectors as much as possible.
-Tried advanced numpy indexing to avoid loops for each element of the
-matrices but unfortunately G[obj] += Jac does not work when some of
-the elements selected by obj are repeated (see tentative numpy
-tutorial at http://www.scipy.org/NumPy_Tutorial)
+For efficiency indexing individual elements in arrays from Python
+should be avoided as much as possible.  Advanced numpy indexing to
+avoid loops for each element of the matrices was tried but
+unfortunately ``G[obj] += Jac`` does not work when some of the
+elements selected by ``obj`` are repeated (see tentative numpy
+tutorial at http://www.scipy.org/NumPy_Tutorial). Possible approaches
+to overcome this are the following:
 
-Possible approaches to overcome this are the following: 
-
-1. Use a few cython functions doing the inner loops or implementing
-   fancy indexing with sparse matrices. Currently simple python
-   functions are used because a profile of the code seems to indicate
-   that most of the time is spent factoring the matrix and evaluating
-   nonlinear devices.
+1. Use a few optimized functions doing the inner loops (perhaps using
+   cython) or implementing fancy indexing with sparse matrices.
 
 2. Create a giant AD tape for the whole circuit. The nodalAD module
-   implements this. 
+   implements this. This approach is simpler but in practice test
+   results (see nodalAD module) show that it does not improve
+   efficiency. Also tape generation seems to require a dense matrix
+   multiplication (G * x). This rules out the approach for large
+   circuits.
 
-The second approach is simpler but in practice test results (see
-nodalAD module) show that it does not improve efficiency. Also tape
-generation seems to require a dense matrix multiplication (G *
-x). This rules out the approach for large circuits.
+Currently the first approach is being used for both dense and sparse
+matrices and is described here: nonlinear (and frequency-defined)
+elements are added new attribute vectors ``nD_?pos`` and ``nD_?neg``
+that contain the non-reference terminal RC numbers where the internal
+current sources are connected. This requires some pre-processing but
+in this way we can avoid ``if`` statements in inner loop
+functions. For regular linear transconductances this does not seem
+necessary as we only have to fill the matrix once.
 
-The current solution is described here: Nonlinear (and
-frequency-defined) elements are added new attribute vectors
-``nD_?pos`` and ``nD_?neg`` that contain the non-reference terminal RC
-numbers where the internal current sources are connected. This
-requires some pre-processing but in this way we can avoid ``if``
-statements in inner loop functions. For regular linear
-transconductances this does not seem necessary as we only have to fill
-the matrix once.
+A profile transient analysis of the soliton line with a matrix size of
+3022 (using pysparse) seems to indicate that about half of the time is
+spent building and half factoring the matrix. At this time the main
+Jacobian is (almost) created and factored from scratch at every
+iteration.  The results shown in the table were obtained in a netbook
+with an Intel Atom processor. Note the time to evaluate nonlinear
+models (``eval_and_deriv``) is only about 25% of the time to build the
+matrix.
+
+   ======  =======  =======  =======  ======= ===========================
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+   ======  =======  =======  =======  ======= ===========================
+        1    0.000    0.000   23.301   23.301 <string>:1(<module>)
+        1    0.000    0.000   23.301   23.301 profile:0(run_analyses(analysisQueue))
+        1    0.000    0.000   23.301   23.301 cardoon:26(run_analyses)
+        1    0.036    0.036   23.301   23.301 tran.py:66(run)
+      100    0.000    0.000   19.181    0.192 fsolve.py:23(solve)
+      100    0.012    0.000   19.181    0.192 nodalSP.py:257(solve_simple)
+      100    0.132    0.001   19.169    0.192 fsolve.py:59(fsolve_Newton)
+      257    0.056    0.000   18.197    0.071 nodalSP.py:260(get_deltax)
+      253    3.516    0.014    8.993    0.036 nodalSP.py:729(get_i_Jac)
+      257    0.016    0.000    8.921    0.035 nodalSP.py:246(_get_deltax)
+      257    8.453    0.033    8.453    0.033 :0(factorize)
+    12126    0.924    0.000    2.096    0.000 cppaddev.py:143(eval_and_deriv)
+   ======  =======  =======  =======  ======= ===========================
+
+Of course things may be different with other circuits but for this
+case it may be expected to speed the simulator at least by a factor of
+two if matrix creation and factorization are optimized.
 
 Currently voltages are stored in terminals only after the final
 solution is found. The main reason for this is efficiency as it is

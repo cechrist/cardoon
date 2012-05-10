@@ -1,0 +1,10 @@
+
+Version 0.4.0
+-------------
+
+* Added sparse matrix support for OP, DC and Tran analyses.
+
+* Added NEWS file and examples directory
+
+* Other general improvements
+

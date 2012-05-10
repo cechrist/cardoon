@@ -9,8 +9,9 @@
 
 .vars f0=9.GHz 
 
-.options sparse=1
-.analysis tran tstop=10ps tstep=.1ps verbose=1 im=trap
+.analysis tran tstop=0.5ns tstep=.1ps verbose=0 im=trap
+
+.plot tran 202 147 48
 
 *
 * For 27dBm input use vac = 14V
@@ -186,7 +187,5 @@ tlinpy4:t46  46 0 47 0 model = tline1 length=107.46u
 tlinpy4:t47  47 0 48 0 model = tline1 length=52.41u
 *
 res:rl   48  0  r=50.
-
-#.plot tran 202 147 48
 
 .end

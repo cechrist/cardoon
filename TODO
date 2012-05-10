@@ -8,7 +8,6 @@ Action Plan (TODO file)
 
 Other tasks to be done at some time:
 
-
 * Consider changing saveOP interface (return value?) for nonlinear devices
 
 * Add netlist variable sweep in DC analysis
@@ -22,8 +21,8 @@ Other tasks to be done at some time:
 
 * Add "+" notation for multiple lines in parser 
 
-* Fix problem with PyTrilinos library: produces segmentation fault. In
-  the meantime use some alternative library such as pysparse
+* Investigate problem with PyTrilinos library: produces segmentation
+  fault. 
 
 
 

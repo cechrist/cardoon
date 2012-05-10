@@ -148,6 +148,8 @@ class Analysis(ParamSet):
             circuit.dC_var = 'Device: ' + dev.nodeName \
                 + '  Parameter: ' + self.param
         circuit.dC_unit = paramunit
+        print('System dimension: {0}'.format(circuit.nD_dimension))
+        print('Sweep: ', circuit.dC_var)
         
         xVec = np.zeros((circuit.nD_dimension, self.num))
         tIter = 0

@@ -6,20 +6,41 @@ Installation and Usage
 Installation
 ------------
 
-In addition to a Python interpreter (version 2.6 or possibly 2.7), the
-following free libraries are required to run cardoon. All, except
-pycppad can be installed directly from Debian/Ubuntu packages. To
-install pycppad, just follow the instructions on its website.
+Cardoon is being developed in Debian GNU/Linux
+<http://www.debian.org>, but it should work in other environments if
+the Python interpreter and the libraries are available.  In addition
+to a Python interpreter (version 2.6 or possibly 2.7), several
+free libraries are required to run cardoon. In Debian Linux or
+Debian-based distributions (Ubuntu, Linux Mint and others) all of
+these libraries except pycppad can be installed as packages::
 
-* numpy:  http://numpy.scipy.org/
+  apt-get install python-numpy python-sparse python-matplotlib \
+  python-pyparsing ipython python-sphinx pylint 
 
-* pycppad:  http://www.seanet.com/~bradbell/pycppad/pycppad.xml
+To install pycppad install cppad first by following the instructions
+on their websites. The corresponding websites for each library are
+listed below:
 
-* matplotlib:  http://matplotlib.sourceforge.net/
+* pycppad: Automatic differentiation
 
-* pyparsing:  http://pyparsing.wikispaces.com/
+  - cppad:  http://www.coin-or.org/CppAD/Doc/cppad.xml
 
-* ipython:  http://ipython.org/
+  - pycppad:  http://www.seanet.com/~bradbell/pycppad/pycppad.xml 
+
+* numpy:  http://numpy.scipy.org/ (matrix and vector support)
+
+* pysparse:  http://pysparse.sourceforge.net/ (sparse matrix support)
+
+* matplotlib:  http://matplotlib.sourceforge.net/ (plotting)
+
+* pyparsing:  http://pyparsing.wikispaces.com/ (parser)
+
+* ipython:  http://ipython.org/ (iterative shells)
+
+* Sphinx: http://sphinx.pocoo.org/ (documentation)
+
+* pyreverse from the pylint package: http://www.logilab.org/2560 (to
+  generate UML diagrams)
 
 You may also need to install *git* to fetch the source code from
 the github repository::
@@ -47,7 +68,7 @@ run the program with no arguments for a brief help message::
     Usage:
             cardoon <netlistname>  : Process netlist file
             cardoon -c             : Generate catalogs
-            cardoon -i             : drop to Ipython shell
+            cardoon -i             : immediatly drop to Ipython shell
 
 Then you can change into the test/devices directory and try some of
 the netlists there::
@@ -83,11 +104,11 @@ the netlists there::
 Netlist Format
 --------------
 
-A very brief and incomplete description is provided here. The netlist
-syntax resembles somewhat the syntax used in other simulators such as
-spice, fREEDA and QUCS, but at least for now it has some
-simplifications. The netlist is case-sensitive. Each line specifies
-one circuit element, an analysis to perform or another command.
+A very brief description is provided here. The netlist syntax
+resembles somewhat the syntax used in other simulators such as spice,
+fREEDA and QUCS, but at least for now it has some simplifications. The
+netlist is case-sensitive. Each line specifies one circuit element, an
+analysis to perform or another command.
 
 * The backslash ("\\") at the end of a line means that the line must
   be joined with the next one. The following is taken as single line::
@@ -202,21 +223,16 @@ one circuit element, an analysis to perform or another command.
 Generating this documentation
 -----------------------------
 
-The main documentation files are kept in the ``doc`` directory. To
-generate the documentation in html or LaTeX formats (other formats are
-possible but not tested) the following packages are needed:
-
-* Sphinx (http://sphinx.pocoo.org/)
-
-* pyreverse from the pylint package to generate UML diagrams
-  (http://www.logilab.org/2560)
-
-The documentation can be generated as follows::
+The main documentation files are kept in the ``doc``
+directory. Documentation can be generated in html or LaTeX formats
+(other formats are possible but not tested).  The documentation can be
+generated as follows::
 
     cd doc
     make html
 
 The device or analysis catalogs are not checked for dependencies. To
 force re-generation of those, you can just remove
-``device_library.rst`` and re-make the documentation. The ``latex``
-targets can be used to generate the documentation in latex format.
+``device_library.rst`` (or run ``cardoon -c`` in the doc directory)
+and re-make the documentation. The ``latex`` targets can be used to
+generate the documentation in latex format.

@@ -2,7 +2,7 @@
 
 isin:i1 gnd 4 idc=2m acmag=1.
 res:r1 4 2 r=100
-tlinpy4:tline1 2 gnd 3 gnd z0mag=75.00 k=7 fscale=10.e9 alpha = 59.9 fopt=10e9 length=501.29u nsect=10
+tlinpy4:tline1 2 gnd 3 gnd z0mag=75.00 k=7 fscale=10.e9 alpha = 59.9 fopt=10e9 length=501.29u nsect=20
 res:r2 3 gnd r=100
 svdiode:d1 3 gnd cj0=1e-12
 

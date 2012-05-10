@@ -16,6 +16,7 @@ from integration import BEuler, Trapezoidal
 from globalVars import glVar
 from fsolve import solve, NoConvergenceError
 import matplotlib.pyplot as plt
+import sys
 
 class Analysis(ParamSet):
     """
@@ -96,7 +97,6 @@ class Analysis(ParamSet):
 
         # Create nodal objects and solve for initial state
         nd.make_nodal_circuit(circuit)
-        print('System dimension: {0}\n'.format(circuit.nD_dimension))
         dc = nd.DCNodal(circuit)
         tran = nd.TransientNodal(circuit, imo)
         x = dc.get_guess()
@@ -104,8 +104,12 @@ class Analysis(ParamSet):
         sV = tran.get_source(0.)
         # solve DC equations
         try: 
+            print('Calculating DC operating point ... ', end='')
+            sys.stdout.flush()
             (x, res, iterations) = solve(x, sV, dc.convergence_helpers)
+            print('Succeded.\n')
         except NoConvergenceError as ce:
+            print('Failed.\n')
             print(ce)
             return
         dc.save_OP(x)
@@ -138,10 +142,18 @@ class Analysis(ParamSet):
         xOld = x
         tIter = 0
         tRes = 0.
+        dots = 50
+        print('System dimension: {0}'.format(circuit.nD_dimension))
+        print('Number of samples: {0}'.format(nsamples))
         if self.verbose:
             print('-------------------------------------------------')
             print(' Step    | Time (s)     | Iter.    | Residual    ')
             print('-------------------------------------------------')
+        else:
+            print('Printing one dot every {0} samples:'.format(dots))
+            print('.', end='')
+            sys.stdout.flush()
+
         for i in xrange(1, nsamples):
             qVec = tran.update_q(xOld)
             imo.accept(qVec)
@@ -173,6 +185,9 @@ class Analysis(ParamSet):
             if self.verbose:
                 print('{0:8} | {1:12} | {2:8} | {3:12}'.format(
                         i, timeVec[i], iterations, res))
+            elif not i%dots:
+                print('.', end='')
+                sys.stdout.flush()
 
         # Calculate average residual and iterations
         avei = float(tIter) / nsamples

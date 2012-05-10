@@ -15,7 +15,7 @@ from analysis import AnalysisError, ipython_drop
 import nodal as nd
 from fsolve import solve, NoConvergenceError
 import matplotlib.pyplot as plt
-
+import sys
 
 class Analysis(ParamSet):
     r"""
@@ -86,10 +86,15 @@ class Analysis(ParamSet):
         dc = nd.DCNodal(circuit)
         x0 = dc.get_guess()
         sV = dc.get_source()
+        print('System dimension: {0}'.format(circuit.nD_dimension))
         # solve equations
         try: 
+            print('Calculating DC operating point ... ', end='')
+            sys.stdout.flush()
             (x, res, iterations) = solve(x0, sV, dc.convergence_helpers)
+            print('Succeded.\n')
         except NoConvergenceError as ce:
+            print('Failed.\n')
             print(ce)
             return
         dc.save_OP(x)
