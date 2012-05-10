@@ -240,3 +240,6 @@ Collector current plot:
 .. image:: tline_out.png
    :scale: 100 %
    :alt: Transmission line output voltages
+
+
+.. include:: ../../examples/README

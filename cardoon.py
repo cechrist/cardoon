@@ -116,8 +116,11 @@ def analysis_catalog():
 
 if __name__ == "__main__":
     import sys
+    import doc
+    print('\nCardoon Circuit Simulator {0} release {1}'.format(doc.version,
+                                                               doc.release))
     if len(sys.argv) != 2:
-        print('\nUsage:')
+        print('Usage:')
         print('        cardoon <netlistname>  : Process netlist file')
         print('        cardoon -c             : Generate catalogs')
         print('        cardoon -i             : drop to Ipython shell')

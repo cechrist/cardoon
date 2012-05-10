@@ -2,27 +2,43 @@
 Action Plan (TODO file)
 -----------------------
 
-#. Add automatic test suite
+Short-term goals:
 
-#. Add support for convolution of freq-defined elements
+  #. Add automatic test suite
+  
+  #. Add support for convolution of freq-defined elements and implement
+     time delay support in transient analysis
+  
+  #. Finish implementation of nodal analysis of independent subcircuits
 
 Other tasks to be done at some time:
 
-* Consider changing saveOP interface (return value?) for nonlinear devices
+  * Add more device models
+  
+  * Classify device catalog by device type / improve device library
+    organization
+  
+  * Consider changing saveOP interface (return value?) for nonlinear devices
+  
+  * Add netlist variable sweep in DC analysis
+  
+  * Improve convergence control in Newton method
+  
+  * Implement extrinsic model for MOS trasistors using an approach
+    similar to the BJT implementation.
+  
+  * Add "+" notation for multiple lines in parser 
+  
+  * Optimize nodal implementation: 
 
-* Add netlist variable sweep in DC analysis
+    - Investigate problem with PyTrilinos library that produces
+      segmentation fault
 
-* Keep testing existing code with more circuits
+    - Find alternative sparse matrix libraries in python that allow
+      finer control
 
-* Improve convergence control in Newton method
+    - Optimize matrix filling process
 
-* Implement extrinsic model for MOS trasistors using an approach
-  similar to the BJT implementation.
-
-* Add "+" notation for multiple lines in parser 
-
-* Investigate problem with PyTrilinos library: produces segmentation
-  fault. 
 
 
 

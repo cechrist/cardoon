@@ -6,8 +6,8 @@
 *                and dummy resistors
 
 ***Input***
-vsin:v2 153 0 vdc=1. mag=.1 freq=1kHz
-res:r2s 153 154 r=10.
+vsin:v2 153 0 vdc=1. acmag=.1 rint = 5.
+vpulse:v2 154 153 rint=5 v1=0 v2=2. pw=400us per=1ms td=50us tr=50us tf=50us
 vsin:v1 151 0 mag=.2 freq=5kHz
 res:r1s 151 152 r=10.
 
@@ -100,12 +100,12 @@ ne=0.5 nc=0.5 tr=3000e-9 vje=0.55 vjc=0.55 rc=100  re=10)
 *.analysis op intvars=0
 *.analysis dc device=vsin:v1 param=vdc start=-2. stop=2. num=30
 *.analysis ac start=100. stop=1MEG num=100 log=True
-.analysis tran tstep=10us tstop=2ms
+.analysis tran tstep=10us tstop=1ms
 .options maxiter=300 gyr=1e-5 maxdelta=3. sparse=1
 
 .plot dc 153 151 23
 .plot ac_dB 153 151 23
 .plot ac_phase 23
-.plot tran 153 151 23
+.plot tran 154 151 23
 
 .end

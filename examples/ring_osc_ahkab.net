@@ -1,7 +1,7 @@
 ### RING OSCILLATOR with 3 inverters ###
 
-# Modified from ahkab circuit 
-#            simulator test netlist (Copyright 2006 Giuseppe Venturini)
+# Modified from ahkab circuit simulator <http://code.google.com/p/ahkab/>  
+#   test netlist (Copyright 2006 Giuseppe Venturini)
 
 x1 1 3 20 0 inv1
 x2 3 4 2 0 inv1

@@ -19,13 +19,17 @@ also be found at:
   http://vision.lakeheadu.ca/cardoon/
 
 A secondary objective is to add features and make the program
-efficient enough to be useful for general use, if possible.  The
+efficient enough to be useful for general use, if possible. The
 program is still at the early development stage but it has already
 enough functionality to be useful for some tasks. It can currently
-simulate circuits with a few thousand nodes in reasonable times.  If
-you plan to use this program please be aware that as it is developed
-interfaces may have to be changed, sometimes *breaking compatibility
-with earlier versions*.
+simulate circuits with a few thousand nodes in reasonable times. As of
+May 2012, is is probably the fastest available python-based circuit
+simulator. The program takes 2.6 times the ngspice time to run a
+transient analysis of the soliton line circuit (3022 nodes), which is
+quite good considering it is running on an interpreter.  If you plan
+to use this program please be aware that as it is developed interfaces
+may have to be changed, sometimes *breaking compatibility with earlier
+versions*.
 
 State-variable nonlinear device modeling (in the fREEDA sense) is
 supported. A state-variable PN junction model is included. This

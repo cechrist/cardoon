@@ -1,0 +1,34 @@
+
+Examples Directory
+------------------
+
+The ``examples`` directory contains ready-to-use netlist
+examples. They all should work with no errors. To run netlists,
+execute the following command::
+
+  cardoon/examples$ ../cardoon.py <netlist file>
+
+Brief description of each file:
+
+ #. ``inverter.net``: Basic CMOS inverter from documentation (DC sweep)
+
+ #. ``npn_thermal.net``: Electro-thermal BJT test from documentation
+    (DC sweep). Simulation drops to an ipython shell at the end. Results
+    can be explored with more detail in this mode. Type ``quit()`` to
+    exit this shell.
+
+ #. ``oscillator.net``: Colpitts oscillator from documentation (transient)
+
+ #. ``ring_osc_ahkab.net``: CMOS ring oscillator similar to the
+    example provided with the ahkab <http://code.google.com/p/ahkab/>
+    simulator.
+
+ #. ``summing_lm741.net``: transistor-level LM741-based summing
+    amplifier (transient)
+
+ #. ``thermal_rf_amp_AC.net``: RF amplifier with transmission lines (AC sweep)
+
+ #. ``soliton.net``: Nonlinear transmission line transient
+    simulation. This simulation takes approximately 5 minutes to
+    complete.
+
