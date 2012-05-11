@@ -11,6 +11,7 @@ independently.
 
 """
 
+from __future__ import print_function
 import numpy as np
 from fsolve import fsolve_Newton, NoConvergenceError
 from integration import BEuler
@@ -362,18 +363,32 @@ class _NLFunction:
         """Newton's method with source stepping"""
         x = np.copy(x0)
         totIter = 0
-        for lambda_ in np.linspace(start = .1, stop = 1., num = 10):
-            def get_deltax(x):
-                (iVec, Jac) = self.get_i_Jac(x) 
-                return self._get_deltax(iVec - lambda_ * sV, Jac)
+        lambda_ = 0.5
+        def get_deltax(x):
+            (iVec, Jac) = self.get_i_Jac(x) 
+            return self._get_deltax(iVec - lambda_ * sV, Jac)
             
-            def f_eval(x):
-                iVec = self.get_i(x) 
-                return iVec - lambda_ * sV
-            (x, res, iterations) = fsolve_Newton(x, get_deltax, f_eval)
-            print('lambda = {0}, res = {1}, iter = {2}'.format(lambda_, 
-                                                               res, iterations))
-            totIter += iterations
+        def f_eval(x):
+            iVec = self.get_i(x) 
+            return iVec - lambda_ * sV
+
+        stack = [0., 1.]
+        step = 1. - lambda_
+        while stack:
+            print('lambda = {0}: '.format(lambda_), end='')
+            try:
+                (x, res, iterations) = fsolve_Newton(x, get_deltax, f_eval)
+                print('res = {0}, iter = {1}'.format(res, iterations))
+                totIter += iterations
+                # Recover value of lambda_ from stack
+                step = stack[-1] - lambda_
+                lambda_ = stack.pop()
+            except NoConvergenceError as nce:
+                print('\n' + str(nce) + '\n')
+                # push _lambda into stack
+                stack.append(lambda_)
+                step *= .5
+                lambda_ -= step
 
         return (x, res, totIter)
 

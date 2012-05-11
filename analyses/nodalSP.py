@@ -14,226 +14,31 @@ dense implementation but still a lot could be gained with finer
 control over matrix factorization. At this time the main Jacobian is
 (almost) created and factored from scratch at every iteration.
 
-Also there is a lot of overlap with the ``nodal`` module. 
+Many of the functions are directly imported from the ``nodal`` module
+to avoid redundancy. Some of these should be optimized for better
+performance.
 
 """
 
+from __future__ import print_function
 import numpy as np
 import pysparse
 from fsolve import fsolve_Newton, NoConvergenceError
 from integration import BEuler
-
-# ****************** Stand-alone functions (perhaps to be optimized) **********
-
-def set_quad(G, row1, col1, row2, col2, g):
-    """
-    Set transconductance/transcapacitance quad
-
-    G: target matrix
-    """
-    if col1 >= 0:
-        if row1 >= 0:
-            G[row1, col1] += g
-        if row2 >= 0:
-            G[row2, col1] -= g
-    if col2 >= 0:
-        if row1 >= 0:
-            G[row1, col2] -= g
-        if row2 >= 0:
-            G[row2, col2] += g
-
-
-def set_xin(xin, posCols, negCols, xVec):
-    """
-    Calculate input port voltage xin
-    """
-    for i,j in posCols:
-        xin[i] += xVec[j]
-    for i,j in negCols:
-        xin[i] -= xVec[j]
-
-
-def set_i(iVec, posRows, negRows, current):
-    """
-    Set current contributions of current into iVec
-    """
-    for i,j in posRows:
-        iVec[j] += current[i]
-    for i,j in negRows:
-        iVec[j] -= current[i]
-
-
-def set_Jac(M, posRows, negRows, posCols, negCols, Jac):
-    """
-    Set current contributions of Jac into M
-    """
-    for i1, i in posRows:
-        for j1, j in posCols:
-            M[i,j] += Jac[i1,j1]
-        for j1, j in negCols:
-            M[i,j] -= Jac[i1,j1]
-    for i1, i in negRows:
-        for j1, j in negCols:
-            M[i,j] += Jac[i1,j1]
-        for j1, j in posCols:
-            M[i,j] -= Jac[i1,j1]
-
-
-# ********************** Regular functions *****************************
-
-def make_nodal_circuit(ckt, reference='gnd'):
-    """
-    Add attributes to Circuit/Elements/Terminals for nodal analysis
-
-    This functionality should be useful for any kind of nodal-based
-    analysis (DC, AC, TRAN, HB, etc.)
-
-    Takes a Circuit instance (ckt) as an argument. If the circuit
-    contains the 'gnd' node, it is used as the reference. Otherwise a
-    reference node must be indicated.
-
-    New attributes are added in Circuit/Element/Terminal
-    instances. All new attributes start with ``nD_``
-
-    Works with subcircuits too (see ``nD_namRClist`` attribute)
-    """
-    # get ground node
-    ckt.nD_ref = ckt.get_term(reference)
-
-    # make a list of all non-reference terminals in circuit 
-    ckt.nD_termList = ckt.termDict.values() + ckt.get_internal_terms()
-    # remove ground node from terminal list
-    ckt.nD_termList.remove(ckt.nD_ref)
-    # Assign a number (0-inf) to all nodes. For reference nodes
-    # assign -1 
-    ckt.nD_ref.nD_namRC = -1
-    # Make a list of all elements
-    ckt.nD_elemList = ckt.elemDict.values()
-    # Set RC number of reference terminals to -1
-    for elem in ckt.nD_elemList:
-        if elem.localReference:
-            elem.neighbour[elem.localReference].nD_namRC = -1
-    # For the future: use graph techniques to find the optimum
-    # terminal order
-    for i, term in enumerate(ckt.nD_termList):
-        term.nD_namRC = i
-
-    # Store internal RC numbers for later use
-    for elem in ckt.nD_elemList:
-        elem.nD_intRC = [term.nD_namRC for term in 
-                         elem.neighbour[elem.numTerms:]]
-
-    # Dimension is the number of unknowns to solve for
-    ckt.nD_dimension = len(ckt.nD_termList)
-    # Number of external terminals excluding reference
-    ckt.nD_nterms = len(ckt.termDict.values()) - 1
-
-    # Create specialized element lists
-    ckt.nD_nlinElem = filter(lambda x: x.isNonlinear, ckt.nD_elemList)
-    ckt.nD_freqDefinedElem = filter(lambda x: x.isFreqDefined, ckt.nD_elemList)
-    ckt.nD_sourceDCElem = filter(lambda x: x.isDCSource, ckt.nD_elemList)
-    ckt.nD_sourceTDElem = filter(lambda x: x.isTDSource, ckt.nD_elemList)
-    ckt.nD_sourceFDElem = filter(lambda x: x.isFDSource, ckt.nD_elemList)
-
-    # Map row/column numbers directly into VC*S descriptions
-    for elem in ckt.nD_elemList:
-        process_nodal_element(elem)
-
-    # Subcircuit-connection processing
-    try:
-        connectTerms = ckt.get_connections()
-        # List of RC numbers of external connections
-        ckt.nD_namRClist = [term.nD_namRC for term in connectTerms]
-    except AttributeError:
-        # Not a subcircuit
-        pass
-
-def restore_RCnumbers(elem):
-    """
-    Restore RC numbers in internal terminals
-
-    Assumption is number of internal terminals is the same
-    """
-    for term, i in zip(elem.neighbour[elem.numTerms:], elem.nD_intRC):
-        term.nD_namRC = i
-
-def process_nodal_element(elem):
-    """
-    Process element for nodal analysis
-    """
-    # Create list with RC numbers (choose one)
-    # rcList = map(lambda x: x.nD_namRC, elem.neighbour)
-    rcList = [x.nD_namRC for x in elem.neighbour]
-
-    # Translate linear VCCS/VCQS format
-    def convert_vcs(x):
-        """
-        Converts format of VC*S 
-
-        input: [(contn1, contn2), (outn1, outn2), g]
-
-        output: [row1, col1, row2, col2, g]
-        """
-        col1 = rcList[x[0][0]]
-        col2 = rcList[x[0][1]]
-        row1 = rcList[x[1][0]]
-        row2 = rcList[x[1][1]]
-        return [row1, col1, row2, col2, x[2]]
-    elem.nD_linVCCS = map(convert_vcs, elem.linearVCCS)
-    elem.nD_linVCQS = map(convert_vcs, elem.linearVCQS)
-
-    # Translate positive and negative terminal numbers
-    def create_list(portlist):
-        """
-        Converts an internal port list into 2 lists with (+-) nodes
-
-        The format of each list is::
-
-            (internal term number, namRC number)
-        """
-        tmp0 = [rcList[x1[0]] for x1 in portlist]
-        tmp1 = [rcList[x1[1]] for x1 in portlist]
-        return ([(i, j) for i,j in enumerate(tmp0) if j > -1],
-                [(i, j) for i,j in enumerate(tmp1) if j > -1])
-
-    # Convert nonlinear device descriptions to a format more
-    # readily usable for the NA approach
-    if elem.isNonlinear:
-        # Control voltages
-        (elem.nD_vpos, elem.nD_vneg) = create_list(elem.controlPorts)
-        # Current source terminals
-        (elem.nD_cpos, elem.nD_cneg) = create_list(elem.csOutPorts)
-        # Charge source terminals
-        (elem.nD_qpos, elem.nD_qneg) = create_list(elem.qsOutPorts)
-# Disabled since not needed for now
-#            # Create list with external ports for gmin calculation
-#            nports = elem.numTerms - 1
-#            elem.nD_extPorts = [(i, nports) for i in range(nports)]
-#            (elem.nD_epos, elem.nD_eneg) = create_list(elem.nD_extPorts)
-
-    # Convert frequency-defined elements
-    if elem.isFreqDefined:
-        (elem.nD_fpos, elem.nD_fneg) =  create_list(elem.fPortsDefinition)
-
-    # Translate source output terms
-    if elem.isDCSource or elem.isTDSource or elem.isFDSource:
-        # first get the destination row/columns 
-        n1 = rcList[elem.sourceOutput[0]]
-        n2 = rcList[elem.sourceOutput[1]]
-        elem.nD_sourceOut = (n1, n2)
-
-
+from nodal import set_quad, set_xin, set_i, set_Jac, make_nodal_circuit,\
+    restore_RCnumbers, process_nodal_element,_NLFunction
 
 #-------------------------------------------------------------------------
 # ****************************** Classes *********************************
 #-------------------------------------------------------------------------
 
-class _NLFunction:
+class _NLFunctionSP(_NLFunction):
     """
-    Nonlinear function interface class
+    Nonlinear function interface class using sparse matrices
 
     This is an abstract class to be use as a base class by other
-    nodal-based classes such as DCNodal
+    nodal-based classes such as DCNodal. Only methods that differ from
+    nodal._NLFunction are defined here.
     """
 
     def __init__(self):
@@ -252,39 +57,6 @@ class _NLFunction:
         umf.solve(errFunc, self.deltaxVec)
         return self.deltaxVec
 
-    # The following functions used to solve equations, originally from
-    # pycircuit
-    def solve_simple(self, x0, sV):
-        #"""Simple Newton's method"""
-        # Docstring removed to avoid printing this all the time
-        def get_deltax(x):
-            (iVec, Jac) = self.get_i_Jac(x) 
-            return self._get_deltax(iVec - sV, Jac)
-    
-        def f_eval(x):
-            iVec = self.get_i(x) 
-            return iVec - sV
-    
-        return fsolve_Newton(x0, get_deltax, f_eval)
-    
-    def solve_homotopy_source(self, x0, sV):
-        """Newton's method with source stepping"""
-        x = np.copy(x0)
-        totIter = 0
-        for lambda_ in np.linspace(start = .1, stop = 1., num = 10):
-            def get_deltax(x):
-                (iVec, Jac) = self.get_i_Jac(x) 
-                return self._get_deltax(iVec - lambda_ * sV, Jac)
-            
-            def f_eval(x):
-                iVec = self.get_i(x) 
-                return iVec - lambda_ * sV
-            (x, res, iterations) = fsolve_Newton(x, get_deltax, f_eval)
-            print('lambda = {0}, res = {1}, iter = {2}'.format(lambda_, 
-                                                               res, iterations))
-            totIter += iterations
-
-        return (x, res, totIter)
 
     def solve_homotopy_gmin(self, x0, sV):
         """Newton's method with gmin stepping"""
@@ -329,7 +101,7 @@ class _NLFunction:
 
 #---------------------------------------------------------------------------
 
-class DCNodal(_NLFunction):
+class DCNodal(_NLFunctionSP):
     """
     Calculates the DC part of currents and Jacobian
 
@@ -536,7 +308,7 @@ class DCNodal(_NLFunction):
     
 #----------------------------------------------------------------------
 
-class TransientNodal(_NLFunction):
+class TransientNodal(_NLFunctionSP):
     """
     Keeps track of transient analysis equations. 
 

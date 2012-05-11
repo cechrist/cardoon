@@ -45,7 +45,7 @@ def solve(x0, sV, convergence_helpers):
                 'Giving up. No convergence with any method')
         else:
             if algorithm.__doc__:
-                print('Trying ' + algorithm.__doc__)
+                print('\nTrying ' + algorithm.__doc__)
             try:
                 (x, res, iterations) = algorithm(x0, sV)
             except NoConvergenceError as ce:
