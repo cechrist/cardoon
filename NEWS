@@ -1,10 +1,21 @@
 
+News
+----
+
+Version 0.4.1
+^^^^^^^^^^^^^
+
+    * Added adaptive source stepping
+
+    * Improved documentation (Options and Constant tables, Device categories)
+
+
 Version 0.4.0
--------------
+^^^^^^^^^^^^^
 
-* Added sparse matrix support for OP, DC and Tran analyses.
-
-* Added NEWS file and examples directory
-
-* Other general improvements
+    * Added sparse matrix support for OP, DC and Tran analyses.
+    
+    * Added NEWS file and examples directory
+    
+    * Other general improvements
 
