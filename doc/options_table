@@ -1,0 +1,13 @@
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ abstol       1.0e-08      nodal unit   Absolute tolerance                                   
+ errfunc      0            bool         Additional test for error function in Newton's method 
+ gyr          0.001        S            Default gain in internal gyrators                    
+ maxdelta     20.0         nodal unit   Maximum allowed change in Newton iterations          
+ maxiter      100                       Maximum number of Newton iterations                  
+ reltol       1.0e-08                   Relative tolerance                                   
+ sparse       1            bool         Use sparse matrices in analyses if possible          
+ temp         27.0         C            Ambient temperature                                  
+ =========== ============ ============ ===================================================== 
+

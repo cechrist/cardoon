@@ -5,6 +5,7 @@ Main simulator program
 For now this is quite rudimentary. 
 """
 from __future__ import print_function
+from globalVars import const, glVar
 import circuit as cir
 from netlistparser import parse_file, ParseError, analysisQueue
 from paramset import ParamError
@@ -114,6 +115,18 @@ def analysis_catalog():
             print(pset.describe_parameters(), file=f)
 
 
+def options_const_tables():
+    """
+    Generates tables for global variables and constants
+
+    files: constants_table, options_table
+    """
+    with open('constants_table', 'w') as f:
+        print(const.describe_parameters(), file=f)
+    with open('options_table', 'w') as f:
+        print(glVar.describe_parameters(), file=f)
+
+
 if __name__ == "__main__":
     import sys
     import doc
@@ -131,10 +144,10 @@ if __name__ == "__main__":
         print('Generating catalogs ...')
         device_catalog()
         analysis_catalog()
+        options_const_tables()
     elif sys.argv[1] == '-i':
         # drop to ipython shell
         import devices
-        from globalVars import const, glVar
         from IPython.Shell import IPShellEmbed
         args = ['-pi1','In <\\#>: ','-pi2','   .\\D.: ',
                 '-po','Out<\\#>: ','-nosep']

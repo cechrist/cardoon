@@ -160,19 +160,9 @@ analysis to perform or another command.
   Example::
    
        .options temp=29.1439 gyr=1e-3
+
+  Global options are documented in the :doc:`global_vars`.   
    
-  List of global options (check globalVars.py for an updated list)
-
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- abstol       1.0e-08                   Absolute tolerance                                   
- gyr          0.01         S            Default gain in internal gyrators                    
- maxiter      100                       Maximum number of Newton iterations                  
- reltol       1.0e-08                   Relative tolerance                                   
- temp         27.0         C            Ambient temperature                                  
- =========== ============ ============ =====================================================  
-
 * Subcircuits use a syntax similar to spice::
 
       x1 2 3 4 X1
