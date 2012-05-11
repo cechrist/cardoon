@@ -35,6 +35,8 @@ class Device(cir.Element):
         idc:is1 gnd 4 idc=2mA
 
     """
+    # Device category
+    category = "Sources"
 
     # devtype is the 'model' name
     devType = "idc"

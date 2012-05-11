@@ -173,6 +173,8 @@ class Device(cir.Element):
     This implementation does not account for the power dissipation
     in Rs. Use an external thermal resistor if that is needed.
     """
+    # Device category
+    category = "Semiconductor devices"
 
     # devtype is the 'model' name
     devType = "svdiode"

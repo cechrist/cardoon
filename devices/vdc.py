@@ -56,6 +56,8 @@ class Device(cir.Element):
     Otherwise a Norton equivalent circuit is used.
 
     """
+    # Device category
+    category = "Sources"
 
     # devtype is the 'model' name
     devType = "vdc"

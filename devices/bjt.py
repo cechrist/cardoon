@@ -73,6 +73,9 @@ def extrinsic_bjt(IBJT):
         
         isNonlinear = True
     
+        # Device category
+        category = "Semiconductor devices"
+
         # devtype is the 'model' name: remove the 'i' from intrinsic name
         devType = IBJT.devType 
     

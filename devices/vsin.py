@@ -38,6 +38,8 @@ class Device(cir.Element):
     Same as vdc.
 
     """
+    # Device category
+    category = "Sources"
 
     # devtype is the 'model' name
     devType = "vsin"

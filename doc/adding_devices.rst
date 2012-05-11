@@ -4,7 +4,7 @@ Implementing a new device model
 
 A current-source approach is adopted in this simulator. Therefore all
 models must be implemented using independent and voltage-controlled
-sources. This is not a limitation any circuit component can be
+current sources. This is not a limitation any circuit component can be
 described in that way, including ideal voltage sources and
 state-variable defined nonlinear models.
 
@@ -24,6 +24,8 @@ class defined as follows::
         """
 	Document new model here
         """
+	# Device category
+	category = "Basic Components"
 
         # devtype is the 'model' name
         devType = "emptydev"
@@ -71,8 +73,8 @@ class defined as follows::
             # Calculate temperature-dependent variables (if any)
             # self.set_temp_vars(self.temp)
 
-A sample file named ``devices/EmptyDev.py`` is included to be used as
-a skeleton to create new models.
+It is recommended to copy one of the existing device files to a new
+file name and use that as a starting point to create a new device.
 
 
 Module documentation
@@ -115,8 +117,13 @@ here.  Example for diode device::
 Attributes and functions description
 ------------------------------------
 
-Mandatory argument: ``devType = 'string'``. Specifies the netlist name
-of the device model, for example 'res' for a resistor model
+Mandatory attribute: ``devType = 'string'``. Specifies the netlist name
+of the device model, for example 'res' for a resistor model. 
+
+Another mandatory attribute is ``category = 'string'``. This is the
+broad category to classify the current model in the
+:doc:`device_library` (for example *Basic Components*). You can use
+one of the existing categories or create a new one.
 
 The following attributes are not mandatory and defaut to empty lists
 if not specified. They can be used with any type of device model:

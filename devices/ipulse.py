@@ -94,6 +94,8 @@ class Device(cir.Element):
         ipulse:i1 gnd 4 i1=-1V i2=1V td=1ms pw=10ms per=20ms
 
     """
+    # Device category
+    category = "Sources"
 
     # devtype is the 'model' name
     devType = "ipulse"

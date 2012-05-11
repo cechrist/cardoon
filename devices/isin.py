@@ -32,6 +32,8 @@ class Device(cir.Element):
         isin:i1 gnd 4 idc=2mA amp=2mA freq=1GHz phase=90 
 
     """
+    # Device category
+    category = "Sources"
 
     # devtype is the 'model' name
     devType = "isin"

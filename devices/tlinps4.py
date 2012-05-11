@@ -68,6 +68,8 @@ class Device(cir.Element):
                |        -1    s21        1    |
 
     """
+    # Device category
+    category = "Distributed components"
 
     # devtype is the 'model' name
     devType = "tlinps4"

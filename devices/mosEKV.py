@@ -98,6 +98,8 @@ class Device(cir.Element):
     current, but if the device is in reverse (Vds < 0 for N-channel)
     mode, it is added to the source current.
     """
+    # Device category
+    category = "Semiconductor devices"
 
     devType = "mosekv"
     

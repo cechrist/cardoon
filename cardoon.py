@@ -52,36 +52,52 @@ def device_catalog():
     import paramset as ps
 
     with open('device_library.rst', 'w') as f:
+        print(":tocdepth: 3\n", file=f)
         print("======================", file=f)
         print("Device Library Catalog", file=f)
         print("======================", file=f)
         print(" ", file=f)
-        # loop through all devices
-        for key in sorted(devices.devClass.iterkeys()):
-            if key[-2:] == '_t':
-                #print('-' * len(key) + '\n', file=f)
-                print('\nElectro-thermal version with extra thermal port:', 
-                      key, '\n', file=f)
-                continue
-            val = devices.devClass[key]
-            # Print doc string
-            doc = val.__doc__
-            if hasattr(val,'extraDoc'):
-                doc += val.extraDoc
-            doc = doc.split(os.linesep)
-            # Remove empty first line 
-            doc.pop(0)
-            # Add header with netlist name to title
-            print(key + ': ' + doc.pop(0)[4:], file=f)
-            print('-' * (len(key)+2) + doc.pop(0)[4:], file=f)
-            for line in doc:
-              print(line[4:], file=f)
 
-            print('\nParameters', file=f)
-            print('++++++++++\n', file=f)
-            # create parameter set from device dictionary
-            pset = ps.ParamSet(val.paramDict)
-            print(pset.describe_parameters(), file=f)
+        # sort devices according to category
+        catDict = dict()
+        for key in devices.devClass:
+            dev = devices.devClass[key]
+            try:
+                catDict[dev.category].append(dev)
+            except KeyError:
+                catDict[dev.category] = [dev]
+                
+        # Generate one Section per category
+        for category in sorted(catDict.iterkeys()):
+            print(category, file=f)
+            print('=' * len(category) + '\n', file=f)
+            devlist = catDict[category]
+            devlist.sort(key = lambda x: x.devType)
+            for dev in devlist:
+                key = dev.devType
+                if key[-2:] == '_t':
+                    #print('-' * len(key) + '\n', file=f)
+                    print('\nElectro-thermal version with extra thermal port:', 
+                          key, '\n', file=f)
+                    continue
+                # Print doc string
+                doc = dev.__doc__
+                if hasattr(dev,'extraDoc'):
+                    doc += dev.extraDoc
+                doc = doc.split(os.linesep)
+                # Remove empty first line 
+                doc.pop(0)
+                # Add header with netlist name to title
+                print(key + ': ' + doc.pop(0)[4:], file=f)
+                print('-' * (len(key)+2) + doc.pop(0)[4:], file=f)
+                for line in doc:
+                  print(line[4:], file=f)
+    
+                print('\nParameters', file=f)
+                print('++++++++++\n', file=f)
+                # create parameter set from device dictionary
+                pset = ps.ParamSet(dev.paramDict)
+                print(pset.describe_parameters(), file=f)
             
 
 def analysis_catalog():
@@ -92,6 +108,7 @@ def analysis_catalog():
     import paramset as ps
 
     with open('analysis_library.rst', 'w') as f:
+        print(":tocdepth: 2\n", file=f)
         print("========================", file=f)
         print("Analysis Library Catalog", file=f)
         print("========================", file=f)

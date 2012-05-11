@@ -1,7 +1,253 @@
+:tocdepth: 3
+
 ======================
 Device Library Catalog
 ======================
  
+Basic Components
+================
+
+cap: Linear Capacitor
+---------------------
+
+Connection diagram::
+
+               || C
+  0 o----------||---------o 1
+               ||
+
+Netlist example::
+
+    cap:c1 1 2 c=10uF
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ c            0.0          F            Capacitance                                          
+ =========== ============ ============ ===================================================== 
+
+ind: Inductor
+-------------
+
+Connection diagram::
+
+             __  __  __  _ 
+    0       /  \/  \/  \/ \          1
+      o----+   /\  /\  /\  +-------o    External view
+              (_/ (_/ (_/  
+
+Netlist example::
+
+    ind:l1 1 0 l=3uH
+
+
+Internal Topology
++++++++++++++++++
+
+Internal implementation uses a gyrator (adds one internal node)::
+
+                                    il/gyr    til
+    0  o---------+            +----------------+
+                 | gyr V23    |                |
+      +         /|\          /^\               |
+    Vin        ( | )        ( | ) gyr Vin    ----- gyr^2 * L
+      -         \V/          \|/             -----
+                 |            |                |
+    1  o---------+            +----------------+
+                                      |
+                                     --- tref 
+                                      V
+
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ l            0.0          H            Inductance                                           
+ =========== ============ ============ ===================================================== 
+
+res: Resistor
+-------------
+
+Connection diagram::
+
+                R
+  0 o--------/\/\/\/---------o 1
+
+Normally a linear device. If the electro-thermal version is used
+(res_t), the device is nonlinear.
+
+Netlist examples::
+
+    # Linear resistor (2 terminals)
+    res:r1 1 2 r=1e3 tc1=10e-3
+
+    # Electro-thermal resistor (nonlinear, 4 terminals)
+    res_t:r1 1 2 3 4 r=1e3 tc1=10e-3
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ l            0.0          m            Lenght                                               
+ narrow       0.0          m            Narrowing due to side etching                        
+ r            0.0          Ohms         Resistance                                           
+ rsh          0.0          Ohms         Sheet resistance                                     
+ tc1          0.0          1/C          Temperature coefficient 1                            
+ tc2          0.0          1/C^2        Temperature coefficient 2                            
+ temp         None         C            Device temperature                                   
+ tnom         27.0         C            Nominal temperature                                  
+ w            0.0          m            Width                                                
+ =========== ============ ============ ===================================================== 
+
+
+Electro-thermal version with extra thermal port: res_t 
+
+Distributed components
+======================
+
+tlinps4: 4-Terminal Physical Transmission Line
+----------------------------------------------
+
+This model uses scattering parameters::
+
+         0 o===================================o 2
+                           Z0
+         1 o===================================o 3
+
+
+This model is similar to tlinpy4, but it is more robust and can
+handle lossless lines, even at DC, but internally requires 2
+additional ports to keep track of v1+ and v2+. This model is more
+suitable for convolution as the S parameters are better behaved
+than the Y parameters.
+
+Netlist Examples::
+
+  tlinps4:tl1 in gnd out gnd z0mag=100. length=0.3m
+  .model c_line tlins4 (z0mag=75.00 k=7 fscale=1.e10 alpha = 59.9)
+
+Internal Topology
++++++++++++++++++
+
+The model is symmetric. The schematic for Port 1 is shown here::
+
+           I1                              v1+ + v1-          v1-
+          --->                               ---->     v1+   ---->
+      0 o--------,                          ,------------+----------,  4
+   +             |                          |            |          |  
+                 |                          |           ,-,  s12 v2+|  
+  V1            /|\ (v1+ - s12 v2+)/Z0     /^\          | |        /|\ 
+               ( | )                      ( | )       1 | |       ( | )
+   -            \V/                    V1  \|/          '-'        \V/ 
+                 |                          |            |          |  
+      1 o--------+                          +---------+--+----------'   
+                                                      |
+                                                     --- lref (6)
+                                                      V
+
+
+Note: for a matched transmission line, s11 = s22 = 0 and s12 =
+s21. The equivalent 'Y' matrix is::
+
+           |              1/Z0    -s12/Z0 |
+           |                              |
+           |             -s21/Z0    1/Z0  |           
+       Y = |                              |
+           | -1            1        s12   |
+           |                              |
+           |        -1    s21        1    |
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ alpha        0.1          dB/m         Attenuation                                          
+ fscale       0.0          Hz           Scaling frequency for attenuation                    
+ k            1.0                       Effective relative dielectric constant               
+ length       0.1          m            Line length                                          
+ tand         0.0                       Loss tangent                                         
+ z0mag        50.0         Ohms         Magnitude of characteristic impedance                
+ =========== ============ ============ ===================================================== 
+
+tlinpy4: 4-Terminal Physical Transmission Line
+----------------------------------------------
+
+This model uses Y parameters::
+
+         0 o===================================o 2
+                           Z0
+         1 o===================================o 3
+
+
+Code derived from fREEDA tlinp4 element. fREEDA implementation by
+Carlos E. Christoffersen, Mete Ozkar, Michael Steer
+
+Two models are supported dependent on the secting of nsect: When
+``nsect = 0`` (not set) the frequency-domain model is enabled.
+When ``nsect > 0`` the transmission line is expanded in 
+``nsect`` RLCG subsections.
+
+Netlist Examples::
+
+  tlinpy4:tl1 in gnd out gnd z0mag=100. length=0.3m
+  .model c_line tlinpy4 (z0mag=75.00 k=7 fscale=1.e10 alpha = 59.9)
+
+
+Internal Topology
++++++++++++++++++
+
+The internal schematic when nsect = 0 is the following::
+             
+      0 o----+------,               ,-----+-------o 2
+   +         |      |               |     |              +
+            ,-,     |               |    ,-, 
+  v1        | |    /|\ y12 v2      /|\   | |             v2
+        y11 | |   ( | )           ( | )  | | y22
+   -        '-'    \V/      y21 v1 \V/   '-'             -
+             |      |               |     |  
+      1 o----+------'               '-----+-------o 3
+
+                   y11 = y22 , y12 = y21
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ alpha        0.1          dB/m         Attenuation                                          
+ fopt         0            Hz           Optimum frequency for discrete approximation         
+ fscale       0.0          Hz           Scaling frequency for attenuation                    
+ k            1.0                       Effective relative dielectric constant               
+ length       0.1          m            Line length                                          
+ nsect        0                         Enable discrete approximation with n sections        
+ tand         0.0                       Loss tangent                                         
+ z0mag        50.0         Ohms         Magnitude of characteristic impedance                
+ =========== ============ ============ ===================================================== 
+
+Semiconductor devices
+=====================
+
 bjt: Bipolar Junction Transistor
 --------------------------------
 
@@ -180,30 +426,6 @@ Parameters
 
 Electro-thermal version with extra thermal port: bjt_t 
 
-cap: Linear Capacitor
----------------------
-
-Connection diagram::
-
-               || C
-  0 o----------||---------o 1
-               ||
-
-Netlist example::
-
-    cap:c1 1 2 c=10uF
-
-
-
-Parameters
-++++++++++
-
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- c            0.0          F            Capacitance                                          
- =========== ============ ============ ===================================================== 
-
 diode: Junction Diode
 ---------------------
 
@@ -285,155 +507,6 @@ Parameters
 
 
 Electro-thermal version with extra thermal port: diode_t 
-
-idc: DC current source
-----------------------
-
-Schematic::
-
-                idc
-               ,---,    
-    0 o-------( --> )---------o 1
-               `---`     
-
-Temperature dependence:
-
-.. math::
-    
-  i_{DC}(T) = i_{DC}(T_{nom}) (1 + t_{c1} \Delta T + t_{c2} \Delta T^2)
-
-  \Delta T = T - T_{nom}
-
-Netlist example::
-
-    idc:is1 gnd 4 idc=2mA
-
-
-
-Parameters
-++++++++++
-
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- idc          0.0          A            DC current                                           
- tc1          0.0          1/C          Current temperature coefficient 1                    
- tc2          0.0          1/C^2        Current temperature coefficient 2                    
- temp         None         C            Device temperature                                   
- tnom         27.0         C            Nominal temperature                                  
- =========== ============ ============ ===================================================== 
-
-ind: Inductor
--------------
-
-Connection diagram::
-
-             __  __  __  _ 
-    0       /  \/  \/  \/ \          1
-      o----+   /\  /\  /\  +-------o    External view
-              (_/ (_/ (_/  
-
-Netlist example::
-
-    ind:l1 1 0 l=3uH
-
-
-Internal Topology
-+++++++++++++++++
-
-Internal implementation uses a gyrator (adds one internal node)::
-
-                                    il/gyr    til
-    0  o---------+            +----------------+
-                 | gyr V23    |                |
-      +         /|\          /^\               |
-    Vin        ( | )        ( | ) gyr Vin    ----- gyr^2 * L
-      -         \V/          \|/             -----
-                 |            |                |
-    1  o---------+            +----------------+
-                                      |
-                                     --- tref 
-                                      V
-
-
-
-
-Parameters
-++++++++++
-
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- l            0.0          H            Inductance                                           
- =========== ============ ============ ===================================================== 
-
-ipulse: Pulse current source
-----------------------------
-
-Connection diagram::
-                       
-               ,---,  iout
-    0 o-------( --> )---------o 1
-               '---'    
-
-    iout = pulse(t)
-
-This source only works for time domain. It is equivalent to an
-open circuit for DC or frequency-domain.
-
-Netlist example::
-
-    ipulse:i1 gnd 4 i1=-1V i2=1V td=1ms pw=10ms per=20ms
-
-
-
-Parameters
-++++++++++
-
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- i1           0.0          A            Initial value                                        
- i2           0.0          A            Pulsed value                                         
- per          .0inf        s            Period                                               
- pw           .0inf        s            Pulse width                                          
- td           0.0          s            Delay time                                           
- tf           0.0          s            Fall time                                            
- tr           0.0          s            Rise time                                            
- =========== ============ ============ ===================================================== 
-
-isin: (Co-)Sinusoidal current source
-------------------------------------
-
-Connection diagram::
-                       
-               ,---,  iout
-    0 o-------( --> )---------o 1
-               '---'    
-
-    iout = idc + mag * cos(2 * pi * freq * t + phase)
-
-This source works for time and frequency domain. For AC analysis,
-the 'acmag' parameter is provided. By default acmag = mag.
-
-Netlist example::
-
-    isin:i1 gnd 4 idc=2mA amp=2mA freq=1GHz phase=90 
-
-
-
-Parameters
-++++++++++
-
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- acmag        None         A            Amplitude for AC analysis only                       
- freq         1000.0       Hz           Frequency                                            
- idc          0.0          A            DC current                                           
- mag          0.0          A            Amplitude                                            
- phase        0.0          degrees      Phase                                                
- =========== ============ ============ ===================================================== 
 
 mosacm: Incomplete ACM MOSFET
 -----------------------------
@@ -715,47 +788,6 @@ Parameters
 
 
 Electro-thermal version with extra thermal port: mosekv_t 
-
-res: Resistor
--------------
-
-Connection diagram::
-
-                R
-  0 o--------/\/\/\/---------o 1
-
-Normally a linear device. If the electro-thermal version is used
-(res_t), the device is nonlinear.
-
-Netlist examples::
-
-    # Linear resistor (2 terminals)
-    res:r1 1 2 r=1e3 tc1=10e-3
-
-    # Electro-thermal resistor (nonlinear, 4 terminals)
-    res_t:r1 1 2 3 4 r=1e3 tc1=10e-3
-
-
-
-Parameters
-++++++++++
-
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- l            0.0          m            Lenght                                               
- narrow       0.0          m            Narrowing due to side etching                        
- r            0.0          Ohms         Resistance                                           
- rsh          0.0          Ohms         Sheet resistance                                     
- tc1          0.0          1/C          Temperature coefficient 1                            
- tc2          0.0          1/C^2        Temperature coefficient 2                            
- temp         None         C            Device temperature                                   
- tnom         27.0         C            Nominal temperature                                  
- w            0.0          m            Width                                                
- =========== ============ ============ ===================================================== 
-
-
-Electro-thermal version with extra thermal port: res_t 
 
 svbjt: Bipolar Junction Transistor
 ----------------------------------
@@ -1047,57 +1079,30 @@ Parameters
 
 Electro-thermal version with extra thermal port: svdiode_t 
 
-tlinps4: 4-Terminal Physical Transmission Line
-----------------------------------------------
+Sources
+=======
 
-This model uses scattering parameters::
+idc: DC current source
+----------------------
 
-         0 o===================================o 2
-                           Z0
-         1 o===================================o 3
+Schematic::
 
+                idc
+               ,---,    
+    0 o-------( --> )---------o 1
+               `---`     
 
-This model is similar to tlinpy4, but it is more robust and can
-handle lossless lines, even at DC, but internally requires 2
-additional ports to keep track of v1+ and v2+. This model is more
-suitable for convolution as the S parameters are better behaved
-than the Y parameters.
+Temperature dependence:
 
-Netlist Examples::
+.. math::
+    
+  i_{DC}(T) = i_{DC}(T_{nom}) (1 + t_{c1} \Delta T + t_{c2} \Delta T^2)
 
-  tlinps4:tl1 in gnd out gnd z0mag=100. length=0.3m
-  .model c_line tlins4 (z0mag=75.00 k=7 fscale=1.e10 alpha = 59.9)
+  \Delta T = T - T_{nom}
 
-Internal Topology
-+++++++++++++++++
+Netlist example::
 
-The model is symmetric. The schematic for Port 1 is shown here::
-
-           I1                              v1+ + v1-          v1-
-          --->                               ---->     v1+   ---->
-      0 o--------,                          ,------------+----------,  4
-   +             |                          |            |          |  
-                 |                          |           ,-,  s12 v2+|  
-  V1            /|\ (v1+ - s12 v2+)/Z0     /^\          | |        /|\ 
-               ( | )                      ( | )       1 | |       ( | )
-   -            \V/                    V1  \|/          '-'        \V/ 
-                 |                          |            |          |  
-      1 o--------+                          +---------+--+----------'   
-                                                      |
-                                                     --- lref (6)
-                                                      V
-
-
-Note: for a matched transmission line, s11 = s22 = 0 and s12 =
-s21. The equivalent 'Y' matrix is::
-
-           |              1/Z0    -s12/Z0 |
-           |                              |
-           |             -s21/Z0    1/Z0  |           
-       Y = |                              |
-           | -1            1        s12   |
-           |                              |
-           |        -1    s21        1    |
+    idc:is1 gnd 4 idc=2mA
 
 
 
@@ -1107,53 +1112,30 @@ Parameters
  =========== ============ ============ ===================================================== 
  Name         Default      Unit         Description                                          
  =========== ============ ============ ===================================================== 
- alpha        0.1          dB/m         Attenuation                                          
- fscale       0.0          Hz           Scaling frequency for attenuation                    
- k            1.0                       Effective relative dielectric constant               
- length       0.1          m            Line length                                          
- tand         0.0                       Loss tangent                                         
- z0mag        50.0         Ohms         Magnitude of characteristic impedance                
+ idc          0.0          A            DC current                                           
+ tc1          0.0          1/C          Current temperature coefficient 1                    
+ tc2          0.0          1/C^2        Current temperature coefficient 2                    
+ temp         None         C            Device temperature                                   
+ tnom         27.0         C            Nominal temperature                                  
  =========== ============ ============ ===================================================== 
 
-tlinpy4: 4-Terminal Physical Transmission Line
-----------------------------------------------
+ipulse: Pulse current source
+----------------------------
 
-This model uses Y parameters::
+Connection diagram::
+                       
+               ,---,  iout
+    0 o-------( --> )---------o 1
+               '---'    
 
-         0 o===================================o 2
-                           Z0
-         1 o===================================o 3
+    iout = pulse(t)
 
+This source only works for time domain. It is equivalent to an
+open circuit for DC or frequency-domain.
 
-Code derived from fREEDA tlinp4 element. fREEDA implementation by
-Carlos E. Christoffersen, Mete Ozkar, Michael Steer
+Netlist example::
 
-Two models are supported dependent on the secting of nsect: When
-``nsect = 0`` (not set) the frequency-domain model is enabled.
-When ``nsect > 0`` the transmission line is expanded in 
-``nsect`` RLCG subsections.
-
-Netlist Examples::
-
-  tlinpy4:tl1 in gnd out gnd z0mag=100. length=0.3m
-  .model c_line tlinpy4 (z0mag=75.00 k=7 fscale=1.e10 alpha = 59.9)
-
-
-Internal Topology
-+++++++++++++++++
-
-The internal schematic when nsect = 0 is the following::
-             
-      0 o----+------,               ,-----+-------o 2
-   +         |      |               |     |              +
-            ,-,     |               |    ,-, 
-  v1        | |    /|\ y12 v2      /|\   | |             v2
-        y11 | |   ( | )           ( | )  | | y22
-   -        '-'    \V/      y21 v1 \V/   '-'             -
-             |      |               |     |  
-      1 o----+------'               '-----+-------o 3
-
-                   y11 = y22 , y12 = y21
+    ipulse:i1 gnd 4 i1=-1V i2=1V td=1ms pw=10ms per=20ms
 
 
 
@@ -1163,14 +1145,46 @@ Parameters
  =========== ============ ============ ===================================================== 
  Name         Default      Unit         Description                                          
  =========== ============ ============ ===================================================== 
- alpha        0.1          dB/m         Attenuation                                          
- fopt         0            Hz           Optimum frequency for discrete approximation         
- fscale       0.0          Hz           Scaling frequency for attenuation                    
- k            1.0                       Effective relative dielectric constant               
- length       0.1          m            Line length                                          
- nsect        0                         Enable discrete approximation with n sections        
- tand         0.0                       Loss tangent                                         
- z0mag        50.0         Ohms         Magnitude of characteristic impedance                
+ i1           0.0          A            Initial value                                        
+ i2           0.0          A            Pulsed value                                         
+ per          .0inf        s            Period                                               
+ pw           .0inf        s            Pulse width                                          
+ td           0.0          s            Delay time                                           
+ tf           0.0          s            Fall time                                            
+ tr           0.0          s            Rise time                                            
+ =========== ============ ============ ===================================================== 
+
+isin: (Co-)Sinusoidal current source
+------------------------------------
+
+Connection diagram::
+                       
+               ,---,  iout
+    0 o-------( --> )---------o 1
+               '---'    
+
+    iout = idc + mag * cos(2 * pi * freq * t + phase)
+
+This source works for time and frequency domain. For AC analysis,
+the 'acmag' parameter is provided. By default acmag = mag.
+
+Netlist example::
+
+    isin:i1 gnd 4 idc=2mA amp=2mA freq=1GHz phase=90 
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ acmag        None         A            Amplitude for AC analysis only                       
+ freq         1000.0       Hz           Frequency                                            
+ idc          0.0          A            DC current                                           
+ mag          0.0          A            Amplitude                                            
+ phase        0.0          degrees      Phase                                                
  =========== ============ ============ ===================================================== 
 
 vccs: Voltage-controlled current source

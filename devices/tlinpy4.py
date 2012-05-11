@@ -56,6 +56,8 @@ class Device(cir.Element):
                        y11 = y22 , y12 = y21
 
     """
+    # Device category
+    category = "Distributed components"
 
     # devtype is the 'model' name
     devType = "tlinpy4"

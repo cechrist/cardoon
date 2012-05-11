@@ -46,6 +46,8 @@ class Device(cir.Element):
 
 
     """
+    # Device category
+    category = "Basic Components"
 
     # devtype is the 'model' name
     devType = "ind"

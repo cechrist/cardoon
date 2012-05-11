@@ -35,6 +35,8 @@ class Device(cir.Element):
         res_t:r1 1 2 3 4 r=1e3 tc1=10e-3
 
     """
+    # Device category
+    category = "Basic Components"
 
     # devtype is the 'model' name
     devType = "res"

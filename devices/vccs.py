@@ -38,6 +38,8 @@ class Device(cir.Element):
         vccs:g1 gnd 4 3 gnd g=2mS
 
     """
+    # Device category
+    category = "Sources"
 
     # devtype is the 'model' name
     devType = "vccs"

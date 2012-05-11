@@ -64,6 +64,8 @@ class Device(cir.Element):
 
 
     """
+    # Device category
+    category = "Semiconductor devices"
 
     devType = "mosacms"
     paramDict = dict(
