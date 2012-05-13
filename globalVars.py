@@ -44,7 +44,7 @@ const.set_attributes()
 globDict = dict(
     temp = ('Ambient temperature', 'C', float, 27.),
     abstol = ('Absolute tolerance', 'nodal unit', float, 1e-8),
-    reltol = ('Relative tolerance', '', float, 1e-8),
+    reltol = ('Relative tolerance', '', float, 1e-6),
     maxiter = ('Maximum number of Newton iterations', '', int, 20),
     maxdelta = ('Maximum allowed change in Newton iterations', 
                 'nodal unit', float, 20.),
