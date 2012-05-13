@@ -328,8 +328,8 @@ class _NLFunction:
     def __init__(self):
         # List here the functions that can be used to solve equations
         self.convergence_helpers = [self.solve_simple, 
-                                    self.solve_homotopy_source, 
                                     self.solve_homotopy_gmin, 
+                                    self.solve_homotopy_source, 
                                     None]
 
     def _get_deltax(self, errFunc, Jac):
@@ -344,84 +344,124 @@ class _NLFunction:
             deltax = np.dot(np.linalg.pinv(Jac), errFunc)
         return deltax
 
+    def _homotopy(self, _lambda, f, x0, get_deltax, f_eval):
+        """
+        Controls _lambda and the homotopy flow
+        
+        The lambda parameter is varied from 0 to 1. 0 corresponds to a
+        problem easy to solve and 1 correstponds to the original problem.
+        Uses bisection to find lambda step step size to reach 1.
+
+        Inputs:
+
+            _lambda: Initial value for lambda
+            f: f(lambda) (for example gmin(lambda))        
+            x0: initial guess (modified on output to best approximation)
+            get_deltax and f_eval: functions passed to Newton's solver
+
+        Output:
+
+          (x, res, iterations, success)
+
+        """
+        stack = [0., 1.]
+        step = _lambda
+        small = 1e-4
+        x = np.copy(x0)
+        success = True
+        totIter = 0
+        sepline = '===================================================='
+        print('    lambda      |   Iterations    |   Residual')
+        print(sepline)
+        while stack:
+            # Update parameter in nonlinear functions
+            f(_lambda)
+            (x, res, iterations, success1) = \
+                fsolve_Newton(x, get_deltax, f_eval)
+            print('{0:15} | {1:15} | {2:15}'.format(
+                    _lambda, iterations, res), end='')
+            totIter += iterations
+            if success1:
+                print('')
+                # Save result
+                x0[:] = x
+                # Recover value of lambda_ from stack
+                step = stack[-1] - _lambda
+                _lambda = stack.pop()
+            else:
+                print('  <--- Backtracking')
+                # Restore previous better guess
+                x[:] = x0
+                # push _lambda into stack
+                stack.append(_lambda)
+                step *= .5
+                _lambda -= step
+                if (_lambda < small) or (step < small):
+                    success = False
+                    break
+        print(sepline)
+        print('Total iterations: ', totIter)
+        return (x, res, totIter, success)
+
     # The following functions used to solve equations, originally from
-    # pycircuit
+    # pycircuit but since they have evolved quite a bit
     def solve_simple(self, x0, sV):
         #"""Simple Newton's method"""
         # Docstring removed to avoid printing this all the time
         def get_deltax(x):
             (iVec, Jac) = self.get_i_Jac(x) 
             return self._get_deltax(iVec - sV, Jac)
-    
         def f_eval(x):
             iVec = self.get_i(x) 
             return iVec - sV
-    
-        return fsolve_Newton(x0, get_deltax, f_eval)
-    
-    def solve_homotopy_source(self, x0, sV):
-        """Newton's method with source stepping"""
-        x = np.copy(x0)
-        totIter = 0
-        lambda_ = 0.5
-        def get_deltax(x):
-            (iVec, Jac) = self.get_i_Jac(x) 
-            return self._get_deltax(iVec - lambda_ * sV, Jac)
-            
-        def f_eval(x):
-            iVec = self.get_i(x) 
-            return iVec - lambda_ * sV
-
-        stack = [0., 1.]
-        step = 1. - lambda_
-        while stack:
-            print('lambda = {0}: '.format(lambda_), end='')
-            try:
-                (x, res, iterations) = fsolve_Newton(x, get_deltax, f_eval)
-                print('res = {0}, iter = {1}'.format(res, iterations))
-                totIter += iterations
-                # Recover value of lambda_ from stack
-                step = stack[-1] - lambda_
-                lambda_ = stack.pop()
-            except NoConvergenceError as nce:
-                print('\n' + str(nce) + '\n')
-                # push _lambda into stack
-                stack.append(lambda_)
-                step *= .5
-                lambda_ -= step
-
-        return (x, res, totIter)
-
+        (x, res, iterations, success) = \
+            fsolve_Newton(x0, get_deltax, f_eval)
+        if success:
+            return (x, res, iterations)
+        else:
+            raise NoConvergenceError(
+                'No convergence. iter = {0} res = {1}'.format(iterations, res))
+        
     def solve_homotopy_gmin(self, x0, sV):
         """Newton's method with gmin stepping"""
-        x = np.copy(x0)
-        totIter = 0
         idx = np.arange(self.ckt.nD_nterms)
-        for gminexp in np.arange(-1., -8., -1):
-            gmin = 10.**gminexp
-            # Add gmin from ground to all external nodes. Assumes all
-            # external nodes are sorted first in the vector. This will
-            # not work if the terminal order is changed.
-            def get_deltax(xvec):
-                (iVec, Jac) = self.get_i_Jac(xvec) 
-                iVec[idx] += gmin * xvec[idx]
-                Jac[idx, idx] += gmin
-                return self._get_deltax(iVec - sV, Jac)
-            def f_eval(xvec):
-                iVec = self.get_i(xvec)
-                iVec[idx] += gmin * xvec[idx]
-                return iVec - sV
-            (x, res, iterations) = fsolve_Newton(x0, get_deltax, f_eval)
-            print('gmin = {0}, res = {1}, iter = {2}'.format(
-                    gmin, res, iterations))
-            totIter += iterations
+        def f(_lambda):
+            gbase = 1e-5
+            self.gmin = gbase / _lambda**3 - gbase
+        # Add gmin from ground to all external nodes. Assumes all
+        # external nodes are sorted first in the vector. This will
+        # not work if the terminal order is changed.
+        def get_deltax(xvec):
+            (iVec, Jac) = self.get_i_Jac(xvec) 
+            iVec[idx] += self.gmin * xvec[idx]
+            Jac[idx, idx] += self.gmin
+            return self._get_deltax(iVec - sV, Jac)
+        def f_eval(xvec):
+            iVec = self.get_i(xvec)
+            iVec[idx] += self.gmin * xvec[idx]
+            return iVec - sV
+        (x, res, iterations, success) = \
+            self._homotopy(0.5, f, x0, get_deltax, f_eval)
+        if success:
+            return (x, res, iterations)
+        else:
+            raise NoConvergenceError('gmin stepping did not converge')
 
-        # Call solve_simple with better initial guess
-        (x, res, iterations) = self.solve_simple(x, sV)
-        print('gmin = 0, res = {0}, iter = {1}'.format(res, iterations))
-        totIter += iterations
-
-        return (x, res, totIter)
+    def solve_homotopy_source(self, x0, sV):
+        """Newton's method with source stepping"""
+        def f(_lambda):
+            self._lambdasV = _lambda * sV
+        def get_deltax(x):
+            (iVec, Jac) = self.get_i_Jac(x) 
+            return self._get_deltax(iVec - self._lambdasV, Jac)
+        def f_eval(x):
+            return self.get_i(x) - self._lambdasV
+        (x, res, iterations, success) = \
+            self._homotopy(0.5, f, x0, get_deltax, f_eval)
+        if success:
+            return (x, res, iterations)
+        else:
+            raise NoConvergenceError('Source stepping did not converge')
 
 # Old code for gmin homotopy: add conductances in parallel to
 # nonlinear device external ports

@@ -5,7 +5,8 @@ News
 Version 0.4.1
 ^^^^^^^^^^^^^
 
-    * Added adaptive source stepping
+    * Homotopy (gmin and source) now actually work. The implementation
+      was wrong in previous versions.
 
     * Improved documentation (Options and Constant tables, Device categories)
 

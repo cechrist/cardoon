@@ -64,8 +64,6 @@ vsin:v33 16 0 mag=0.01 freq=1.65e9 phase=0
 .analysis op
 .analysis ac start=.5GHz stop=4GHz num= 100 log=False
 
-.options maxiter=20 abstol=3e-8 reltol=1e-8 
-
 .plot dc 9 5 7
 
 .plot ac_mag vin vout

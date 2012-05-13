@@ -112,9 +112,10 @@ def fsolve_Newton(x0, get_deltax, f_eval):
     res = max(res1, np.linalg.norm(deltax))
 
     if ier == 2:
-        raise NoConvergenceError('No convergence. iter = {0} res = {1}'.format(
-                i, res))
+        success = False
+    else:
+        success = True
 
-    return (x, res, i+1)
+    return (x, res, i+1, success)
 
 

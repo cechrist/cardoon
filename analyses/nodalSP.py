@@ -44,8 +44,8 @@ class _NLFunctionSP(_NLFunction):
     def __init__(self):
         # List here the functions that can be used to solve equations
         self.convergence_helpers = [self.solve_simple, 
-                                    self.solve_homotopy_source, 
                                     self.solve_homotopy_gmin, 
+                                    self.solve_homotopy_source, 
                                     None]
 
     def _get_deltax(self, errFunc, Jac):
@@ -60,43 +60,29 @@ class _NLFunctionSP(_NLFunction):
 
     def solve_homotopy_gmin(self, x0, sV):
         """Newton's method with gmin stepping"""
-        x = np.copy(x0)
-        totIter = 0
         idx = np.arange(self.ckt.nD_nterms)
-        for gminexp in np.arange(-1., -8., -1):
-            gmin = 10.**gminexp
-            val = gmin * np.ones(self.ckt.nD_nterms)
-            # Add gmin from ground to all external nodes. Assumes all
-            # external nodes are sorted first in the vector. This will
-            # not work if the terminal order is changed.
-            def get_deltax(xvec):
-                (iVec, Jac) = self.get_i_Jac(xvec) 
-                iVec[idx] += gmin * xvec[idx]
-                Jac.update_add_at(val, idx, idx)
-                return self._get_deltax(iVec - sV, Jac)
-            def f_eval(xvec):
-                iVec = self.get_i(xvec)
-                iVec[idx] += gmin * xvec[idx]
-                return iVec - sV
-            (x, res, iterations) = fsolve_Newton(x0, get_deltax, f_eval)
-            print('gmin = {0}, res = {1}, iter = {2}'.format(
-                    gmin, res, iterations))
-            totIter += iterations
-
-        # Call solve_simple with better initial guess
-        (x, res, iterations) = self.solve_simple(x, sV)
-        print('gmin = 0, res = {0}, iter = {1}'.format(res, iterations))
-        totIter += iterations
-
-        return (x, res, totIter)
-
-# Old code for gmin homotopy: add conductances in parallel to
-# nonlinear device external ports
-#
-#        for elem in self.ckt.nD_nlinElem:
-#            Gadd = np.eye(len(elem.nD_extPorts))
-#            set_Jac(Ggmin, elem.nD_epos, elem.nD_eneg, 
-#                    elem.nD_epos, elem.nD_eneg, Gadd)
+        def f(_lambda):
+            gbase = 1e-5
+            self.gmin = gbase / _lambda**3 - gbase
+            self.val = self.gmin * np.ones(self.ckt.nD_nterms)
+        # Add gmin from ground to all external nodes. Assumes all
+        # external nodes are sorted first in the vector. This will
+        # not work if the terminal order is changed.
+        def get_deltax(xvec):
+            (iVec, Jac) = self.get_i_Jac(xvec) 
+            iVec[idx] += self.gmin * xvec[idx]
+            Jac.update_add_at(self.val, idx, idx)
+            return self._get_deltax(iVec - sV, Jac)
+        def f_eval(xvec):
+            iVec = self.get_i(xvec)
+            iVec[idx] += self.gmin * xvec[idx]
+            return iVec - sV
+        (x, res, iterations, success) = \
+            self._homotopy(0.5, f, x0, get_deltax, f_eval)
+        if success:
+            return (x, res, iterations)
+        else:
+            raise NoConvergenceError('gmin stepping did not converge')
 
 
 #---------------------------------------------------------------------------
