@@ -43,13 +43,14 @@ const.set_attributes()
 
 globDict = dict(
     temp = ('Ambient temperature', 'C', float, 27.),
-    abstol = ('Absolute tolerance', 'nodal unit', float, 1e-8),
-    reltol = ('Relative tolerance', '', float, 1e-6),
+    abstol = ('Absolute tolerance for nodal variables', 'nodal unit', 
+              float, 1e-7),
+    reltol = ('Relative tolerance for nodal variables', '', float, 1e-4),
     maxiter = ('Maximum number of Newton iterations', '', int, 20),
-    maxdelta = ('Maximum allowed change in Newton iterations', 
+    maxdelta = ('Maximum allowed change in one Newton iteration', 
                 'nodal unit', float, 20.),
-    errfunc = ("Additional test for error function in Newton's method", 'bool', 
-               bool, False),
+    errfunc = ("Enable additional test for error function in Newton's method", 
+               'bool', bool, False),
     sparse = ("Use sparse matrices in analyses if possible", 'bool', 
               bool, True),
     gyr = ('Default gain in internal gyrators', 'S', float, 1e-3)

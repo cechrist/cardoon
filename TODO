@@ -26,8 +26,6 @@ Longer term goals and other tasks to be done at some time:
 
   * Implement Harmonic Balance analysis
 
-  * Improve convergence control in Newton method
-  
   * Implement extrinsic model for MOS trasistors using an approach
     similar to the BJT implementation.
   

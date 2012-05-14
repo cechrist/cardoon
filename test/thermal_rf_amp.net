@@ -62,7 +62,7 @@ vsin:v33 16 0 mag=0.01 freq=1.65e9 phase=0
 *.analysis ac start=.5GHz stop=4GHz num= 100 log=False
 .analysis tran tstop=10ns tstep=0.02ns verbose=1
 
-.options maxiter=20 abstol=3e-8 reltol=1e-8 
+.options maxiter=20 errfunc=0
 
 .plot dc 9 5 7
 

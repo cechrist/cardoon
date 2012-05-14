@@ -23,6 +23,28 @@ program. For example::
   Out<2>: 1e-08
   In <3>: 
 
+Convergence Notes
+^^^^^^^^^^^^^^^^^
+
+* ``abstol`` and ``reltol`` control the absolute and relative
+  tolerances in nodal variables. Iterations stop when updates in
+  nodal variables are smaller than ``abstol + reltol * var``.
+
+* If ``errfunc`` is set then an additional test is performed to check
+  that the error in the nodal equation is less than ``abstol``. This
+  test is disabled by default because it introduces additional
+  overhead. However it may be useful in cases where convergence is
+  very slow.
+
+* The ``gyr`` variable is used to control the gain of internal
+  gyrators in some device models. For example, a value of 1e-3 means
+  that the extra nodal voltage in an ideal voltage source model is
+  equal to the current through the source expressed in mA. 
+
+* Sometimes Newton's method convergence can be achieved by adjusting
+  the value of ``maxdelta`` and increasing ``maxiter``.
+
+
 Physical and Mathematical Constants
 -----------------------------------
 
