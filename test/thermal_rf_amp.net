@@ -69,6 +69,6 @@ vsin:v33 16 0 mag=0.01 freq=1.65e9 phase=0
 .plot ac_mag vin vout
 
 .plot tran vin vout 
-.plot tran 60
+.plot tran 60 61 62 63 64 65 66 
 
 .end
