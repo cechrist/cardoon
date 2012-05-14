@@ -155,8 +155,7 @@ def eval_and_deriv(dev, vPort):
     except AttributeError:
         create_tape(dev, vPort)
         fout = dev._func.forward(0, vPort)
-    finally:
-        jac = dev._func.jacobian(vPort)
+    jac = dev._func.jacobian(vPort)
 
     return (fout, jac)
 
