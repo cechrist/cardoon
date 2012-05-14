@@ -619,7 +619,7 @@ def f_simple(v):
     c = np.log(1. + d)
     # f = (b > -20) ? c : d
     f = ad.condassign(b, c, d)
-    return f*f
+    return f**2
 
 
 def f_accurate(v):

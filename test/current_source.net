@@ -1,0 +1,34 @@
+# 5 nA CMOS Current source reference using ACM model
+
+.analysis dc param=temp start=-20C stop=90C shell=1
+
+# -------------------------------------------------------------------
+# Supply/current mirrors
+# -------------------------------------------------------------------
+vdc:vdd 5 0 vdc = 1V
+# Gyrator gain: Terminal 6 voltage equal to (5-1) current in uA
+vccs:gyr2 gnd 6 5 1 g=1e-6
+vccs:gyr1 5 1 6 gnd g=1e-6
+vccs:id3 gnd 4 6 gnd g=1e-6
+vccs:id1 gnd 2 6 gnd g=.2e-6
+# Needed to get the right solution, contributes 1pA error
+res:r1 1 gnd r=1e12
+
+# -------------------------------------------------------------------
+# NMOS
+# -------------------------------------------------------------------
+mosacms:m1 2 2 gnd gnd model=n_typ l=61.6u w=1u
+mosacms:m2 1 2 3 gnd  model=n_typ l=6.16u w=5u
+mosacms:m3 4 4 gnd gnd  model=n_typ l=123.2u w=1u
+mosacms:m4 3 4 gnd gnd  model=n_typ l=98.56u w=1u
+
+# Generic technology parameters
+.model n_typ mosacms (type=n vth=500m isq=85n tcv=.75m bex=-1.8)
+.model p_typ mosacms (type=p vth=-700m isq=25n)
+
+.plot dc 6
+.plot dc 3
+.plot dc 2 4
+
+.end
+

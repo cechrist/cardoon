@@ -27,7 +27,7 @@ def inv_f1(f):
     i_f = 4. * f_simple(f)
     # Use fixed number of iterations for easy taping
     for i in xrange(30):
-        sqi1 = np.sqrt(1. + i_f)
+        sqi1 = np.sqrt(1. + i_f + 1e-15)
         # Uses different formulation for f>0 and f<0 for convergence
         i_fnew = ad.condassign(f, 
                                (f + 2. - np.log(sqi1 - 1.))**2 - 1.,
@@ -38,27 +38,29 @@ def inv_f1(f):
 def inv_f(f):
     """
     Solve f^(-1)(i_f(r)) to get i_f and i_r using Newton's method
+
+    Uses a fixed number of iterations for easy taping and a different
+    formulation for f>0 and f<0 to ensure convergence in few
+    iterations. Solution has good accuracy for all values.
     """
     # Obtain a good guess first using EKV's simple interpolation function
-    i_f = 4. * f_simple(f)
-    # Use fixed number of iterations for easy taping. Solution has
-    # good accuracy for all values.
+    i1 = 4. * f_simple(f)
+    i2 = i1
     for counter in xrange(4):
-        sqi1 = np.sqrt(1. + i_f)
-        sqi11 = abs(sqi1 - 1.) # Needed to prevent AD library from choking
-        # f > 0
-        fodfp = (sqi1 - 2. + np.log(sqi11) - f) * 2. * sqi11
+        # (f > 0) => (i1 >= 3.) The 1e-15 term needed to prevent AD
+        # library from choking as without it we have log(0) later
+        sqi1p = np.sqrt(1. + i1 + 1e-15) 
+        sqi11 = sqi1p - 1. 
+        fodfp = (sqi1p - 2. + np.log(sqi11) - f) * 2. * sqi11
+        i1 = abs(i1 - fodfp)
         # f < 0
+        sqi1 = np.sqrt(1. + i2) 
         fodfn = (sqi1 - 1. - np.exp(f - sqi1 + 2.)) * 2. * sqi1 \
             / (np.exp(f - sqi1 + 2.) + 1.)
-        # Uses different formulation for f>0 and f<0 to ensure
-        # convergence in few iterations
-        ifnew = ad.condassign(f, i_f - fodfp, i_f - fodfn)
-#        deltai = abs(ifnew - i_f)
-#        print(deltai)
-        i_f = ad.condassign(ifnew, ifnew, 1e-300)
+        i2 = i2 - fodfn
 
-    return i_f
+    return ad.condassign(f, i1, i2)
+
 
 def fifr(i):
     """
@@ -213,7 +215,7 @@ class Device(cir.Element):
                                        .5*self.gamma, 2))\
                      - .5*self.gamma, 2) - 2.*self.phi
         
-        # Normalized currents
+        # Normalized currents.  
         i_f = inv_f((vp - vPort1[2]) / self.Vt)
         i_r = inv_f((vp - vPort1[0]) / self.Vt)
         
