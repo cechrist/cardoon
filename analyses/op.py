@@ -15,6 +15,8 @@ from analysis import AnalysisError, ipython_drop
 from nodalAD import DCNodalAD
 from globalVars import glVar
 from fsolve import solve, NoConvergenceError
+import nodalSP
+import nodal
 
 class Analysis(ParamSet):
     r"""
@@ -32,9 +34,13 @@ class Analysis(ParamSet):
     nonlinear elements can be printed. 
 
     Convergence parameters for the Newton method are controlled using
-    the global variables in ``.options``.
+    the global variables in ``.options``. The type of matrix used in
+    this analysis is controlled by the ``sparse`` option. Global
+    options are documented in :doc:`global_vars`. 
 
-    OP formulation documented in :doc:`analysis`
+    OP analysis formulation is documented in :doc:`analysis`, and
+    internal classes and functions used in this analysis are
+    documented in :doc:`analyses_classes`.
 
     Example::
 
@@ -74,9 +80,9 @@ class Analysis(ParamSet):
             print('\n', circuit.title, '\n')
 
         if glVar.sparse:
-            import nodalSP as nd
+            nd = nodalSP
         else:
-            import nodal as nd
+            nd = nodal
             print('Using dense matrices\n')
 
         # Only works with flattened circuits

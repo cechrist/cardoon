@@ -9,14 +9,16 @@
 
 from __future__ import print_function
 import numpy as np
+import matplotlib.pyplot as plt
+import sys
 
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
 from integration import BEuler, Trapezoidal
 from globalVars import glVar
 from fsolve import solve, NoConvergenceError
-import matplotlib.pyplot as plt
-import sys
+import nodalSP
+import nodal
 
 class Analysis(ParamSet):
     """
@@ -30,14 +32,18 @@ class Analysis(ParamSet):
     elements and time delays is not yet included.
 
     Convergence parameters for the Newton method are controlled using
-    the global variables in ``.options``.
+    the global variables in ``.options``. The type of matrix used in
+    this analysis is controlled by the ``sparse`` option. Global
+    options are documented in :doc:`global_vars`. 
 
     One plot window is generated for each ``.plot`` statement. Use
     ``tran`` request type for this analysis. By default, only results
     for nodes listed in ``.plot`` statements are saved. To save all
     nodal variables set ``saveall`` to 1.
 
-    Transient analysis formulation documented in :doc:`analysis`
+    Transient analysis formulation is documented in :doc:`analysis`,
+    and internal classes and functions used in this analysis are
+    documented in :doc:`analyses_classes`.
 
     Example::
 
@@ -76,9 +82,9 @@ class Analysis(ParamSet):
             print('\n', circuit.title, '\n')
 
         if glVar.sparse:
-            import nodalSP as nd
+            nd = nodalSP
         else:
-            import nodal as nd
+            nd = nodal
             print('Using dense matrices\n')
 
         # Only works with flattened circuits

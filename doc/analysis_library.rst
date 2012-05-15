@@ -62,12 +62,16 @@ The following parameters can be swept:
     all devices that do not explicitly have ``temp`` set.
 
 Convergence parameters for the Newton method are controlled using
-the global variables in ``.options``.
+the global variables in ``.options``. The type of matrix used in
+this analysis is controlled by the ``sparse`` option. Global
+options are documented in :doc:`global_vars`. 
 
 One plot window is generated for each ``.plot`` statement. Use
 ``dc`` request type for this analysis.
 
-DC formulation documented in :doc:`analysis`
+DC analysis formulation is documented in :doc:`analysis`, and
+internal classes and functions used in this analysis are
+documented in :doc:`analyses_classes`.
 
 Examples::
 
@@ -113,9 +117,13 @@ the analysis is complete. Optionally the operating points of
 nonlinear elements can be printed. 
 
 Convergence parameters for the Newton method are controlled using
-the global variables in ``.options``.
+the global variables in ``.options``. The type of matrix used in
+this analysis is controlled by the ``sparse`` option. Global
+options are documented in :doc:`global_vars`. 
 
-OP formulation documented in :doc:`analysis`
+OP analysis formulation is documented in :doc:`analysis`, and
+internal classes and functions used in this analysis are
+documented in :doc:`analyses_classes`.
 
 Example::
 
@@ -189,14 +197,18 @@ and trapezoidal (``im=trap``). Support for frequency-defined
 elements and time delays is not yet included.
 
 Convergence parameters for the Newton method are controlled using
-the global variables in ``.options``.
+the global variables in ``.options``. The type of matrix used in
+this analysis is controlled by the ``sparse`` option. Global
+options are documented in :doc:`global_vars`. 
 
 One plot window is generated for each ``.plot`` statement. Use
 ``tran`` request type for this analysis. By default, only results
 for nodes listed in ``.plot`` statements are saved. To save all
 nodal variables set ``saveall`` to 1.
 
-Transient analysis formulation documented in :doc:`analysis`
+Transient analysis formulation is documented in :doc:`analysis`,
+and internal classes and functions used in this analysis are
+documented in :doc:`analyses_classes`.
 
 Example::
 

@@ -67,13 +67,27 @@ def fsolve_Newton(x0, get_deltax, f_eval):
 
     is solved and a new value for :math:`x_{n+1}` is obtained. Arguments:
 
-    x0: initial guess
+      ``x0``: initial guess vector
 
-    get_deltax(x): function that returns :math:`J(x_n)^{-1} F(x_n)`
+      ``get_deltax(x)``: function that returns the :math:`J(x_n)^{-1}
+      F(x_n)` vector
 
-    f_eval(x): function that returns error function
+      ``f_eval(x)``: function that returns error function vector
 
-    Returns (x, res, niter)
+    Convergence parameters are taken from the global options
+    (:doc:`global_vars`). Relative and absolute tolerances are checked
+    independently for each variable. 
+
+    Returns the following tuple: ``(x, res, niter, success)``
+
+      ``x``: estimated solution vector at the last iteration
+      
+      ``res``: maximum residual from all variables
+
+      ``niter``: number of iterations 
+
+      ``success``: True if method converged to specified tolerance,
+      False otherwise
 
     This function originally adapted from pycircuit
     (https://github.com/henjo/pycircuit)

@@ -1,6 +1,6 @@
 # Test of a transistor device
 
-.options temp=29.1439 sparse= 1
+.options temp=29.1439 sparse= 0
 .analysis op intvars=1 shell=0
 *.analysis dc device=vdc:vb param=vdc start=0 stop=12 shell=True
 

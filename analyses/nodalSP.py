@@ -9,10 +9,14 @@ This module contains basic classes/functions for nodal analysis. These
 are part of the standard netlist analyses but they can also be used
 independently.
 
-This implementation uses pysparse. It is much more efficient than the
-dense implementation but still a lot could be gained with finer
-control over matrix factorization. At this time the main Jacobian is
-(almost) created and factored from scratch at every iteration.
+This implementation uses UMFPACK
+(http://www.cise.ufl.edu/research/sparse/umfpack/) to solve sparse
+matrix linear systems with the pysparse interface
+(http://pysparse.sourceforge.net/). For medium-size and large circuits
+it is much more efficient than the dense implementation but still a
+lot could be gained with finer control over matrix factorization. At
+this time the main Jacobian is (almost) created and factored from
+scratch at every iteration.
 
 Many of the functions are directly imported from the ``nodal`` module
 to avoid redundancy. Some of these should be optimized for better

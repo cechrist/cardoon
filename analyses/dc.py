@@ -9,12 +9,14 @@
 
 from __future__ import print_function
 import numpy as np
+import matplotlib.pyplot as plt
 
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
 from fsolve import solve, NoConvergenceError
 from globalVars import glVar
-import matplotlib.pyplot as plt
+import nodalSP
+import nodal
 
 class Analysis(ParamSet):
     """
@@ -36,12 +38,16 @@ class Analysis(ParamSet):
         all devices that do not explicitly have ``temp`` set.
 
     Convergence parameters for the Newton method are controlled using
-    the global variables in ``.options``.
+    the global variables in ``.options``. The type of matrix used in
+    this analysis is controlled by the ``sparse`` option. Global
+    options are documented in :doc:`global_vars`. 
 
     One plot window is generated for each ``.plot`` statement. Use
     ``dc`` request type for this analysis.
 
-    DC formulation documented in :doc:`analysis`
+    DC analysis formulation is documented in :doc:`analysis`, and
+    internal classes and functions used in this analysis are
+    documented in :doc:`analyses_classes`.
 
     Examples::
 
@@ -92,9 +98,9 @@ class Analysis(ParamSet):
             print('\n', circuit.title, '\n')
 
         if glVar.sparse:
-            import nodalSP as nd
+            nd = nodalSP
         else:
-            import nodal as nd
+            nd = nodal
             print('Using dense matrices\n')
 
         # Only works with flattened circuits
