@@ -1,0 +1,103 @@
+#*** Complete mixer with thermal filter ***
+# Original netlist developed for carrot circuit simulator
+
+.options reltol=1e-4 abstol=1e-6 maxiter=25 sparse=0 temp=20
+.analysis tran tstop=15ms tstep=5us shell=0 saveall=0
+
+.plot tran 39 41
+.plot tran 1001 1003
+.plot tran 12 21
+
+# -------------------------------------------------------------------------
+# Supplies and sources
+vdc:vcc 1 0 vdc=10
+vdc:vee 9 0 vdc=-10
+
+# Input 1
+vdc:vin1 11 0 vdc=.5
+vsin:vin11 11 12 mag=.1 freq=10kHz rint=50
+res:rd1 0 12 r=1e2
+
+# Input 2
+vdc:vin21 22 0 vdc=-5
+vsin:vin22 21 22 mag=.08 freq=10.1kHz rint=50
+
+# Imixer
+res:rmixer 1 7 r=5100
+
+# Iamp
+res:ramp 1 30 r=91e3
+
+# -------------------------------------------------------------------------
+# Thermal circuit
+vdc:tamb 1002 0 vdc=20
+res:rth1 1001 1002 r=20.11
+cap:cth1 1001 1002 c=30.8e-6
+res:rth2 1003 1002 r=20.11
+cap:cth2 1003 1002 c=30.8e-6
+
+# -------------------------------------------------------------------------
+# Mixer
+svdiode_t:d0 2 1 1001 0 model=diozen 
+svdiode_t:d1 3 1 1003 0 model=diozen 
+
+bjt:q18 2 11 4 model=snpn_911 
+bjt:q17 3 12 4 model=snpn_911 
+bjt:q15 2 12 5 model=snpn_911 
+bjt:q14 3 11 5 model=snpn_911 
+
+bjt:q19 4 21 6 model=snpn_911 
+bjt:q20 5 22 6 model=snpn_911 
+
+# Mixer current mirror
+bjt:q16 6 7 8 model=snpn_911 
+bjt:q21 7 7 10 model=snpn_911 
+res:r11 8 9 r=200
+res:r12 10 9 r=200
+
+# -------------------------------------------------------------------------
+# Amplifier
+
+# Current mirror
+bjt:q8 1 30 31 model=snpn_911 
+bjt:q5 30 31 32 model=snpn_911 
+res:r1 32 9 r=1e3
+bjt:q9 35 31 36 model=snpn_911 
+res:r6 36 9 r=200
+bjt:q11 40 31 37 model=snpn_911 
+res:r2 37 9 r=1e3
+bjt:q7 41 31 42 model=snpn_911 
+res:r3 42 9 r=1e3
+
+# Diff. amp. 1
+res:r5 1 33 r=10e3
+res:r4 1 34 r=10e3
+bjt_t:q0 33 0 35 1001 0 model=snpn_911_t
+bjt_t:q1 34 0 35 1003 0 model=snpn_911_t
+# bjt:q0 33 0 35 model=snpn_911 
+# bjt:q1 34 0 35 model=snpn_911 
+
+# Diff. amp. 2
+res:r7 1 38 r=10e3
+res:r8 1 39 r=10e3
+bjt:q12 38 33 40 model=snpn_911 
+bjt:q10 39 34 40 model=snpn_911 
+
+# Output stage
+bjt:q4 1 39 41 model=snpn_911 
+
+# -------------------------------------------------------------------------
+# Transistor models
+# npn
+.model snpn_911 bjt (isat=5e-17 bf=147 vaf=80 ikf=4.3e-3 ise=8e-18 ne=1.233 br=1.9 var=11 ikr=6e-4 isc=5e-16 nc=1.08 re=12 rb=1200 rbm=200 rc=25 cje=58e-15 vje=0.83 mje=0.35 cjc=133e-15 vjc=0.6 mjc=0.44 xcjc=1 fc=0.85 tf=60e-12 xtf=48 itf=3e-2 tr=10e-9 eg=1.16 xti=3 xtb=1.6)
+# pnp
+.model spnp_911 bjt (type=p isat=2.9e-16 xti=3.3 eg=1.16 vaf=60 bf=49 ne=1.585 ise=4e-15 ikf=140e-6 xtb=1.5 br=0.5108 var=6 nc=1.58 isc=40e-15 ikr=140e-6 rc=50 re=20 rb=150 rbm=30 cjc=245e-15 mjc=0.44 vjc=0.6 fc=0.85 cje=54e-15 mje=0.44 vje=0.6 tf=14e-9 itf=3e-3 vtf=4 xtf=0.8 tr=338e-9 )
+
+.model snpn_911_t bjt_t (isat=5e-17 bf=147 vaf=80 ikf=4.3e-3 ise=8e-18 ne=1.233 br=1.9 var=11 ikr=6e-4 isc=5e-16 nc=1.08 re=12 rb=1200 rbm=200 rc=25 cje=58e-15 vje=0.83 mje=0.35 cjc=133e-15 vjc=0.6 mjc=0.44 xcjc=1 fc=0.85 tf=60e-12 xtf=48 itf=3e-2 tr=10e-9 eg=1.16 xti=3 xtb=1.6)
+# pnp
+.model spnp_911_t bjt_t (type=p isat=2.9e-16 xti=3.3 eg=1.16 vaf=60 bf=49 ne=1.585 ise=4e-15 ikf=140e-6 xtb=1.5 br=0.5108 var=6 nc=1.58 isc=40e-15 ikr=140e-6 rc=50 re=20 rb=150 rbm=30 cjc=245e-15 mjc=0.44 vjc=0.6 fc=0.85 cje=54e-15 mje=0.44 vje=0.6 tf=14e-9 itf=3e-3 vtf=4 xtf=0.8 tr=338e-9 )
+
+# Zener model
+.model diozen svdiode_t (isat=1e-25 rs=220 bv=5.95 ibv=1e-5)
+
+.end
