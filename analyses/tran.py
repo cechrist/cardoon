@@ -129,6 +129,9 @@ class Analysis(ParamSet):
         nsamples = len(timeVec)
         circuit.tran_timevec = timeVec
 
+        # Get terminals that to plot/save from circuit. 
+        termSet = circuit.get_requested_terms('tran')
+
         # Allocate vectors for results
         if self.saveall:
             for term in circuit.nD_termList:
@@ -137,12 +140,9 @@ class Analysis(ParamSet):
             circuit.nD_ref.tran_v = np.zeros(nsamples)
         else:
             # Only save requested nodes
-            for outreq in circuit.outReqList:
-                if outreq.type == 'tran':
-                    for termname in outreq.varlist:
-                        term = circuit.termDict[termname]
-                        term.tran_v = np.empty(nsamples)
-                        term.tran_v[0] = x[term.nD_namRC]
+            for term in termSet:
+                term.tran_v = np.empty(nsamples)
+                term.tran_v[0] = x[term.nD_namRC]
 
         # Save initial values
         xOld = x
@@ -180,11 +180,8 @@ class Analysis(ParamSet):
                     term.tran_v[i] = x[term.nD_namRC]                
             else:
                 # Only save requested nodes
-                for outreq in circuit.outReqList:
-                    if outreq.type == 'tran':
-                        for termname in outreq.varlist:
-                            term = circuit.termDict[termname]
-                            term.tran_v[i] = x[term.nD_namRC]
+                for term in termSet:
+                    term.tran_v[i] = x[term.nD_namRC]
             # Keep some info about iterations
             tIter += iterations
             tRes += res
@@ -205,14 +202,13 @@ class Analysis(ParamSet):
         # to a common module that processes output requests such as
         # plot, print, save, etc.
         flag = False
-        for outreq in circuit.outReqList:
+        for outreq in circuit.plotReqList:
             if outreq.type == 'tran':
                 flag = True
                 plt.figure()
                 plt.grid(True)
                 plt.xlabel('Time [s]')
-                for termname in outreq.varlist:
-                    term = circuit.termDict[termname]
+                for term in outreq.termlist:
                     plt.plot(timeVec, term.tran_v, 
                              label = 'Term: {0} [{1}]'.format(
                             term.nodeName, term.unit)) 
