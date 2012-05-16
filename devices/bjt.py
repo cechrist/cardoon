@@ -40,7 +40,7 @@ def extrinsic_bjt(IBJT):
     RC, RE and a Collector-Bulk connection are added to intrinsic
     BJT models::
 
-                  RC      ct             et    RE
+                  RC    Term: ct      Term: et   RE
       C (0) o---/\/\/\/--+-----,         4----/\/\/\/----o  E (2)
                          |      \       /
                          |       \     /     
@@ -127,13 +127,13 @@ Can only be {1} or {2}, {3} found.'.format(self.nodeName,
 
             extraVCCS = list()
             if self.re:
-                # Add ei node and translate port descriptions
+                # Add et node and translate port descriptions
                 self._et = self.add_internal_term('et', 'V')
                 extraVCCS += [((2, self._et), (2, self._et), 
                                self.area / self.re)]
             if self.rc:
-                # Add ci node and translate port descriptions
-                self._ct = self.add_internal_term('ci', 'V')
+                # Add ct node and translate port descriptions
+                self._ct = self.add_internal_term('ct', 'V')
                 extraVCCS += [((0, self._ct), (0, self._ct), 
                                self.area / self.rc)]
 
@@ -279,7 +279,7 @@ class BJTi(cir.Element):
                                    ( | ) ibc(vbc)     |
                     gyr * tib       \|/               |       
                      ,---,           |               /|\       
-         (B) 1 o----( --> )----------+ Bi           ( | ) ice    
+         (B) 1 o----( --> )----------+ Term : Bi    ( | ) ice    
                      `---`           |               \V/      
                                     /|\               |       
                                    ( | ) ibe(vbe)     |
@@ -293,7 +293,7 @@ class BJTi(cir.Element):
           tref   |                | voltage: ib/gyr
              ,---+                |
              |   |    ,---,       |         
-             |   +---( --> )------+ tib
+             |   +---( --> )------+ Term : ib
              |        `---`       
             ---     gyr ib Rb(ib)
              V      

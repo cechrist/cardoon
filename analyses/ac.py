@@ -140,8 +140,7 @@ class Analysis(ParamSet):
                     # should never happen
                     assert False
                     
-                for termname in outreq.varlist:
-                    term = circuit.termDict[termname]
+                for term in outreq.termlist:
                     pltfunc(fvec, f1(term.aC_V), 
                             label = 'Term: {0} [{1}]'.format(
                             term.nodeName, unit + term.unit)) 

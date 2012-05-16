@@ -7,7 +7,8 @@ vdc:vdd 1 gnd vdc=3V
 vdc:vin in gnd vdc=1 
 
 x1 in out 1 gnd inverter
-vccs:g1 gnd cout out gnd g=1mS
+vccs:g1 gnd 2 out gnd g=1mS
+vdc:amp 2 cout
 res:rload cout gnd r=1k
 
 .subckt inverter in out 1 gnd
@@ -17,6 +18,7 @@ mosekv:m2 out in gnd gnd type = n
 
 .plot dc out 
 .plot dc cout 
+.plot dc vdc:amp:i
 
 .end
 

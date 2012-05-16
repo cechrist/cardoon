@@ -27,9 +27,9 @@ class Device(cir.Element):
 
     This model is similar to tlinpy4, but it is more robust and can
     handle lossless lines, even at DC, but internally requires 2
-    additional ports to keep track of v1+ and v2+. This model is more
-    suitable for convolution as the S parameters are better behaved
-    than the Y parameters.
+    additional ports to keep track of :math:`v1^+` and
+    :math:`v2^+`. This model is more suitable for convolution as the S
+    parameters are better behaved than the Y parameters.
 
     Netlist Examples::
 
@@ -41,8 +41,8 @@ class Device(cir.Element):
 
     The model is symmetric. The schematic for Port 1 is shown here::
 
-               I1                              v1+ + v1-          v1-
-              --->                               ---->     v1+   ---->
+               I1                              v1+ + v1-  Term:   v1-
+              --->                               ---->     v1p   ---->
           0 o--------,                          ,------------+----------,  4
        +             |                          |            |          |  
                      |                          |           ,-,  s12 v2+|  
@@ -55,6 +55,8 @@ class Device(cir.Element):
                                                          --- lref (6)
                                                           V
 
+    Internal terminal names: v1p (keeps track of :math:`v1^+`) and v1m
+    (keeps track of :math:`v1^-`)
 
     Note: for a matched transmission line, s11 = s22 = 0 and s12 =
     s21. The equivalent 'Y' matrix is::
@@ -122,8 +124,8 @@ class Device(cir.Element):
         self.alpha_nepers = self.alpha / const.Np2dB
 
         # Add internal terminals
-        self.add_internal_term('V1+', 'V') # 4
-        self.add_internal_term('V2+', 'V') # 5
+        self.add_internal_term('v1p', 'V') # 4
+        self.add_internal_term('v2m', 'V') # 5
         self.add_reference_term()          # 6
 
         # Calculate temperature-dependent variables

@@ -193,21 +193,40 @@ analysis to perform or another command.
   and analysis lines. ``.var`` definitions can be placed anywhere in the
   netlist.
 
-* Output commands: the only command to control output defined so far
-  is ``.plot``. Examples::
+* Output commands: there are two output commands: ``.plot`` and
+  ``.save``. Both of them use the same syntax. Examples::
 
     .plot dc in out
     .plot tran 5 out3
+    .plot tran vdc:amp1:i
     # In general:
     .plot <type> <list of terminals>
 
   In the examples, ``dc`` and ``tran`` are the type of output to
   plot. Some possible types are the following: ``dc``, ``ac_mag``,
   ``ac_phase``, ``tran``. Check the :doc:`analysis_library` to see what
-  types of requests are accepted by each analysis.  Each recognized
-  plot line generates a new figure. Results stored in terminals listed
-  in a single plot line are grouped in a single figure. If an analysis
-  does not recognize a request type, the request is ignored.
+  types of requests are accepted by each analysis.  
+
+  Terminals can be external or internal. For external terminals just
+  specify the terminal name.  Internal terminals are specified as
+  follows::
+
+    <element type>:<name>:<internal terminal name>
+    # Example: 'x1' internal terminal from 'svbjt:q1'
+    svbjt:q1:x1
+
+  Check the internal topology of each device in the
+  :doc:`device_library` to find the internal terminal names for aech
+  device.
+
+  Each recognized plot line generates a new figure. Results stored in
+  terminals listed in a single plot line are grouped in a single
+  figure. If an analysis does not recognize a request type, the
+  request is ignored.
+
+  At this moment ``.save`` statements just ensure that results for the
+  selected terminals are saved in memory. This behaviour is likely to
+  change in the future.
 
 
 Generating this documentation

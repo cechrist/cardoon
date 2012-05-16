@@ -322,6 +322,7 @@ def parse_analysis(tok):
 def parse_plot(tok):
     # Create output request and add to circuit
     outreq = cir.OutRequest(tok.Type, tok.Vars)
+    #import pdb; pdb.set_trace()
     # Add requests always to main circuit
     cktStack[0].add_plot_request(outreq)
 
@@ -381,8 +382,10 @@ def parse_file(filename, ckt):
     nodes = pp.OneOrMore(identifier + ~pp.FollowedBy("="))
 
     # Output variables (for .plot, .save)
-    outVars = pp.OneOrMore(identifier)
-
+    intTerm = pp.Group(pp.Combine(identifier + pp.Literal(':') + identifier)
+                       + pp.Suppress(':') + identifier)
+    oneVar = intTerm | identifier
+    outVars = pp.OneOrMore(oneVar)
     # Comment line: any line that starts with # , * or //
     commentline = pp.Suppress(((pp.Literal('*') ^ pp.Literal('#')) 
                                + pp.Regex('.*')) ^ pp.dblSlashComment)

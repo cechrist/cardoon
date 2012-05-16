@@ -241,8 +241,7 @@ class Analysis(ParamSet):
                 plt.figure()
                 plt.grid(True)
                 plt.xlabel('{0} [{1}]'.format(circuit.dC_var, circuit.dC_unit))
-                for termname in outreq.varlist:
-                    term = circuit.termDict[termname]
+                for term in outreq.termlist:
                     plt.plot(sweepvar, term.dC_v, 
                              label = 'Term: {0} [{1}]'.format(
                             term.nodeName, term.unit)) 

@@ -153,7 +153,7 @@ class Device(cir.Element):
            / Rs
            \ 
            / 
-           |  t2                                 tx
+           |  Term : t2                       Term : x
            o---------+                  +----------------+
                      | i(x)+dq/dt       |                |
           +         /|\                /|\ gyr vin      /^\ 
@@ -249,7 +249,7 @@ class Device(cir.Element):
 
         if self.rs:
             # Needs one more terminal
-            t2 = self.add_internal_term('Vd_int', 'V')
+            t2 = self.add_internal_term('t2', 'V')
             g = self.area / self.rs
             self.linearVCCS = [((t2, 1), (tx, tref), glVar.gyr),
                                ((0, t2), (0, t2), g)]

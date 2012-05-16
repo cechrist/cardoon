@@ -49,9 +49,9 @@ Netlist example::
 Internal Topology
 +++++++++++++++++
 
-Internal implementation uses a gyrator (adds one internal node)::
+Internal implementation uses a gyrator (adds il internal node)::
 
-                                    il/gyr    til
+                                    il/gyr    Term: il
     0  o---------+            +----------------+
                  | gyr V23    |                |
       +         /|\          /^\               |
@@ -131,9 +131,9 @@ This model uses scattering parameters::
 
 This model is similar to tlinpy4, but it is more robust and can
 handle lossless lines, even at DC, but internally requires 2
-additional ports to keep track of v1+ and v2+. This model is more
-suitable for convolution as the S parameters are better behaved
-than the Y parameters.
+additional ports to keep track of :math:`v1^+` and
+:math:`v2^+`. This model is more suitable for convolution as the S
+parameters are better behaved than the Y parameters.
 
 Netlist Examples::
 
@@ -145,8 +145,8 @@ Internal Topology
 
 The model is symmetric. The schematic for Port 1 is shown here::
 
-           I1                              v1+ + v1-          v1-
-          --->                               ---->     v1+   ---->
+           I1                              v1+ + v1-  Term:   v1-
+          --->                               ---->     v1p   ---->
       0 o--------,                          ,------------+----------,  4
    +             |                          |            |          |  
                  |                          |           ,-,  s12 v2+|  
@@ -159,6 +159,8 @@ The model is symmetric. The schematic for Port 1 is shown here::
                                                      --- lref (6)
                                                       V
 
+Internal terminal names: v1p (keeps track of :math:`v1^+`) and v1m
+(keeps track of :math:`v1^-`)
 
 Note: for a matched transmission line, s11 = s22 = 0 and s12 =
 s21. The equivalent 'Y' matrix is::
@@ -272,7 +274,7 @@ Extrinsic Internal Topology
 RC, RE and a Collector-Bulk connection are added to intrinsic
 BJT models::
 
-              RC      ct             et    RE
+              RC    Term: ct      Term: et   RE
   C (0) o---/\/\/\/--+-----,         4----/\/\/\/----o  E (2)
                      |      \       /
                      |       \     /     
@@ -348,7 +350,7 @@ configurations are described here.
                                ( | ) ibc(vbc)     |
                 gyr * tib       \|/               |       
                  ,---,           |               /|\       
-     (B) 1 o----( --> )----------+ Bi           ( | ) ice    
+     (B) 1 o----( --> )----------+ Term : Bi    ( | ) ice    
                  `---`           |               \V/      
                                 /|\               |       
                                ( | ) ibe(vbe)     |
@@ -362,7 +364,7 @@ configurations are described here.
       tref   |                | voltage: ib/gyr
          ,---+                |
          |   |    ,---,       |         
-         |   +---( --> )------+ tib
+         |   +---( --> )------+ Term : ib
          |        `---`       
         ---     gyr ib Rb(ib)
          V      
@@ -462,7 +464,7 @@ The internal representation is the following::
        / Rs
        \ 
        / 
-       |   t2
+       |   Term : t2
        o---------+            
                  | i(vin)+dq/dt 
       +         /|\           
@@ -813,7 +815,7 @@ Extrinsic Internal Topology
 RC, RE and a Collector-Bulk connection are added to intrinsic
 BJT models::
 
-              RC      ct             et    RE
+              RC    Term: ct      Term: et   RE
   C (0) o---/\/\/\/--+-----,         4----/\/\/\/----o  E (2)
                      |      \       /
                      |       \     /     
@@ -866,7 +868,7 @@ BC diodes (Ibf, Ibr) with state-variable based diodes. This
 requires two additional variables (nodes) but eliminates large
 positive exponentials from the model::
 
-                                  x2 
+                              Term : x2 
                   +--------------------------+
                   |                          |
                  /|\                        /^\ 
@@ -880,7 +882,7 @@ positive exponentials from the model::
             ---  \|/                        \V/  
              V    |                          |
                   +--------------------------+
-                                   x1                
+                              Term : x1                
                                               
 All currents/charges in the model are functions of voltages v3
 (x2) and v4 (x1). Note that vbc and vbe are now also functions of
@@ -914,7 +916,7 @@ internal base current and calculate Rb(ib).
               gyr tib      v2  ( | ) ibc(x2)      |
                                 \|/               |       
                  ,---,      +    |               /|\       
-     (B) 1 o----( --> )----------+ Bi           ( | ) ice(x1,x2)
+     (B) 1 o----( --> )----------+ Term : Bi    ( | ) ice(x1,x2)
                  `---`      +    |               \V/      
                                 /|\               |       
                            v1  ( | ) ibe(x1)      |
@@ -927,7 +929,7 @@ internal base current and calculate Rb(ib).
              |    `---`       |
       tref   |                | ib/gyr
           ,--+                |
-          |  |    ,---,       | tib
+          |  |    ,---,       | Term : ib
           |  +---( --> )------+
           |       `---`       
          --- 
@@ -1030,7 +1032,7 @@ The internal representation is the following::
        / Rs
        \ 
        / 
-       |  t2                                 tx
+       |  Term : t2                       Term : x
        o---------+                  +----------------+
                  | i(x)+dq/dt       |                |
       +         /|\                /|\ gyr vin      /^\ 
@@ -1256,7 +1258,7 @@ Internal Topology
 A gyrator is used to convert a current source into a voltage
 source if Rint is zero::
 
-                                   i/gyr       ti
+                                   i/gyr      Term: i
     0  o---------+            +----------------+
                  | gyr V23    |                |
       +         /|\          /|\              /^\ 

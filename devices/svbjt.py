@@ -46,7 +46,7 @@ class SVBJTi(cir.Element):
     requires two additional variables (nodes) but eliminates large
     positive exponentials from the model::
 
-                                      x2 
+                                  Term : x2 
                       +--------------------------+
                       |                          |
                      /|\                        /^\ 
@@ -60,7 +60,7 @@ class SVBJTi(cir.Element):
                 ---  \|/                        \V/  
                  V    |                          |
                       +--------------------------+
-                                       x1                
+                                  Term : x1                
                                                   
     All currents/charges in the model are functions of voltages v3
     (x2) and v4 (x1). Note that vbc and vbe are now also functions of
@@ -94,7 +94,7 @@ class SVBJTi(cir.Element):
                   gyr tib      v2  ( | ) ibc(x2)      |
                                     \|/               |       
                      ,---,      +    |               /|\       
-         (B) 1 o----( --> )----------+ Bi           ( | ) ice(x1,x2)
+         (B) 1 o----( --> )----------+ Term : Bi    ( | ) ice(x1,x2)
                      `---`      +    |               \V/      
                                     /|\               |       
                                v1  ( | ) ibe(x1)      |
@@ -107,7 +107,7 @@ class SVBJTi(cir.Element):
                  |    `---`       |
           tref   |                | ib/gyr
               ,--+                |
-              |  |    ,---,       | tib
+              |  |    ,---,       | Term : ib
               |  +---( --> )------+
               |       `---`       
              --- 

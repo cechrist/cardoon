@@ -30,9 +30,9 @@ class Device(cir.Element):
     Internal Topology
     +++++++++++++++++
 
-    Internal implementation uses a gyrator (adds one internal node)::
+    Internal implementation uses a gyrator (adds il internal node)::
 
-                                        il/gyr    til
+                                        il/gyr    Term: il
         0  o---------+            +----------------+
                      | gyr V23    |                |
           +         /|\          /^\               |

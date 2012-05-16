@@ -107,6 +107,8 @@ ne=0.5 nc=0.5 tr=3000e-9 vje=0.55 vjc=0.55 rc=100  re=10)
 .plot ac_dB 153 151 23
 .plot ac_phase 23
 .plot tran 153 151 23
+.plot tran vdc:vcc:i vdc:vee:i 
+.plot tran svbjt:q15:x1 svbjt:q15:x2
 .save tran 25
 
 .end

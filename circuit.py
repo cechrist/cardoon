@@ -506,7 +506,9 @@ class OutRequest:
 
       1. Type of of request (``type``): dc, ac_*, tran, etc.
 
-      2. List of variables (``varlist``): these are terminal names.
+      2. List of variables (``varlist``): for external terminals,
+         these are strings with terminal name. For internal terminals,
+         a list with device and terminal names.
 
     After initialization the circuit adds a list of terminals in the
     ``termlist`` attribute.
@@ -672,14 +674,38 @@ class Circuit:
         for outreq in self.plotReqList + self.saveReqList:
             outreq.termlist = []
             for termname in outreq.varlist:
-                if termname == '0':
-                    # Special treatment for ground terminal
-                    termname = 'gnd'
-                try:
-                    outreq.termlist.append(self.termDict[termname])
-                except KeyError:
-                    raise CircuitError(
-                        'Output request for nonexistent terminal: ' + termname)
+                # Distinguish external/internal terminals
+                if type(termname) == str:
+                    # External terminal
+                    if termname == '0':
+                        # Special treatment for ground terminal
+                        termname = 'gnd'
+                    try:
+                        outreq.termlist.append(self.termDict[termname])
+                    except KeyError:
+                        raise CircuitError(
+                            'Output request for nonexistent terminal: ' 
+                            + termname)
+                else:
+                    # Internal terminal
+                    try:
+                        elem = self.elemDict[termname[0]]
+                    except KeyError:
+                        raise CircuitError(
+                            'Output request for nonexistent element: ' 
+                            + termname[0] + ':' + termname[1])
+                    iterm = None
+                    for term in elem.get_internal_terms():
+                        if term.nodeName == termname[1]:
+                            iterm = term
+                            break
+                    if iterm:
+                        outreq.termlist.append(iterm)
+                    else:
+                        raise CircuitError(
+                            'Output request for nonexistent terminal: '
+                            + termname[0] + ':' + termname[1])
+
 
         self._initialized = True
 

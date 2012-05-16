@@ -41,7 +41,7 @@ class Device(cir.Element):
     A gyrator is used to convert a current source into a voltage
     source if Rint is zero::
 
-                                       i/gyr       ti
+                                       i/gyr      Term: i
         0  o---------+            +----------------+
                      | gyr V23    |                |
           +         /|\          /|\              /^\ 
