@@ -504,10 +504,12 @@ class OutRequest:
 
     Output request consist in: 
 
-      1. Type of of request: dc, ac_*, tran, etc.
+      1. Type of of request (``type``): dc, ac_*, tran, etc.
 
-      2. List of variables. For now these are terminal names.
+      2. List of variables (``varlist``): these are terminal names.
 
+    After initialization the circuit adds a list of terminals in the
+    ``termlist`` attribute.
     """
     validTypes = ['dc', 'ac_mag', 'ac_phase', 'ac_dB', 'tran', 'hb']
 
@@ -546,7 +548,7 @@ class Circuit:
     to be the same. If a circuit does not contain a ground node then
     it is up to the user to set a reference.
 
-    Output requests are stored in a list: outReqList
+    Plot/Save requests are stored in lists: plotReqList/saveReqList
 
     In the future we may implement topology checking utilities here.
     """
@@ -569,7 +571,8 @@ class Circuit:
         self.termDict = dict()
         self.elemDict = dict()
         self.subcktDict = dict()
-        self.outReqList = list()
+        self.plotReqList = list()
+        self.saveReqList = list()
 
     # Printing stuff ---------------------------------------------
 
@@ -606,8 +609,12 @@ class Circuit:
             for cktName in usedSubCKTs:
                 desc += Circuit.cktDict[cktName].netlist_string()
         
-        for outreq in self.outReqList:
+        for outreq in self.plotReqList:
             desc += '\n.plot ' + outreq.type 
+            for name in outreq.varlist:
+                desc += ' ' + name
+        for outreq in self.saveReqList:
+            desc += '\n.save ' + outreq.type 
             for name in outreq.varlist:
                 desc += ' ' + name
         desc += '\n'
@@ -661,13 +668,16 @@ class Circuit:
                 # Initialize subcircuit definition
                 Circuit.cktDict[xsubckt.cktName].init()
 
-        # Check output requests
-        for outreq in self.outReqList:
+        # Check and initialize output requests
+        for outreq in self.plotReqList + self.saveReqList:
+            outreq.termlist = []
             for termname in outreq.varlist:
                 if termname == '0':
                     # Special treatment for ground terminal
                     termname = 'gnd'
-                if not self.termDict.has_key(termname):
+                try:
+                    outreq.termlist.append(self.termDict[termname])
+                except KeyError:
                     raise CircuitError(
                         'Output request for nonexistent terminal: ' + termname)
 
@@ -882,8 +892,27 @@ class Circuit:
         except KeyError:
             raise CircuitError(termName + ': Terminal not found' )
     
-    def add_out_request(self, outreq):
-        self.outReqList.append(outreq)
+    def add_plot_request(self, outreq):
+        self.plotReqList.append(outreq)
+
+    def add_save_request(self, outreq):
+        self.saveReqList.append(outreq)
+
+    def get_requested_terms(self, reqtype):
+        """
+        Returns a set with terminals to be plotted or saved 
+
+        Set generated from all plot and save requests of the specified
+        type.
+        """
+        # Uses a set to avoid repeated terminals
+        termSet = set()
+        for outreq in self.plotReqList + self.saveReqList:
+            if outreq.type == reqtype:
+                for term in outreq.termlist:
+                    termSet.add(term)
+        return termSet
+
 
 #---------------------------------------------------------------------
 class SubCircuit(Circuit):

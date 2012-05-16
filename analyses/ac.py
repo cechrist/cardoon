@@ -118,7 +118,7 @@ class Analysis(ParamSet):
         # to a common module that processes output requests such as
         # plot, print, save, etc.
         flag = False
-        for outreq in circuit.outReqList:
+        for outreq in circuit.plotReqList:
             if outreq.type[:2] == 'ac':
                 flag = True
                 plt.figure()
@@ -132,10 +132,10 @@ class Analysis(ParamSet):
                     unit = ''
                 elif pkey == 'phase':
                     f1 = lambda v: 180./np.pi * np.angle(v)
-                    unit = 'degrees, '
+                    unit = 'degrees'
                 elif pkey == 'dB':
                     f1 = lambda v: 20. * np.log10(v)
-                    unit = 'dB, '
+                    unit = 'dB'
                 else:
                     # should never happen
                     assert False

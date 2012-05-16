@@ -321,9 +321,15 @@ def parse_analysis(tok):
 
 def parse_plot(tok):
     # Create output request and add to circuit
-    outreq = cir.OutRequest(tok.plotType, tok.plotVars)
-    cktStack[-1].add_out_request(outreq)
+    outreq = cir.OutRequest(tok.Type, tok.Vars)
+    # Add requests always to main circuit
+    cktStack[0].add_plot_request(outreq)
 
+def parse_save(tok):
+    # Create output request and add to circuit
+    outreq = cir.OutRequest(tok.Type, tok.Vars)
+    # Add requests always to main circuit
+    cktStack[0].add_save_request(outreq)
         
 def parse_ends(tok):
     # First make sure that we were indeed processing a subcircuit
@@ -424,8 +430,13 @@ def parse_file(filename, ckt):
 
     # example: .plot dc 10 out1
     plotline = pp.Suppress(pp.Keyword('.plot', caseless=True)) \
-        + identifier.setResultsName('plotType') \
-        + outVars.setResultsName('plotVars') 
+        + identifier.setResultsName('Type') \
+        + outVars.setResultsName('Vars') 
+
+    # example: .save dc 10 out1
+    saveline = pp.Suppress(pp.Keyword('.save', caseless=True)) \
+        + identifier.setResultsName('Type') \
+        + outVars.setResultsName('Vars') 
 
     endsline = pp.Keyword('.ends', caseless=True)
     
@@ -441,6 +452,7 @@ def parse_file(filename, ckt):
         | includeline.setParseAction(parse_include) \
         | analysisline.setParseAction(parse_analysis) \
         | plotline.setParseAction(parse_plot) \
+        | saveline.setParseAction(parse_save) \
         | endsline.setParseAction(parse_ends) \
         | endline.setParseAction(parse_end)
 

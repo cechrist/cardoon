@@ -235,7 +235,7 @@ class Analysis(ParamSet):
         # to a common module that processes output requests such as
         # plot, print, save, etc.
         flag = False
-        for outreq in circuit.outReqList:
+        for outreq in circuit.plotReqList:
             if outreq.type == 'dc':
                 flag = True
                 plt.figure()

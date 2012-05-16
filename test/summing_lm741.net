@@ -100,12 +100,13 @@ ne=0.5 nc=0.5 tr=3000e-9 vje=0.55 vjc=0.55 rc=100  re=10)
 *.analysis op intvars=0
 *.analysis dc device=vsin:v1 param=vdc start=-2. stop=2. num=30
 *.analysis ac start=100. stop=1MEG num=100 log=True
-.analysis tran tstep=10us tstop=2ms
+.analysis tran tstep=10us tstop=2ms shell=1
 .options gyr=1e-2 maxiter=50 maxdelta=2. sparse=1 
 
 .plot dc 153 151 23
 .plot ac_dB 153 151 23
 .plot ac_phase 23
 .plot tran 153 151 23
+.save tran 25
 
 .end
