@@ -317,7 +317,7 @@ def run_AC(ckt, fvec):
 # ****************************** Classes *********************************
 #-------------------------------------------------------------------------
 
-class _NLFunction:
+class _NLFunction(object):
     """
     Nonlinear function interface class
 
@@ -487,7 +487,7 @@ class DCNodal(_NLFunction):
 
     def __init__(self, ckt):
         # Init base class
-        _NLFunction.__init__(self)
+        super(DCNodal, self).__init__()
 
         # Save ckt instance
         self.ckt = ckt
@@ -701,7 +701,7 @@ class TransientNodal(_NLFunction):
 
         """
         # Init base class
-        _NLFunction.__init__(self)
+        super(TransientNodal, self).__init__()
 
         # Save ckt instance
         self.ckt = ckt

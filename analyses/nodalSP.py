@@ -104,7 +104,7 @@ class DCNodal(_NLFunctionSP):
 
     def __init__(self, ckt):
         # Init base class
-        _NLFunction.__init__(self)
+        super(DCNodal, self).__init__()
 
         # Save ckt instance
         self.ckt = ckt
@@ -323,7 +323,7 @@ class TransientNodal(_NLFunctionSP):
 
         """
         # Init base class
-        _NLFunction.__init__(self)
+        super(TransientNodal, self).__init__()
 
         # Save ckt instance
         self.ckt = ckt
