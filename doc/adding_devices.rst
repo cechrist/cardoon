@@ -67,7 +67,7 @@ class defined as follows::
 	    # This adds one internal terminal (in addition to any
 	    # existing ones). First argument is the internal variable
 	    # name and second is the variable unit. Returns terminal index
-	    ti1 = self.add_internal_terms('i1', 'A')
+	    ti1 = self.add_internal_term('i1', 'A')
     
             # Ambient temperature (temp) by default set to 27 C 
             # Calculate temperature-dependent variables (if any)
@@ -210,7 +210,7 @@ follows::
 
 	# This adds one internal terminal. Assume only 2 external
 	# terminals are connected so far
-	til = self.add_internal_terms('i1', 'A') # til = 2
+	til = self.add_internal_term('i1', 'A') # til = 2
 	# Add local reference terminal
 	tref = self.add_reference_term() # tref = 3
 
