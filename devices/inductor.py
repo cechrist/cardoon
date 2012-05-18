@@ -104,7 +104,7 @@ class Device(cir.Element):
         # Access to global variables is through the glVar 
         self.linearVCCS = [((0,1), (tref, til), glVar.gyr), 
                            ((til, tref), (0,1), glVar.gyr)]
-        cap = self.l * glVar.gyr * glVar.gyr
+        cap = self.l * glVar.gyr**2
         self.linearVCQS = [((til, tref), (til, tref), cap)]
 
         # Adjust according to temperature (not needed so far)
