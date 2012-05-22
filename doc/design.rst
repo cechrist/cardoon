@@ -221,6 +221,23 @@ less work to operate directly from the vector of unknowns in the
 equation-solving routine.
 
 
+Temperature handling in electrothermal simulations
+--------------------------------------------------
+
+The nodal voltage in the thermal port of electrothermal models
+represents the difference between the device temperature and the
+ambient temperature. In this way a zero difference is usually a good
+guess for the nonlinear solver and the numerical solution is more
+robust.
+
+Some issues that should be addressed in the future include:
+
+  * Automatically convert the temperature difference to the actual
+    temperature for plotting and saving (the same scheme should also
+    work for currents in voltage sources for example).
+
+  * Propagate units across terminals in thermal circuits using an
+    algorithm similar to freeda's local reference group checking.
 
 
 .. include:: ../TODO

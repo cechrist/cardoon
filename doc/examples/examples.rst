@@ -116,7 +116,6 @@ BJT model::
 
     # Test of an electrothermal BJT
     
-    .options gyr=1e-4 maxdelta=100.
     .analysis dc device=vdc:vb param=vdc start=0 stop=12 shell=1
     
     .model mynpn svbjt_t (bf=200 vaf=100 ikf=10e-3 rb=1k)
@@ -128,32 +127,32 @@ BJT model::
     
     svbjt_t:q1 1 2 0 0 t1 gnd model=mynpn
     
-    res:rth t1 t2 r=100.
-    vdc:tamb t2 gnd vdc=27.C
+    res:rth t1 0 r=100.
     
     .plot dc t1 
     .plot dc 1 2 
     
     .end
 
-If the ``.options`` line is ommited, the analysis succeeds but
-requires a few more iterations.  Note that ``shell=1`` in the analysis
-line. This indicates the simulator to run an interactive shell after
-completing the analysis.  Running this netlist and entering some
-commands in the simulator shell produces::
+Note that ``shell=1`` in the analysis line. This indicates the
+simulator to run an interactive shell after completing the analysis.
+Running this netlist and entering some commands in the simulator shell
+produces::
 
-    cechrist@phobos:~/src/cardoon/test$ cardoon npn_thermal.net
+    cechrist@moon:~/wd/cardoon/examples$ cardoon npn_thermal.net 
+    
+    Cardoon Circuit Simulator 0.4 release 0.4.1.dev
     ******************************************************
                      DC sweep analysis
     ******************************************************
     
      # Test of an electrothermal BJT 
     
-    Average iterations: 4
-    Average residual: 6.954042279e-08
+    System dimension: 11
+    Sweep:  Device: vdc:vb  Parameter: vdc
+    Average iterations: 5
+    Average residual: 0.0114478106429
     
-    <close plot windows here>
-
     Dropping into IPython, type CTR-D to exit
     Available commands:
         sweepvar: vector with swept parameter
@@ -173,7 +172,9 @@ The base voltage is swept. As the collector current increases, at
 first the power dissipation in the BJT also increases but eventually
 the reduction in :math:`V_{CE}` causes a reduction in power
 dissipation as the transistor gets closer to saturation. This effect
-can be observed in the temperature plot shown below.
+can be observed in the temperature plot shown below. Temperature is
+given as the increment to ambient temperature given in the
+``.options`` line (the default value is used here). 
 
 .. image:: bjt_temp_out.png
    :scale: 100 %
