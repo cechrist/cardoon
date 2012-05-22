@@ -1,6 +1,5 @@
 # Test of an electrothermal BJT
 
-.options gyr=1e-4 maxdelta=100.
 .analysis dc device=vdc:vb param=vdc start=0 stop=12 shell=1
 
 .model mynpn svbjt_t (bf=200 vaf=100 ikf=10e-3 rb=1k)
