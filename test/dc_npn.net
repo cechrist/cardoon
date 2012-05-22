@@ -1,6 +1,6 @@
 # Test of a transistor device
 
-.options temp=29.1439  maxdelta=500
+.options temp=29.1439  sparse=0
 .analysis dc device=bjt:q1 param=bf start=10 stop=150 num=200
 #.analysis op
 

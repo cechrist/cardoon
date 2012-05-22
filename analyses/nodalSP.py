@@ -48,7 +48,7 @@ class _NLFunctionSP(_NLFunction):
     def __init__(self):
         # List here the functions that can be used to solve equations
         self.convergence_helpers = [self.solve_simple, 
-                                    self.solve_homotopy_gmin, 
+                                    self.solve_homotopy_gmin2, 
                                     self.solve_homotopy_source, 
                                     None]
 
@@ -62,6 +62,39 @@ class _NLFunctionSP(_NLFunction):
         return self.deltaxVec
 
 
+    def solve_homotopy_gmin2(self, x0, sV):
+        """Newton's method with gmin stepping (nonlinear ports)"""
+        # Adds gmin in parallel with nonlinear element (external) ports
+        # Create Gmin matrix (structure is fixed)
+        Gonesll = pysparse.spmatrix.ll_mat(self.ckt.nD_dimension, 
+                                            self.ckt.nD_dimension)
+        for elem in self.ckt.nD_nlinElem:
+            Gadd = np.eye(len(elem.nD_extPorts))
+            # import pdb; pdb.set_trace()
+            set_Jac(Gonesll, elem.nD_epos, elem.nD_eneg, 
+                    elem.nD_epos, elem.nD_eneg, Gadd)
+        Gones = Gonesll.to_csr()
+        tmpVec =  np.empty(self.ckt.nD_dimension)
+
+        def get_deltax(xVec):
+            (iVec, Jac) = self.get_i_Jac(xVec) 
+            Gones.matvec(xVec, tmpVec)
+            iVec += self.gmin * tmpVec
+            Jac.shift(self.gmin, Gonesll)
+            return self._get_deltax(iVec - sV, Jac)
+        def f_eval(xVec):
+            iVec = self.get_i(xVec)
+            self.Gones.matvec(xVec, tmpVec)
+            iVec += self.gmin * tmpVec
+            return iVec - sV
+        (x, res, iterations, success) = \
+            self._homotopy(0.5, self._set_gmin, x0, get_deltax, f_eval)
+        if success:
+            return (x, res, iterations)
+        else:
+            raise NoConvergenceError('gmin stepping did not converge')
+
+
     def solve_homotopy_gmin(self, x0, sV):
         """Newton's method with gmin stepping"""
         idx = np.arange(self.ckt.nD_nterms)
@@ -72,14 +105,14 @@ class _NLFunctionSP(_NLFunction):
         # Add gmin from ground to all external nodes. Assumes all
         # external nodes are sorted first in the vector. This will
         # not work if the terminal order is changed.
-        def get_deltax(xvec):
-            (iVec, Jac) = self.get_i_Jac(xvec) 
-            iVec[idx] += self.gmin * xvec[idx]
+        def get_deltax(xVec):
+            (iVec, Jac) = self.get_i_Jac(xVec) 
+            iVec[idx] += self.gmin * xVec[idx]
             Jac.update_add_at(self.val, idx, idx)
             return self._get_deltax(iVec - sV, Jac)
-        def f_eval(xvec):
-            iVec = self.get_i(xvec)
-            iVec[idx] += self.gmin * xvec[idx]
+        def f_eval(xVec):
+            iVec = self.get_i(xVec)
+            iVec[idx] += self.gmin * xVec[idx]
             return iVec - sV
         (x, res, iterations, success) = \
             self._homotopy(0.5, f, x0, get_deltax, f_eval)
@@ -174,11 +207,11 @@ class DCNodal(_NLFunctionSP):
         x0 = np.zeros(self.ckt.nD_dimension)
         for elem in self.ckt.nD_nlinElem:
             try:
-                # Only add to positive side. This is not the only way
+                # Only set positive side. This is not the only way
                 # and may not work well in some cases but this is a
                 # guess anyway
                 for i,j in elem.nD_vpos:
-                    x0[j] += elem.vPortGuess[i]
+                    x0[j] = elem.vPortGuess[i]
             except AttributeError:
                 # if vPortGuess not given just leave things unchanged
                 pass

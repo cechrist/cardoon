@@ -203,11 +203,10 @@ def process_nodal_element(elem):
         (elem.nD_cpos, elem.nD_cneg) = create_list(elem.csOutPorts)
         # Charge source terminals
         (elem.nD_qpos, elem.nD_qneg) = create_list(elem.qsOutPorts)
-# Disabled since not needed for now
-#            # Create list with external ports for gmin calculation
-#            nports = elem.numTerms - 1
-#            elem.nD_extPorts = [(i, nports) for i in range(nports)]
-#            (elem.nD_epos, elem.nD_eneg) = create_list(elem.nD_extPorts)
+        # Create list with external ports for gmin calculation
+        nports = elem.numTerms - 1
+        elem.nD_extPorts = [(i, nports) for i in range(nports)]
+        (elem.nD_epos, elem.nD_eneg) = create_list(elem.nD_extPorts)
 
     # Convert frequency-defined elements
     if elem.isFreqDefined:
@@ -328,8 +327,9 @@ class _NLFunction(object):
     def __init__(self):
         # List here the functions that can be used to solve equations
         self.convergence_helpers = [self.solve_simple, 
-                                    self.solve_homotopy_gmin, 
+                                    self.solve_homotopy_gmin2, 
                                     self.solve_homotopy_source, 
+                                    self.solve_homotopy_gmin, 
                                     None]
 
     def _get_deltax(self, errFunc, Jac):
@@ -343,6 +343,16 @@ class _NLFunction(object):
             # Use pseudo-inverse
             deltax = np.dot(np.linalg.pinv(Jac), errFunc)
         return deltax
+
+    def _set_gmin(self, _lambda):
+        """
+        Sets gmin value given lambda (used for homotopy)
+
+        Range of lambda: [1e-4, 1]
+        Range of gmin: [10, 0]
+        """
+        gbase = 1e-3
+        self.gmin = gbase / _lambda - gbase
 
     def _homotopy(self, _lambda, f, x0, get_deltax, f_eval):
         """
@@ -390,8 +400,10 @@ class _NLFunction(object):
                 _lambda = stack.pop()
             else:
                 print('  <--- Backtracking')
-                # Restore previous better guess
-                x[:] = x0
+                # Check if residual was big
+                if res > .1:
+                    # Restore previous better guess
+                    x[:] = x0
                 # push _lambda into stack
                 stack.append(_lambda)
                 step *= .5
@@ -425,23 +437,46 @@ class _NLFunction(object):
     def solve_homotopy_gmin(self, x0, sV):
         """Newton's method with gmin stepping"""
         idx = np.arange(self.ckt.nD_nterms)
-        def f(_lambda):
-            gbase = 1e-5
-            self.gmin = gbase / _lambda**3 - gbase
         # Add gmin from ground to all external nodes. Assumes all
         # external nodes are sorted first in the vector. This will
         # not work if the terminal order is changed.
-        def get_deltax(xvec):
-            (iVec, Jac) = self.get_i_Jac(xvec) 
-            iVec[idx] += self.gmin * xvec[idx]
+        def get_deltax(xVec):
+            (iVec, Jac) = self.get_i_Jac(xVec) 
+            iVec[idx] += self.gmin * xVec[idx]
             Jac[idx, idx] += self.gmin
             return self._get_deltax(iVec - sV, Jac)
-        def f_eval(xvec):
-            iVec = self.get_i(xvec)
-            iVec[idx] += self.gmin * xvec[idx]
+        def f_eval(xVec):
+            iVec = self.get_i(xVec)
+            iVec[idx] += self.gmin * xVec[idx]
             return iVec - sV
         (x, res, iterations, success) = \
-            self._homotopy(0.5, f, x0, get_deltax, f_eval)
+            self._homotopy(0.5, self._set_gmin, x0, get_deltax, f_eval)
+        if success:
+            return (x, res, iterations)
+        else:
+            raise NoConvergenceError('gmin stepping did not converge')
+
+    def solve_homotopy_gmin2(self, x0, sV):
+        """Newton's method with gmin stepping (nonlinear ports)"""
+        # Adds gmin in parallel with nonlinear element (external) ports
+        # Create Gmin matrix (structure is fixed)
+        Gones = np.zeros((self.ckt.nD_dimension, self.ckt.nD_dimension))
+        for elem in self.ckt.nD_nlinElem:
+            Gadd = np.eye(len(elem.nD_extPorts))
+            # import pdb; pdb.set_trace()
+            set_Jac(Gones, elem.nD_epos, elem.nD_eneg, 
+                    elem.nD_epos, elem.nD_eneg, Gadd)
+        def get_deltax(xVec):
+            (iVec, Jac) = self.get_i_Jac(xVec) 
+            iVec += self.gmin * np.dot(Gones, xVec)
+            Jac += self.gmin * Gones
+            return self._get_deltax(iVec - sV, Jac)
+        def f_eval(xVec):
+            iVec = self.get_i(xVec)
+            iVec += self.gmin * np.dot(Gones, xVec)
+            return iVec - sV
+        (x, res, iterations, success) = \
+            self._homotopy(0.5, self._set_gmin, x0, get_deltax, f_eval)
         if success:
             return (x, res, iterations)
         else:
@@ -450,27 +485,18 @@ class _NLFunction(object):
     def solve_homotopy_source(self, x0, sV):
         """Newton's method with source stepping"""
         def f(_lambda):
-            self._lambdasV = _lambda * sV
+            self._lambda = _lambda
         def get_deltax(x):
             (iVec, Jac) = self.get_i_Jac(x) 
-            return self._get_deltax(iVec - self._lambdasV, Jac)
+            return self._get_deltax(iVec - self._lambda * sV, Jac)
         def f_eval(x):
-            return self.get_i(x) - self._lambdasV
+            return self.get_i(x) - self._lambda * sV
         (x, res, iterations, success) = \
             self._homotopy(0.5, f, x0, get_deltax, f_eval)
         if success:
             return (x, res, iterations)
         else:
             raise NoConvergenceError('Source stepping did not converge')
-
-# Old code for gmin homotopy: add conductances in parallel to
-# nonlinear device external ports
-#
-#        for elem in self.ckt.nD_nlinElem:
-#            Gadd = np.eye(len(elem.nD_extPorts))
-#            set_Jac(Ggmin, elem.nD_epos, elem.nD_eneg, 
-#                    elem.nD_epos, elem.nD_eneg, Gadd)
-
 
 #---------------------------------------------------------------------------
 
@@ -549,11 +575,11 @@ class DCNodal(_NLFunction):
         x0 = np.zeros(self.ckt.nD_dimension)
         for elem in self.ckt.nD_nlinElem:
             try:
-                # Only add to positive side. This is not the only way
-                # and may not work well in some cases but this is a
-                # guess anyway
+                # Only use positive side. This is not the only way and
+                # may not work well in some cases but this is a guess
+                # anyway
                 for i,j in elem.nD_vpos:
-                    x0[j] += elem.vPortGuess[i]
+                    x0[j] = elem.vPortGuess[i]
             except AttributeError:
                 # if vPortGuess not given just leave things unchanged
                 pass
