@@ -18,7 +18,7 @@ http://www.gnu.org/licenses/gpl.html
 
 import numpy as np
 #import circuit as cir
-#from globalVars import const, glVar
+from globalVars import glVar
 # For automatic differentiation:
 import cppaddev as ad
 
@@ -34,9 +34,10 @@ def thermal_device(nle):
         electrothermal device is always nonlinear.
 
         Adds one thermal port (pair of terminals) connected after the
-        regular terminals. Temperature in this port is in degree C.  A
-        current source proportional to the instantaneous power
-        dissipated in device is connected to the thermal port.
+        regular terminals. Temperature in this port is the difference
+        with ambient temperature in degrees C.  A current source
+        proportional to the instantaneous power dissipated in device
+        is connected to the thermal port.
         """
     
         # devtype is the 'model' name
@@ -70,8 +71,10 @@ def thermal_device(nle):
             # True if needed.
             if self.__addThermalPorts:
                 # Add units to thermal port
-                self.neighbour[self.numTerms-1].unit = 'C'
-                self.neighbour[self.numTerms-2].unit = 'C'
+                self.neighbour[self.numTerms-1].unit = \
+                    '+{0} C'.format(glVar.temp)
+                self.neighbour[self.numTerms-2].unit = \
+                    '+{0} C'.format(glVar.temp)
                 self.csOutPorts = self.csOutPorts + [(self.numTerms-1, 
                                                       self.numTerms-2)]
                 self.controlPorts = self.controlPorts + [(self.numTerms-2, 
@@ -86,7 +89,7 @@ def thermal_device(nle):
             try:
                 if len(self.vPortGuess) < len(self.controlPorts):
                     self.vPortGuess = np.concatenate(
-                        (self.vPortGuess,[27.]), axis=0)
+                        (self.vPortGuess,[0.]), axis=0)
             except AttributeError:
                 # Ignore if vPortGuess not provided
                 pass
@@ -96,7 +99,7 @@ def thermal_device(nle):
             vPort is a vector with control voltages (last port is thermal)
             """
             # set temperature in base class first
-            nle.set_temp_vars(self, vPort[self.__tpn])
+            nle.set_temp_vars(self, vPort[self.__tpn] + glVar.temp)
 
             # now calculate currents and charges
             if saveOP:

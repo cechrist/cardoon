@@ -12,8 +12,7 @@ res:rb 3 2 r=96k
 
 svbjt_t:q1 1 2 0 0 t1 gnd model=mynpn
 
-res:rth t1 t2 r=100.
-vdc:tamb t2 gnd vdc=27.C
+res:rth t1 0 r=100.
 
 .plot dc t1 
 .plot dc 1 2 

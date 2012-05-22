@@ -228,6 +228,15 @@ analysis to perform or another command.
   selected terminals are saved in memory. This behaviour is likely to
   change in the future.
 
+* Electrothermal devices: the netlist name for the electrothermal
+  model is formed by adding "_t" to the original name (e.g.,
+  ``bjt_t``).  An electrothermal model has an additional pair of
+  thermal terminals. The voltage in this thermal port is the
+  difference between the device temperature and the ambient
+  temperature. The current is proportional to the power dissipated in
+  the device.
+
+
 
 Generating this documentation
 -----------------------------

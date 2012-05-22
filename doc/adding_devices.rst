@@ -436,13 +436,13 @@ Automatic Eletro-Thermal Models
 +++++++++++++++++++++++++++++++
 
 Automatic electrothermal model generation allows to implement one
-nonlinear model with two different netlist names: the normal one
-with electrical terminals only (e.g., "bjt") and an electrothermal
-model that has an additional pair of thermal terminals. The voltage
-in this thermal port is the temperature and the current is
-proportional to the power dissipated in the device. The netlist name
-for the electrothermal model is formed by adding "_t" to the
-original name (e.g., "bjt_t").
+nonlinear model with two different netlist names: the normal one with
+electrical terminals only (e.g., "bjt") and an electrothermal model
+that has an additional pair of thermal terminals. The voltage in this
+thermal port is the difference between the device temperature and the
+ambient temperature. The current is proportional to the power
+dissipated in the device. The netlist name for the electrothermal
+model is formed by adding "_t" to the original name (e.g., "bjt_t").
 
 To implement an automatic electrothermal model, set the following
 attribute::

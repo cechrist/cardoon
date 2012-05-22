@@ -7,8 +7,7 @@ res:r1 3 gnd r=1k
 diode_t:d1 3 gnd 1000 gnd rs=50.
 #diode:d1 3 gnd rs=50. temp=100.
 
-res:rth 1000 1001 r=100.
-vdc:tamb 1001 gnd vdc=20.C
+res:rth 1000 gnd r=100.
 
 .plot dc 3 
 .plot dc 1000 

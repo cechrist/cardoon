@@ -53,10 +53,8 @@ res:r64 63 64 r=0.15
 cap:c64 63 64 c=8e-6
 res:r65 64 65 r=9.9e-3
 cap:c65 64 65 c=1.2e-4
-res:r66 65 66 r=0.205
-cap:c66 65 66 c=2e-5
-
-vdc:tref 66 gnd vdc=27
+res:r66 65 0 r=0.205
+cap:c66 65 0 c=2e-5
 
 vsin:v33 16 0 mag=0.01 freq=1.65e9 phase=0  
 
@@ -67,5 +65,7 @@ vsin:v33 16 0 mag=0.01 freq=1.65e9 phase=0
 .plot dc 9 5 7
 
 .plot ac_mag vin vout
+
+.plot ac_mag 60
 
 .end
