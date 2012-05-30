@@ -220,6 +220,13 @@ solution is found. The main reason for this is efficiency as it is
 less work to operate directly from the vector of unknowns in the
 equation-solving routine.
 
+Move sparse matrix implementation to scipy
+++++++++++++++++++++++++++++++++++++++++++
+
+The scipy library offers more flexibility than pysparse. It can handle
+complex matrices and perform separated symbolic and numeric
+factorizations. 
+
 
 Temperature handling in electrothermal simulations
 --------------------------------------------------

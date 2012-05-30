@@ -42,9 +42,21 @@ doctring from the ``Analysis`` class in the corresponding module.
 Version Numbers
 +++++++++++++++
 
-The initial release of the program was version 0.1.1 and had no basic
-analysis implemented. Starting from version 0.2.dev, versions are finished
-with a ``.dev`` tag to indicate that the program is still being
-developed and interfaces may change.  Version 1.0 will be released
-after the basic analyses (DC/AC/Transient/HB) are implemented and
-validated and program interfaces become stable enough.
+Starting with version 0.4.1, ``.dev`` is appended at the end of a
+version number while the version evolves, *i.e.*, changes are commited
+to that version. Once a version is deemed to be released, the ``.dev``
+part should be stripped and the commit tagged with
+``version-0.x.y``. An increment in ``x`` indicates that a major
+feature has been added (such as a new analysis type, major re-write of
+code, etc.). Otherwise, ``y`` is incremented.
+
+Version 1.0 will be released when the following features are
+implemented:
+
+  * Basic analyses are efficient: DC, AC, Transient
+ 
+  * Frequency-defined devices are supported in all analyses
+
+  * Time-delay interface is stable and implemented for all analyses
+
+  * Netlist syntax and interfaces in general are mostly stable

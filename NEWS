@@ -5,10 +5,9 @@ News
 Version 0.4.1
 ^^^^^^^^^^^^^
 
-    * Internal terminal variables can now be plotted from the netlist
+    * Much better homotopy routines
 
-    * Homotopy (gmin and source) now actually work. The implementation
-      was wrong in previous versions.
+    * Internal terminal variables can now be plotted from the netlist
 
     * Improved documentation (Options and Constant tables, Device categories)
 
