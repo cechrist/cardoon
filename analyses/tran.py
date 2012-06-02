@@ -18,7 +18,7 @@ from integration import BEuler, Trapezoidal
 from globalVars import glVar
 from fsolve import solve, NoConvergenceError
 #import nodalSP
-import nodalUMFPack as nodalSP
+import nodalScipy as nodalSP
 import nodal
 
 class Analysis(ParamSet):

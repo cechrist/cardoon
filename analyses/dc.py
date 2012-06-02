@@ -15,7 +15,7 @@ from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
 from fsolve import solve, NoConvergenceError
 from globalVars import glVar
-import nodalUMFPack as nodalSP
+import nodalScipy as nodalSP
 import nodal
 
 class Analysis(ParamSet):
