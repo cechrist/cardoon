@@ -1,6 +1,7 @@
-# Simple netlist with transmission line
+# Simple netlist with thermal diode
 *.analysis op elemop=1 intvars=1
-.analysis dc device=res:rth param=r start=1k stop=5k num=10 shell=0
+.analysis dc device=res:rth param=r start=1k stop=5k num=2 shell=0
+.options sparse=1
 
 idc:i1 gnd 3 idc=2e-3
 res:r1 3 gnd r=1k

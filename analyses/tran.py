@@ -17,7 +17,8 @@ from analysis import AnalysisError, ipython_drop
 from integration import BEuler, Trapezoidal
 from globalVars import glVar
 from fsolve import solve, NoConvergenceError
-import nodalSP
+#import nodalSP
+import nodalUMFPack as nodalSP
 import nodal
 
 class Analysis(ParamSet):
@@ -167,12 +168,16 @@ class Analysis(ParamSet):
             sV += tran.get_source(timeVec[i])
             # solve equations: use previous time-step solution as an
             # initial guess
+            if i > 1 and glVar.sparse:
+                # Re-use factorized Jacobian
+                xOld -= tran.get_chord_deltax(sV)
             try: 
                 (x, res, iterations) = solve(xOld, sV, 
                                              tran.convergence_helpers)
             except NoConvergenceError as ce:
                 print(ce)
                 return
+
             # Save results
             xOld[:] = x
             if self.saveall:

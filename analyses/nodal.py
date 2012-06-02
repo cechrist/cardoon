@@ -401,9 +401,9 @@ class _NLFunction(object):
             else:
                 print('  <--- Backtracking')
                 # Check if residual was big
-                if res > .1:
-                    # Restore previous better guess
-                    x[:] = x0
+                #if res > 1e-3: (not reliable)
+                # Restore previous better guess
+                x[:] = x0
                 # push _lambda into stack
                 stack.append(_lambda)
                 step *= .5
