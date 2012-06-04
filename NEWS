@@ -2,6 +2,16 @@
 News
 ----
 
+Version 0.4.2
+^^^^^^^^^^^^^
+
+    * New, faster sparse-matrix-based nodal implementation using Scipy
+      library (pysparse no longer needed)
+
+    * Faster (sparse-matrix-based) transient analysis: saves one
+      iteration per time step compared with previous implementation
+
+
 Version 0.4.1
 ^^^^^^^^^^^^^
 

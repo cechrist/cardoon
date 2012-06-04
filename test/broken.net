@@ -1,0 +1,20 @@
+# This netlist generates a singular matrix (for testing purposes)
+
+.analysis tran tstop=200ns tstep=0.5ns im=BE
+.options sparse=1
+
+vpulse:vin vin1 gnd v2 = 3v tr=1ns tf=1ns td=1ns pw=4ns per=10ns
+vdc:vdd 0 3 vdc=3.3
+
+res:R1 vin2 vin1 r=1e3
+cap:c1 vin2 gnd c=1.6pf
+mosekv:m1 1 vout 3 gnd w=10um l=1um type=n 
+mosekv:m2 1 vout 5 gnd w=10um l=1um type=n 
+cap:c2 vout gnd c=1pf
+
+.plot tran vin1
+.plot tran vin2
+.plot tran vout
+
+.end
+

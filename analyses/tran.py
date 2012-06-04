@@ -17,9 +17,8 @@ from analysis import AnalysisError, ipython_drop
 from integration import BEuler, Trapezoidal
 from globalVars import glVar
 from fsolve import solve, NoConvergenceError
-#import nodalSP
-import nodalScipy as nodalSP
 import nodal
+import nodalSP
 
 class Analysis(ParamSet):
     """

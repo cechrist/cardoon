@@ -15,8 +15,8 @@ from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
 from fsolve import solve, NoConvergenceError
 from globalVars import glVar
-import nodalScipy as nodalSP
 import nodal
+import nodalSP
 
 class Analysis(ParamSet):
     """

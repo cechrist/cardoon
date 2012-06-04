@@ -13,31 +13,20 @@ Short-term goals:
 
 Longer term goals and other tasks to be done at some time:
 
-  * Classify device catalog by device type / improve device library
-    organization
-  
   * Consider changing saveOP interface (return value?) for nonlinear devices
   
   * Add netlist variable sweep in DC analysis
   
   * Implement time-step control in transient analysis
 
-  * Implement Harmonic Balance analysis
+  * Implement Harmonic Balance analysis (or equivalent)
 
   * Implement extrinsic model for MOS trasistors using an approach
     similar to the BJT implementation.
   
   * Add "+" notation for multiple lines in parser 
   
-  * Optimize nodal implementation: 
-
-    - Investigate problem with PyTrilinos library that produces
-      segmentation fault
-
-    - Try scikits.umfpack instead of pysparse
-
-    - Optimize matrix filling process
-
+  * Implement sparse-matrix-based AC analysis
 
 
 

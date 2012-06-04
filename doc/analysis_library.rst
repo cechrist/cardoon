@@ -138,7 +138,6 @@ Parameters
  Name         Default      Unit         Description                                          
  =========== ============ ============ ===================================================== 
  elemop       0                         Print element operating points                       
- fullAD       0                         Use CPPAD for entire nonlinear part                  
  intvars      0                         Print internal element nodal variables               
  shell        0                         Drop to ipython shell after calculation              
  =========== ============ ============ ===================================================== 

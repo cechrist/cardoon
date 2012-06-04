@@ -23,13 +23,13 @@ efficient enough to be useful for general use, if possible. The
 program is still at the early development stage but it has already
 enough functionality to be useful for some tasks. It can currently
 simulate circuits with a few thousand nodes in reasonable times. As of
-May 2012, Cardoon is probably the fastest available Python-based
-circuit simulator. The program takes 2.6 times the ngspice time to run
-a transient analysis of the soliton line circuit (3022 nodes), which
-is quite good considering it is running on an interpreter.  If you
-plan to use this program please be aware that as it is developed
-interfaces may have to be changed, sometimes *breaking compatibility
-with earlier versions*.
+June 2012, Cardoon is probably the fastest available Python-based
+circuit simulator. The program takes approximately 1.7 times the
+ngspice time to run a transient analysis of the soliton line circuit
+(3022 nodes), which is quite good considering it is running on an
+interpreter.  If you plan to use this program please be aware that as
+it is developed interfaces may have to be changed, sometimes *breaking
+compatibility with earlier versions*.
 
 State-variable nonlinear device modeling (in the fREEDA sense) is
 supported. A state-variable PN junction model is included. This

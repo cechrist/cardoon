@@ -14,12 +14,13 @@ free libraries are required to run cardoon. In Debian Linux or
 Debian-based distributions (Ubuntu, Linux Mint and others) all of
 these libraries except pycppad can be installed as packages::
 
-  apt-get install python-numpy python-sparse python-matplotlib \
-  python-pyparsing ipython python-sphinx pylint 
+  apt-get install libsuperlu3 python-numpy python-scipy python-matplotlib \
+  python-pyparsing ipython python-sphinx pylint
 
-To install pycppad install cppad first by following the instructions
-on their websites. The corresponding websites for each library are
-listed below:
+I have added libsuperlu3 because I do not see it in the python-scipy
+dependencies.  To install pycppad install cppad first by following the
+instructions on their websites. The corresponding websites for each
+library are listed below:
 
 * pycppad: Automatic differentiation
 
@@ -29,7 +30,7 @@ listed below:
 
 * numpy:  http://numpy.scipy.org/ (matrix and vector support)
 
-* pysparse:  http://pysparse.sourceforge.net/ (sparse matrix support)
+* scipy:  http://www.scipy.org/ (sparse matrix support, FFT, etc.)
 
 * matplotlib:  http://matplotlib.sourceforge.net/ (plotting)
 
