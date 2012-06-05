@@ -26,6 +26,7 @@ class BEuler:
         Set time step size to h. q is ignored as it is not needed
         """
         self.a0 = 1. / h
+        self.qn1 = np.zeros_like(q)
 
     def set_h(self, h):
         """
@@ -37,7 +38,7 @@ class BEuler:
         """
         Accept q as last valid value
         """
-        self.qn1 = np.copy(q)
+        self.qn1[:] = q
 
     def f_n1(self):
         r"""
@@ -65,7 +66,7 @@ class Trapezoidal:
         self.a0 = 2. / h    
         self.qnm1 = np.copy(q)
         if dq == None:
-            self.dqnm1 = np.zeros(len(q))
+            self.dqnm1 = np.zeros_like(q)
         else:
             self.dqnm1 = np.copy(dq)
 

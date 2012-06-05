@@ -8,9 +8,9 @@
 """
 
 from __future__ import print_function
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
 
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
@@ -223,6 +223,17 @@ class Analysis(ParamSet):
                     plt.legend()
         if flag:
             plt.show()
+        flag = False
+        if circuit.saveReqList:
+            saveDict = dict(timeVec = timeVec)
+            for outreq in circuit.saveReqList:
+                if outreq.type == 'tran':
+                    flag = True
+                    for term in outreq.termlist:
+                        saveDict[term.nodeName] = term.tran_v 
+        if flag:
+            # One or more variables should be saved
+            np.savez('tran_out', **saveDict)
 
         def getvec(termname):
             return circuit.termDict[termname].tran_v
