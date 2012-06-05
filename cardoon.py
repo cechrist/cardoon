@@ -149,11 +149,12 @@ if __name__ == "__main__":
     import doc
     print('\nCardoon Circuit Simulator {0} release {1}'.format(doc.version,
                                                                doc.release))
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         print('Usage:')
-        print('        cardoon <netlistname>  : Process netlist file')
-        print('        cardoon -c             : Generate catalogs')
-        print('        cardoon -i             : drop to Ipython shell')
+        print('        cardoon <netlistname>        : Process netlist file')
+        print('        cardoon -c                   : Generate catalogs')
+        print('        cardoon -x <script> <args>   : execute Python script')
+        print('        cardoon -i                   : drop to Ipython shell')
         exit(1)
 
     if sys.argv[1] == '-c':
@@ -162,6 +163,11 @@ if __name__ == "__main__":
         device_catalog()
         analysis_catalog()
         options_const_tables()
+    elif sys.argv[1] == '-x':
+        # Execute python script
+        with open(sys.argv[2], 'r') as f:
+            sys.argv = sys.argv[2:]
+            exec(f)
     elif sys.argv[1] == '-i':
         # drop to ipython shell
         import devices

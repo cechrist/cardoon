@@ -57,49 +57,67 @@ Just unpack the zip file in some directory.
 Usage
 -----
 
-At this moment the main program reads a netlist file, builds the
-circuit described there and runs any specified analyses. Optionally
-some analyses can drop to an ipython shell with access to internal
-variables after calculations are finished for interactive work.
+In the most common usage mode, the main program reads a netlist file,
+builds the circuit described there and runs any specified
+analyses. Optionally some analyses can drop to an ipython shell with
+access to internal variables after calculations are finished for
+interactive work.
+
+Sample session
+++++++++++++++
 
 After the source is installed, change into the cardoon directory and
 run the program with no arguments for a brief help message::
 
-    cechrist@moon:~/wd/cardoon$ python cardoon.py 
+    cechrist@phobos:~/src/cardoon$ python cardoon.py
+    
+    Cardoon Circuit Simulator 0.4 release 0.4.2.dev
     Usage:
-            cardoon <netlistname>  : Process netlist file
-            cardoon -c             : Generate catalogs
-            cardoon -i             : immediatly drop to Ipython shell
+            cardoon <netlistname>        : Process netlist file
+            cardoon -c                   : Generate catalogs
+            cardoon -x <script> <args>   : execute Python script
+            cardoon -i                   : drop to Ipython shell
 
-Then you can change into the test/devices directory and try some of
-the netlists there::
+In this document the first form of execution listed above is
+described. The last two forms allow execution of arbitrary Python code
+with access to the internal simulator classes and are not documented
+here (for now).
 
-    cechrist@moon:~/wd/cardoon$ cd test
-    cechrist@moon:~/wd/cardoon/test$ python ../cardoon.py simple.net
-    Trying Simple Newton's method
+You can change into the test/devices directory and try running a
+netlist from there::
+
+    cechrist@phobos:~/src/cardoon/test$ cardoon bias_npn.net 
+
+    Cardoon Circuit Simulator 0.4 release 0.4.2.dev
     ******************************************************
                  Operating point analysis
     ******************************************************
-    Number of iterations =  3
-    Residual =  2.20086083382e-08
+    
+     # Test of a transistor device 
+    
+    Using dense matrices
+    
+    Number of iterations =  17
+    Residual =  5.72923232187e-06
     
      Node      |  Value               | Unit 
     ----------------------------------------
-    1          |             0.672162 | V
-    2          |              2.67216 | V
+    1          |              3.49951 | V
+    10         |              11.9158 | V
+    2          |              0.80018 | V
+    3          |                 10.0 | V
     gnd        |                  0.0 | V
     
-    Element:  svdiode:d1
-     Variable  |  Value 
-    -------------------------
-        Cd     | 6.69110617079e-05
-        ID     | 0.00193278379487
-      Sshot    | 6.19332180271e-22
-     Sthermal  | 0.0
-        VD     | 0.672162035866
-        gd     | 0.0747260598229
-     kFliker   | 0.0
-        x      | 4.38235965115
+    Element:  svbjt:q1
+    
+        Internal nodal variables:
+    
+        et         :           0.00425608 V
+        ct         :              3.47695 V
+        x2         :             -2.69946 s.v.
+        x1         :              290.954 s.v.
+        Bi         :              0.80005 V
+        ib         :            0.0958315 0.001 A
 
 
 Netlist Format

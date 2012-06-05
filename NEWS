@@ -5,6 +5,8 @@ News
 Version 0.4.2
 ^^^^^^^^^^^^^
 
+    * Added ``-x`` command line option
+
     * New, faster sparse-matrix-based nodal implementation using Scipy
       library (pysparse no longer needed)
 

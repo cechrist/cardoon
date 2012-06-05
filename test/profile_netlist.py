@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-# This script is intended to be run within the cardoon shell:
+# This script can be run within cardoon environment:
+#
+#  cardoon -x profile_netlist.py <netlist file>
+#
+# It can also be run from the iterative shell:
 #
 #  cardoon -i
 #  run -i profile_netlist.py <netlist file>
