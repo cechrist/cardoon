@@ -213,7 +213,9 @@ Profiler results for soliton.net
 
 A profile transient analysis of the soliton line with a matrix size of
 3022 was performed using scipy matrices, optimized matrix filling and
-SuperLU for matrix decomposition. The number of time steps is 501. 
+SuperLU for matrix decomposition. The number of time steps is 501. The
+results shown in the table were obtained in a netbook with an Intel
+Atom processor:
 
    ======  =======  =======  =======  ======= ===========================
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
@@ -255,7 +257,9 @@ Profiler results for sum741_profile.net
 
 A profile transient analysis of the soliton line with a matrix size of
 189 was performed using scipy matrices, optimized matrix filling and
-SuperLU for matrix decomposition. The number of time steps is 101. 
+SuperLU for matrix decomposition. The number of time steps is 101. The
+results shown in the table were obtained in a netbook with an Intel
+Atom processor:
 
    ======  =======  =======  =======  ======= ===========================
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)

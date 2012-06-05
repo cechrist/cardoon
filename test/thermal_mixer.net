@@ -1,7 +1,7 @@
 #*** Complete mixer with thermal filter ***
 # Original netlist developed for carrot circuit simulator
 
-.options reltol=1e-3 abstol=1e-5 maxiter=25 maxdelta=5. sparse=0 temp=20
+.options reltol=1e-3 abstol=1e-5 maxiter=25 maxdelta=5. sparse=1 temp=20
 .analysis tran tstop=15ms tstep=5us shell=0 saveall=0
 
 .plot tran 39 41
