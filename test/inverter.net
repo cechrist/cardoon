@@ -13,6 +13,7 @@ mosekv:m2 out in gnd gnd type = n
 .ends
 
 .plot dc out
+.save dc out
 
 .end
 

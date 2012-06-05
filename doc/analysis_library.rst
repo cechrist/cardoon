@@ -190,10 +190,10 @@ tran: Transient Analysis
 ------------------------
 
 Solves nodal equations starting from ``t=0`` to ``tstop`` with a
-fixed time step (at least for now) equal to ``tstep``. Two
-integration methods are supported: Backwards Euler (``im = BE``)
-and trapezoidal (``im=trap``). Support for frequency-defined
-elements and time delays is not yet included.
+fixed time step equal to ``tstep``. Two integration methods are
+supported: Backwards Euler (``im = BE``) and trapezoidal
+(``im=trap``). Support for frequency-defined elements and time
+delays is not yet included.
 
 Convergence parameters for the Newton method are controlled using
 the global variables in ``.options``. The type of matrix used in

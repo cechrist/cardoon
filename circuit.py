@@ -513,7 +513,7 @@ class OutRequest:
     After initialization the circuit adds a list of terminals in the
     ``termlist`` attribute.
     """
-    validTypes = ['dc', 'ac_mag', 'ac_phase', 'ac_dB', 'tran', 'hb']
+    validTypes = ['dc', 'ac', 'ac_mag', 'ac_phase', 'ac_dB', 'tran', 'hb']
 
     def __init__(self, reqtype, varlist):
         if reqtype not in self.validTypes:

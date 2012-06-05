@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from paramset import ParamSet
 from analysis import AnalysisError, ipython_drop
 
-class Analysis(ParamSet):
+class TestDev(ParamSet):
     """
     Test Equations Of a Nonlinear Device
     ------------------------------------
@@ -224,6 +224,5 @@ class Analysis(ParamSet):
 
         plt.show()
 
-# Here you can add additional functions and classes that only are
-# visible withing this module.
+aClass = TestDev
 

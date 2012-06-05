@@ -11,13 +11,12 @@ from __future__ import print_function
 import numpy as np
 
 from paramset import ParamSet
-from analysis import AnalysisError, ipython_drop
+import analysis 
 import nodal as nd
 from fsolve import solve, NoConvergenceError
-import matplotlib.pyplot as plt
 import sys
 
-class Analysis(ParamSet):
+class ACSweep(ParamSet):
     r"""
     AC Sweep
     --------
@@ -33,8 +32,8 @@ class Analysis(ParamSet):
     are controlled using the global variables in ``.options``.
 
     One plot window is generated for each ``.plot`` statement. Use the
-    following request types for this analysis: ``ac_mag``,
-    ``ac_phase`` or ``ac_dB``.
+    following request types for this analysis: ``ac`` (complex),
+    ``ac_mag``, ``ac_phase`` or ``ac_dB``.
 
     AC formulation documented in :doc:`analysis`
 
@@ -104,65 +103,43 @@ class Analysis(ParamSet):
             fvec = np.logspace(start = np.log10(self.start), 
                                stop = np.log10(self.stop), 
                                num = self.num)
-            pltfunc = plt.semilogx
         else:
             fvec = np.linspace(start = self.start, 
                                stop = self.stop, 
                                num = self.num)
-            pltfunc = plt.plot
 
         # Perform analysis
         nd.run_AC(circuit, fvec)
 
-        # Process output requests.  In the future this should be moved
-        # to a common module that processes output requests such as
-        # plot, print, save, etc.
-        flag = False
-        for outreq in circuit.plotReqList:
-            if outreq.type[:2] == 'ac':
-                flag = True
-                plt.figure()
-                plt.grid(True)
-                plt.xlabel('Frequency [Hz]')
-
-                # First item may be output format
-                pkey = outreq.type[3:]
-                if pkey == 'mag':
-                    f1 = np.abs
-                    unit = ''
-                elif pkey == 'phase':
-                    f1 = lambda v: 180./np.pi * np.angle(v)
-                    unit = 'degrees'
-                elif pkey == 'dB':
-                    f1 = lambda v: 20. * np.log10(v)
-                    unit = 'dB'
-                else:
-                    # should never happen
-                    assert False
-                    
-                for term in outreq.termlist:
-                    pltfunc(fvec, f1(term.aC_V), 
-                            label = 'Term: {0} [{1}]'.format(
-                            term.nodeName, unit + term.unit)) 
-                if len(outreq.varlist) == 1:
-                    plt.ylabel(
-                        'Term: {0} [{1}]'.format(term.nodeName, term.unit))
-                else:
-                    plt.legend()
-        if flag:
-            plt.show()
+        # Process output requests.  
+        analysis.process_requests(circuit, 'ac', 
+                                  fvec, 'Frequency [Hz]',
+                                  'aC_V', log = self.log)
+        analysis.process_requests(circuit, 'ac_mag', 
+                                  fvec, 'Frequency [Hz]',
+                                  'aC_V', lambda x: abs(x), log = self.log)
+        analysis.process_requests(circuit, 'ac_phase', 
+                                  fvec, 'Frequency [Hz]',
+                                  'aC_V', 
+                                  lambda v: 180./np.pi * np.angle(v),
+                                  'degrees', self.log)
+        analysis.process_requests(circuit, 'ac_dB', 
+                                  fvec, 'Frequency [Hz]',
+                                  'aC_V', 
+                                  lambda v: 20. * np.log10(v),
+                                  'dB', self.log)
 
         def getvec(termname):
             return circuit.termDict[termname].aC_V
 
         if self.shell:
-            ipython_drop("""
+            analysis.ipython_drop("""
 Available commands:
     fvec: frequency vector
     getvec(<terminal>) to retrieve AC result vector
-    plt.* to access pyplot commands (plt.plot(x,y), plt.show(), etc.)
 """, globals(), locals())
 
 
 
+aClass = ACSweep
 

@@ -463,6 +463,8 @@ def parse_file(filename, ckt):
     # stack and takes it out when finished. So at any time we can
     # access the current circuit as cktStack[-1]
     cktStack.append(ckt)
+    # Save file name in circuit
+    ckt.filename = filename
 
     try:
         with open(filename, 'r') as f:

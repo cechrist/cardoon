@@ -9,16 +9,15 @@
 
 from __future__ import print_function
 import numpy as np
-import matplotlib.pyplot as plt
 
 from paramset import ParamSet
-from analysis import AnalysisError, ipython_drop
+import analysis 
 from fsolve import solve, NoConvergenceError
 from globalVars import glVar
 import nodal
 import nodalSP
 
-class Analysis(ParamSet):
+class DCSweep(ParamSet):
     """
     DC Sweep
     --------
@@ -117,24 +116,26 @@ class Analysis(ParamSet):
             try:
                 dev = circuit.elemDict[self.device]
             except KeyError: 
-                raise AnalysisError('Could not find: {0}'.format(self.device))
+                raise analysis.AnalysisError(
+                    'Could not find: {0}'.format(self.device))
             if self.param:
                 try:
                     pinfo = dev.paramDict[self.param]
                 except KeyError:
-                    raise AnalysisError('Unrecognized parameter: ' 
-                                        + self.param)
+                    raise analysis.AnalysisError('Unrecognized parameter: ' 
+                                                 + self.param)
                 else:
                     if not pinfo[2] == float:
-                        raise AnalysisError('Parameter must be float: ' 
-                                            + self.param)
+                        raise analysis.AnalysisError(
+                            'Parameter must be float: ' + self.param)
             else:
-                raise AnalysisError("Don't know what parameter to sweep!")
+                raise analysis.AnalysisError(
+                    "Don't know what parameter to sweep!")
             paramunit = pinfo[1]
         else:
             # No device, check if temperature sweep
             if self.param != 'temp':
-                raise AnalysisError(
+                raise analysis.AnalysisError(
                     'Only temperature sweep supported if no device specified')
             paramunit = 'C'
             tempFlag = True
@@ -231,36 +232,21 @@ class Analysis(ParamSet):
             nd.process_nodal_element(dev)
         # -----------------------------------------------------------
 
-        # Process output requests.  In the future this should be moved
-        # to a common module that processes output requests such as
-        # plot, print, save, etc.
-        flag = False
-        for outreq in circuit.plotReqList:
-            if outreq.type == 'dc':
-                flag = True
-                plt.figure()
-                plt.grid(True)
-                plt.xlabel('{0} [{1}]'.format(circuit.dC_var, circuit.dC_unit))
-                for term in outreq.termlist:
-                    plt.plot(sweepvar, term.dC_v, 
-                             label = 'Term: {0} [{1}]'.format(
-                            term.nodeName, term.unit)) 
-                if len(outreq.varlist) == 1:
-                    plt.ylabel(
-                        'Term: {0} [{1}]'.format(term.nodeName, term.unit))
-                else:
-                    plt.legend()
-        if flag:
-            plt.show()
+        # Process output requests.  
+        analysis.process_requests(circuit, 'dc', sweepvar, 
+                                  '{0} [{1}]'.format(circuit.dC_var, 
+                                                     circuit.dC_unit), 
+                                  'dC_v')
 
         def getvec(termname):
             return circuit.termDict[termname].dC_v
 
         if self.shell:
-            ipython_drop("""
+            analysis.ipython_drop("""
 Available commands:
     sweepvar: vector with swept parameter
     getvec(<terminal>) to retrieve results
-    plt.* to access pyplot commands (plt.plot(x,y), plt.show(), etc.)
 """, globals(), locals())
 
+
+aClass = DCSweep

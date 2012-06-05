@@ -10,26 +10,25 @@
 from __future__ import print_function
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 
 from paramset import ParamSet
-from analysis import AnalysisError, ipython_drop
+import analysis 
 from integration import BEuler, Trapezoidal
 from globalVars import glVar
 from fsolve import solve, NoConvergenceError
 import nodal
 import nodalSP
 
-class Analysis(ParamSet):
+class Transient(ParamSet):
     """
     Transient Analysis
     ------------------
 
     Solves nodal equations starting from ``t=0`` to ``tstop`` with a
-    fixed time step (at least for now) equal to ``tstep``. Two
-    integration methods are supported: Backwards Euler (``im = BE``)
-    and trapezoidal (``im=trap``). Support for frequency-defined
-    elements and time delays is not yet included.
+    fixed time step equal to ``tstep``. Two integration methods are
+    supported: Backwards Euler (``im = BE``) and trapezoidal
+    (``im=trap``). Support for frequency-defined elements and time
+    delays is not yet included.
 
     Convergence parameters for the Newton method are controlled using
     the global variables in ``.options``. The type of matrix used in
@@ -98,7 +97,7 @@ class Analysis(ParamSet):
         elif self.im == 'trap':
             imo = Trapezoidal()
         else:
-            raise AnalysisError(
+            raise analysis.AnalysisError(
                 'Unknown integration method: {0}'.format(self.im))
 
         # Create nodal objects and solve for initial state
@@ -202,47 +201,21 @@ class Analysis(ParamSet):
         print('\nAverage iterations: {0}'.format(avei))
         print('Average residual: {0}\n'.format(aver))
 
-        # Process output requests.  In the future this may be moved
-        # to a common module that processes output requests such as
-        # plot, print, save, etc.
-        flag = False
-        for outreq in circuit.plotReqList:
-            if outreq.type == 'tran':
-                flag = True
-                plt.figure()
-                plt.grid(True)
-                plt.xlabel('Time [s]')
-                for term in outreq.termlist:
-                    plt.plot(timeVec, term.tran_v, 
-                             label = 'Term: {0} [{1}]'.format(
-                            term.nodeName, term.unit)) 
-                if len(outreq.varlist) == 1:
-                    plt.ylabel(
-                        'Term: {0} [{1}]'.format(term.nodeName, term.unit))
-                else:
-                    plt.legend()
-        if flag:
-            plt.show()
-        flag = False
-        if circuit.saveReqList:
-            saveDict = dict(timeVec = timeVec)
-            for outreq in circuit.saveReqList:
-                if outreq.type == 'tran':
-                    flag = True
-                    for term in outreq.termlist:
-                        saveDict[term.nodeName] = term.tran_v 
-        if flag:
-            # One or more variables should be saved
-            np.savez('tran_out', **saveDict)
+        # Process output requests.  
+        analysis.process_requests(circuit, 'tran', 
+                                  timeVec, 'Time [s]', 'tran_v')
 
         def getvec(termname):
             return circuit.termDict[termname].tran_v
 
         if self.shell:
-            ipython_drop("""
+            analysis.ipython_drop("""
 Available commands:
     timeVec: time vector
     getvec(<terminal>) to retrieve results (if result saved)
-    plt.* to access pyplot commands (plt.plot(x,y), plt.show(), etc.)
 """, globals(), locals())
+
+
+
+aClass = Transient
 

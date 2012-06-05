@@ -29,7 +29,7 @@ anClass = {}
 
 for modname in analysisList:
     module = __import__(modname, globals(), locals())
-    anClass[module.Analysis.anType] = module.Analysis
+    anClass[module.aClass.anType] = module.aClass
 
 
 

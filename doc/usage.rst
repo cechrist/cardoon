@@ -243,9 +243,23 @@ analysis to perform or another command.
   figure. If an analysis does not recognize a request type, the
   request is ignored.
 
-  At this moment ``.save`` statements just ensure that results for the
-  selected terminals are saved in memory. This behaviour is likely to
-  change in the future.
+  ``.save`` statements save the requested information in a numpy
+  ``.npz`` file. The file name is formed as follows by taking the main
+  netlist file name minus `.net` plus ``_<request name>.npz``. For
+  example, if the netlist file name is ``vsin.net``, the file created
+  for an ``ac`` request is ``vsin_ac.npz``. Data saved in this file
+  can be loaded in a python session using the numpy ``load`` function
+  as follows::
+
+    >>> import numpy as np
+    >>> l=np.load('vsin_ac.npz')
+    >>> l.files
+    ['1', '2', 'xaxis']
+    >>> l['1']
+    array([ 1.00000000 -6.28318278e-06j,  0.99999999 -7.22413241e-06j,
+            0.99999999 -8.30599536e-06j,  0.99999999 -9.54987410e-06j,
+	    ...
+      
 
 * Electrothermal devices: the netlist name for the electrothermal
   model is formed by adding "_t" to the original name (e.g.,

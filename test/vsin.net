@@ -9,6 +9,7 @@ cap:c1 2 0 c=10n
 .plot ac_mag 1 2
 .plot ac_phase 1 2
 .plot ac_dB 1 2
+.save ac 1 2
 
 .end
 

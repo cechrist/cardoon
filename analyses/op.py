@@ -17,7 +17,7 @@ from fsolve import solve, NoConvergenceError
 import nodalSP
 import nodal
 
-class Analysis(ParamSet):
+class DCOP(ParamSet):
     r"""
     DC Operating Point
     ------------------
@@ -143,6 +143,7 @@ Available commands:
 
 
 
+aClass = DCOP
 
 
 

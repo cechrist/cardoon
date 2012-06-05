@@ -14,6 +14,8 @@ http://www.gnu.org/licenses/gpl.html
 
 from globalVars import glVar
 from IPython.Shell import IPShellEmbed
+import numpy as np
+import matplotlib.pyplot as plt
 
 class AnalysisError(Exception):
     """
@@ -40,3 +42,59 @@ def ipython_drop(msg, glo, loc):
         exit_msg = 'Leaving Interpreter, back to program.')
     ipshell(global_ns = glo, local_ns = loc)
 
+
+def process_requests(circuit, reqtype, xaxis, xlabel, attribute, 
+                     f1 = lambda x:x, unitOverride = '', log = False):
+    """
+    Process plot and save output requests
+
+    Arguments:
+
+    circuit: circuit instance with requests
+    reqtype: tran, dc, etc.
+    xaxis: numpy array to use for x axis
+    xlabel: Label for x-axis
+    attribute: attribute to extract from terminals (numpy array)
+    f1: function to apply to attribute
+    unitOverride: override terminal units
+    log: use logarithmic scale
+    """
+    if log:
+        pltfunc = plt.semilogx
+    else:
+        pltfunc = plt.plot
+
+    flag = False
+    for outreq in circuit.plotReqList:
+        if outreq.type == reqtype:
+            flag = True
+            plt.figure()
+            plt.grid(True)
+            plt.xlabel(xlabel)
+            for term in outreq.termlist:
+                if unitOverride:
+                    unit = unitOverride
+                else:
+                    unit = term.unit
+                pltfunc(xaxis, f1(getattr(term, attribute)), 
+                        label = 'Term: {0} [{1}]'.format(term.nodeName, unit)) 
+            if len(outreq.varlist) == 1:
+                plt.ylabel(
+                    'Term: {0} [{1}]'.format(term.nodeName, unit))
+            else:
+                plt.legend()
+    if flag:
+        plt.show()
+    flag = False
+    if circuit.saveReqList:
+        saveDict = {'xaxis': xaxis}
+        for outreq in circuit.saveReqList:
+            if outreq.type == reqtype:
+                flag = True
+                for term in outreq.termlist:
+                    saveDict[term.nodeName] = f1(getattr(term, attribute))
+    if flag:
+        # Take filename minus '.net' and append analysis name
+        outfile = circuit.filename.split('.net')[0] + '_' + reqtype
+        # One or more variables should be saved
+        np.savez(outfile, **saveDict)
