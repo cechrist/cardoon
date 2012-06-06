@@ -7,7 +7,7 @@ For now this is quite rudimentary.
 from __future__ import print_function
 from globalVars import const, glVar
 import circuit as cir
-from netlistparser import parse_file, ParseError, analysisQueue
+from netlistparser import parse_file, ParseError
 from paramset import ParamError
 import analyses
 import os
@@ -20,8 +20,8 @@ def parse_net(filename, ckt = None):
     """
     if not ckt:
         ckt = cir.get_mainckt()
-    parse_file(filename, ckt)
-    return analysisQueue
+    return parse_file(filename, ckt)
+
 
 
 def run_analyses(analysisQueue, ckt = None):

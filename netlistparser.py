@@ -43,7 +43,14 @@ class NetVarException(Exception):
 cktStack = []
 
 # Queue to hold analyses to be processed
-analysisQueue = []
+class Queue:
+    def __init__(self):
+        self.q = []
+
+    def reset(self):
+        self.q = []
+
+analysisQueue = Queue()
 
 # Characters allowed in parameter strings
 allowedChars = '._/+-:'
@@ -316,7 +323,7 @@ def parse_analysis(tok):
     # set attributes with parameter values plus defaults
     an.set_attributes()
     # Add analysis to queue
-    analysisQueue.append(an)
+    analysisQueue.q.append(an)
 
 
 def parse_plot(tok):
@@ -463,6 +470,8 @@ def parse_file(filename, ckt):
     # stack and takes it out when finished. So at any time we can
     # access the current circuit as cktStack[-1]
     cktStack.append(ckt)
+    # Clean queue
+    analysisQueue.reset()
     # Save file name in circuit
     ckt.filename = filename
 
@@ -531,3 +540,5 @@ def parse_file(filename, ckt):
             f.close()
     except IOError as ioe:
         raise ParseError('Parse error -> ' + str(ioe))
+
+    return analysisQueue.q

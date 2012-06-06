@@ -94,7 +94,7 @@ def process_requests(circuit, reqtype, xaxis, xlabel, attribute,
                 for term in outreq.termlist:
                     saveDict[term.nodeName] = f1(getattr(term, attribute))
     if flag:
-        # Take filename minus '.net' and append analysis name
+        # Take filename minus '.net' and append request name
         outfile = circuit.filename.split('.net')[0] + '_' + reqtype
         # One or more variables should be saved
         np.savez(outfile, **saveDict)

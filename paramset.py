@@ -196,6 +196,14 @@ class ParamSet:
 
     # Conversion to attributes ----------------------------------------
 
+    def reset(self):
+        """
+        Reset to default state
+        """
+        self.valueDict = dict()
+        self.varDict = dict()
+        self.clean_attributes()
+
     def clean_attributes(self):
         """
         Delete parameter attributes
