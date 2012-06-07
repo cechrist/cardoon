@@ -1,6 +1,6 @@
 # 5 nA CMOS Current source reference using ACM model
 
-.analysis dc param=temp start=-20C stop=90C 
+.analysis dc param=temp start=-20C stop=90C shell=1
 
 # -------------------------------------------------------------------
 # Supply/current mirrors
@@ -26,7 +26,9 @@ mosacms:m4 3 4 gnd gnd  model=n_typ l=98.56u w=1u
 .model n_typ mosacms (type=n vth=500m isq=85n tcv=.75m bex=-1.8)
 .model p_typ mosacms (type=p vth=-700m isq=25n)
 
-.save dc 6 3 2 4
+.plot dc 6
+.plot dc 3
+.plot dc 2 4
 
 .end
 

@@ -12,6 +12,16 @@ from paramset import ParamError
 import analyses
 import os
 
+def reset_all():
+    """
+    Clean all circuits and reset global options
+    """
+    # Set global variables to default values
+    glVar.reset()
+    glVar.set_attributes()
+    # Erase circuits
+    cir.reset_allckt()
+
 def parse_net(filename, ckt = None):
     """
     Parse netlist file given in filename. If ckt is not given it

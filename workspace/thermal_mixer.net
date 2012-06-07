@@ -4,9 +4,11 @@
 # Needs more relaxed tolerance due to thermal ports. 
 # (This has to be addresed in the future)
 .options reltol=1e-3 abstol=1e-5 maxiter=140 maxdelta=5. sparse=1 temp=20
-.analysis tran tstop=5ms tstep=5us shell=0 saveall=0
+.analysis tran tstop=15ms tstep=5us shell=0 saveall=0
 
-.save tran 39 41 1001 1003 12 21
+.plot tran 39 41
+.plot tran 1001 1003
+.plot tran 12 21
 
 # -------------------------------------------------------------------------
 # Supplies and sources

@@ -25,6 +25,7 @@ Developer's Manual
    :maxdepth: 2
 
    coding
+   testing
    adding_devices
    circuit_ref
    analysis

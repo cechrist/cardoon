@@ -34,7 +34,7 @@ The netlist is the following::
 
 Running this netlist produces the following output::
 
-    cechrist@phobos:~/src/cardoon/test$ cardoon inverter.net
+    cechrist@phobos:~/src/cardoon/examples$ cardoon inverter.net
     ******************************************************
                      DC sweep analysis
     ******************************************************
@@ -87,7 +87,7 @@ Netlist::
 
 Running this netlist produces::
 
-    cechrist@phobos:~/src/cardoon/test$ cardoon oscillator.net
+    cechrist@phobos:~/src/cardoon/examples$ cardoon oscillator.net
     ******************************************************
                      Transient analysis
     ******************************************************
@@ -222,7 +222,7 @@ identical circuits are used::
 
 Run netlist::
 
-    cechrist@phobos:~/src/cardoon/test$ cardoon tlinpy.net 
+    cechrist@phobos:~/src/cardoon/examples$ cardoon tlinpy.net 
     ******************************************************
                      AC sweep analysis
     ******************************************************

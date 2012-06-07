@@ -9,7 +9,7 @@ vdc:vin in gnd
 mosacm:m1 out in 1 1 type = p
 mosacm:m2 out in gnd gnd type = n
 
-.save dc out
+.plot dc out
 
 .end
 

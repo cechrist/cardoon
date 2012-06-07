@@ -14,8 +14,8 @@ svdiode:d10 30 gnd cj0=1e-12
 
 .analysis ac start=1GHz stop=5GHz num=200 log=False shell=0
 
-.save ac 2 20
-.save ac 3 30
+.plot ac_mag 2 20
+.plot ac_mag 3 30
 
 .end
 

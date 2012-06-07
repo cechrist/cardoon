@@ -1,7 +1,7 @@
 # Test of an electrothermal BJT
 
 .options temp=25
-.analysis dc device=vdc:vb param=vdc start=0 stop=12 shell=0
+.analysis dc device=vdc:vb param=vdc start=0 stop=12 shell=1
 
 .model mynpn svbjt_t (bf=200 vaf=100 ikf=10e-3 rb=1k)
 
@@ -14,7 +14,8 @@ svbjt_t:q1 1 2 0 0 t1 gnd model=mynpn
 
 res:rth t1 0 r=100.
 
-.save dc t1 1 2
+.plot dc t1 
+.plot dc 1 2 
 
 .end
 

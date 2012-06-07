@@ -1,33 +1,28 @@
 #!/usr/bin/python
+#
+# This script should be run within cardoon environment
 
-# This script can be run within cardoon environment:
-#
-#  cardoon -x run_tests.py [-g]
-#
 
 import sys
 import os
 import numpy as np
 
-netlists = ['sum741_profile.net', 'soliton.net']
-usage = '\nUsage: cardoon -x run_tests.py [-g]'
 flag = False
-
 # Check arguments
-if len(sys.argv) == 2:
-    if sys.argv[1] != '-g':
-        print(usage)
+if len(sys.argv) >= 2:
+    if sys.argv[1] == '-g':
+        if len(sys.argv) == 2:
+            print('\nUsage: cardoon -x run_tests.py [-g] <netlists>')
+        else:
+            # Re-generate output data
+            netlists = sys.argv[2:]
+            flag = True
+            print('\n=======================================================')
+            print(' Re-generating reference results.')
+            print(' *Existing results are being erased*')
+            print('\n=======================================================')
     else:
-        # Re-generate output data
-        flag = True
-        print('\n=======================================================')
-        print(' Re-generating reference results.')
-        print(' Existing results *will be erased*')
-        print('\n=======================================================')
-elif len(sys.argv) > 1:
-    print(usage)
-
-
+        netlists = sys.argv[1:]
 
 for net in netlists:
     circuit = cir.get_mainckt()
@@ -49,14 +44,35 @@ for net in netlists:
         files = [name for name in os.listdir('.') 
                  if (name.find(basename) == 0) and (name.find('_ref.npz') > 0)]
         residual = 0.
+        if not files:
+            print('\nFatal: no reference files for {0}'.format(net))
+            print('\n*** Test Failed! ***')
+            exit(-1)
         for reffile in files:
             delta = 0.
             # Look for corresponding output file
             outfile = reffile.replace('_ref','')
-            refResult = np.load(reffile)
-            result = np.load(outfile)
+            try:
+                refResult = np.load(reffile)
+            except IOError:
+                print('\nProblem reading reference file: {0}'.format(reffile))
+                print('\n*** Test Failed! ***')
+                exit(-1)
+            try:
+                result = np.load(outfile)
+            except IOError:
+                print('\nProblem reading reference file: {0}'.format(outfile))
+                print('\n*** Test Failed! ***')
+                exit(-1)
+
             for var in refResult.files:
-                delta = refResult[var] - result[var]
+                try:
+                    delta = refResult[var] - result[var]
+                except KeyError:
+                    print('\nError: "{0}" not found in {1}'.format(
+                            var, outfile))
+                    print('\n*** Test Failed! ***')
+                    exit(-1)
                 res = np.max(abs(delta))
                 residual += res
                 if not np.all(abs(delta) < (abs(glVar.reltol * refResult[var])
@@ -70,15 +86,11 @@ Reference file: {0}, Variable: {1}, Residual: {2}
                     raise Exception(message)
         print('\n=======================================================')
         print(' Success: {0}'.format(net))
-        print(' Sum of residuals: {0}'.format(res))
+        print(' Sum of residuals: {0}'.format(residual))
         print('=======================================================\n')
 
     # Reset everything
-    # Set global variables to default values
-    glVar.reset()
-    glVar.set_attributes()
-    # Erase circuits
-    cir.reset_allckt()
+    reset_all()
 
 if not flag:
     print('\n============================================================')

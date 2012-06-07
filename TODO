@@ -4,14 +4,14 @@ Action Plan (TODO file)
 
 Short-term goals:
 
-  #. Add automatic test suite
-  
   #. Add support for convolution of freq-defined elements and implement
      time delay support in transient analysis
   
   #. Finish implementation of nodal analysis of independent subcircuits
 
 Longer term goals and other tasks to be done at some time:
+
+  * Convert into Python library with easy-to-use setup script
 
   * Consider changing saveOP interface (return value?) for nonlinear devices
   

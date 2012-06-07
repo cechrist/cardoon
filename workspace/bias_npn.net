@@ -2,7 +2,7 @@
 
 .options temp=29.1439 sparse= 0
 .analysis op intvars=1 shell=0
-.analysis dc device=vdc:vb param=vdc start=0 stop=12 
+*.analysis dc device=vdc:vb param=vdc start=0 stop=12 shell=True
 
 .model t122 svbjt (type=npn isat=0.480e-15 nf=1.008 bf=99.655 vaf=90.000 \
 ikf=0.190 \
@@ -20,8 +20,6 @@ vdc:vb 3 0 vdc=10
 res:rb 3 2 r=96k
 
 svbjt:q1 1 2 0 0 model=t122
-
-.save dc 1 2
 
 .end
 

@@ -150,6 +150,7 @@ class Transient(ParamSet):
         dots = 50
         print('System dimension: {0}'.format(circuit.nD_dimension))
         print('Number of samples: {0}'.format(nsamples))
+        print('Integration method: {0}'.format(self.im))
         if self.verbose:
             print('-------------------------------------------------')
             print(' Step    | Time (s)     | Iter.    | Residual    ')

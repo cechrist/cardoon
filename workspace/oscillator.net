@@ -22,10 +22,10 @@ vje=0.700 mje=0.220 fc=0.890 cjc=1.050e-12 vjc=0.610 mjc=0.240 xcjc=0.400 \
 tf=56.940e-12 tr=1.000e-9 xtf=68.398 vtf=0.600 itf=0.700 xtb=1.600 \
 eg=1.110 xti=3.000 re=0.500 rc=2.680)
 
-.analysis tran tstop=50ns tstep=40ps im=trap shell=0
+.analysis tran tstop=50ns tstep=40ps im=trap shell=1
 .options sparse=0
 
-.save tran 2 3
+.plot tran 2 3
 
 .end
 

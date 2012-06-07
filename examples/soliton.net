@@ -1,8 +1,5 @@
 #### Classic soliton line netlist #######
 
-# WARNING: this netlist simulates very slowly as sparse matrix support
-# is not yet included in Cardoon.
-
 * NLTL with 24.00 GHz initial Bragg frequency,
 * 225.00 GHz final Bragg frequency and 0.952097 tapering rule,
 * and 120.00 ps total compression.

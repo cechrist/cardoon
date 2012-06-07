@@ -1,3 +1,24 @@
 
-This directory contains various files used for testing purposes.
+The tests contained in this directory should be run after making
+modifications to the program to ensure that there are no
+regressions. All tests must be successful before committing changes to
+the main repository.  Ideally, every time that a new feature is added
+to the simulator, a netlist testing the feature and the corresponding
+results should be added to this directory.
+
+In order to run the tests, a set of reference result files (*_ref.npz)
+is used by the test script to verify that the results produced by
+the netlists match. These results are not available in the main
+repository, but they can be downloaded from:
+
+     http://vision.lakeheadu.ca/cardoon/reference_results.tar.gz
+
+To test an individual netlist::
+
+   ../cardoon.py -x run_tests.py <netlist name>
+
+To perform all automated tests, run the following::
+
+   ../cardoon.py -x run_tests.py *.net
+
 

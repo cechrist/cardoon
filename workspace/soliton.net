@@ -7,10 +7,9 @@
 .vars f0=9.GHz 
 
 .options sparse=1
-# Short stop time 
 .analysis tran tstop=0.05ns tstep=.1ps verbose=0 im=trap
 
-.save tran 202 4 17 48
+.save tran 202 147 48
 
 *
 * For 27dBm input use vac = 14V

@@ -83,10 +83,10 @@ described. The last two forms allow execution of arbitrary Python code
 with access to the internal simulator classes and are not documented
 here (for now).
 
-You can change into the test/devices directory and try running a
-netlist from there::
+To run one netlist, change into the ``cardoon/workspace`` directory
+and execute the program as follows::
 
-    cechrist@phobos:~/src/cardoon/test$ cardoon bias_npn.net 
+    cechrist@phobos:~/src/cardoon/workspace$ cardoon bias_npn.net 
 
     Cardoon Circuit Simulator 0.4 release 0.4.2.dev
     ******************************************************

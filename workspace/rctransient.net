@@ -1,14 +1,14 @@
-### RC transient netlist ###
+### RC plus diode transient netlist ###
 
 ipulse:iin 0 1 i1=-.1mA i2=1mA pw=3n per=10n tr=.5n tf=.5n td=.5n
 
+diode:d1 1 2 rs = 200. cj0=1p
 res:r1 1 2 r=5k
 cap:c1 2 0 c=2p
 res:r2 2 0 r=10k
 
-.options sparse = 0
 .analysis tran tstop=20n tstep=.1n im=trap verbose=0
 
-.save tran 1 2
+.plot tran 1 2
 
 .end

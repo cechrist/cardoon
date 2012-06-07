@@ -5,6 +5,8 @@ News
 Version 0.4.2
 ^^^^^^^^^^^^^
 
+    * Added automatic test suite
+
     * Added ``-x`` command line option
 
     * New, faster sparse-matrix-based nodal implementation using Scipy
@@ -12,6 +14,8 @@ Version 0.4.2
 
     * Faster (sparse-matrix-based) transient analysis: saves one
       iteration per time step compared with previous implementation
+
+    * Other minor improvements
 
 
 Version 0.4.1

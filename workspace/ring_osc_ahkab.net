@@ -22,7 +22,7 @@ vpulse:vdd2 20 0 v1=2 v2=2.5 tr=.1n
 
 .options sparse=0
 .analysis tran tstop=4n tstep=.02n im=trap verbose=0
-.save tran 1 3 4
+.plot tran 1 3 4
 
 .end
 
