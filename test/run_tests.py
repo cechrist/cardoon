@@ -23,6 +23,9 @@ if len(sys.argv) >= 2:
             print('\n=======================================================')
     else:
         netlists = sys.argv[1:]
+else:
+    print('\nNo netlist specified, exiting ...')
+    exit(-1)
 
 for net in netlists:
     circuit = cir.get_mainckt()
