@@ -50,23 +50,6 @@ class Device(cir.Element):
     #
     numTerms = 4
     
-    # Flags: at least one should be enabled for other than
-    # linear R, L, C, M, or linear controlled sources
-    #
-    # isNonlinear = True
-    # needsDelays = True
-    # isFreqDefined = True
-    # isDCSource = True
-    # isTDSource = True
-    # isFDSource = True
-
-    # Nonlinear device attributes
-    # csOutPorts = ((0, 2), )
-    # csContPorts = ((0, 3), (1, 3), (2, 3))
-    # qsOutPorts = ( )
-    # qsContPorts = ( )
-    # csDelayedContPorts = ( )
-
     paramDict = dict(
         cir.Element.tempItem,
         g = ('Linear transconductance', 'S', float, 1e-3),

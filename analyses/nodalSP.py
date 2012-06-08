@@ -527,11 +527,10 @@ class TransientNodal(_NLFunctionSP):
         # Init base class
         super(TransientNodal, self).__init__()
 
-        # Save ckt instance
-        self.ckt = ckt
         # Make sure circuit is ready (analysis should take care)
         assert ckt.nD_ref
-
+        # Save circuit and integration method instance
+        self.ckt = ckt
         self.im = im
 
         # Allocate matrices/vectors

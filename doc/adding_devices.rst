@@ -371,10 +371,10 @@ not specified, the initial guess is set to zero.
 
     controlPorts = [(1, 0), (1, 2)]
 
-* Time-delayed port voltages (``csDelayedContPorts``): optional, if
+* Time-delayed port voltages (``delayedContPorts``): optional, if
   ``needsDelays`` is ``True``, list port voltages in triplet format::
 
-    csDelayedContPorts = [(n1, n2, delay1), (n3, n4, delay2)]
+    delayedContPorts = [(n1, n2, delay1), (n3, n4, delay2)]
 
 Similar vectors are required for output ports of charge sources
 (``qsOutPorts``). Some of these could be empty and can be modified by

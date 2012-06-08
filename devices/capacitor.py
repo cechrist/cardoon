@@ -39,23 +39,6 @@ class Device(cir.Element):
     #
     numTerms = 2
     
-    # Flags: at least one should be enabled for other than
-    # linear R, L, C, M
-    #
-    # isNonlinear = True
-    # needsDelays = True
-    # isFreqDefined = True
-    # isDCSource = True
-    # isTDSource = True
-    # isFDSource = True
-
-    # Nonlinear device attributes
-    # csOutPorts = ((0, 2), )
-    # csContPorts = ((0, 3), (1, 3), (2, 3))
-    # qsOutPorts = ( )
-    # qsContPorts = ( )
-    # csDelayedContPorts = ( )
-
     paramDict = dict(
         c = ('Capacitance', 'F', float, 0.)
         )

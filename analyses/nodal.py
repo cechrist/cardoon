@@ -197,8 +197,17 @@ def process_nodal_element(elem):
     # Convert nonlinear device descriptions to a format more
     # readily usable for the NA approach
     if elem.isNonlinear:
-        # Control voltages
-        (elem.nD_vpos, elem.nD_vneg) = create_list(elem.controlPorts)
+        if elem.needsDelays:
+            # Delayed control voltages (not needed in this form)
+            # (elem.nD_dpos, elem.nD_dneg) = create_list(elem.delayedContPorts)
+            # Store delays
+            elem.nD_delay = np.array([x1[2] for x1 in elem.delayedContPorts])
+            # Control voltages plus delayed ports
+            (elem.nD_vpos, elem.nD_vneg) = create_list(elem.controlPorts
+                                                       + elem.delayedContPorts)
+        else:
+            # Control voltages
+            (elem.nD_vpos, elem.nD_vneg) = create_list(elem.controlPorts)
         # Current source terminals
         (elem.nD_cpos, elem.nD_cneg) = create_list(elem.csOutPorts)
         # Charge source terminals
@@ -729,11 +738,10 @@ class TransientNodal(_NLFunction):
         # Init base class
         super(TransientNodal, self).__init__()
 
-        # Save ckt instance
-        self.ckt = ckt
         # Make sure circuit is ready (analysis should take care)
         assert ckt.nD_ref
-
+        # Save circuit and integration method instance
+        self.ckt = ckt
         self.im = im
 
         # Allocate matrices/vectors
