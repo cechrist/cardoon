@@ -5,12 +5,13 @@ Main simulator program
 For now this is quite rudimentary. 
 """
 from __future__ import print_function
+import os
+import time
 from globalVars import const, glVar
 import circuit as cir
 from netlistparser import parse_file, ParseError
 from paramset import ParamError
 import analyses
-import os
 
 def reset_all():
     """
@@ -46,7 +47,10 @@ def run_analyses(analysisQueue, ckt = None):
     if analysisQueue:
         for an in analysisQueue:
             try:
+                start = time.clock()
                 an.run(ckt)
+                elapsed = time.clock() - start
+                print('{0} analysis time: {1} s\n'.format(an.anType, elapsed))
             except analyses.AnalysisError as ae:
                 print(ae)
     else:
