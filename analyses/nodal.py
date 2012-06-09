@@ -125,6 +125,8 @@ def make_nodal_circuit(ckt, reference='gnd'):
     ckt.nD_dimension = len(ckt.nD_termList)
     # Number of external terminals excluding reference
     ckt.nD_nterms = len(ckt.termDict.values()) - 1
+    # Maximum delay in circuit
+    ckt.nD_maxDelay = 0.
 
     # Create specialized element lists
     ckt.nD_nlinElem = filter(lambda x: x.isNonlinear, ckt.nD_elemList)
@@ -202,6 +204,9 @@ def process_nodal_element(elem):
             # (elem.nD_dpos, elem.nD_dneg) = create_list(elem.delayedContPorts)
             # Store delays
             elem.nD_delay = np.array([x1[2] for x1 in elem.delayedContPorts])
+            maxD = np.amax(elem.nD_delay)
+            if maxD > cir.nD_maxDelay:
+                cir.nD_maxDelay = maxD
             # Control voltages plus delayed ports
             (elem.nD_vpos, elem.nD_vneg) = create_list(elem.controlPorts
                                                        + elem.delayedContPorts)

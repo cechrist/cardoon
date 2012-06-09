@@ -20,7 +20,8 @@ class Device(cir.Element):
     ----------------------------------------------------
 
     Model derived from fREEDA 1.4 MesfetCT device by Carlos
-    E. Christoffersen and Hector Gutierrez.
+    E. Christoffersen and Hector Gutierrez. ---> modify this to carrot
+    model: 2 diode juntions plus a current source for ids.
 
     Terminal order: 0 Drain, 1 Gate, 2 Source::
 
@@ -41,6 +42,22 @@ class Device(cir.Element):
     Netlist example::
 
         mesfetc:m1 2 3 4 a0=0.09910 a1=0.08541 a2=-0.02030 a3=-0.01543
+
+    Internal Topology::
+
+                   ,----------------,-------------,--------,--o 0 (D)
+                   |                |             |        |
+                  /^\               |             |        |
+                 ( | ) igd(Vgd)   ----- Cgd       |        |
+                  \|/             -----           |        |
+                   |                |             |       /|\
+        (G) 1 o----+----------------,      Cds  -----    ( | ) ids(Vgs, Vgd)
+                   |                |           -----     \V/               
+                  /|\               |             |        |
+                 ( | ) igs(Vgs)   ----- Cgs       |        |
+                  \V/             -----           |        |
+                   |                |             |        |
+                   `----------------'-------------'--------'--o 2 (S)
 
     """
     # Device category
@@ -94,14 +111,14 @@ class Device(cir.Element):
 
     isNonlinear = True
 
-    # For now only one current source between D and S
-    csOutPorts = [(0, 2)]
-    # Controling voltages are DB, GB and SB
-    controlPorts = [(0, 3), (1, 3), (2, 3)]
+    # igs, igd, ids
+    csOutPorts = [(1, 2), (1, 0), (0, 2)]
+    # Controling voltages are Vgs, Vgd
+    controlPorts = [(1, 2), (1, 0)]
+    # Time-delayed control port added later. Guess includes time-delayed port
     vPortGuess = np.array([0., 0., 0.])
-    # No charge sources defined by now
-    qsOutPorts = [ ]
-    # No time-delayed port voltages required
+    # charge sources
+    qsOutPorts = [(1, 2), (1, 0), (0, 2)]
 
     def __init__(self, instanceName):
         """
@@ -116,14 +133,12 @@ class Device(cir.Element):
         # here. Internal terminals/devices should also be defined
         # here.  Raise cir.CircuitError if a fatal error is found.
         ad.delete_tape(self)
+        # Time-delayed control port
+        self.delayedContPorts = [(1, 2, self.t)]
 
-        if self.type == 'n':
-            self._tf = 1.
-        elif self.type == 'p':
-            self._tf = -1.
-        else:
-            raise cir.CircuitError(
-                '{0}: unrecognized type: {1}. Valid types are "n" or "p"'.format(self.nodeName, self.type))
+        self._k2 = self.cgs0 / sqrt(1. - self.fcc);
+        self._k3 = self.cgd0 / sqrt(1. - self.fcc);
+        self._bm1 = self.b - 1.;
 
         if not thermal:
             # Calculate temperature-dependent variables
@@ -135,66 +150,77 @@ class Device(cir.Element):
         Calculate temperature-dependent variables, given temp in deg. C
         """
         ad.delete_tape(self)
-
         # Absolute temperature (note self.temp is in deg. C)
         T = const.T0 + temp
         # Thermal voltage
-        self.Vt = const.k * T / const.q
+        self._Vt = const.k * T / const.q
+        delta_T = temp - self.tnom
+        tn = T / (self.tnom + const.T0)
+        self._k5 = self.n  * self._Vt
+        self._k6 = self.nr * self._Vt
+        self._Vt0 = self.vt0 * (1. + (delta_T * self.avt0) 
+                                + (delta_T**2 * self.bvt0))
+        if (self.tbet):
+            self._Beta = self.beta * pow(1.01, (delta_T * self.tbet))
+        else:
+            self._Beta = self.beta
+        Ebarr = self.eg -.000702 * T * T / (T + 1108.)
+        EbarrN = eg -.000702 * tnom * tnom / (tnom + 1108.)
+        Nn = 1. / 38.696 / self._Vt
+        self._Is = self.isat * np.exp((tn - 1.) * Ebarr / Nn / Vt)
+        if (self.xti):
+            self._Is *= pow(tn, xti / Nn)
+        self._Vbi = self.vbi * tn -3. * Vt * np.log(tn) + tn * EbarrN - Ebarr
+        self._k1 = self.fcc * self._Vbi
+        self._k4 = 2. * Vbi * (one - fcc)
         
 
     def eval_cqs(self, vPort, saveOP = False):
         """
-        Calculates drain current. Input is a vector as follows:
-        vPort = [vdb , vgb , vsb]
+        Calculates gate and drain current. Input is a vector as follows:
+        vPort = [vgs(t), vgd(t), vgs(t-td)]
 
         If saveOP = True, return normal output vector plus operating
         point variables in tuple: (iVec, qVec, opV)
         """
-        # Invert all voltages in case of a P-channel device
-        vPort1 = self._tf * vPort
-        # The following formula (11.2.10) seems to work better
-        # but it is just an approximation
-        vp = pow(np.sqrt(vPort1[1]-self.vt0 \
-                             + pow(np.sqrt(2.*self.phi)+\
-                                       .5*self.gamma, 2))\
-                     - .5*self.gamma, 2) - 2.*self.phi
-        
-        # Normalized currents.  
-        i_f = inv_f((vp - vPort1[2]) / self.Vt)
-        i_r = inv_f((vp - vPort1[0]) / self.Vt)
-        
-        # Calculate IS at this point
-        # All this not needed if we just want IS
-        eox = 34.5e-12
-        cox = eox / self.tox
-        mu0 = self.kp / cox
-        mus = mu0 / (1. + self.theta * np.sqrt(vp + 2.*self.phi))
-        chi = self.Vt * mus / self.l / self.vsat
-        
-        # From Page 464, also (A.2.3.2d)
-        n = 1. + self.gamma / 2. / np.sqrt(2.*self.phi + vp)
-        
-        # Here kp = u0 Cox
-        # 1 / (1 + theta*sqrt(vp+2*phi)) accounts for effective mobility
-        IS = self.kp / (1. + self.theta*np.sqrt(vp+2.*self.phi))\
-            * n * self.Vt * self.Vt / 2. * self.w/self.l
-        
-        # Get drain current (including vsat effect)
-        # 1/(1 + chi * abs(sqrt(1+i_f)-sqrt(1+i_r))) is the velocity
-        # saturation factor. It needs absolute value to work with
-        # reverse biasing
-        idrain = IS * (i_f - i_r) \
-            / (1. + chi * np.abs(np.sqrt(1.+i_f)-np.sqrt(1.+i_r))) * self._tf
+        # static igs current
+        igs = self._Is * (np.exp(vPort[0] / self._k5) - 1.) \
+            - self.ib0 * np.exp(-(vPort[0] + self.vbd) / self._k6)
+      
+        # # Calculate cgs, including temperature effect.
+        # condassign(cgs, k1 - vPort[0],
+      	# cgs0 / sqrt(one - vPort[0] / Vbi), k2 * (one + (vPort[0] - k1) / k4))
+        # cgs *= (one + m * (0.0004 * delta_T + one - Vbi / vbi))
+      
+        # static igd current
+        igd = self._Is * (np.exp(vPort[1] / self._k5) - 1.) \
+            - self.ib0 * np.exp(-(vPort[1] + self.vbd) / self._k6)
+      
+        # Power dissipated on this junction
+        ip[2] -= igd * vPort[1]
+      
+        # Calculate cgd, including temperature effect.
+        condassign(cgd, k1 - vPort[1],
+      	cgd0 / sqrt(one - vPort[1] / Vbi), k3 * (one + (vPort[1] - k1) / k4))
+        cgd *= (one + m * (0.0004 * delta_T + one - Vbi / vbi))
+      
+      	# Calculate the total current igd = static + dq_dt
+        igd += cgd * x[4]
+      
+        # Calculate ids. Include temperature effects.
+        vx = x[5] * (one + Beta * (vds0 - vp[1]))
+      
+        itmp = (a0 + vx*(a1 + vx*(a2 + vx  * a3)))* tanh(gama * vp[1])
+        condassign(ids, (itmp * vp[1]) * (vPort[0] - Vt0), itmp, zero)
+      
+        if (tme && tm)
+          ids *= pow((1 + delta_T * tm), tme)
 
-        iVec, qVec = np.array([idrain]), np.array([])
 
-        if saveOP:
-            # Create operating point variables vector
-            opV = np.array([vp, i_f, i_r, IS, n])
-            return (iVec, qVec, opV)
-        else:
-            # Return numpy array with one element per current source.
-            return (iVec, qVec)
+
+
+        # Return numpy array with one element per current source.
+        return (iVec, qVec)
 
 
     # Use AD for eval and deriv function

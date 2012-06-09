@@ -350,19 +350,6 @@ The following attributes are required for nonlinear models::
   isNonlinear = True
   needsDelays = True or False
 
-An optional attribute, ``vPortGuess`` is a numpy vector with a valid
-set of controlling voltages to be used as an initial guess. If this is
-not specified, the initial guess is set to zero.
-
-* Current source output ports (``csOutPorts``): for each current
-  source in the device, list ports as follows: ``(n1, n2)``. Current
-  flows from ``n1`` to ``n2``.
-  
-  Example for a 3-terminal BJT with BE and CE current sources,
-  assuming teminals are connected C (0) - B (1) - E (2)::
-  
-    csOutPorts = [(1, 2), (0, 2)]
-
 * Controlling ports (``controlPorts``): list here all ports whose
   voltages are needed to calculate the nonlinear currents / charges in
   same format.
@@ -376,12 +363,28 @@ not specified, the initial guess is set to zero.
 
     delayedContPorts = [(n1, n2, delay1), (n3, n4, delay2)]
 
-Similar vectors are required for output ports of charge sources
-(``qsOutPorts``). Some of these could be empty and can be modified by
-``process_params()`` according to parameter values.
+* An optional attribute, ``vPortGuess`` is a numpy vector with a valid
+  set of controlling (plus time-delayed) voltages to be used as an
+  initial guess. If this is not specified, the initial guess is set to
+  zero.
 
-* The nonlinear model equations that are dependent on the control port
-  voltages are implemented in the following function::
+* Current source output ports (``csOutPorts``): for each current
+  source in the device, list ports as follows: ``(n1, n2)``. Current
+  flows from ``n1`` to ``n2``.
+  
+  Example for a 3-terminal BJT with BE and CE current sources,
+  assuming teminals are connected C (0) - B (1) - E (2)::
+  
+    csOutPorts = [(1, 2), (0, 2)]
+
+* A similar vector is required for output ports of charge sources
+  (``qsOutPorts``). 
+
+Some of these attributes could be empty or can be modified by
+``process_params()`` according to parameter values.  
+
+Nonlinear model equations that are dependent on the control port
+voltages are implemented in the following function::
 
       def eval_cqs(self, vPort, saveOP=False):
           """
@@ -402,35 +405,36 @@ Similar vectors are required for output ports of charge sources
           else:
               return (iVec, qVec)
 
-  The ``saveOP`` argument is optional and may be ommitted if it is
-  never needed. ``vPort`` contains control port voltages (or state
-  variables) in the order defined by ``controlPorts``, followed by any
-  voltages defined in ``csDelayedContPorts``.
+The ``saveOP`` argument is optional and may be ommitted if it is never
+needed. ``vPort`` contains control port voltages (or state variables)
+in the order defined by ``controlPorts``, followed by any voltages
+defined in ``csDelayedContPorts``.
 
-  The variables in ``iVec`` are first currents following the order
-  defined in ``csOutPorts``, in ``qVec`` are the charges defined in
-  ``csOutPorts``. If there are no currents/charges, return an empty
-  vector.
+The variables in ``iVec`` are first currents following the order
+defined in ``csOutPorts``, in ``qVec`` are the charges defined in
+``csOutPorts``. If there are no currents/charges, return an empty
+vector.
 
-  To avoid automatic differentiation problems, use the
-  ``ad.condassign()`` function provided in cppaddev.py to replace
-  conditional (``if``) statements dependent on variables related to
-  ``vPort``.
+To avoid automatic differentiation problems, use the
+``ad.condassign()`` function provided in cppaddev.py to replace
+conditional (``if``) statements dependent on variables related to
+``vPort``.
 
-* The following two functions should be present, normally implemented
-  by evaluating the AD tape (they run *much* faster than
-  ``eval_cqs()``). But we could also implement them manually by other
-  means::
+The following two functions should be present, normally implemented by
+evaluating the AD tape (they run *much* faster than
+``eval_cqs()``). But we could also implement them manually by other
+means::
 
-     def eval(self, vPort): same as eval_cqs()
-     def eval_and_deriv(self, vPort): returns a tuple, (outVec, Jacobian)
+   def eval(self, vPort): same as eval_cqs()
+   def eval_and_deriv(self, vPort): returns a tuple, (outVec, Jacobian)
 
-  To have those automatically implemented using cppad, add the
-  following to the ``Device`` class::
+To have those automatically implemented using cppad, add the following
+to the ``Device`` class::
 
-     # Use functions directly from cppaddev (imported as ad)
-     eval_and_deriv = ad.eval_and_deriv
-     eval = ad.eval
+   # Use functions directly from cppaddev (imported as ad)
+   eval_and_deriv = ad.eval_and_deriv
+   eval = ad.eval
+
 
 Automatic Eletro-Thermal Models
 +++++++++++++++++++++++++++++++
