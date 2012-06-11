@@ -137,13 +137,13 @@ class Device(cir.Element):
            \ 
            / 
            |   Term : t2
-           o---------+            
-                     | i(vin)+dq/dt 
-          +         /|\           
-        vin        | | |          
-          -         \V/           
-                     |            
-        1  o---------+            
+           o---------,-------------,            
+                     | i(vin)      |
+          +         /|\          ----- q(vin)
+        vin        | | |         -----
+          -         \V/            |
+                     |             |
+        1  o---------'-------------'
                                   
     Terminal t2 not present if Rs = 0
 
