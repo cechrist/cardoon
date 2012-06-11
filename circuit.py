@@ -219,7 +219,8 @@ class Element(GraphNode, ParamSet):
     numTerms = 0
 
     # temperature parameter: must be called 'temp' (if needed at all)
-    tempItem = (('temp', ('Device temperature', 'C', float, None)), )
+    tempItem = (('temp', ('Device temperature (None: use global temp.)', 
+                          'C', float, None)), )
     
     # Has electro-thermal implementation (using autothermal.py)
     # Element must implement all nonlinear functions to use this

@@ -97,11 +97,11 @@ def make_nodal_circuit(ckt, reference='gnd'):
         create_additional_indexes(elem)
     
 
-def process_nodal_element(elem):
+def process_nodal_element(elem, ckt):
     """
     Process element for nodal analysis
     """
-    nodal.process_nodal_element(elem)
+    nodal.process_nodal_element(elem, ckt)
     if elem.isNonlinear:
         create_additional_indexes(elem)
 
@@ -134,7 +134,7 @@ def create_additional_indexes(elem):
     qpidx = np.arange(0, lvpos * lqpos + lvneg * lqneg, dtype = int)
     qnidx = np.arange(0, lvpos * lqneg + lvneg * lqpos, dtype = int) 
 
-    ncols = len(elem.controlPorts)
+    ncols = elem.nD_nxin
     # Current source Jac indexes
     jaci = [i1 * ncols + j1 
             for i1, i in elem.nD_cpos for j1, j in elem.nD_vpos]
@@ -341,7 +341,7 @@ class DCNodal(_NLFunctionSP):
         for elem in self.ckt.nD_nlinElem:
             # The values that we insert do not matter, we are just
             # interested in the structure
-            outJac = np.empty((len(elem.csOutPorts), len(elem.controlPorts)),
+            outJac = np.empty((len(elem.csOutPorts), elem.nD_nxin),
                               dtype = float)
             set_Jac_triplet(JacTriplet, elem.nD_cpos, elem.nD_cneg, 
                             elem.nD_vpos, elem.nD_vneg, outJac)
@@ -427,7 +427,7 @@ class DCNodal(_NLFunctionSP):
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             outV = elem.eval(xin)
             # Update iVec. outV may have extra charge elements but
@@ -456,7 +456,7 @@ class DCNodal(_NLFunctionSP):
         self._mbase = self._mbaseLin
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             (outV, outJac) = elem.eval_and_deriv(xin)
             # Update iVec and Jacobian now. outV may have extra charge
@@ -490,7 +490,7 @@ class DCNodal(_NLFunctionSP):
             term.nD_vOP = v
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             # Set OP in element (discard return value)
             elem.nD_xOP = xin
@@ -593,9 +593,9 @@ class TransientNodal(_NLFunctionSP):
         for elem in self.ckt.nD_nlinElem:
             # The values that we insert do not matter, we are just
             # interested in the structure
-            outJac = np.empty((len(elem.csOutPorts), len(elem.controlPorts)),
+            outJac = np.empty((len(elem.csOutPorts), elem.nD_nxin),
                               dtype = float)
-            qJac = np.empty((len(elem.qsOutPorts), len(elem.controlPorts)),
+            qJac = np.empty((len(elem.qsOutPorts), elem.nD_nxin),
                             dtype = float)
             set_Jac_triplet(JacTriplet, elem.nD_cpos, elem.nD_cneg, 
                             elem.nD_vpos, elem.nD_vneg, outJac)
@@ -656,7 +656,7 @@ class TransientNodal(_NLFunctionSP):
         self.qVec[:] = self.C * xVec
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)  
             outV = elem.eval(xin)
             set_i(self.qVec, elem.nD_qpos, elem.nD_qneg, 
@@ -717,7 +717,7 @@ class TransientNodal(_NLFunctionSP):
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             outV = elem.eval(xin)
             # Update iVec. outV may have extra charge elements but
@@ -748,7 +748,7 @@ class TransientNodal(_NLFunctionSP):
         self._mbase = self._mbaseLin
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             (outV, outJac) = elem.eval_and_deriv(xin)
             # Update iVec and Jacobian now. outV may have extra charge

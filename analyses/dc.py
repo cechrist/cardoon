@@ -179,7 +179,7 @@ class DCSweep(ParamSet):
                 dev.process_params()
                 # Re-generate nodal attributes. 
                 nd.restore_RCnumbers(dev)
-                nd.process_nodal_element(dev)
+                nd.process_nodal_element(dev, circuit)
 
             # re-process linear matrix
             dc.refresh()
@@ -229,7 +229,7 @@ class DCSweep(ParamSet):
             dev.process_params()
             # Re-generate nodal attributes. 
             nd.restore_RCnumbers(dev)
-            nd.process_nodal_element(dev)
+            nd.process_nodal_element(dev, circuit)
         # -----------------------------------------------------------
 
         # Process output requests.  

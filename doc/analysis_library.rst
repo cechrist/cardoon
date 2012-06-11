@@ -18,8 +18,8 @@ nonlinear devices. Convergence parameters for the Newton method
 are controlled using the global variables in ``.options``.
 
 One plot window is generated for each ``.plot`` statement. Use the
-following request types for this analysis: ``ac_mag``,
-``ac_phase`` or ``ac_dB``.
+following request types for this analysis: ``ac`` (complex),
+``ac_mag``, ``ac_phase`` or ``ac_dB``.
 
 AC formulation documented in :doc:`analysis`
 

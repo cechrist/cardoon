@@ -40,6 +40,7 @@ netElemList = ['resistor', 'capacitor', 'inductor', 'idc', 'vdc',
                'vccs',
                'diode', 'svdiode', 'bjt', 'svbjt', 
                'mosEKV', 'mosACM', 'mosACMs', 
+               'mesfetc',
                'tlinpy4', 'tlinps4', 'isin', 'vsin', 'ipulse', 'vpulse']
 
 # Add here any modules to be imported in addition to netElemList

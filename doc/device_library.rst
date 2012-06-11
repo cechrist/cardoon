@@ -108,7 +108,7 @@ Parameters
  rsh          0.0          Ohms         Sheet resistance                                     
  tc1          0.0          1/C          Temperature coefficient 1                            
  tc2          0.0          1/C^2        Temperature coefficient 2                            
- temp         None         C            Device temperature                                   
+ temp         None         C            Device temperature (None: use global temp.)          
  tnom         27.0         C            Nominal temperature                                  
  w            0.0          m            Width                                                
  =========== ============ ============ ===================================================== 
@@ -408,7 +408,7 @@ Parameters
  rbm          0.0          W            Minimum base resistance                              
  rc           0.0          W            Collector ohmic resistance                           
  re           0.0          W            Emitter ohmic resistance                             
- temp         None         C            Device temperature                                   
+ temp         None         C            Device temperature (None: use global temp.)          
  tf           0.0          S            Ideal forward transit time                           
  tnom         27.0         C            Nominal temperature                                  
  tr           0.0          S            Ideal reverse transit time                           
@@ -465,13 +465,13 @@ The internal representation is the following::
        \ 
        / 
        |   Term : t2
-       o---------+            
-                 | i(vin)+dq/dt 
-      +         /|\           
-    vin        | | |          
-      -         \V/           
-                 |            
-    1  o---------+            
+       o---------,-------------,            
+                 | i(vin)      |
+      +         /|\          ----- q(vin)
+    vin        | | |         -----
+      -         \V/            |
+                 |             |
+    1  o---------'-------------'
                               
 Terminal t2 not present if Rs = 0
 
@@ -500,7 +500,7 @@ Parameters
  m            0.5                       PN junction grading coefficient                      
  n            1.0                       Emission coefficient                                 
  rs           0.0          Ohms         Series resistance                                    
- temp         None         C            Device temperature                                   
+ temp         None         C            Device temperature (None: use global temp.)          
  tnom         27.0         C            Nominal temperature                                  
  tt           0.0          s            Transit time                                         
  vj           1.0          V            Built-in junction potential                          
@@ -509,6 +509,94 @@ Parameters
 
 
 Electro-thermal version with extra thermal port: diode_t 
+
+mesfetc: Intrinsic MESFET using Curtice-Ettemberg cubic model
+-------------------------------------------------------------
+
+Model derived from fREEDA 1.4 MesfetCT model adapted to re-use
+junction code from ``diode.py``. Some parameter names have been
+changed: ``isat``, ``tau``. Uses symmetric diodes and
+capacitances. Valid only for Vds > 0, Vgs <= 0. *Implementation
+needs more testing*
+
+Terminal order: 0 Drain, 1 Gate, 2 Source::
+
+           Drain 0
+                   o
+                   |
+                   |
+               |---+
+               |
+  Gate 1 o---->|
+               |
+               |---+
+                   |
+                   |
+                   o
+          Source 2
+
+Netlist example::
+
+    mesfetc:m1 2 3 4 a0=0.09910 a1=0.08541 a2=-0.02030 a3=-0.01543
+
+Internal Topology::
+
+               ,----------------,------------,--o 0 (D)
+               |                |            |
+              /^\               |            |
+             ( | ) igd(Vgd)   ----- Cgd      |
+              \|/             -----          |
+               |                |           /|\ 
+    (G) 1 o----+----------------,          ( | ) ids(Vgs, Vgd)
+               |                |           \V/               
+              /|\               |            |
+             ( | ) igs(Vgs)   ----- Cgs      |
+              \V/             -----          |
+               |                |            |
+               `----------------'------------'--o 2 (S)
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ a0           0.1          A            Drain saturation current for Vgs=0                   
+ a1           0.05         A/V          Coefficient for V1                                   
+ a2           0.0          A/V^2        Coefficient for V1^2                                 
+ a3           0.0          A/V^3        Coefficient for V1^3                                 
+ area         1.0                       Area multiplier                                      
+ avt0         0.0          1/K          Pinch-off voltage (VP0 or VT0) linear temp. coefficient 
+ beta         0.0          1/V          V1 dependance on Vds                                 
+ bvt0         0            1/K^2        Pinch-off voltage (VP0 or VT0) quadratic temp. coefficient 
+ cgd0         0.0          F            Gate-drain Schottky barrier capacitance for Vgd=0    
+ cgs0         0.0          F            Gate-source Schottky barrier capacitance for Vgs=0   
+ eg0          0.8          eV           Barrier height at 0 K                                
+ fcc          0.5          V            Forward-bias depletion capacitance coefficient       
+ gama         1.5          1/V          Slope of drain characteristic in the linear region   
+ ib0          0.0          A            Breakdown current parameter                          
+ isat         0.0          A            Diode saturation current                             
+ mgd          0.5                       Gate-drain grading coefficient                       
+ mgs          0.5                       Gate-source grading coefficient                      
+ n            1.0                       Diode ideality factor                                
+ nr           10.0                      Breakdown ideality factor                            
+ tau          0.0          s            Channel transit time                                 
+ tbet         0            1/K          BETA power law temperature coefficient               
+ temp         None         C            Device temperature (None: use global temp.)          
+ tm           0.0          1/K          Ids linear temp. coeff.                              
+ tme          0.0          1/K^2        Ids power law temp. coeff.                           
+ tnom         27.0         C            Nominal temperature                                  
+ vbd          .0inf        V            Breakdown voltage                                    
+ vbi          0.8          V            Built-in potential of the Schottky junctions         
+ vds0         4.0          V            Vds at which BETA was measured                       
+ vt0          -1.0e+10     V            Voltage at which the channel current is forced to be zero for Vgs<=Vto 
+ xti          2.0                       Diode saturation current temperature exponent        
+ =========== ============ ============ ===================================================== 
+
+
+Electro-thermal version with extra thermal port: mesfetc_t 
 
 mosacm: Incomplete ACM MOSFET
 -----------------------------
@@ -569,7 +657,7 @@ Parameters
  kp           0.0005106    A/V^2        Transconductance Parameter                           
  l            1.0e-05      m            Channel length                                       
  phi          0.55         V            Surface Potential                                    
- temp         None         C            Device temperature                                   
+ temp         None         C            Device temperature (None: use global temp.)          
  theta        0.814        1/V          Mobility Saturation Parameter                        
  tox          7.5e-09      m            Oxide Thickness                                      
  type         n                         N- or P-channel MOS (n or p)                         
@@ -643,7 +731,7 @@ Parameters
  l            1.0e-05      m            Channel length                                       
  n            1.3          F/m^2        Subthreshold slope factor                            
  tcv          0.001        V/K          Threshold voltage temperature coefficient            
- temp         None         C            Device temperature                                   
+ temp         None         C            Device temperature (None: use global temp.)          
  tnom         27.0         C            Nominal temperature of model parameters              
  type         n                         N- or P-channel MOS (n or p)                         
  vth          0.5          V            Threshold Voltage                                    
@@ -772,7 +860,7 @@ Parameters
  q0           0.0          A.s/m^2      Reverse short channel effect peak charge density     
  satlim       54.5982                   Ratio defining the saturation limit if/ir            
  tcv          0.001        V/K          Threshold voltage temperature coefficient            
- temp         None         C            Device temperature                                   
+ temp         None         C            Device temperature (None: use global temp.)          
  theta        0.0          1/V          Mobility recuction coefficient                       
  tnom         27.0         C            Nominal temperature of model parameters              
  tox          None         m            Oxide thickness                                      
@@ -973,7 +1061,7 @@ Parameters
  rbm          0.0          W            Minimum base resistance                              
  rc           0.0          W            Collector ohmic resistance                           
  re           0.0          W            Emitter ohmic resistance                             
- temp         None         C            Device temperature                                   
+ temp         None         C            Device temperature (None: use global temp.)          
  tf           0.0          S            Ideal forward transit time                           
  tnom         27.0         C            Nominal temperature                                  
  tr           0.0          S            Ideal reverse transit time                           
@@ -1071,7 +1159,7 @@ Parameters
  m            0.5                       PN junction grading coefficient                      
  n            1.0                       Emission coefficient                                 
  rs           0.0          Ohms         Series resistance                                    
- temp         None         C            Device temperature                                   
+ temp         None         C            Device temperature (None: use global temp.)          
  tnom         27.0         C            Nominal temperature                                  
  tt           0.0          s            Transit time                                         
  vj           1.0          V            Built-in junction potential                          
@@ -1117,7 +1205,7 @@ Parameters
  idc          0.0          A            DC current                                           
  tc1          0.0          1/C          Current temperature coefficient 1                    
  tc2          0.0          1/C^2        Current temperature coefficient 2                    
- temp         None         C            Device temperature                                   
+ temp         None         C            Device temperature (None: use global temp.)          
  tnom         27.0         C            Nominal temperature                                  
  =========== ============ ============ ===================================================== 
 
@@ -1225,7 +1313,7 @@ Parameters
  g            0.001        S            Linear transconductance                              
  tc1          0.0          1/C          Current temperature coefficient 1                    
  tc2          0.0          1/C^2        Current temperature coefficient 2                    
- temp         None         C            Device temperature                                   
+ temp         None         C            Device temperature (None: use global temp.)          
  tnom         27.0         C            Nominal temperature                                  
  =========== ============ ============ ===================================================== 
 
@@ -1283,7 +1371,7 @@ Parameters
  rint         0.0          Ohms         Internal resistance                                  
  tc1          0.0          1/C          Voltage temperature coefficient 1                    
  tc2          0.0          1/C^2        Voltage temperature coefficient 2                    
- temp         None         C            Device temperature                                   
+ temp         None         C            Device temperature (None: use global temp.)          
  tnom         27.0         C            Nominal temperature                                  
  vdc          0.0          V            DC voltage                                           
  =========== ============ ============ ===================================================== 

@@ -137,7 +137,7 @@ def make_nodal_circuit(ckt, reference='gnd'):
 
     # Map row/column numbers directly into VC*S descriptions
     for elem in ckt.nD_elemList:
-        process_nodal_element(elem)
+        process_nodal_element(elem, ckt)
 
     # Subcircuit-connection processing
     try:
@@ -157,7 +157,7 @@ def restore_RCnumbers(elem):
     for term, i in zip(elem.neighbour[elem.numTerms:], elem.nD_intRC):
         term.nD_namRC = i
 
-def process_nodal_element(elem):
+def process_nodal_element(elem, ckt):
     """
     Process element for nodal analysis
     """
@@ -204,15 +204,18 @@ def process_nodal_element(elem):
             # (elem.nD_dpos, elem.nD_dneg) = create_list(elem.delayedContPorts)
             # Store delays
             elem.nD_delay = np.array([x1[2] for x1 in elem.delayedContPorts])
+            # Keep track of longest delay
             maxD = np.amax(elem.nD_delay)
-            if maxD > cir.nD_maxDelay:
-                cir.nD_maxDelay = maxD
+            if maxD > ckt.nD_maxDelay:
+                ckt.nD_maxDelay = maxD
             # Control voltages plus delayed ports
-            (elem.nD_vpos, elem.nD_vneg) = create_list(elem.controlPorts
-                                                       + elem.delayedContPorts)
+            allPorts = elem.controlPorts + elem.delayedContPorts
+            (elem.nD_vpos, elem.nD_vneg) = create_list(allPorts)
+            elem.nD_nxin = len(allPorts)
         else:
             # Control voltages
             (elem.nD_vpos, elem.nD_vneg) = create_list(elem.controlPorts)
+            elem.nD_nxin = len(elem.controlPorts)
         # Current source terminals
         (elem.nD_cpos, elem.nD_cneg) = create_list(elem.csOutPorts)
         # Charge source terminals
@@ -641,7 +644,7 @@ class DCNodal(_NLFunction):
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             outV = elem.eval(xin)
             # Update iVec. outV may have extra charge elements but
@@ -673,7 +676,7 @@ class DCNodal(_NLFunction):
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             (outV, outJac) = elem.eval_and_deriv(xin)
             # Update iVec and Jacobian now. outV may have extra charge
@@ -707,7 +710,7 @@ class DCNodal(_NLFunction):
             term.nD_vOP = v
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             # Set OP in element (discard return value)
             elem.nD_xOP = xin
@@ -826,7 +829,7 @@ class TransientNodal(_NLFunction):
         self.qVec.fill(0.)
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)  
             outV = elem.eval(xin)
             set_i(self.qVec, elem.nD_qpos, elem.nD_qneg, 
@@ -891,7 +894,7 @@ class TransientNodal(_NLFunction):
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             outV = elem.eval(xin)
             # Update iVec. outV may have extra charge elements but
@@ -925,7 +928,7 @@ class TransientNodal(_NLFunction):
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
-            xin = np.zeros(len(elem.controlPorts))
+            xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             (outV, outJac) = elem.eval_and_deriv(xin)
             # Update iVec and Jacobian now. outV may have extra charge
