@@ -189,7 +189,7 @@ class Device(cir.Element):
                 self.linearVCQS.append(((cnn, 1), (cnn, 1), C))
                 if G:
                     # Add conductor
-                    self.linearVCLS.append(((cnn, 1), (cnn, 1), G))
+                    self.linearVCCS.append(((cnn, 1), (cnn, 1), G))
 
         # Calculate temperature-dependent variables
         # self.set_temp_vars(self.temp)
