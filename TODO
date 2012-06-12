@@ -4,8 +4,11 @@ Development Plan (TODO file)
 
 Short-term goals:
 
-  #. Add support for convolution of freq-defined elements and implement
-     time delay support in transient analysis
+  #. Update documentation to describe treatment of time-delayed
+     control voltages. Add support for time-delayed control voltages
+     in AC analysis
+
+  #. Add support for convolution of freq-defined elements 
   
   #. Finish implementation of nodal analysis of independent subcircuits
 

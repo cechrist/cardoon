@@ -59,7 +59,7 @@ class Transient(ParamSet):
     paramDict = dict(
         tstop = ('Simulation stop time', 's', float, 1e-3),
         tstep = ('Time step size', 's', float, 1e-5),
-        im = ('Integration method', '', str, 'BE'),
+        im = ('Integration method', '', str, 'trap'),
         verbose = ('Show iterations for each point', '', bool, False),
         saveall = ('Save all nodal voltages', '', bool, False),
         shell = ('Drop to ipython shell after calculation', '', bool, False)
@@ -128,7 +128,7 @@ class Transient(ParamSet):
         nsamples = len(timeVec)
         circuit.tran_timevec = timeVec
 
-        # Get terminals that to plot/save from circuit. 
+        # Get terminals to plot/save from circuit. 
         termSet = circuit.get_requested_terms('tran')
 
         # Allocate vectors for results
@@ -157,18 +157,18 @@ class Transient(ParamSet):
             print('-------------------------------------------------')
         else:
             print('Printing one dot every {0} samples:'.format(dots))
-            print('.', end='')
             sys.stdout.flush()
 
         for i in xrange(1, nsamples):
-            qVec = tran.update_q(xOld)
-            imo.accept(qVec)
-            sV = imo.f_n1()
-            sV += tran.get_source(timeVec[i])
+            tran.accept(xOld)
+            sV = tran.get_rhs(timeVec[i])
             # solve equations: use previous time-step solution as an
             # initial guess
             if i > 1 and glVar.sparse:
-                # Re-use factorized Jacobian
+                # Re-use factorized Jacobian: This saves the time to
+                # evaluate the function and Jacobian plus the time for
+                # factorization. Only sparse implementation stores
+                # factorized Jacobian
                 xOld -= tran.get_chord_deltax(sV)
             try: 
                 (x, res, iterations) = solve(xOld, sV, 

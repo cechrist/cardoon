@@ -228,7 +228,8 @@ class Element(GraphNode, ParamSet):
 
     # Flags for nonlinear devices. 
     isNonlinear = False
-    needsDelays = False
+    # Number of time-delayed control ports
+    nDelays = 0
     # Used for transmission lines, etc.
     isFreqDefined = False
     # Element contributes to source vector (DC, time-domain and freq-domain)

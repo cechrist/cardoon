@@ -25,6 +25,7 @@ class BEuler:
 
         Set time step size to h. q is ignored as it is not needed
         """
+        self.h = h
         self.a0 = 1. / h
         self.qn1 = np.zeros_like(q)
 
@@ -32,6 +33,7 @@ class BEuler:
         """
         Change time step size to h
         """
+        self.h = h
         self.a0 = 1. / h
 
     def accept(self, q):
@@ -63,6 +65,7 @@ class Trapezoidal:
         Set time step size to h, previous charge to q previous
         derivative to dq
         """
+        self.h = h
         self.a0 = 2. / h    
         self.qnm1 = np.copy(q)
         if dq == None:
@@ -74,6 +77,7 @@ class Trapezoidal:
         """
         Change time step size to h in next call to f_n1
         """
+        self.h = h
         self.a0 = 1. / h
 
     def accept(self, q):

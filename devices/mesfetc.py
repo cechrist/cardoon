@@ -112,7 +112,7 @@ class Device(cir.Element):
     makeAutoThermal = True
 
     isNonlinear = True
-    needsDelays = True
+    nDelays = 1
 
     # igs, igd, ids
     csOutPorts = [(1, 2), (1, 0), (0, 2)]
@@ -209,9 +209,8 @@ class Device(cir.Element):
         igd -= self.ib0 * np.exp(-(vPort[1] + self.vbd) / self._k6)
       
         vds = vPort[0] - vPort[1]
-        # Calculate ids. Include temperature effects.
+        # Calculate ids. 
         vx = vPort[2] * (1. + self._Beta * (self.vds0 - vds))
-      
         itmp = (self.a0 + vx * (self.a1 + vx * (self.a2 + vx  * self.a3))) \
             * np.tanh(self.gama * vds) * self._idsFac
         # vPort[2] would make more sense than vPort[0] below?

@@ -348,19 +348,22 @@ Nonlinear models
 The following attributes are required for nonlinear models::
 
   isNonlinear = True
-  needsDelays = True or False
 
 * Controlling ports (``controlPorts``): list here all ports whose
   voltages are needed to calculate the nonlinear currents / charges in
-  same format.
+  this format: ``(n1, n2)`` means that the port voltage is defined as
+  ``V(n1) - V(n2)``.
 
   Example for BJT without intrinsic RC, RB and RE (vbc, vbe)::
 
     controlPorts = [(1, 0), (1, 2)]
 
-* Time-delayed port voltages (``delayedContPorts``): optional, if
-  ``needsDelays`` is ``True``, list port voltages in triplet format::
+* Time-delayed port voltages (``nDelays`` and ``delayedContPorts``):
+  optional, ``nDelays`` is the number of delayed control voltages
+  (defaults to zero). ``delayedContPorts`` is a list port definitions
+  and corresponding delay in triplet format::
 
+    nDelays = 2
     delayedContPorts = [(n1, n2, delay1), (n3, n4, delay2)]
 
 * An optional attribute, ``vPortGuess`` is a numpy vector with a valid

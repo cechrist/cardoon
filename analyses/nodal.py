@@ -76,6 +76,34 @@ def set_Jac(M, posRows, negRows, posCols, negCols, Jac):
         for j1, j in posCols:
             M[i,j] -= Jac[i1,j1]
 
+def delay_interp(td, vp, h, tsV, vpV):
+    """
+    Use linear interpolation to find v(t-td)
+
+    td: time delay
+    vp: current port voltage
+    h: current time step
+    tsV: vector with past time steps
+    vpV: vector with past voltage samples
+
+    returns (v(t-td), deriv_coeff)
+    """
+    #import pdb; pdb.set_trace()
+    if td <= h:
+        deriv_coeff = (h - td) / h
+        vtd = vpV[-1] + (vp - vpV[-1]) * deriv_coeff
+    else:
+        deriv_coeff = 0.
+        timeacc = h
+        for i in xrange(-1, -len(tsV), -1):
+            timeacc += tsV[i]
+            if td < timeacc:
+                # Found position: do interpolation
+                vtd = vpV[i-1] + (vpV[i] - vpV[i-1]) \
+                    * (timeacc - td) / tsV[i]
+                break
+    return (vtd, deriv_coeff) 
+
 
 # ********************** Regular functions *****************************
 
@@ -130,6 +158,7 @@ def make_nodal_circuit(ckt, reference='gnd'):
 
     # Create specialized element lists
     ckt.nD_nlinElem = filter(lambda x: x.isNonlinear, ckt.nD_elemList)
+    ckt.nD_delayElem = filter(lambda x: x.nDelays, ckt.nD_nlinElem)
     ckt.nD_freqDefinedElem = filter(lambda x: x.isFreqDefined, ckt.nD_elemList)
     ckt.nD_sourceDCElem = filter(lambda x: x.isDCSource, ckt.nD_elemList)
     ckt.nD_sourceTDElem = filter(lambda x: x.isTDSource, ckt.nD_elemList)
@@ -199,7 +228,7 @@ def process_nodal_element(elem, ckt):
     # Convert nonlinear device descriptions to a format more
     # readily usable for the NA approach
     if elem.isNonlinear:
-        if elem.needsDelays:
+        if elem.nDelays:
             # Delayed control voltages (not needed in this form)
             # (elem.nD_dpos, elem.nD_dneg) = create_list(elem.delayedContPorts)
             # Store delays
@@ -812,6 +841,19 @@ class TransientNodal(_NLFunction):
         # Generate Gp 
         self.update_Gp()
 
+        # Initialize time delay structures
+        nsteps = np.ceil(self.ckt.nD_maxDelay / h)
+        self._dpsteps = nsteps * [h]
+        for elem in self.ckt.nD_nlinElem:
+            if elem.nDelays:
+                elem.tran_dpvolt = []
+                # first have to retrieve port voltages from xVec
+                xin = np.zeros(elem.nD_nxin)
+                set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec) 
+                # Extract delayed ports and append to element list
+                for i in xrange(-elem.nDelays, 0):
+                    elem.tran_dpvolt.append(nsteps * [xin[i]])
+
 
     def update_Gp(self):
         """
@@ -825,8 +867,9 @@ class TransientNodal(_NLFunction):
         """ 
         Recalculate qVec for a given value of xVec
         """
-        # Calculate total q vector
-        self.qVec.fill(0.)
+        # Add linear charges
+        self.qVec[:] = np.dot(self.C, xVec)
+        # Nonlinear charges
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(elem.nD_nxin)
@@ -834,10 +877,27 @@ class TransientNodal(_NLFunction):
             outV = elem.eval(xin)
             set_i(self.qVec, elem.nD_qpos, elem.nD_qneg, 
                   outV[len(elem.csOutPorts):])
-        # Add linear charges
-        self.qVec += np.dot(self.C, xVec)
         return self.qVec
             
+
+    def accept(self, xVec):
+        """
+        Accept xVec for current time step and store state
+        """
+        self.im.accept(self.update_q(xVec))
+        # Append current time step to list
+        self._dpsteps.append(self.im.h)
+        # Store here xVec components. Optimally this would be
+        # performed in the same loop as update_q, but kept here for
+        # clarity.
+        for elem in self.ckt.nD_delayElem:
+            # first have to retrieve port voltages from xVec
+            xin = np.zeros(elem.nD_nxin)
+            set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec) 
+            # Extract delayed ports and append to element lists
+            for i in xrange(-elem.nDelays, 0):
+                elem.tran_dpvolt[i].append(xin[i])
+
 
     def get_source(self, ctime):
         """
@@ -875,7 +935,18 @@ class TransientNodal(_NLFunction):
             if outTerm[1] >= 0:
                 self.sVec[outTerm[1]] += current
         return self.sVec
-        
+
+    def get_rhs(self, ctime):
+        """
+        Returns system rhs vector: s' 
+
+        s' includes source vector, charge history and convolution
+        contributions
+
+        ctime: current time
+        """
+        # TODO: add convolution
+        return self.im.f_n1() + self.get_source(ctime)
 
     def get_i(self, xVec):
         """
@@ -887,15 +958,20 @@ class TransientNodal(_NLFunction):
 
         iVec: output vector of currents
         """
-        # Erase arrays
-        self.iVec.fill(0.)
         # Linear contribution
-        self.iVec += np.dot(self.Gp, xVec)
+        self.iVec[:] = np.dot(self.Gp, xVec)
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
+            if elem.nDelays:
+                # Apply delay to port voltages
+                for i in xrange(-elem.nDelays, 0):
+                    (xin[i], dc) = delay_interp(elem.nD_delay[i], 
+                                                xin[i], self.im.h, 
+                                                self._dpsteps, 
+                                                elem.tran_dpvolt[i])
             outV = elem.eval(xin)
             # Update iVec. outV may have extra charge elements but
             # they are not used in the following
@@ -919,18 +995,29 @@ class TransientNodal(_NLFunction):
 
         Jac: system Jacobian
         """
-        # Erase arrays
-        self.iVec.fill(0.)
-        self.Jac.fill(0.)
         # Linear contribution
-        self.iVec += np.dot(self.Gp, xVec)
-        self.Jac += self.Gp
+        self.iVec[:] = np.dot(self.Gp, xVec)
+        self.Jac[:,:] = self.Gp
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
             xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
-            (outV, outJac) = elem.eval_and_deriv(xin)
+            if elem.nDelays:
+                # Derivative coefficients
+                dc = np.empty_like(elem.nD_delay)
+                # Apply delay to port voltages
+                for i in xrange(-elem.nDelays, 0):
+                    (xin[i], dc[i]) = delay_interp(elem.nD_delay[i], 
+                                                   xin[i], self.im.h, 
+                                                   self._dpsteps, 
+                                                   elem.tran_dpvolt[i])
+                (outV, outJac) = elem.eval_and_deriv(xin)
+                # Multiply Jacobian columns by derivative factors
+                for i in xrange(-elem.nDelays, 0):
+                    outJac[:,i] *= dc[i]
+            else:
+                (outV, outJac) = elem.eval_and_deriv(xin)
             # Update iVec and Jacobian now. outV may have extra charge
             # elements but they are not used in the following
             set_i(self.iVec, elem.nD_cpos, elem.nD_cneg, outV)

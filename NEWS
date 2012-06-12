@@ -2,6 +2,16 @@
 News
 ----
 
+Version 0.4.3
+^^^^^^^^^^^^^
+
+     * Added support for time delays in nonlinear device models
+
+     * Added MESFET Curtice model 
+
+     * Default integration method in transient analysis is now ``trap``
+
+
 Version 0.4.2
 ^^^^^^^^^^^^^
 
