@@ -312,7 +312,7 @@ def run_AC(ckt, fvec):
                     elem.nD_vpos, elem.nD_vneg, qJac)
 
     # Frequency-dependent matrices: a matrix of complex vectors, each
-    # vector conatins the values for all frequencies. This format is
+    # vector contains the values for all frequencies. This format is
     # compatible with the format returned by elem.get_Y_matrix(fvec)
     Y = np.zeros((ckt.nD_dimension, ckt.nD_dimension, nfreq), dtype=complex)
     # Frequency-defined elements

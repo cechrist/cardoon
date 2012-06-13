@@ -43,6 +43,7 @@ for net in netlists:
                 except OSError:
                     pass
     else:
+        warningflag = False
         # Look for *_ref.npz files and compare with corrensponding *.npz
         files = [name for name in os.listdir('.') 
                  if (name.find(basename) == 0) and (name.find('_ref.npz') > 0)]
@@ -76,17 +77,23 @@ for net in netlists:
                             var, outfile))
                     print('\n*** Test Failed! ***')
                     exit(-1)
-                res = np.max(abs(delta))
+                res = np.average(abs(delta))
                 residual += res
                 if not np.all(abs(delta) < (abs(glVar.reltol * refResult[var])
                                             + glVar.abstol)):
                     message = """
-Test failed:
-
-Reference file: {0}, Variable: {1}, Residual: {2}
-
-""".format(reffile, var, res)
-                    raise Exception(message)
+Reference file: {0}
+Variable: {1}
+Residual: {2}""".format(reffile, var, res)
+                    if res < 1e-3:
+                        print('\n=============================================')
+                        message = "Warning: \n" + message
+                        print(message)
+                        print('=============================================')
+                        warningflag = True
+                    else:
+                        message = "\nTest failed: \n" + message
+                        raise Exception(message)
         print('\n=======================================================')
         print(' Success: {0}'.format(net))
         print(' Sum of residuals: {0}'.format(residual))
@@ -96,6 +103,11 @@ Reference file: {0}, Variable: {1}, Residual: {2}
     reset_all()
 
 if not flag:
-    print('\n============================================================')
-    print('              All tests succesfully completed!')
-    print('============================================================\n')
+    if warningflag:
+        print('\n============================================================')
+        print('              All tests completed (with Warnings)')
+        print('============================================================\n')
+    else:
+        print('\n============================================================')
+        print('              All tests succesfully completed!')
+        print('============================================================\n')
