@@ -65,11 +65,13 @@ def process_requests(circuit, reqtype, xaxis, xlabel, attribute,
         pltfunc = plt.plot
 
     flag = False
+    plt.ion()
     for outreq in circuit.plotReqList:
         if outreq.type == reqtype:
             flag = True
             plt.figure()
             plt.grid(True)
+            plt.title(reqtype)
             plt.xlabel(xlabel)
             for term in outreq.termlist:
                 if unitOverride:
@@ -84,7 +86,8 @@ def process_requests(circuit, reqtype, xaxis, xlabel, attribute,
             else:
                 plt.legend()
     if flag:
-        plt.show()
+        plt.draw()
+
     flag = False
     if circuit.saveReqList:
         saveDict = {'xaxis': xaxis}

@@ -7,9 +7,9 @@
 **Litton process 
 **spiral inductor modeled as regular inductor
 
-.options sparse = 1 errfunc=1
+.options sparse = 1 errfunc=1 maxiter=40 maxdelta=5
 *.analysis dc device=vsin:vin param=vdc start=-.1 stop=.1 num=50 
-.analysis tran tstep= 3ps tstop=.3ns shell=0 im=trap
+.analysis tran tstep= .5ps tstop=4ns shell=0 im=trap
 
 * Input: 2 , output: 26
 .plot dc 51 192 2 26
@@ -74,15 +74,15 @@ res:rfb 21 22 r=237.4
 *NPortFoster1:f1 22 0 15 0
 *+ filename = filtronicsind.yp ports = 2 poles1 = 2 poles2 = 4
 
-ind:lfb 22 15 l=1.268n 
-*int_res=9.55
+ind:lfb 22 1500 l=1.268n 
+res:rlfb 1500 15 r=9.55
 tlinpy4:t12 19 0 23 0 model=m_line1 length=313u
 
 *NPortFoster1:f2 23 0 24 0
 *+ filename = filtronicsind.yp ports = 2 poles1 = 2 poles2 = 4
 
-ind:lp 23 24 l=1.268n 
-* int_res=1.55
+ind:lp 23 2400 l=1.268n 
+res:rlp 2400 24 r=1.55
 res:rpad 24 29 r=24.93
 *res:rdc 29 30 r=20
 cap:c_via12 24 0 c=17e-12

@@ -197,6 +197,8 @@ if __name__ == "__main__":
         try:
             analysisQueue = parse_net(sys.argv[1])
             run_analyses(analysisQueue)
+            print('Press [Enter] to exit ...')
+            c = raw_input()
         except (ParseError, cir.CircuitError, ParamError) as ex:
             print(ex)
             exit(1)

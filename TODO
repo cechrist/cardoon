@@ -4,9 +4,10 @@ Development Plan (TODO file)
 
 Short-term goals:
 
+  #. Find problem in mmic_circuit.net
+
   #. Update documentation to describe treatment of time-delayed
-     control voltages. Add support for time-delayed control voltages
-     in AC analysis
+     control voltages. 
 
   #. Add support for convolution of freq-defined elements 
   

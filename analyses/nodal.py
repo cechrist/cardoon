@@ -283,9 +283,7 @@ def run_AC(ckt, fvec):
     Returns a matrix with results. Dimension: (nvars x nfreq)
 
     """
-    # Number of frequencies
-    nfreq = np.shape(fvec)[0]
-    # Allocate matrices/vectors. 
+    # Allocate and fill constant matrices/vectors. 
     # G is used for G + dI/dv
     G = np.zeros((ckt.nD_dimension, ckt.nD_dimension))
     # C is used for C + dQ/dv
@@ -299,28 +297,14 @@ def run_AC(ckt, fvec):
         # All elements have nD_linVCQS (perhaps empty)
         for vcqs in elem.nD_linVCQS:
             set_quad(C, *vcqs)
-    # Calculate dI/dx and dQ/dx and add to G and C
+    # Calculate dI/dx and dQ/dx and save them in a list. We need this
+    # because if elements use time-delayed control voltages then
+    # Jacobian entries are frequency-dependent.
+    jacList = []
     for elem in ckt.nD_nlinElem:
         (outV, outJac) = elem.eval_and_deriv(elem.nD_xOP)
-        set_Jac(G, elem.nD_cpos, elem.nD_cneg, 
-                elem.nD_vpos, elem.nD_vneg, outJac)
-        if len(elem.qsOutPorts):
-            # import pdb; pdb.set_trace()
-            # Get charge derivatives from outJac
-            qJac = outJac[len(elem.csOutPorts):,:]
-            set_Jac(C, elem.nD_qpos, elem.nD_qneg, 
-                    elem.nD_vpos, elem.nD_vneg, qJac)
-
-    # Frequency-dependent matrices: a matrix of complex vectors, each
-    # vector contains the values for all frequencies. This format is
-    # compatible with the format returned by elem.get_Y_matrix(fvec)
-    Y = np.zeros((ckt.nD_dimension, ckt.nD_dimension, nfreq), dtype=complex)
-    # Frequency-defined elements
-    for elem in ckt.nD_freqDefinedElem:
-        # get first Y matrix for all frequencies. 
-        set_Jac(Y, elem.nD_fpos, elem.nD_fneg, 
-                elem.nD_fpos, elem.nD_fneg, elem.get_Y_matrix(fvec))
-
+        jacList.append(outJac)
+        
     # Sources
     sVec = np.zeros(ckt.nD_dimension, dtype = complex)
     for source in ckt.nD_sourceFDElem:
@@ -337,17 +321,38 @@ def run_AC(ckt, fvec):
             # AC routine not implemented, ignore
             pass
 
-#    if hasattr(ckt, 'nD_namRClist'):
-#        # Allocate external currents vector
-#        extSVec = np.zeros(ckt.nD_dimension)
-
-    # Loop for each frequency: create and solve linear system
+    # Number of frequencies
+    nfreq = np.shape(fvec)[0]
     j = complex(0., 1.)
     omegaVec = 2. * np.pi * fvec
     xVec = np.zeros((ckt.nD_dimension, nfreq), dtype=complex)
+    # Frequency-dependent matrices: a matrix of complex vectors, one
+    # for each frequency.
+    Y = np.empty((ckt.nD_dimension, ckt.nD_dimension), dtype=complex)
+    # Loop for each frequency: create and solve linear system
     for k, omega in enumerate(omegaVec):
-        N = G + j * omega * C + Y[:,:,k] 
-        xVec[:,k] = np.linalg.solve(N, sVec)
+        Y[:] = G + j * omega * C 
+        for elem, outJac in zip(ckt.nD_nlinElem, jacList):
+            if elem.nDelays:
+                # Multiply Jacobian columns by exp(j omega tau)
+                for i in xrange(-elem.nDelays, 0):
+                    outJac[:,i] *= np.exp(j * omega * elem.nD_delay[i])
+            set_Jac(Y, elem.nD_cpos, elem.nD_cneg, 
+                    elem.nD_vpos, elem.nD_vneg, outJac)
+            if len(elem.qsOutPorts):
+                # Get charge derivatives from outJac
+                qJac = outJac[len(elem.csOutPorts):,:]
+                set_Jac(Y, elem.nD_qpos, elem.nD_qneg, 
+                        elem.nD_vpos, elem.nD_vneg, j * omega * qJac)
+
+        # Frequency-defined elements
+        for elem in ckt.nD_freqDefinedElem:
+            # get first Y matrix for all frequencies. 
+            set_Jac(Y, elem.nD_fpos, elem.nD_fneg, 
+                    elem.nD_fpos, elem.nD_fneg, elem.get_Y_matrix(fvec[k]))
+
+        xVec[:,k] = np.linalg.solve(Y, sVec)
+
         
     # Save results in circuit
     # Set nodal voltage of reference to zero
