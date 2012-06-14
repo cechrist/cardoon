@@ -1,0 +1,16 @@
+*** MESFET Biasing sweep ***
+
+.analysis dc device=vdc:vdrain param=vdc start=0 stop=3. shell = 0
+
+.plot dc 123
+
+vdc:vbias 3 0  vdc = -.1
+vdc:vdrain 4 0 vdc = 3.
+res:meter 123 0 r=1.
+
+res:rs 123 0 r=1.144
+
+*** Mesfet 
+mesfetc:m1 4 3 123 a0 = .016542 a1 = .0500214 a2 = .02012 a3 = -.00806592 gama = 2.16505 tau = 5e-12 beta = -.0394707 isat = 1e-9 vbd = 15 nr = 10 ib0 = 1e-9 cgs0 = .52785e-12 cgd0 = .087e-12 
+
+.end

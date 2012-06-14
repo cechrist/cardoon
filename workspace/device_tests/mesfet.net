@@ -1,0 +1,12 @@
+# *** MESFET model test netlist ***
+#
+#
+.analysis testdev plot=1 ports_bias = [-.2V, -3.2V, -.2V, -3.2] sweep_port=1 \
+	  start = -.2V stop= -3.2V sweep_num=20 device = mesfetc:m1 \
+	  param = temp param_val = [-20, 27, 90] useAD = 0 shell=0
+
+
+# Change parameters here if needed
+mesfetc:m1 1 2 3 a0=0.1321 a1=0.1085 a2=-0.04804 a3=-0.03821 beta=0.03141 gama=0.7946 vds0=5.892 vt0=-1.2 vbi=1.5 cgd0=4e-15 cgs0=695.2f isat=4e-12 n=1.2 tau=1ps vbd=12 area=8
+
+.end

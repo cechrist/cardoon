@@ -87,13 +87,16 @@ class Junction:
 
         vd: diode voltage
         """
-        b = self.fc * self._t_vj - vd
-        c = self._k5 * (1. - pow(1. - vd / self._t_vj, self._k4))
-        d = self._k6 * ((1. - self.fc * (1. + self.m)) 
-                        * vd + .5 * self.m * vd * vd / self._t_vj 
-                        - self._k7) + self._k5 \
-                        * (1. - pow(1. - self.fc, self._k4))
-        return ad.condassign(b, c, d)
+        if self.cj0:
+            b = self.fc * self._t_vj - vd
+            c = self._k5 * (1. - pow(1. - vd / self._t_vj, self._k4))
+            d = self._k6 * ((1. - self.fc * (1. + self.m)) 
+                            * vd + .5 * self.m * vd * vd / self._t_vj 
+                            - self._k7) + self._k5 \
+                            * (1. - pow(1. - self.fc, self._k4))
+            return ad.condassign(b, c, d)
+        else:
+            return 0. * vd
 
 
 

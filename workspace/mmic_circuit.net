@@ -7,14 +7,13 @@
 **Litton process 
 **spiral inductor modeled as regular inductor
 
-.options sparse = 1 errfunc=1 maxiter=40 maxdelta=5
-*.analysis dc device=vsin:vin param=vdc start=-.1 stop=.1 num=50 
-.analysis tran tstep= .5ps tstop=4ns shell=0 im=trap
+.options sparse = 1 abstol=1e-8 reltol=1e-6
+*.analysis ac start=5GHz stop=16GHz num= 50 log=False
+.analysis tran tstep= 1ps tstop=4ns shell=0 im=trap shell = 0
 
 * Input: 2 , output: 26
-.plot dc 51 192 2 26
-.plot tran 51 192 2 26
-*.plot tran 51 42 62
+.plot tran 2 26
+.plot ac_dB 2 26
 
 .model m_line1 tlinpy4 (z0mag = 95.7 k=7.55 fscale=10e9 alpha=773 nsect=20 fopt=10e9 tand=0.006)
 .model m_line2 tlinpy4 (z0mag= 81.9  k=7.73 fscale=10e9 alpha=78 nsect=20 fopt=10e9 tand=0.006)
@@ -24,7 +23,7 @@ cap:c1 2 3 c=6e-12
 tlinpy4:t1 3 0 0 0 model=m_line1 length = 1194u
 tlinpy4:t2 3 0 4 0 model=m_line2 length = 183u
 
-mesfetc:m1 51 42 62  a0=0.09910 a1=0.08541  a2=-0.02030 a3=-0.01543 beta=0.01865 gama=0.8293 vds0=6.494 vt0=-1.2 vbi=0.8  cgd0=3f cgs0=528.2f isat=3e-12 nr=1.2 tau=1ps  vbd=12 area=6
+mesfetc:m1 51 42 62  a0=0.09910 a1=0.08541  a2=-0.02030 a3=-0.01543 beta=0.01865 gama=0.8293 vds0=6.494 vt0=-1.2 vbi=0.8 cgd0=3f cgs0=528.2f isat=3e-12 nr=1.2 tau=1ps  vbd=12 area=1
 
 res:rg1 41 42 r=0.83
 res:rd1 5 51 r=0.83
@@ -55,7 +54,7 @@ tlinpy4:t8 14 0 15 0 model=m_line1 length=705u
 tlinpy4:t9 14 0 0 0 model=m_line2 length=419u
 tlinpy4:t10 14 0 17 0 model=m_line2 length=58u 
 
-mesfetc:m2 192 172 182 a0=0.1321 a1=0.1085 a2=-0.04804 a3=-0.03821 beta=0.03141 gama=0.7946 vds0=5.892 vt0=-1.2 vbi=1.5 cgd0=4e-15 cgs0=695.2f isat=4e-12 n=1.2 tau=1ps vbd=12 area=8
+mesfetc:m2 192 172 182 a0=0.1321 a1=0.1085 a2=-0.04804 a3=-0.03821 beta=0.03141 gama=0.7946 vds0=5.892 vt0=-1.2 vbi=1.5 cgd0=4e-15 cgs0=695.2f isat=4e-12 n=1.2 tau=1ps vbd=12 area=1
 
 res:rg2 171 172 r=0.63
 res:rd2 191 192 r=0.63
@@ -83,7 +82,7 @@ tlinpy4:t12 19 0 23 0 model=m_line1 length=313u
 
 ind:lp 23 2400 l=1.268n 
 res:rlp 2400 24 r=1.55
-res:rpad 24 29 r=24.93
+res:rpad 24 12 r=24.93
 *res:rdc 29 30 r=20
 cap:c_via12 24 0 c=17e-12
 tlinpy4:t13 19 0 25 0 model=m_line3 length=229u
@@ -91,7 +90,6 @@ cap:cload 25 26 c=6e-12
 res:r50 26 0 r=50
 
 vdc:v1 12 0 vdc=6
-vdc:v2 29 0 vdc=6
-vsin:vin 2 0 freq=10e9 mag=2.5 phase=-90 rint=50.
+vsin:vin 2 0 freq=10e9 mag=.5 phase=-90 rint=50.
 
 .end

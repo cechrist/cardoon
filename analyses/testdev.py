@@ -88,7 +88,7 @@ class TestDev(ParamSet):
         # Check that parameters make some sense
         if not dev.isNonlinear:
             raise AnalysisError(self.device + ' is linear')
-        if nports != len(dev.controlPorts):
+        if nports != len(dev.controlPorts + dev.delayedContPorts):
             raise AnalysisError('ports_bias for ' + self.device 
                                 + ': wrong number of control ports given')
         if self.sweep_num < 1:

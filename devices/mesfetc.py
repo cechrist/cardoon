@@ -22,8 +22,7 @@ class Device(cir.Element):
     Model derived from fREEDA 1.4 MesfetCT model adapted to re-use
     junction code from ``diode.py``. Some parameter names have been
     changed: ``isat``, ``tau``. Uses symmetric diodes and
-    capacitances. Valid only for Vds > 0, Vgs <= 0. *Implementation
-    needs more testing*
+    capacitances. Works in reversed mode.
 
     Terminal order: 0 Drain, 1 Gate, 2 Source::
 
@@ -77,7 +76,7 @@ class Device(cir.Element):
         gama = ('Slope of drain characteristic in the linear region', '1/V', 
                 float, 1.5),
         vt0 = ('Voltage at which the channel current is forced to be zero\
- for Vgs<=Vto', 'V', float, -1e+10),
+ for Vgs<=Vto', 'V', float, -np.inf),
         cgs0 = ('Gate-source Schottky barrier capacitance for Vgs=0', 'F', 
                 float, 0.),
         cgd0 = ('Gate-drain Schottky barrier capacitance for Vgd=0', 'F', 
@@ -86,16 +85,16 @@ class Device(cir.Element):
         n = ('Diode ideality factor', '', float, 1.),
         ib0 = ('Breakdown current parameter', 'A', float, 0.),
         nr = ('Breakdown ideality factor', '', float, 10.),
+        vbd = ('Breakdown voltage', 'V', float, np.inf),
         tau = ('Channel transit time', 's', float, 0.),
         vbi = ('Built-in potential of the Schottky junctions', 'V', float, 0.8),
         fcc = ('Forward-bias depletion capacitance coefficient', 'V', 
                float, 0.5),
-        vbd = ('Breakdown voltage', 'V', float, np.inf),
         tnom = ('Nominal temperature', 'C', float, 27.),
         avt0 = ('Pinch-off voltage (VP0 or VT0) linear temp. coefficient',
                 '1/K', float, 0.),
         bvt0 = ('Pinch-off voltage (VP0 or VT0) quadratic temp. coefficient',
-                '1/K^2', float, 0),
+                '1/K^2', float, 0.),
         tbet = ('BETA power law temperature coefficient', '1/K', float, 0),
         tm = ('Ids linear temp. coeff.', '1/K', float, 0.),
         tme = ('Ids power law temp. coeff.', '1/K^2', float, 0.),
@@ -112,14 +111,14 @@ class Device(cir.Element):
     makeAutoThermal = True
 
     isNonlinear = True
-    nDelays = 1
+    nDelays = 2
 
     # igs, igd, ids
     csOutPorts = [(1, 2), (1, 0), (0, 2)]
     # Controling voltages are Vgs, Vgd
     controlPorts = [(1, 2), (1, 0)]
     # Time-delayed control port added later. Guess includes time-delayed port
-    vPortGuess = np.array([0., 0., 0.])
+    vPortGuess = np.array([0., 0., 0., 0.])
     # charge sources
     qsOutPorts = [(1, 2), (1, 0)]
 
@@ -139,7 +138,7 @@ class Device(cir.Element):
         # here.  Raise cir.CircuitError if a fatal error is found.
         ad.delete_tape(self)
         # Time-delayed control port
-        self.delayedContPorts = [(1, 2, self.tau)]
+        self.delayedContPorts = [(1, 2, self.tau), (1, 0, self.tau)]
 
         # Absolute nominal temperature
         self.Tnomabs = self.tnom + const.T0
@@ -193,10 +192,9 @@ class Device(cir.Element):
     def eval_cqs(self, vPort, saveOP = False):
         """
         Calculates gate and drain current. Input is a vector as follows:
-        vPort = [vgs(t), vgd(t), vgs(t-tau)]
+        vPort = [vgs(t), vgd(t), vgs(t-tau), vgd(t-tau)]
 
-        If saveOP = True, return normal output vector plus operating
-        point variables in tuple: (iVec, qVec, opV)
+        saveOP has no effect for now
         """
         # Calculate junction currents
         igs = self.diogs.get_id(vPort[0])
@@ -207,17 +205,19 @@ class Device(cir.Element):
         # Add breakdown current
         igs -= self.ib0 * np.exp(-(vPort[0] + self.vbd) / self._k6)
         igd -= self.ib0 * np.exp(-(vPort[1] + self.vbd) / self._k6)
-      
-        vds = vPort[0] - vPort[1]
+
+        DtoSswap = ad.condassign(vPort[0] - vPort[1], 1., -1.)
+        vds = DtoSswap * (vPort[0] - vPort[1])
+        vgsi =  ad.condassign(DtoSswap, vPort[2], vPort[3])
         # Calculate ids. 
-        vx = vPort[2] * (1. + self._Beta * (self.vds0 - vds))
+        vx = vgsi * (1. + self._Beta * (self.vds0 - vds))
         itmp = (self.a0 + vx * (self.a1 + vx * (self.a2 + vx  * self.a3))) \
             * np.tanh(self.gama * vds) * self._idsFac
-        # vPort[2] would make more sense than vPort[0] below?
-        ids = ad.condassign((itmp * vds) * (vPort[0] - self._Vt0), itmp, 0.)
+        # vgsi would makes sense than vPort[0] below?
+        ids = ad.condassign((vgsi - self._Vt0), itmp, 0.)
       
         # Return numpy array with one element per current source.
-        iVec = np.array([igs, igd, ids]) * self.area
+        iVec = np.array([igs, igd, ids * DtoSswap]) * self.area
         qVec = np.array([qgs, qgd]) * self.area
 
         return (iVec, qVec)
@@ -252,7 +252,7 @@ class Device(cir.Element):
 
         self.OP = dict(
             VGS = vPort[0],
-            VGD = vPort[1],
+            VDS = vPort[0] - vPort[1],
             IDS = outV[2],
             IGS = outV[0],
             IGD = outV[1]
