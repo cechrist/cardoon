@@ -7,7 +7,8 @@ Version 0.4.3
 
      * Plots no longer block program execution
 
-     * Added support for time delays in nonlinear device models
+     * Added support for time delays in nonlinear device models (also
+       included in updated documentation)
 
      * Added Curtice cubic MESFET model 
 
