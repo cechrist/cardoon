@@ -208,13 +208,16 @@ class Device(cir.Element):
 
         DtoSswap = ad.condassign(vPort[0] - vPort[1], 1., -1.)
         vds = DtoSswap * (vPort[0] - vPort[1])
-        vgsi =  ad.condassign(DtoSswap, vPort[2], vPort[3])
+        vgsi =  ad.condassign(DtoSswap, vPort[0], vPort[1])
+        vgsiT =  ad.condassign(DtoSswap, vPort[2], vPort[3])
         # Calculate ids. 
-        vx = vgsi * (1. + self._Beta * (self.vds0 - vds))
-        itmp = (self.a0 + vx * (self.a1 + vx * (self.a2 + vx  * self.a3))) \
+        vx = vgsiT * (1. + self._Beta * (self.vds0 - vds))
+        ids = (self.a0 + vx * (self.a1 + vx * (self.a2 + vx  * self.a3))) \
             * np.tanh(self.gama * vds) * self._idsFac
-        # vgsi would makes sense than vPort[0] below?
-        ids = ad.condassign((vgsi - self._Vt0), itmp, 0.)
+        # vgsiT makes more sense than vgsi below? (vgsi in original doc)
+        ids = ad.condassign((vgsi - self._Vt0), ids, 0.)
+        # Must ensure ids > 0 for power conservation
+        ids = ad.condassign(ids, ids, 0.)
       
         # Return numpy array with one element per current source.
         iVec = np.array([igs, igd, ids * DtoSswap]) * self.area

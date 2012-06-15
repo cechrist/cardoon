@@ -1,0 +1,36 @@
+*** Electrothermal MESFET using the Curtice model ***
+
+.options sparse=0 temp=27
+.analysis tran tstep=5ps tstop=2ns
+
+.save tran 3 4
+.save tran 1000 1001
+
+ind:l1 1 2 l=1e-9 
+cap:c1 2 3 c=20e-11 
+
+ind:l2 3 7 l=15e-9  
+res:r2 7 8 r=100
+
+ind:l3 4 5 l=15e-9  
+res:r3 5 6 r=10
+cap:cload 4 9 c=20e-12 
+res:rload 9 0 r=100.
+
+vdc:vbias 8 0 vdc = -.15
+vpulse:vdrain 6 0  v1=1V v2=3v tr=50ps pw=40ns
+res:rin 11 1 r = 50
+vsin:vs 11 0 mag = .15 freq = 5.1GHz
+
+res:rs 123 0 r=1.144
+
+*** Thermal sub-circuit
+res:rchip 1000 1001 r=1
+cap:cchip 1000 1001 c=1n
+res:rtherm 1001 0 r=100
+cap:ctherm 1001 0 c=1u
+
+*** Mesfet 
+mesfetc_t:m1 4 3 123 1000 0 a0 = .016542 a1 = .0500214 a2 = .02012 a3 = -.00806592 gama = 2.16505 tau = 5e-12 beta = -.0394707 isat = 1e-9 vbd = 15 nr = 10 ib0 = 1e-9 cgs0 = .52785e-12 cgd0 = .087e-12 
+
+.end

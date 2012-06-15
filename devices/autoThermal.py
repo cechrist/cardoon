@@ -87,9 +87,10 @@ def thermal_device(nle):
 
             # Initial guess for input ports: 
             try:
-                if len(self.vPortGuess) < len(self.controlPorts):
-                    self.vPortGuess = np.concatenate(
-                        (self.vPortGuess,[0.]), axis=0)
+                # Consider time-delayed ports come after regular control ports
+                if len(self.vPortGuess) < len(self.controlPorts) + self.nDelays:
+                    self.vPortGuess = np.insert(self.vPortGuess, self.__tpn, 0.)
+                        
             except AttributeError:
                 # Ignore if vPortGuess not provided
                 pass
@@ -101,15 +102,18 @@ def thermal_device(nle):
             # set temperature in base class first
             nle.set_temp_vars(self, vPort[self.__tpn] + glVar.temp)
 
+            # Remove thermal port from vPort (needed in case
+            # time-delayed ports follow regular control ports)
+            vPort1 = np.delete(vPort, self.__tpn)
             # now calculate currents and charges
             if saveOP:
-                (iVec1, qVec, opV) = nle.eval_cqs(self, vPort, saveOP)
+                (iVec1, qVec, opV) = nle.eval_cqs(self, vPort1, saveOP)
             else:
-                (iVec1, qVec) = nle.eval_cqs(self, vPort)
+                (iVec1, qVec) = nle.eval_cqs(self, vPort1)
             # Calculate instantaneous power 
-            pout = nle.power(self, vPort, iVec1)
+            pout = nle.power(self, vPort1, iVec1)
             # Re-arrange output vector
-            iVec = np.concatenate((iVec1, [pout]), axis = 0)
+            iVec = np.append(iVec1, pout)
             if saveOP:
                 return (iVec, qVec, opV)
             else:
