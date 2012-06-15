@@ -1,7 +1,7 @@
 *** Improved LMA411 model (June 2012) ***
 **Netlist  of an Xband MMIC LNA  (LMA 411)
 **Low noise phemt lna using 0.25um technology
-**First amplifier is 300um (6x50um) thick and second is 400 um thick
+**First PHEMT is 300um (6x50um) wide and second is 400 um wide
 **DC supply of 6 volts
 **GaAs substrate thickness 100 um, silicon nitride passivation:
 **Standard thickness 1,000 ang
@@ -9,7 +9,7 @@
 **spiral inductor modeled as regular inductor
 
 .options sparse = 1 abstol=1e-8 reltol=1e-6
-*.analysis ac start=5GHz stop=16GHz num= 50 log=False
+.analysis ac start=5GHz stop=16GHz num= 50 log=False
 .analysis tran tstep= .5ps tstop=1ns shell=0 im=trap shell = 0
 
 * Input: 2 , output: 26
@@ -18,9 +18,9 @@
 .plot tran 17 19 18
 .plot ac_dB 2 26
 
-.model m_line1 tlinpy4 (z0mag = 73.3 k=7.27 fscale=10e9 alpha=81.5 nsect=20 fopt=10e9 tand=0.006)
-.model m_line2 tlinpy4 (z0mag= 86.4  k=6.89 fscale=10e9 alpha=122 nsect=20 fopt=10e9 tand=0.006)
-.model m_line3 tlinpy4 (z0mag = 76.2 k=7.18 fscale=10e9 alpha= 87 nsect=20 fopt=10e9 tand=0.006)
+.model m_line1 tlinpy4 (z0mag = 73.3 k=7.27 fscale=10e9 alpha=81.5 nsect=10 fopt=10e9 tand=0.006)
+.model m_line2 tlinpy4 (z0mag= 86.4  k=6.89 fscale=10e9 alpha=122 nsect=10 fopt=10e9 tand=0.006)
+.model m_line3 tlinpy4 (z0mag = 76.2 k=7.18 fscale=10e9 alpha= 87 nsect=10 fopt=10e9 tand=0.006)
 
 cap:c1 2 3 c=6e-12
 tlinpy4:t1 3 0 0 0 model=m_line2 length = 1108u

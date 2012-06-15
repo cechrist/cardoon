@@ -4,9 +4,8 @@
 .analysis ac start=1GHz stop=10GHz num= 40 log=False 
 .analysis tran tstep=5ps tstop=2ns
 
-.plot ac_mag 3 4 
-*.plot ac_phase 3 4 
-.plot tran 3 4
+.save ac 3 4 
+.save tran 3 4
 
 ind:l1 1 2 l=1e-9 
 cap:c1 2 3 c=20e-11 

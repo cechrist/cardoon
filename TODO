@@ -4,9 +4,7 @@ Development Plan (TODO file)
 
 Short-term goals:
 
-  #. Find problem in mmic_circuit.net
-
-  #. Update documentation to describe treatment of time-delayed
+  #. Update documentation to include treatment of time-delayed
      control voltages. 
 
   #. Add support for convolution of freq-defined elements 
@@ -15,7 +13,8 @@ Short-term goals:
 
 Longer term goals and other tasks to be done at some time:
 
-  * Convert into Python library with easy-to-use setup script
+  * Convert into Python library with easy-to-use setup script and
+    re-organize executable behaviour
 
   * Consider changing saveOP interface (return value?) for nonlinear devices
   

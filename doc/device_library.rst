@@ -510,14 +510,13 @@ Parameters
 
 Electro-thermal version with extra thermal port: diode_t 
 
-mesfetc: Intrinsic MESFET using Curtice-Ettemberg cubic model
--------------------------------------------------------------
+mesfetc: Cubic Curtice-Ettemberg Intrinsic MESFET Model
+-------------------------------------------------------
 
 Model derived from fREEDA 1.4 MesfetCT model adapted to re-use
 junction code from ``diode.py``. Some parameter names have been
 changed: ``isat``, ``tau``. Uses symmetric diodes and
-capacitances. Valid only for Vds > 0, Vgs <= 0. *Implementation
-needs more testing*
+capacitances. Works in reversed mode.
 
 Terminal order: 0 Drain, 1 Gate, 2 Source::
 
@@ -570,7 +569,7 @@ Parameters
  area         1.0                       Area multiplier                                      
  avt0         0.0          1/K          Pinch-off voltage (VP0 or VT0) linear temp. coefficient 
  beta         0.0          1/V          V1 dependance on Vds                                 
- bvt0         0            1/K^2        Pinch-off voltage (VP0 or VT0) quadratic temp. coefficient 
+ bvt0         0.0          1/K^2        Pinch-off voltage (VP0 or VT0) quadratic temp. coefficient 
  cgd0         0.0          F            Gate-drain Schottky barrier capacitance for Vgd=0    
  cgs0         0.0          F            Gate-source Schottky barrier capacitance for Vgs=0   
  eg0          0.8          eV           Barrier height at 0 K                                
@@ -591,7 +590,7 @@ Parameters
  vbd          .0inf        V            Breakdown voltage                                    
  vbi          0.8          V            Built-in potential of the Schottky junctions         
  vds0         4.0          V            Vds at which BETA was measured                       
- vt0          -1.0e+10     V            Voltage at which the channel current is forced to be zero for Vgs<=Vto 
+ vt0          -.0inf       V            Voltage at which the channel current is forced to be zero for Vgs<=Vto 
  xti          2.0                       Diode saturation current temperature exponent        
  =========== ============ ============ ===================================================== 
 

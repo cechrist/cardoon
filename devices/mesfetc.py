@@ -16,8 +16,8 @@ from diode import Junction
 
 class Device(cir.Element):
     """
-    Intrinsic MESFET using Curtice-Ettemberg cubic model
-    ----------------------------------------------------
+    Cubic Curtice-Ettemberg Intrinsic MESFET Model
+    ----------------------------------------------
 
     Model derived from fREEDA 1.4 MesfetCT model adapted to re-use
     junction code from ``diode.py``. Some parameter names have been

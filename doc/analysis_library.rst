@@ -223,7 +223,7 @@ Parameters
  =========== ============ ============ ===================================================== 
  Name         Default      Unit         Description                                          
  =========== ============ ============ ===================================================== 
- im           BE                        Integration method                                   
+ im           trap                      Integration method                                   
  saveall      0                         Save all nodal voltages                              
  shell        0                         Drop to ipython shell after calculation              
  tstep        1.0e-05      s            Time step size                                       

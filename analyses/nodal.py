@@ -324,26 +324,28 @@ def run_AC(ckt, fvec):
     # Number of frequencies
     nfreq = np.shape(fvec)[0]
     j = complex(0., 1.)
-    omegaVec = 2. * np.pi * fvec
+    jomegaVec = j * 2. * np.pi * fvec
     xVec = np.zeros((ckt.nD_dimension, nfreq), dtype=complex)
     # Frequency-dependent matrices: a matrix of complex vectors, one
     # for each frequency.
     Y = np.empty((ckt.nD_dimension, ckt.nD_dimension), dtype=complex)
     # Loop for each frequency: create and solve linear system
-    for k, omega in enumerate(omegaVec):
-        Y[:] = G + j * omega * C 
+    for k, jomega in enumerate(jomegaVec):
+        Y[:] = G + jomega * C 
         for elem, outJac in zip(ckt.nD_nlinElem, jacList):
+            # Need a working copy to avoid modifying the original
+            workJac = outJac.astype(complex)
             if elem.nDelays:
-                # Multiply Jacobian columns by exp(j omega tau)
+                # Multiply Jacobian columns by exp(-j omega tau)
                 for i in xrange(-elem.nDelays, 0):
-                    outJac[:,i] *= np.exp(j * omega * elem.nD_delay[i])
+                    workJac[:,i] *= np.exp(-jomega * elem.nD_delay[i])
             set_Jac(Y, elem.nD_cpos, elem.nD_cneg, 
-                    elem.nD_vpos, elem.nD_vneg, outJac)
+                    elem.nD_vpos, elem.nD_vneg, workJac)
             if len(elem.qsOutPorts):
                 # Get charge derivatives from outJac
-                qJac = outJac[len(elem.csOutPorts):,:]
+                jwqJac = jomega * workJac[len(elem.csOutPorts):,:]
                 set_Jac(Y, elem.nD_qpos, elem.nD_qneg, 
-                        elem.nD_vpos, elem.nD_vneg, j * omega * qJac)
+                        elem.nD_vpos, elem.nD_vneg, jwqJac)
 
         # Frequency-defined elements
         for elem in ckt.nD_freqDefinedElem:
