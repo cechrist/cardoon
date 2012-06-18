@@ -56,15 +56,17 @@ analysisQueue = Queue()
 allowedChars = '._/+-:'
 
 # Grammar definition for numeric fields, using spice syntax mostly
-point = pp.Literal('.')
-e = pp.CaselessLiteral('e')
-plusorminus = pp.Literal('+') | pp.Literal('-')
-number = pp.Word(pp.nums) 
-integer = pp.Combine( pp.Optional(plusorminus) + number )
-floatnumber = pp.Combine(
-    ( (integer + pp.Optional(point + pp.Optional(number)))
-      | (pp.Optional(plusorminus) + point + number))
-    + pp.Optional( e + integer ) ) 
+#point = pp.Literal('.')
+#e = pp.CaselessLiteral('e')
+#plusorminus = pp.Literal('+') | pp.Literal('-')
+#number = pp.Word(pp.nums) 
+#integer = pp.Combine( pp.Optional(plusorminus) + number )
+#floatnumber = pp.Combine(
+#    ( (integer + pp.Optional(point + pp.Optional(number)))
+#      | (pp.Optional(plusorminus) + point + number))
+#    + pp.Optional( e + integer ) ) 
+
+floatnumber = pp.Regex(r'[+-]?\d*(\.\d*)?([Ee][+-]?\d+)?')
 
 # Multipliers
 multT = pp.CaselessLiteral('t').setParseAction(lambda tok: 1e12)
@@ -81,8 +83,8 @@ multf = pp.CaselessLiteral('f').setParseAction(lambda tok: 1e-15)
 multiplier = multT | multG | multMeg | multK \
     | multMil | multm | multu | multn | multp | multf
 
-numvalue = floatnumber.setResultsName('value') \
-    + pp.Optional(multiplier).setResultsName('mult') \
+numvalue = floatnumber('value') \
+    + pp.Optional(multiplier)('mult') \
     + pp.Optional(pp.Word(pp.alphas))
 
 def string_to_number(valueString):
@@ -369,28 +371,26 @@ def parse_file(filename, ckt):
     # ParString used for string parameter values and filename in .include 
     parString = pp.Word(pp.alphanums + allowedChars)
 
-    vector = pp.Suppress(pp.Literal('[')) \
-        + pp.ZeroOrMore(parString + pp.Suppress(pp.Literal(','))) \
-        + parString + pp.Suppress(pp.Literal(']'))
+    LPAR,RPAR,LBRACK,RBRACK,EQ,COLON = map(pp.Suppress,"()[]=:")
+
+    vector = LBRACK + pp.delimitedList(parString) + RBRACK
 
     parName = pp.Word(pp.alphas, pp.alphanums + '_')
     parameters = pp.OneOrMore(
-        pp.Group(parName + pp.Suppress('=') 
-                 + (parString.setResultsName('single') |
-                    pp.Group(vector).setResultsName('vector'))))
+        pp.Group(parName + EQ + 
+                 (parString('single') | pp.Group(vector)('vector'))))
 
     # Used for names of: devices (type and instances), nodes, subcircuits
     identifier = pp.Word(pp.alphanums + '_-')
 
-    elemname = identifier.setResultsName('devType') \
-        + pp.Suppress(':') \
-        + identifier.setResultsName('instanceName')
+    elemname = identifier('devType') + pp.Suppress(':') \
+        + identifier('instanceName')
     
     nodes = pp.OneOrMore(identifier + ~pp.FollowedBy("="))
 
     # Output variables (for .plot, .save)
     intTerm = pp.Group(pp.Combine(identifier + pp.Literal(':') + identifier)
-                       + pp.Suppress(':') + identifier)
+                       + COLON + identifier)
     oneVar = intTerm | identifier
     outVars = pp.OneOrMore(oneVar)
     # Comment line: any line that starts with # , * or //
@@ -398,55 +398,46 @@ def parse_file(filename, ckt):
                                + pp.Regex('.*')) ^ pp.dblSlashComment)
     
     # example: diode:d1 1 gnd model=mydiode isat= 2e-15 area = 2.
-    elemline = elemname \
-        + nodes.setResultsName('nodes') \
-        + pp.Optional(parameters.setResultsName('parameters'))
+    elemline = elemname + nodes('nodes') + pp.Optional(parameters('parameters'))
     
     # example: .model mydiode diode ( isat=1e-15 cj0=5e-12 )
     modelline = pp.Suppress(pp.Keyword('.model', caseless=True)) \
-        + identifier.setResultsName('modName') \
-        + identifier.setResultsName('devType') \
-        + pp.Optional(pp.Suppress('(') 
-                      + parameters.setResultsName('parameters') 
-                      + pp.Suppress(')') )
+        + identifier('modName') \
+        + identifier('devType') \
+        + pp.Optional(LPAR + parameters('parameters') + RPAR )
 
     # example: .options abstol=1e-8
     optionsline = pp.Suppress(pp.Keyword('.options', caseless=True)) \
-        + parameters.setResultsName('options') 
+        + parameters('options') 
 
     # example: .vars freq=1GHz
     varsline = pp.Suppress(pp.Keyword('.vars', caseless=True)) \
-        + parameters.setResultsName('vars') 
+        + parameters('vars') 
 
     # example: .subckt LM741 in out vdd gnd
     subcktDefLine = pp.Suppress(pp.Keyword('.subckt', caseless=True)) \
-        + identifier.setResultsName('subName') \
-        + nodes.setResultsName('nodes')
+        + identifier('subName') + nodes('nodes')
 
     # example: xamp1 2 5 1 gnd LM741
     # Treat the last node as the subcircuit definition name. Sorry
-    subcktInstLine = pp.Word('xX', pp.alphanums 
-                             + '_').setResultsName('instanceName') \
-                             + nodes.setResultsName('nodes')
+    subcktInstLine = pp.Word('xX', pp.alphanums + '_')('instanceName') \
+        + nodes('nodes')
 
     # example: .include model.net
     includeline = pp.Suppress(pp.Keyword('.include', caseless=True)) \
-        + parString.setResultsName('filename')
+        + parString('filename')
 
     # example: .analysis op
     analysisline = pp.Suppress(pp.Keyword('.analysis', caseless=True)) \
-        + identifier.setResultsName('anType') \
-        + pp.Optional(parameters.setResultsName('parameters'))
+        + identifier('anType') + pp.Optional(parameters('parameters'))
 
     # example: .plot dc 10 out1
     plotline = pp.Suppress(pp.Keyword('.plot', caseless=True)) \
-        + identifier.setResultsName('Type') \
-        + outVars.setResultsName('Vars') 
+        + identifier('Type') + outVars('Vars') 
 
     # example: .save dc 10 out1
     saveline = pp.Suppress(pp.Keyword('.save', caseless=True)) \
-        + identifier.setResultsName('Type') \
-        + outVars.setResultsName('Vars') 
+        + identifier('Type') + outVars('Vars') 
 
     endsline = pp.Keyword('.ends', caseless=True)
     
