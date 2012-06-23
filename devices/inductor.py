@@ -34,7 +34,7 @@ class Device(cir.Element):
 
                                         il/gyr    Term: il
         0  o---------+            +----------------+
-                     | gyr V23    |                |
+                     | gyr V(il)  |                |
           +         /|\          /^\               |
         Vin        ( | )        ( | ) gyr Vin    ----- gyr^2 * L
           -         \V/          \|/             -----
