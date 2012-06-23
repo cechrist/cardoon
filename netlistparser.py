@@ -53,7 +53,7 @@ class Queue:
 analysisQueue = Queue()
 
 # Characters allowed in parameter strings
-allowedChars = '._/+-:'
+allowedChars = '._+-*:'
 
 # Grammar definition for numeric fields, using spice syntax mostly
 #point = pp.Literal('.')
@@ -368,10 +368,12 @@ def parse_file(filename, ckt):
     # *******************************************************************
     # Defined here just in case (because function must be re-entrant)
     
-    # ParString used for string parameter values and filename in .include 
-    parString = pp.Word(pp.alphanums + allowedChars)
+    # Symbol definitions
+    LPAR,RPAR,LBRACK,RBRACK,EQ,COLON,QUOTE = map(pp.Suppress,"()[]=:'")
 
-    LPAR,RPAR,LBRACK,RBRACK,EQ,COLON = map(pp.Suppress,"()[]=:")
+    # ParString used for string parameter values
+    parString = pp.Word(pp.alphanums + allowedChars) \
+        | QUOTE + pp.Word(pp.alphanums + allowedChars + ' ()') + QUOTE
 
     vector = LBRACK + pp.delimitedList(parString) + RBRACK
 
@@ -424,8 +426,9 @@ def parse_file(filename, ckt):
         + nodes('nodes')
 
     # example: .include model.net
+    fileString = pp.Word(pp.alphanums + '._-+')
     includeline = pp.Suppress(pp.Keyword('.include', caseless=True)) \
-        + parString('filename')
+        + fileString('filename')
 
     # example: .analysis op
     analysisline = pp.Suppress(pp.Keyword('.analysis', caseless=True)) \

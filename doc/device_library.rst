@@ -53,7 +53,7 @@ Internal implementation uses a gyrator (adds il internal node)::
 
                                     il/gyr    Term: il
     0  o---------+            +----------------+
-                 | gyr V23    |                |
+                 | gyr V(il)  |                |
       +         /|\          /^\               |
     Vin        ( | )        ( | ) gyr Vin    ----- gyr^2 * L
       -         \V/          \|/             -----
@@ -73,6 +73,73 @@ Parameters
  Name         Default      Unit         Description                                          
  =========== ============ ============ ===================================================== 
  l            0.0          H            Inductance                                           
+ =========== ============ ============ ===================================================== 
+
+mem: Memristor
+--------------
+
+Connection diagram::
+
+            _______________
+    0      |_   _   _   _  |         1
+      o----+ |_| |_| |_| |_+-------o    External view
+           |_______________|
+                            
+Netlist example::
+
+    mem:m1 1 0 m = '1e3 * (np.cosh(1e6 * q)-1.)' 
+
+Notes: 
+
+  * The memristance function is given as an expression in the
+    ``m`` parameter. Constants and mathematical functions can be
+    used. The independent variable is ``q``.
+
+  * the memristor loses its memory as the capacitor discharges
+    through Rleak (Rleak is necessary to ensure a unique DC
+    solution). The values of C and Rleak can be adjusted to change
+    the time constant.
+
+Internal Topology
++++++++++++++++++
+
+Internal implementation uses gyrators (adds 2 internal nodes)::
+
+                                    im/gyr    Term: im
+    0  o---------+            +----------------+
+                 | gyr V(im)  |                |
+      +         /|\          /^\              /|\ 
+    Vin        ( | )        ( | ) gyr Vin    ( | ) gyr^2 * M(q) * V(im)
+      -         \V/          \|/              \V/ 
+                 |            |                |   q = C * vc 
+    1  o---------+            +----------------+
+                                      |
+                                     --- tref 
+                                      V 
+
+                                    vc      Term: vc                  
+                              +----------------+--------,
+                              |                |        |                
+                             /^\             -----      /                
+                            ( | ) gyr V(im)  ----- C    \ Rleak
+                             \|/               |        /                
+                              |                |        |                
+                              +----------------+--------'               
+                                      |                                 
+                                     --- tref                           
+                                      V                                 
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ c            1.0e-06      F            Auxiliary capacitance                                
+ m            abs(5e9*q)   Ohms         Memristance function M(q)                            
+ rleak        1.0e+09      Ohms         Leackage resistance                                  
  =========== ============ ============ ===================================================== 
 
 res: Resistor

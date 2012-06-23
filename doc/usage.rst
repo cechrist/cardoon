@@ -127,9 +127,23 @@ A very brief description is provided here. The netlist syntax
 resembles somewhat the syntax used in other simulators such as spice,
 fREEDA and QUCS, but at least for now it has some simplifications. The
 netlist is case-sensitive. Each line specifies one circuit element, an
-analysis to perform or another command.
+analysis to perform or another command. In general lines can be
+entered in any order. Order is important only to define subcircuit
+blocks.
 
-* The backslash ("\\") at the end of a line means that the line must
+**Title line**
+
+  The first line in the netlist is used to set the title and does not
+  follow any particular syntax.
+
+**End of netlist line**
+
+  It a ``.end`` line is read, the parser stops readin the file and any
+  additional lines are ignored.
+
+**Line continuation**
+
+  The backslash ("\\") at the end of a line means that the line must
   be joined with the next one. The following is taken as single line::
 
       .analysis testdev plot=1 ports_bias = [.7V] sweep_port=0 \
@@ -139,13 +153,25 @@ analysis to perform or another command.
   This is different from spice syntax but it is easier to read from
   the parser.
 
-* Parameters can be ``float`` or ``int`` numbers, strings (``str``) or
+**Parameters**
+
+  Parameters can be ``float`` or ``int`` numbers, strings (``str``) or
   numerical vectors. All spice suffixes can be used to specify
   multipliers::
 
       model= mynpn v1 = 1kOhm r2 = 1e2MEG
 
-* Element lines::
+  Some devices (such as the memristor) accept an expression as a
+  parameter. Expressions must be enclosed in single quotes (') and can
+  contain parenthesis and white spaces. Mathematical functions are
+  available but must be preceded by the ``np.`` prefix (this may be
+  relaxed in the future)::
+
+      mem:m1 2 0 m = '1e3 * (np.cosh(1e7 * q)-1.)' 
+
+**Element lines**
+
+  General format::
 
       <element type>:<name> <node list> [<model>] <parameter list>
 
@@ -158,7 +184,9 @@ analysis to perform or another command.
 
   Elements are documented in the :doc:`device_library`.
 
-* Analysis lines::
+**Analysis lines**
+
+  General format::
 
      .analysis <analysis type> <parameter list>
 
@@ -172,7 +200,9 @@ analysis to perform or another command.
       start = .1V stop= .8V sweep_num=1100 device = diode:d2 \
       param = temp param_val = [0., 27, 40] 
 
-* Global options (similar to spice's options):: 
+**Global options**
+
+  General format (similar to spice's options):: 
 
       .options <parameter list>
    
@@ -182,7 +212,9 @@ analysis to perform or another command.
 
   Global options are documented in the :doc:`global_vars`.   
    
-* Subcircuits use a syntax similar to spice::
+**Subcircuits**
+
+  Subcircuits use a syntax similar to spice. Example::
 
       x1 2 3 4 X1
       x2 2 gnd 3 X1
@@ -192,12 +224,18 @@ analysis to perform or another command.
       cap:c2 out gnd c=1nH
       .ends
 
-* Include files::
+**Include files**
+
+  General format::
 
        .include <filename>
 
+  The file is inserted as a part of the netlist in the position of the
+  ``.include`` statement.
 
-* Netlist variables::
+**Netlist variables**
+	  
+  Examples::
 
        .vars freq = 1GHz iin = .5mA
        .vars portVolt1 = [1, 2, 0.]
@@ -212,8 +250,10 @@ analysis to perform or another command.
   and analysis lines. ``.var`` definitions can be placed anywhere in the
   netlist.
 
-* Output commands: there are two output commands: ``.plot`` and
-  ``.save``. Both of them use the same syntax. Examples::
+**Output commands**
+
+  There are two output commands: ``.plot`` and ``.save``. Both of them
+  use the same syntax. Examples::
 
     .plot dc in out
     .plot tran 5 out3
@@ -261,13 +301,15 @@ analysis to perform or another command.
 	    ...
       
 
-* Electrothermal devices: the netlist name for the electrothermal
-  model is formed by adding "_t" to the original name (e.g.,
-  ``bjt_t``).  An electrothermal model has an additional pair of
-  thermal terminals. The voltage in this thermal port is the
-  difference between the device temperature and the ambient
-  temperature. The current is proportional to the power dissipated in
-  the device.
+**Electrothermal devices**
+
+  Refer to the :doc:`device_library` to find which devices support
+  electrothermal models. The netlist name for an electrothermal model
+  is formed by adding "_t" to the original name (e.g., ``bjt_t``).  An
+  electrothermal model has an additional pair of thermal
+  terminals. The voltage in this thermal port is the difference
+  between the device temperature and the ambient temperature. The
+  current is proportional to the power dissipated in the device.
 
 
 
