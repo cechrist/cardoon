@@ -65,7 +65,7 @@ for net in netlists:
             try:
                 result = np.load(outfile)
             except IOError:
-                print('\nProblem reading reference file: {0}'.format(outfile))
+                print('\nProblem reading output file: {0}'.format(outfile))
                 print('\n*** Test Failed! ***')
                 exit(-1)
 
