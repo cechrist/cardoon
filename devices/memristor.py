@@ -1,6 +1,6 @@
 """
-:mod:`memristor` -- Linear memristor
-------------------------------------
+:mod:`memristor` -- Basic (nonlinear) memristor
+-----------------------------------------------
 
 .. module:: memristor
 .. moduleauthor:: Carlos Christoffersen
@@ -29,19 +29,24 @@ class Device(cir.Element):
 
     Notes: 
 
-      * The memristance function is given as an expression in the
+      * not really a basic component as the memristor is nonlinear,
+        otherwise memristance could become negative
+
+      * the memristance function is given as an expression in the
         ``m`` parameter. Constants and mathematical functions can be
-        used. The independent variable is ``q``.
+        used. The independent variable is the memristor charge (``q``)
+
+      * The initial charge can be adjusted with the ``q0`` parameter
 
       * the memristor loses its memory as the capacitor discharges
         through Rleak (Rleak is necessary to ensure a unique DC
         solution). The values of C and Rleak can be adjusted to change
-        the time constant.
+        the time constant
 
     Internal Topology
     +++++++++++++++++
 
-    Internal implementation uses gyrators (adds 2 internal nodes)::
+    Internal implementation uses a gyrator and adds 2 internal nodes::
 
                                         im/gyr    Term: im
         0  o---------+            +----------------+
@@ -53,23 +58,23 @@ class Device(cir.Element):
         1  o---------+            +----------------+
                                           |
                                          --- tref 
-                                          V 
+                                          - 
 
-                                        vc      Term: vc                  
-                                  +----------------+--------,
-                                  |                |        |                
-                                 /^\             -----      /                
-                                ( | ) gyr V(im)  ----- C    \ Rleak
-                                 \|/               |        /                
-                                  |                |        |                
-                                  +----------------+--------'               
-                                          |                                 
-                                         --- tref                           
-                                          V                                 
+                                     Term: vc                  
+        +       +----------------+--------+---------,
+                |                |        |         |  
+               /^\             -----      /        /^\       
+        vc    ( | ) gyr V(im)  ----- C    \ Rleak ( | ) q0 / C / Rleak
+               \|/               |        /        \|/     
+                |                |        |         |       
+        -       +----------------+--------+---------'     
+                                 |                                 
+                                --- tref                           
+                                 -                                 
 
     """
     # Device category
-    category = "Basic Components"
+    category = "Basic components"
 
     # devtype is the 'model' name
     devType = "mem"
@@ -83,6 +88,7 @@ class Device(cir.Element):
     
     paramDict = dict(
         m = ('Memristance function M(q)', 'Ohms', str, 'abs(5e9*q)'),
+        q0 = ('Initial charge', 'As', float, 0.),
         c = ('Auxiliary capacitance', 'F', float, 1e-6),
         rleak = ('Leackage resistance', 'Ohms', float, 1e9)
         )
@@ -128,6 +134,12 @@ class Device(cir.Element):
         tim = self.add_internal_term('im', '{0} A'.format(glVar.gyr)) 
         tvc = self.add_internal_term('vc', 'V') 
         tref = self.add_reference_term() 
+        # Set up source if q0 is given
+        if self.q0:
+            self.isDCSource = True
+            self.sourceOutput = (tref, tvc)
+            self._i0 = self.q0 / self.c / self.rleak
+
         # Setup gyrator
         # Access to global variables is through the glVar 
         self.linearVCCS = [((0,1), (tref, tim), glVar.gyr), 
@@ -177,3 +189,6 @@ class Device(cir.Element):
                    'i': iout[0],
                    'M': opV[0]}
         return self.OP
+
+    def get_DCsource(self):
+        return self._i0

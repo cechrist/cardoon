@@ -10,7 +10,10 @@ Version 0.4.3
      * Added support for time delays in nonlinear device models (also
        included in updated documentation)
 
-     * Added Curtice cubic MESFET and memristor models
+     * Added a memristor model, gyrator device and option for
+       user-defined nonlinear VCCSs
+
+     * Added Curtice cubic MESFET model
 
      * Default integration method in transient analysis is now ``trap``
 

@@ -28,7 +28,7 @@ class Device(cir.Element):
 
     """
     # Device category
-    category = "Basic Components"
+    category = "Basic components"
 
     # devtype is the 'model' name
     devType = "cap"

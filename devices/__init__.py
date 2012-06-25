@@ -37,7 +37,7 @@ import autoThermal
 
 # Regular 'netlist' elements must be listed here
 netElemList = ['resistor', 'capacitor', 'inductor', 'memristor',
-               'vccs',
+               'gyrator', 'vccs',
                'idc', 'vdc', 'isin', 'vsin', 'ipulse', 'vpulse',
                'diode', 'svdiode', 'bjt', 'svbjt', 
                'mosEKV', 'mosACM', 'mosACMs', 

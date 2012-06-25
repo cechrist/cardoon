@@ -27,8 +27,8 @@ class Device(cir.Element):
         2 o      +  Vc   -        o 3
 
     By default the source is linear. If a nonlinear function is
-    provided, the linear gain (g) can not be specified and is not
-    used.
+    provided, the linear gain (``g``) is not used and must not be
+    specified in the netlist.
 
     Netlist examples::
 
@@ -37,7 +37,7 @@ class Device(cir.Element):
 
     """
     # Device category
-    category = "Controlled sources"
+    category = "Controlled Sources"
 
     # devtype is the 'model' name
     devType = "vccs"

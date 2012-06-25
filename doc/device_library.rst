@@ -4,7 +4,7 @@
 Device Library Catalog
 ======================
  
-Basic Components
+Basic components
 ================
 
 cap: Linear Capacitor
@@ -91,19 +91,24 @@ Netlist example::
 
 Notes: 
 
-  * The memristance function is given as an expression in the
+  * not really a basic component as the memristor is nonlinear,
+    otherwise memristance could become negative
+
+  * the memristance function is given as an expression in the
     ``m`` parameter. Constants and mathematical functions can be
-    used. The independent variable is ``q``.
+    used. The independent variable is the memristor charge (``q``)
+
+  * The initial charge can be adjusted with the ``q0`` parameter
 
   * the memristor loses its memory as the capacitor discharges
     through Rleak (Rleak is necessary to ensure a unique DC
     solution). The values of C and Rleak can be adjusted to change
-    the time constant.
+    the time constant
 
 Internal Topology
 +++++++++++++++++
 
-Internal implementation uses gyrators (adds 2 internal nodes)::
+Internal implementation uses a gyrator and adds 2 internal nodes::
 
                                     im/gyr    Term: im
     0  o---------+            +----------------+
@@ -115,19 +120,19 @@ Internal implementation uses gyrators (adds 2 internal nodes)::
     1  o---------+            +----------------+
                                       |
                                      --- tref 
-                                      V 
+                                      - 
 
-                                    vc      Term: vc                  
-                              +----------------+--------,
-                              |                |        |                
-                             /^\             -----      /                
-                            ( | ) gyr V(im)  ----- C    \ Rleak
-                             \|/               |        /                
-                              |                |        |                
-                              +----------------+--------'               
-                                      |                                 
-                                     --- tref                           
-                                      V                                 
+                                 Term: vc                  
+    +       +----------------+--------+---------,
+            |                |        |         |  
+           /^\             -----      /        /^\       
+    vc    ( | ) gyr V(im)  ----- C    \ Rleak ( | ) q0 / C / Rleak
+           \|/               |        /        \|/     
+            |                |        |         |       
+    -       +----------------+--------+---------'     
+                             |                                 
+                            --- tref                           
+                             -                                 
 
 
 
@@ -139,6 +144,7 @@ Parameters
  =========== ============ ============ ===================================================== 
  c            1.0e-06      F            Auxiliary capacitance                                
  m            abs(5e9*q)   Ohms         Memristance function M(q)                            
+ q0           0.0          As           Initial charge                                       
  rleak        1.0e+09      Ohms         Leackage resistance                                  
  =========== ============ ============ ===================================================== 
 
@@ -183,8 +189,46 @@ Parameters
 
 Electro-thermal version with extra thermal port: res_t 
 
-Controlled sources
+Controlled Sources
 ==================
+
+gyr: Gyrator
+------------
+
+The gyrator converts Port 1 voltage into Port 2 current and
+*vice-versa*. Combined with the VCCS device it can be used to
+implement all the remaining controlled sources:
+
+  * VCVS = VCCS + gyrator
+  
+  * CCCS = gyrator + VCCS
+
+  * CCVS = gyrator + VCCS + gyrator
+
+Connection diagram::
+
+        0  o---------+            +----------o 2
+    +                |            |                +
+                    /|\          /^\               
+   Vin1     g Vin2 ( | )        ( | ) g Vin1      Vin2
+                    \V/          \|/               
+    -                |            |                -
+        1  o---------+            +----------o 3
+
+Netlist example::
+
+    gyr:gg 1 0 2 0 g=1m
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ g            0.001        Ohms         Gyrator gain                                         
+ =========== ============ ============ ===================================================== 
 
 vccs: Voltage-controlled current source
 ---------------------------------------
@@ -200,8 +244,8 @@ Schematic::
     2 o      +  Vc   -        o 3
 
 By default the source is linear. If a nonlinear function is
-provided, the linear gain (g) can not be specified and is not
-used.
+provided, the linear gain (``g``) is not used and must not be
+specified in the netlist.
 
 Netlist examples::
 

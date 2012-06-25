@@ -7,8 +7,7 @@
 # -------------------------------------------------------------------
 vdc:vdd 5 0 vdc = 1V
 # Gyrator gain: Terminal 6 voltage equal to (5-1) current in uA
-vccs:gyr2 gnd 6 5 1 g=1e-6
-vccs:gyr1 5 1 6 gnd g=1e-6
+gyr:g1 5 1 6 gnd g=1e-6
 vccs:id3 gnd 4 6 gnd g=1e-6
 vccs:id1 gnd 2 6 gnd g=.2e-6
 # Needed to get the right solution, contributes 1pA error
