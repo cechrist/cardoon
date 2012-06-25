@@ -1,0 +1,15 @@
+# nonlinear VCCS test
+
+.analysis dc device=vdc:vin param=vdc start=-4V stop=4V shell=0
+.options sparse=0
+
+vdc:vin 1 0
+
+vccs:g1 0 cout 1 0 f='1e-3 * np.tanh(vc)' 
+res:rload cout 0 r=1k
+
+.plot dc cout 
+
+.end
+
+

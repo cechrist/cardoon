@@ -156,16 +156,19 @@ blocks.
 **Parameters**
 
   Parameters can be ``float`` or ``int`` numbers, strings (``str``) or
-  numerical vectors. All spice suffixes can be used to specify
-  multipliers::
+  numerical vectors. Spice suffixes (``uF``, ``mA``, ``kHz``, ``GHz``,
+  *etc.*) can be used to specify multipliers::
 
       model= mynpn v1 = 1kOhm r2 = 1e2MEG
 
   Some devices (such as the memristor) accept an expression as a
   parameter. Expressions must be enclosed in single quotes (') and can
-  contain parenthesis and white spaces. Mathematical functions are
-  available but must be preceded by the ``np.`` prefix (this may be
-  relaxed in the future)::
+  contain parenthesis and white spaces. As expressions are evaluated
+  directly by the Python parser, Python syntax must be used. Constants
+  must be written as numbers and standard Spice suffixes *can not* be
+  used inside expressions. Mathematical functions are available but
+  must be preceded by the ``np.`` prefix. These restrictions may be
+  relaxed in the future::
 
       mem:m1 2 0 m = '1e3 * (np.cosh(1e7 * q)-1.)' 
 

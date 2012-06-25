@@ -81,9 +81,9 @@ mem: Memristor
 Connection diagram::
 
             _______________
-    0      |_   _   _   _  |         1
-      o----+ |_| |_| |_| |_+-------o    External view
-           |_______________|
+    0      |_   _   _   _| |         1
+      o----| |_| |_| |_| | |-------o    External view
+           |_____________|_|
                             
 Netlist example::
 
@@ -182,6 +182,43 @@ Parameters
 
 
 Electro-thermal version with extra thermal port: res_t 
+
+Controlled sources
+==================
+
+vccs: Voltage-controlled current source
+---------------------------------------
+
+Schematic::
+
+               g Vc   (or if nonlinear, i(vc))
+               ,---,    
+    0 o-------( --> )---------o 1
+               `---`     
+
+
+    2 o      +  Vc   -        o 3
+
+By default the source is linear. If a nonlinear function is
+provided, the linear gain (g) can not be specified and is not
+used.
+
+Netlist examples::
+
+    vccs:g1 gnd 4 3 gnd g=2mS
+    vccs:iout 0 cout 1 0 f='1e-3 * np.tanh(vc)' 
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ f                         A            Nonlinear function i(vc)                             
+ g            0.001        S            Linear transconductance                              
+ =========== ============ ============ ===================================================== 
 
 Distributed components
 ======================
@@ -1341,46 +1378,6 @@ Parameters
  idc          0.0          A            DC current                                           
  mag          0.0          A            Amplitude                                            
  phase        0.0          degrees      Phase                                                
- =========== ============ ============ ===================================================== 
-
-vccs: Voltage-controlled current source
----------------------------------------
-
-Schematic::
-
-              g Vcont
-               ,---,    
-    0 o-------( --> )---------o 1
-               `---`     
-
-
-    2 o      + Vcont -        o 3
-
-Temperature dependence:
-
-.. math::
-    
-  g(T) = g(T_{nom}) (1 + t_{c1} \Delta T + t_{c2} \Delta T^2)
-
-  \Delta T = T - T_{nom}
-
-Netlist example::
-
-    vccs:g1 gnd 4 3 gnd g=2mS
-
-
-
-Parameters
-++++++++++
-
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- g            0.001        S            Linear transconductance                              
- tc1          0.0          1/C          Current temperature coefficient 1                    
- tc2          0.0          1/C^2        Current temperature coefficient 2                    
- temp         None         C            Device temperature (None: use global temp.)          
- tnom         27.0         C            Nominal temperature                                  
  =========== ============ ============ ===================================================== 
 
 vdc: DC voltage source

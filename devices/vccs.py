@@ -9,6 +9,7 @@
 import numpy as np
 from globalVars import const, glVar
 import circuit as cir
+import cppaddev as ad
 
 class Device(cir.Element):
     r"""
@@ -17,29 +18,26 @@ class Device(cir.Element):
 
     Schematic::
 
-                  g Vcont
+                   g Vc   (or if nonlinear, i(vc))
                    ,---,    
         0 o-------( --> )---------o 1
                    `---`     
 
 
-        2 o      + Vcont -        o 3
+        2 o      +  Vc   -        o 3
 
-    Temperature dependence:
+    By default the source is linear. If a nonlinear function is
+    provided, the linear gain (g) can not be specified and is not
+    used.
 
-    .. math::
-        
-      g(T) = g(T_{nom}) (1 + t_{c1} \Delta T + t_{c2} \Delta T^2)
-
-      \Delta T = T - T_{nom}
-
-    Netlist example::
+    Netlist examples::
 
         vccs:g1 gnd 4 3 gnd g=2mS
+        vccs:iout 0 cout 1 0 f='1e-3 * np.tanh(vc)' 
 
     """
     # Device category
-    category = "Sources"
+    category = "Controlled sources"
 
     # devtype is the 'model' name
     devType = "vccs"
@@ -51,11 +49,9 @@ class Device(cir.Element):
     numTerms = 4
     
     paramDict = dict(
-        cir.Element.tempItem,
+#        cir.Element.tempItem,
         g = ('Linear transconductance', 'S', float, 1e-3),
-        tnom = ('Nominal temperature', 'C', float, 27.),
-        tc1 = ('Current temperature coefficient 1', '1/C', float, 0.),
-        tc2 = ('Current temperature coefficient 2', '1/C^2', float, 0.)
+        f = ('Nonlinear function i(vc)', 'A', str, '')
         )
 
     def __init__(self, instanceName):
@@ -64,24 +60,66 @@ class Device(cir.Element):
         internal nodes here.
         """
         cir.Element.__init__(self, instanceName)
-
-
-    def process_params(self):
-        # Access to global variables is through the glVar 
-
-        # Adjust according to temperature
-        self.set_temp_vars(self.temp)
-        self.linearVCCS = [((2,3), (0,1), self._gT)]
         
 
-    def set_temp_vars(self, temp):
+    def process_params(self):
+
+        if self.is_set('f'):
+            # Nonlinear source
+            if self.is_set('g'):
+                raise cir.CircuitError(
+                    '{0}: can not specify both g and f'.format(self.nodeName))
+            # test f expression to make sure it is valid
+            try:
+                vc = .5
+                result = eval(self.f)
+            except Exception as e:
+                raise cir.CircuitError(
+                    '{0}: Invalid expression: {1} ({2})'.format(
+                        self.nodeName, self.f, e))
+            try:
+                abs(result)
+            except TypeError:
+                raise cir.CircuitError(
+                    '{0}: Invalid expression: {1} result not a number)'.format(
+                        self.nodeName, self.m))
+            # Set nonlinear attributes
+            self.isNonlinear = True
+            self.controlPorts = [(2, 3)]
+            self.csOutPorts = [(0, 1)]
+            self.qsOutPorts = []
+
+        else:
+            # linear source
+            self.linearVCCS = [((2,3), (0,1), self.g)]
+        
+
+    def eval_cqs(self, vPort):
         """
-        Calculate temperature-dependent variables for temp given in C
+        Returns current given control voltage. Charge vector is empty
+
+        vPort[0] = control voltage
+        iout[0] = output current
         """
-        # Absolute temperature (note temp is in deg. C)
-        # T = const.T0 + temp
-        deltaT = temp - self.tnom
-        self._gT = self.g * (1. + (self.tc1 + self.tc2 * deltaT) * deltaT)
+        vc = vPort[0]
+        iout = np.array([eval(self.f)])
+        return (iout, np.array([]))
+
+    # Use automatic differentiation for eval and deriv function
+    eval_and_deriv = ad.eval_and_deriv
+    eval = ad.eval
+
+    def get_OP(self, vPort):
+        """
+        Calculates operating point information
+
+        vPort[0] = control voltage
+        """
+        # Get g at the requested temperature (in case of thermal resistor)
+        (iout, qout) = self.eval_cqs(vPort)
+        self.OP = {'vc': vPort[0], 
+                   'i': iout[0]}
+        return self.OP
 
 
 
