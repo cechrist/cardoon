@@ -19,9 +19,9 @@ class Device(cir.Element):
     Connection diagram::
 
                 _______________
-        0      |_   _   _   _  |         1
-          o----+ |_| |_| |_| |_+-------o    External view
-               |_______________|
+        0      |_   _   _   _| |         1
+          o----| |_| |_| |_| | |-------o    External view
+               |_____________|_|
                                 
     Netlist example::
 
@@ -111,7 +111,7 @@ class Device(cir.Element):
                                    + ': capacitance can not be zero')
         # test m expression to make sure it is valid
         try:
-            q = 1.
+            q = .5
             result = eval(self.m)
         except Exception as e:
             raise cir.CircuitError(
@@ -121,7 +121,7 @@ class Device(cir.Element):
             abs(result)
         except TypeError:
             raise cir.CircuitError(
-                '{0}: Invalid expression: {1} (result not a float)'.format(
+                '{0}: Invalid expression: {1} (result not a number)'.format(
                     self.nodeName, self.m))
 
         # Connect internal terminal
@@ -141,7 +141,7 @@ class Device(cir.Element):
         self.qsOutPorts = []
 
 
-    def eval_cqs(self, vPort):
+    def eval_cqs(self, vPort, saveOP = False):
         """
         Returns memristor voltage given current. Charge vector is empty
 
@@ -150,13 +150,18 @@ class Device(cir.Element):
         iout[0] = gyr * memristor voltage
         """
         q = self.c * vPort[1]
-        normM = glVar.gyr**2 * eval(self.m)
-        iout = np.array([normM * vPort[0]])
-        return (iout, np.array([]))
+        M = eval(self.m)
+        iout = np.array([glVar.gyr**2 * M * vPort[0]])
+        if saveOP:
+            opVars = np.array([M])
+            return (iout, np.array([]), opVars)
+        else:
+            return (iout, np.array([]))
 
     # Use automatic differentiation for eval and deriv function
     eval_and_deriv = ad.eval_and_deriv
     eval = ad.eval
+    get_op_vars = ad.get_op_vars
 
     def get_OP(self, vPort):
         """
@@ -167,6 +172,8 @@ class Device(cir.Element):
         """
         # Get g at the requested temperature (in case of thermal resistor)
         (iout, qout) = self.eval_cqs(vPort)
+        opV = self.get_op_vars(vPort)
         self.OP = {'q': self.c * vPort[1], 
-                   'i': iout[0]}
+                   'i': iout[0],
+                   'M': opV[0]}
         return self.OP
