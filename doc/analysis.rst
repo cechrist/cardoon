@@ -114,17 +114,28 @@ as as the following system of linear equations:
 
 .. math::
 
-     (G_1 + J^k_i) \, x^{k+1} = 
-            s_{DC} - i^k + J^k_i \, x^k \; ,
+     (G_1 + J^k_i) \, \Delta x^{k+1} = 
+            s_{DC} - G_1 x^k - T_i i^k \; ,
 
-This equation can be seen as the nodal equation of a circuit obtained
-by substituting the nonlinear devices by current sources and
-transconductances that are dependent of the current approximation for
-the nodal voltages (:math:`x^k`). Iterations stop when
+with :math:`\Delta x^{k+1} = x^{k+1} - x^k`.  This equation can be
+seen as the nodal equation of a linearized circuit obtained by
+substituting all devices by transconductances in parallel with current
+sources that are dependent of the current approximation for the nodal
+voltages (:math:`x^k`). 
+
+Iterations stop when
 
 .. math::
 
-   | x^{k+1} - x^k | < \epsilon
+   | \Delta x^{k+1}_j | < 
+       \mbox{reltol} \; \max(|x^{k+1}_j|,  |x^k_j|) + \mbox{abstol}
+
+for each nodal variable (:math:`j`). In addition, if ``errfunc`` is
+set to ``True``, the following check is made:
+
+.. math::
+
+    |(G + G_0) x + T_i i(T_{cv} x, T_{dv} x) - s_{DC}| < \mbox{abstol}
 
 
 AC Formulation
@@ -244,23 +255,20 @@ as in OP/DC analysis). Iterations are defined by linearizing
 
 .. math::
 
-    G' x^{k+1}_n + i'(x^k_n) + J^k_n (x^{k+1}_n - x^k_n)
+    G' x^{k+1}_n + i'(x^k_n) + J^k_n \Delta x^{k+1}_n
         = s' \; ,
 
-where the :math:`k` subscript denotes the Newton iteration number and
-:math:`J^k_n = di'(x^k_n)/dx`.  This equation is re-arranged as
-follows:
+where the :math:`k` subscript denotes the Newton iteration number,
+:math:`\Delta x^{k+1}_n = x^{k+1}_n - x^k_n` and :math:`J^k_n =
+di'(x^k_n)/dx`.  This equation is re-arranged as follows:
 
 .. math::
 
-    ( G' + J^k_n ) x^{k+1}_n =
-      s' - i'(x^k_n) + \frac{di'}{dx} x^k_n \; ,
+    ( G' + J^k_n ) \Delta x^{k+1}_n =
+      s' - G' x^k_n - i'(x^k_n) \; ,
 
 as the right-hand side of this equation is known at the :math:`k^{th}`
 iteration, :math:`x^{k+1}_n` can be found by solving a linear system
-of equations. Iterations stop when
+of equations. 
 
-.. math::
-
-   | x^{k+1}_n - x^k_n | < \epsilon
-
+The criterion to stop iterations is the same as in the DC analysis.
