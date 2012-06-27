@@ -107,7 +107,7 @@ def fsolve_Newton(x0, get_deltax, f_eval):
         xnew = x - deltax
 
         # Check if deltax is small
-        n1 = np.all(abs(deltax) < (abs(glVar.reltol * np.maximum(x, xnew))
+        n1 = np.all(abs(deltax) < (glVar.reltol * np.maximum(abs(x), abs(xnew))
                                    + glVar.abstol))
         res = max(abs(deltax))
         if n1:
