@@ -96,15 +96,17 @@ Let :math:`G_1 = G + G_0`. The iteration is defined by linearizing
 
 .. math::
 
-    G_1 x^{k+1} + T_i i^k + J^k_i \, (x^{k+1} - x^k) = s_{DC} \; ,
+    G_1 x^{k+1} + i^k + J^k_i \, (x^{k+1} - x^k) = s_{DC} \; ,
 
 where the :math:`k` superscript indicates the iteration number and 
 
 .. math::
 
-     J^k_i = T_i \left(
-                 \frac{di^k}{dv} T_{cv} + \frac{di^k}{dv_T} T_{dv} 
-                 \right) \; .
+     i^k = T_i i \left(T_{cv} x^k, T_{dv} x^k \right)
+
+     J^k_i = \left(
+             \frac{di^k}{dv} T_{cv} + \frac{di^k}{dv_T} T_{dv} 
+             \right) \; .
 
 The :math:`x^k` vector is assumed to be known for each iteration and
 :math:`x^{k+1}` is the unknown to solve for. The initial guess
@@ -115,7 +117,7 @@ as as the following system of linear equations:
 .. math::
 
      (G_1 + J^k_i) \, \Delta x^{k+1} = 
-            s_{DC} - G_1 x^k - T_i i^k \; ,
+            s_{DC} - G_1 x^k - i^k \; ,
 
 with :math:`\Delta x^{k+1} = x^{k+1} - x^k`.  This equation can be
 seen as the nodal equation of a linearized circuit obtained by
@@ -123,7 +125,7 @@ substituting all devices by transconductances in parallel with current
 sources that are dependent of the current approximation for the nodal
 voltages (:math:`x^k`). 
 
-Iterations stop when
+The condition to stop Newton iterations is:
 
 .. math::
 
@@ -131,12 +133,16 @@ Iterations stop when
        \mbox{reltol} \; \max(|x^{k+1}_j|,  |x^k_j|) + \mbox{abstol}
 
 for each nodal variable (:math:`j`). In addition, if ``errfunc`` is
-set to ``True``, the following check is made:
+set to ``True``, nodal equations are also checked:
 
 .. math::
 
-    |(G + G_0) x + T_i i(T_{cv} x, T_{dv} x) - s_{DC}| < \mbox{abstol}
+    |(G + G_0) x^{k+1} + i^{k+1} - s_{DC}| < \mbox{abstol} \; ,
 
+and iterations stop when both conditions are satisfied.  Normally the
+first condition is enough to obtain an acceptable solution and that is
+why by default the second check is not enabled to save the CPU time
+required to re-evaluate the nodal equations.
 
 AC Formulation
 --------------
@@ -199,11 +205,11 @@ time in the past.
 The initial condition (:math:`x(0)`) is usually obtained by
 calculating the operating point of the circuit using the OP analysis.
 
-An integration method (such as Backward Euler (BE) or Trapezoidal
-Integration) is applied to transform the differential equation into a
-difference equation by discretizing time and approximating derivatives
-with respect to time. Here we assume the time step (:math:`h`) is
-constant.  For example, using the BE rule:
+An integration method such as Backward Euler (BE) or trapezoidal rule
+is applied to transform the differential equation into a difference
+equation by discretizing time and approximating derivatives with
+respect to time. Here we assume the time step (:math:`h`) is constant.
+For example, using the BE rule:
 
 .. math::
 
