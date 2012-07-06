@@ -101,7 +101,7 @@ class Device(cir.Element):
         """
         Returns source value at ctime
         """
-        return self._imag * np.cos(self._omega * time + self._phase)
+        return self.mag * np.cos(self._omega * time + self._phase)
 
 #    def get_next_event(self, ctime):
 #        """
