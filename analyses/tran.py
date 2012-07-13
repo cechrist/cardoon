@@ -131,6 +131,12 @@ class Transient(ParamSet):
         # Get terminals to plot/save from circuit. 
         termSet = circuit.get_requested_terms('tran')
 
+        # Special treatment for ground terminal
+        termSet1 = set(termSet)
+        if circuit.nD_ref in termSet1:
+            termSet1.remove(circuit.nD_ref)
+            circuit.nD_ref.tran_v = np.zeros(nsamples)
+
         # Allocate vectors for results
         if self.saveall:
             for term in circuit.nD_termList:
@@ -139,7 +145,7 @@ class Transient(ParamSet):
             circuit.nD_ref.tran_v = np.zeros(nsamples)
         else:
             # Only save requested nodes
-            for term in termSet:
+            for term in termSet1:
                 term.tran_v = np.empty(nsamples)
                 term.tran_v[0] = x[term.nD_namRC]
 
@@ -184,7 +190,7 @@ class Transient(ParamSet):
                     term.tran_v[i] = x[term.nD_namRC]                
             else:
                 # Only save requested nodes
-                for term in termSet:
+                for term in termSet1:
                     term.tran_v[i] = x[term.nD_namRC]
             # Keep some info about iterations
             tIter += iterations
