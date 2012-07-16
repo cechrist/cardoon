@@ -6,10 +6,10 @@ the main repository.  Ideally, every time that a new feature is added
 to the simulator, a netlist testing the feature and the corresponding
 results should be added to this directory.
 
-In order to run the tests, a set of reference result files (*_ref.npz)
-is used by the test script to verify that the results produced by
-the netlists match. These results are not available in the main
-repository, but they can be downloaded from:
+In order to run the tests, a set of reference result files
+(``*_ref.npz``) is used by the test script to verify that the results
+produced by the netlists match. These results are not available in the
+main repository, but they can be downloaded from:
 
      http://vision.lakeheadu.ca/cardoon/reference_results.tar.gz
 

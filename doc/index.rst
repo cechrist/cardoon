@@ -6,7 +6,7 @@
 Cardoon Electronic Circuit Simulator
 ====================================
 
-.. image:: cardoon1.png
+.. image:: cardoon3.png
    :scale: 50 %
    :alt: Image of a cardoon plant
 
