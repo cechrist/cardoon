@@ -6,6 +6,10 @@
 Cardoon Electronic Circuit Simulator
 ====================================
 
+.. image:: cardoon1.png
+   :scale: 50 %
+   :alt: Image of a cardoon plant
+
 User's Manual
 -------------
 
