@@ -186,10 +186,40 @@ if __name__ == "__main__":
         # drop to ipython shell
         import devices
         from IPython.Shell import IPShellEmbed
+
+        def newElem(elemType, name, **kwargs):
+            """
+            Returns a new element instance
+
+            elemType: type of device (diode, res, cap, ind, etc.)
+            name: instance name (without type)
+
+            The remaining arguments should have the following format:
+            <param name> = <param value>. Type of <param value> should
+            exactly match the expected parameter type.
+            
+            Sample usage: newElem('diode', 'd4', isat=2.1e-15, cj0=1e-12)
+
+            """
+            elem = devices.devClass[elemType](name)
+            elem.set_params(**kwargs)
+            return elem
+
+        msg = """
+Circuit classes access: use cir.<class or function>. 
+For example to get the main circuit:
+     
+    mainckt = cir.get_mainckt()
+
+To create element instances, use newElem() function. Example:
+
+    r = newElem('res','r1',r=50.)
+
+"""
         args = ['-pi1','In <\\#>: ','-pi2','   .\\D.: ',
                 '-po','Out<\\#>: ','-nosep']
         ipshell = IPShellEmbed(args, 
-                               banner = 'Type CTR-D to exit',
+                               banner = msg + 'Type CTR-D to exit',
                                exit_msg = 'Leaving Interpreter.')
         ipshell()
     else:

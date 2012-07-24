@@ -801,18 +801,27 @@ class Circuit:
             
     def connect(self, element, termList):
         """
-        Connect an Element (or subckt) instance to terminals specified by
-        a list of terminal names (termList). If any terminal does not
-        exist in the circuit it is created and added.
-    
-        **Order in the adjacency list is important for Elements**
-    
-        For example, for a MOSFET the first node corresponds to the drain,
-        the second to the gate, etc.
+        Connect an Element (or subckt) instance to terminals 
+
+        Terminals are specified by a list of terminal names
+        (termList). If a terminal does not exist in the circuit it is
+        created and added.
+
+        **Important notes**: 
+
+            * Element/subckt should be in circuit dictionary. No
+              attempt to check this is made (use ``add_elem()``).
+        
+            * Order in the adjacency list is important for Elements
+        
+              For example, for a MOSFET the first node corresponds to
+              the drain, the second to the gate, etc.
+
         """
-        # Some sanity checking. This function should be used once per element
+        # Some sanity checking. This function should be used once per
+        # element (we could change this)
         assert not element.neighbour
-    
+
         for termName in termList:
             terminal = self.get_term(termName)
             terminal.neighbour.append(element)
@@ -875,11 +884,11 @@ class Circuit:
         """
         Adds a Xsubckt instance to circuit
         """
-        try:
-            self.subcktDict[xsubckt.nodeName] = xsubckt 
-        except KeyError:
+        if self.subcktDict.has_key(xsubckt.nodeName):
             raise CircuitError('add_subckt: Subcircuit instance name "'\
                                 + xsubckt.nodeName + '" already in use')
+        else:
+            self.subcktDict[xsubckt.nodeName] = xsubckt 
     
     def get_term(self, termName):
         """ 

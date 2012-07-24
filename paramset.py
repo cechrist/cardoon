@@ -153,7 +153,7 @@ class ParamSet:
             else:
                 # Something is wrong
                 raise ParamError(
-                    '{1}: not a valid value or variable name'.format(paramName))
+                    '{0}: not a valid value or variable name'.format(paramName))
         else:
             raise ParamError(
                 '{0}: not a valid parameter name'.format(paramName))
