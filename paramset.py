@@ -134,14 +134,14 @@ class ParamSet:
         """ 
         Set parameter given with paramName to value
 
-        Mostly used by the parser.  Note that actual attribute is not
-        set until set_attributes() is executed.  A check is made to
-        ensure the parameter name is valid. 
+        Note that actual attribute is not set until set_attributes()
+        is executed.  A check is made to ensure the parameter name is
+        valid.
 
-        If value type does not match with parameter type it is assumed
-        that the value is a netlist variable name. The netlist
-        variable may be assigned a value at a later time before
-        set_attributes() is called.
+        If value type is a string and does not match with parameter
+        type it is assumed that the value is a netlist variable
+        name. The netlist variable may be assigned a value at a later
+        time before set_attributes() is called.
         """
         if self.paramDict.has_key(paramName):
             if type(value) == self.paramDict[paramName][2]:
@@ -157,6 +157,13 @@ class ParamSet:
         else:
             raise ParamError(
                 '{0}: not a valid parameter name'.format(paramName))
+
+    def set_params(self, **kwargs):
+        """ 
+        Set all parameter values given in kwargs
+        """
+        for paramName, value in kwargs.iteritems():
+            self.set_param(paramName, value)
 
     def get_type(self, paramName):
         """
