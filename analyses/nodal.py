@@ -391,7 +391,7 @@ class _NLFunction(object):
         """
         try:
             deltax = np.linalg.solve(Jac, errFunc)
-        except:
+        except np.linalg.LinAlgError:
             print('Singular Jacobian')
             # Use pseudo-inverse
             deltax = np.dot(np.linalg.pinv(Jac), errFunc)

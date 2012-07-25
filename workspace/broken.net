@@ -1,7 +1,7 @@
 # This netlist generates a singular matrix (for testing purposes)
 
 .analysis tran tstop=200ns tstep=0.5ns im=BE
-.options sparse=1
+.options sparse=0
 
 vpulse:vin vin1 gnd v2 = 3v tr=1ns tf=1ns td=1ns pw=4ns per=10ns
 vdc:vdd 0 3 vdc=3.3
