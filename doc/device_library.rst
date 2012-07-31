@@ -576,6 +576,172 @@ Parameters
 
 Electro-thermal version with extra thermal port: bjt_t 
 
+bsim3: Intrinsic BSIM3 MOSFET Model (version 3.2.4)
+---------------------------------------------------
+
+**This model is not ready for regular use**. More development and
+testing is required. Charges are disabled (for now).
+
+This model mainly converted from fREEDA 2.0 mosnbsim3 model
+written by Ramya Mohan (http://www.freeda.org/). Also includes
+some code taken from pyEDA EDA Framework
+(https://github.com/cogenda/pyEDA) and ngspice
+(http://ngspice.sourceforge.net/).
+
+Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
+
+           Drain 0
+                   o
+                   |
+                   |
+               |---+
+               |
+  Gate 1 o-----|<-----o 3 Bulk
+               |
+               |---+
+                   |
+                   |
+                   o
+          Source 2
+
+Netlist examples::
+
+    bsim3:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
+    bsim3:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+
+Internal topology
++++++++++++++++++
+
+The internal topology is the following::
+
+         ,----------------------------+-------------+--o 0 (D)
+         |                            |             |
+        /|\                           |             |
+       ( | ) idb (Vds > 0)          -----           |
+        \V/                         ----- qd        |       
+         |             1 (G)          |            /|\       
+         |               o            |           ( | ) ids    
+         |               |            |            \V/      
+         |               |            |             |       
+         |             -----          |             |
+         |             ----- qg       |      qs     |
+         |               |            |      ||     |
+ (B) 3 o-+---------------+------------+------||-----+--o 2 (S)
+                                             ||
+
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ a0           1                         Non-uniform depletion width effect coefficient       
+ a1           0                         Non-saturation effect coefficient                    
+ a2           1                         Non-saturation effect coefficient                    
+ acde         1                         Exponential coefficient for finite charge thickness  
+ ags          0                         Gate bias coefficient of Abulk                       
+ alpha0       0            m/V          Substrate current model parameter                    
+ alpha1       0            V^{-1}       Substrate current model parameter                    
+ at           33000        m/s          Temperature coefficient of vsat                      
+ b0           0                         Abulk narrow width parameter                         
+ b1           0                         Abulk narrow width parameter                         
+ beta0        30           V            Diode limiting current                               
+ cdsc         -0.00024     F/m^2        Drain/Source and channel coupling capacitance        
+ cdscb        0            F/V/m^2      Body-bias dependence of cdsc                         
+ cdscd        0            F/V/m^2      Drain-bias dependence of cdsc                        
+ cit          0                         Interface state capacitance                          
+ clc          1.0e-07                   Vdsat paramater for C-V model                        
+ cle          0.6                       Vdsat paramater for C-V model                        
+ delta        0.01         V            Effective Vds parameter                              
+ drout        0.56                      DIBL coefficient of output resistance                
+ dsub         0.56                      DIBL coefficient in the subthreshold region          
+ dvt0         2.2                       Short channel effect coefficient 0                   
+ dvt0w        0            m^{-1}       Narrow width effect coefficient 0                    
+ dvt1         0.53                      Short channel effect coefficient 1                   
+ dvt1w        5.3e+06      m^{-1}       Narrow width effect coefficient 1                    
+ dvt2         -0.032       V^{-1}       Short channel effect coefficient 2                   
+ dvt2w        -0.032       V^{-1}       Narrow width effect coefficient 2                    
+ dwb          0            m/V          Width reduction parameter                            
+ dwg          0            m/V          Width reduction parameter                            
+ elm          5                         Non-quasi-static Elmore Constant Parameter           
+ eta0         0.08                      Subthreshold region DIBL coefficeint                 
+ etab         -0.07                     Subthreshold region DIBL coefficeint                 
+ k1           0.53         V^{0.5}      First order body effect coefficient                  
+ k2           -0.0186                   Second order body effect coefficient                 
+ k3           80                        Narrow width effect coefficient                      
+ k3b          0                         Body effect coefficient of k3                        
+ keta         -0.047                    Body-bias coefficient of non-uniform depletion width effect 
+ kt1          -0.11        V            Temperature coefficient of Vth                       
+ kt1l         0            V m          Temperature coefficient of Vth                       
+ kt2          0.022                     Body-coefficient of kt1                              
+ l            1.0e-06      m            Length                                               
+ lint         0            m            Length reduction parameter                           
+ ll           0                         Length reduction parameter                           
+ llc          0                         Length reduction parameter for CV                    
+ lln          1                         Length reduction parameter                           
+ lw           0                         Length reduction parameter                           
+ lwc          0                         Length reduction parameter for CV                    
+ lwl          0                         Length reduction parameter                           
+ lwlc         0                         Length reduction parameter for CV                    
+ lwn          1                         Length reduction parameter                           
+ moin         15                        Coefficient for gate-bias dependent surface potential 
+ nch          1.7e+17                   Channel doping concentration                         
+ nfactor      1                         Subthreshold swing coefficient                       
+ ngate        0            cm^{-3}      Poly-gate doping concentration                       
+ nlx          1.74e-07     m            Lateral non-uniform doping effect                    
+ noff         1                         C-V turn-on/off parameter                            
+ nsub         6.0e+16                   Substrate doping concentration                       
+ pclm         1.3                       Channel length modulation coefficient                
+ pdibl1       0.39                      Drain-induced barrier lowering oefficient            
+ pdibl2       0.0086                    Drain-induced barrier lowering oefficient            
+ pdiblb       0                         Body-effect on drain induced barrier lowering        
+ prt          0                         Temperature coefficient of parasitic resistance      
+ prwb         0                         Body-effect on parasitic resistance                  
+ prwg         0                         Gate-bias effect on parasitic resistance             
+ pscbe1       4.24e+08     V/m          Substrate current body-effect coeffiecient           
+ pscbe2       1.0e-05      m/V          Substrate current body-effect coeffiecient           
+ pvag         0                         Gate dependence of output resistance parameter       
+ rdsw         0                         Sorce-drain resistance per width                     
+ temp         None         C            Device temperature (None: use global temp.)          
+ tnom         27.0         C            Nominal temperature                                  
+ tox          1.5e-08      m            Gate oxide thickness                                 
+ toxm         1.5e-08                   Gate oxide thickness used in extraction              
+ type         n                         N- or P-channel MOS (n or p)                         
+ u0           0.067        cm^2/V/s     Low-field mobility at Tnom                           
+ ua           2.25e-09     m/V          Linear gate dependence of mobility                   
+ ua1          4.31e-09     m/V          Temperature coefficient for ua                       
+ ub           5.87e-19     (m/V)^2      Quadratic gate dependence of mobility                
+ ub1          -7.61e-18    (m/V)^2      Temperature coefficient for ub                       
+ uc           -4.65e-11    m/V^2        Body-bias dependence of mobility                     
+ uc1          -5.6e-11     m/V^2        Temperature coefficient for uc                       
+ ute          -1.5                      Temperature coefficient of mobility                  
+ vbm          -3           V            Maximum body voltage                                 
+ vfb          -1           V            Flat band voltage                                    
+ voff         -0.08        V            Threshold voltage offset                             
+ voffcv       0                         C-V lateral shift parameter                          
+ vsat         80000        m/s          Saturationvelocity at tnom                           
+ w            1.0e-06      m            Width                                                
+ w0           2.5e-06      m            Narrow width effect parameter                        
+ wint         0            m            Width reduction parameter                            
+ wl           0                         Width reduction parameter                            
+ wlc          0                         Width reduction parameter for CV                     
+ wln          1                         Width reduction parameter                            
+ wr           1                         Width dependence of rds                              
+ ww           0                         Width reduction parameter                            
+ wwc          0                         Width reduction parameter for CV                     
+ wwl          0                         Width reduction parameter                            
+ wwlc         0                         Width reduction parameter for CV                     
+ wwn          1                         Width reduction parameter                            
+ xj           1.5e-07      m            Junction depth                                       
+ xt1          1.55e-07     m            Doping depth                                         
+ =========== ============ ============ ===================================================== 
+
+
+Electro-thermal version with extra thermal port: bsim3_t 
+
 diode: Junction Diode
 ---------------------
 

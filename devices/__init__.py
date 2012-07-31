@@ -40,7 +40,7 @@ netElemList = ['resistor', 'capacitor', 'inductor', 'memristor',
                'gyrator', 'vccs',
                'idc', 'vdc', 'isin', 'vsin', 'ipulse', 'vpulse',
                'diode', 'svdiode', 'bjt', 'svbjt', 
-               'mosEKV', 'mosACM', 'mosACMs', 
+               'mosEKV', 'mosACM', 'mosACMs', 'mosBSIM3v3',
                'mesfetc',
                'tlinpy4', 'tlinps4']
 

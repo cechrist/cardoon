@@ -45,6 +45,7 @@ the Free Software Foundation, version 3 or later:
 http://www.gnu.org/licenses/gpl.html
 """
 
+from __future__ import print_function
 import numpy as np
 import pycppad as ad
 
@@ -84,8 +85,10 @@ def condassign(b, c, d):
             return ad.condexp_gt(b, ad.ad(0.), c, d)
     else:
         if b > 0.:
+            #print('a',end='')
             return c
         else:
+            #print('b',end='')
             return d
 
 

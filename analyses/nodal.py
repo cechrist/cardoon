@@ -393,6 +393,7 @@ class _NLFunction(object):
             deltax = np.linalg.solve(Jac, errFunc)
         except np.linalg.LinAlgError:
             print('Singular Jacobian')
+            #import pdb; pdb.set_trace()
             # Use pseudo-inverse
             deltax = np.dot(np.linalg.pinv(Jac), errFunc)
         return deltax
@@ -709,6 +710,7 @@ class DCNodal(_NLFunction):
         # Linear contribution
         self.iVec += np.dot(self.G, xVec)
         self.Jac += self.G
+        #import pdb; pdb.set_trace()
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
