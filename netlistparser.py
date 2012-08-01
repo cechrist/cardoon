@@ -351,8 +351,9 @@ def parse_ends(tok):
 
 
 def parse_end(tok):
-    # Stop processing everything and return
-    cktStack = []
+    # Empty stack. Stop processing everything and return
+    while len(cktStack):
+        cktStack.pop()
 
 
 # *******************************************************************
@@ -523,15 +524,15 @@ def parse_file(filename, ckt):
                         mesg += '\n' + pe.col * '-' + '^'
                     raise ParseError(mesg) 
                 
-                
                 if not cktStack:
                     # This means that .end was found and processing must end
                     # immediatly
-                    return
+                    break
                     
-            # Take circuit out
-            cktStack.pop()
-            f.close()
+            # Take circuit out (if stack not empty due to .end)
+            if cktStack:
+                cktStack.pop()
+
     except IOError as ioe:
         raise ParseError('Parse error -> ' + str(ioe))
 
