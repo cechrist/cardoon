@@ -37,8 +37,7 @@ class Device(cir.Element):
     Intrinsic BSIM3 MOSFET Model (version 3.2.4)
     --------------------------------------------
     
-    **This model is not ready for regular use**. More development and
-    testing is required. Charges are disabled (for now).
+    *(This implementation may require more testing)*
 
     This model mainly converted from fREEDA 2.0 mosnbsim3 model
     written by Ramya Mohan (http://www.freeda.org/). Also includes
@@ -217,9 +216,7 @@ class Device(cir.Element):
     controlPorts = [(0, 3), (1, 3), (2, 3)]
     vPortGuess = np.array([0., 0., 0.])
     # One charge source connected to each D, G, S
-    #qsOutPorts = [(0, 3), (1, 3), (2, 3)]
-    # Charges disabled since code seems wrong
-    qsOutPorts = []
+    qsOutPorts = [(0, 3), (1, 3), (2, 3)]
 
     def __init__(self, instanceName):
         """
@@ -692,12 +689,12 @@ class Device(cir.Element):
         #Substrate current begins
         T1 = self.alpha0 + self.alpha1 * self.leff
         k_temp = T1 / self.leff * diffVds
-        T2 = k_temp * ad.safe_exp(-self.beta0 / diffVds)
+        #T2 = k_temp * ad.safe_exp(-self.beta0 / diffVds)
         # Original T2:
-        #ad.condassign(
-        #    diffVds - self.beta0 / EXP_THRESHOLD,
-        #    k_temp * ad.safe_exp(-self.beta0 / diffVds),
-        #    k_temp * MIN_EXP)
+        ad.condassign(
+            diffVds - self.beta0 / EXP_THRESHOLD,
+            k_temp * ad.safe_exp(-self.beta0 / diffVds),
+            k_temp * MIN_EXP)
 
         k_temp = ad.condassign(T1, T2 * Idsa, 0.)
         Isub = ad.condassign(self.beta0, k_temp, 0.)
@@ -772,31 +769,21 @@ class Device(cir.Element):
         
         T1 = T0 * self.acde
         
-        Tcen = ldeb * ad.safe_exp(T1)
-        # This can not be right:
-        #if (EXP_THRESHOLD + T1 > 0.0)
-        #  Tcen = ldeb * np.exp(T1)
-        #else
-        #  Tcen = ldeb * MAX_EXP
-        #
-        #if (EXP_THRESHOLD > T1)
-        #  Tcen = ldeb * np.exp(T1)
-        #else
-        #  Tcen = ldeb * MAX_EXP
-        #
-        #if (-T1 > EXP_THRESHOLD)
-        #  Tcen = ldeb * MIN_EXP
-        #else
-        #  Tcen = ldeb * MAX_EXP
+        Tcen = ad.condassign(EXP_THRESHOLD + T1,
+                             ldeb * np.exp(T1),
+                             ldeb * MIN_EXP)
+        Tcen = ad.condassign(-EXP_THRESHOLD + T1,
+                             ldeb * MAX_EXP,
+                             Tcen)
         
         V3 = ldeb - Tcen - 1e-3 * self.tox
-        V4 = np.sqrt(V3 * V3 + 4e-3 * self.tox * ldeb)
+        V4 = np.sqrt(V3**2 + 4e-3 * self.tox * ldeb)
         Tcen = ldeb - .5 * (V3 + V4)
         Ccen = const.epSi / Tcen
         Coxeff = Ccen * self.cox / (Ccen + self.cox)
         
         #Calculation for QoverlapCox
-        CoxWLcen = self.cox * Weff * self.leff * Coxeff / self.cox
+        CoxWLcen = Weff * self.leff * Coxeff 
         Qac0 = CoxWLcen * (Vfbeff - vfbzb)
         # QovCox = Qac0 / Coxeff
         

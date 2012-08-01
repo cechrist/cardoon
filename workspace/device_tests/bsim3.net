@@ -2,7 +2,7 @@
 #
 #
 .analysis testdev plot=1 ports_bias = [3V, 0V, 1V] sweep_port=1 \
-	  start = -1V stop= 3.V sweep_num=100 device = bsim3:m1
+	  start = -1V stop= 3.V sweep_num=100 device = bsim3:m1 
 #	  useAD=0 shell=1 plot=0
 #	  param = temp param_val = [-10, 27, 50] useAD=1
 
@@ -15,3 +15,18 @@
 bsim3:m1 2 3 4 gnd w=30e-6 l=1e-6 type = n 
 
 .end
+
+----------------------------------------------------------------
+Jacobian Testing script (cut and paste in shell):
+
+vg = np.arange(-1.,3,.01); res=np.zeros_like(vg)
+for i in xrange(len(res)):
+vports[1] = vg[i]
+(f, Jac) = dev.eval_and_deriv(vports)
+res[i] = Jac[4,1]
+
+
+
+
+plt.plot(vg,res)
+plt.show()

@@ -579,8 +579,7 @@ Electro-thermal version with extra thermal port: bjt_t
 bsim3: Intrinsic BSIM3 MOSFET Model (version 3.2.4)
 ---------------------------------------------------
 
-**This model is not ready for regular use**. More development and
-testing is required. Charges are disabled (for now).
+*(This implementation may require more testing)*
 
 This model mainly converted from fREEDA 2.0 mosnbsim3 model
 written by Ramya Mohan (http://www.freeda.org/). Also includes
