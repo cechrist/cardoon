@@ -37,13 +37,11 @@ class Device(cir.Element):
     Intrinsic BSIM3 MOSFET Model (version 3.2.4)
     --------------------------------------------
     
-    *(This implementation may require more testing)*
-
     This model mainly converted from fREEDA 2.0 mosnbsim3 model
     written by Ramya Mohan (http://www.freeda.org/). Also includes
-    some code taken from pyEDA EDA Framework
-    (https://github.com/cogenda/pyEDA) and ngspice
-    (http://ngspice.sourceforge.net/).
+    some code taken from ngspice (http://ngspice.sourceforge.net/) and
+    pyEDA EDA Framework (https://github.com/cogenda/pyEDA).  *Results
+    are reasonable but requires more testing*
 
     Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
 
@@ -114,8 +112,8 @@ class Device(cir.Element):
         a2 = ('Non-saturation effect coefficient', '', float, 1),
         keta = ('Body-bias coefficient of non-uniform depletion width effect', 
                 '', float, -0.047),
-        nsub = ('Substrate doping concentration', '', float, 6e+16),
-        nch = ('Channel doping concentration', '', float, 1.7e+17),
+        nsub = ('Substrate doping concentration', 'cm^{-3}', float, 6e+16),
+        nch = ('Channel doping concentration', 'cm^{-3}', float, 1.7e+17),
         ngate = ('Poly-gate doping concentration', 'cm^{-3}', float, 0),
         vbm = ('Maximum body voltage', 'V', float, -3),
         xt1 = ('Doping depth', 'm', float, 1.55e-07),
@@ -290,24 +288,26 @@ class Device(cir.Element):
                           / 2. / self.phi)
 
         vbx = self.phi - 7.7348e-4  * self.nch * self.xt1**2
-
-        gamma1 = 5.753e-12 * np.sqrt(self.nch) / self.cox
-        gamma2 = 5.753e-12 * np.sqrt(self.nsub) / self.cox
+        # From ngspice
+        vbx = -abs(vbx)
+        Vbm = -abs(self.vbm)
 
         if not self.is_set('toxm'):
             self.toxm = self.tox
         if not self.is_set('dsub'):
             self.dsub = self.drout
 
-# This does not seem to work?
+# This does not seem to work:
+#        gamma1 = 5.753e-12 * np.sqrt(self.nch) / self.cox
+#        gamma2 = 5.753e-12 * np.sqrt(self.nsub) / self.cox
 #        if not (self.is_set('k1') and self.is_set('k2')):
 #            # if values of K1 and K2 are not supplied, calculate them
 #            # see BSIM3v3 manual app-A, notes NI-2
-#            t1 = np.sqrt(self.phi - vbx) - self.sqrtPhi
-#            t2 = 2. * self.sqrtPhi \
-#                * (np.sqrt(self.phi - self.vbm) - self.sqrtPhi) + self.vbm
-#            self._k2 = (gamma1 - gamma2) * t1 / t2
-#            self._k1 = gamma2 - 2. * self._k2 * np.sqrt(self.phi - self.vbm)
+#            T0 = gamma1 - gamma2
+#            T1 = np.sqrt(self.phi - vbx) - self.sqrtPhi
+#            T2 = np.sqrt(self.phi * (self.phi - Vbm)) - self.phi
+#            self._k2 = T0 * T1 / (2. * T2 + Vbm)
+#            self._k1 = gamma2 - 2. * self._k2 * np.sqrt(self.phi - Vbm)
 #            print self._k1, self._k2
 #        else:
 #            self._k1 = self.k1
@@ -315,9 +315,6 @@ class Device(cir.Element):
         self._k1 = self.k1
         self._k2 = self.k2
 
-        t0 = gamma1 - gamma2
-        t1 = np.sqrt(self.phi - vbx) - self.sqrtPhi
-        t2 = np.sqrt(self.phi * (self.phi - self.vbm)) - self.phi
         self.vth0 = self.vfb + self.phi + self._k1 * self.sqrtPhi
         self.k1ox = self._k1 * self.tox / self.toxm
         self.k2ox = self._k2 * self.tox / self.toxm
@@ -325,10 +322,8 @@ class Device(cir.Element):
         t1 = np.sqrt(const.epSi / const.epOx * self.tox * self.Xdep0)
         t0 = ad.safe_exp(-0.5 * self.dsub * self.leff / t1)
         self.theta0vb0 = (t0 + 2.0 * t0**2)
-
-        
-        # Was in freeda: May be wrong?
-        # self.Tox = 1e8 * self.tox
+        # From freeda, ngspice:
+        self._Tox = 1e8 * self.tox
         
         #Calculation of vbsc(Vbc) and Vbseff
         if self._k2 < 0.:
@@ -762,7 +757,7 @@ class Device(cir.Element):
         T0 = np.sqrt(V3**2 + .08 * abs(vfbzb))
         Vfbeff = vfbzb - 0.5 * (V3 + T0)
         
-        T0 = (Vgs_eff - VbseffCV - vfbzb) / self.tox
+        T0 = (Vgs_eff - VbseffCV - vfbzb) / self._Tox
         
         #Calculation for Tcen
         ldeb = np.sqrt(const.epSi * self._Vt/(const.q * self.nch * 1e6)) / 3.
@@ -816,10 +811,17 @@ class Device(cir.Element):
         DeltaPhi = self._Vt * np.log(1. + T1 * Vgsteff / T2)
         
         #The calculation for Tcen must be done once more
-        T0 = (Vgsteff + 4.*(self.vth0 - self.vfb - self.phi))/ (2. * self.tox)
+        # fREEDA:
+        #T0 = (Vgsteff + 4.*(self.vth0 - self.vfb - self.phi))/ (2. * self._Tox)
+        # ngspice:
+        T3 =  4. * (Vth - vfbzb - self.phi)
+        T0 = ad.condassign(T3,
+                           .5 * (Vgsteff + T3) / self._Tox,
+                           .5 * (Vgsteff + 1.0e-20) / self._Tox)
+
         k_temp = 2.01375270747048 * T0  # was np.exp(.7 * log(T0))
         T1 = 1. + k_temp
-        T2 = 0.7 * k_temp / (T0 * 2. * self.tox)
+        T2 = 0.35 * k_temp / (T0 * self._Tox)
         Tcen = 1.9e-9 / T1
         
         Ccen = const.epSi / Tcen

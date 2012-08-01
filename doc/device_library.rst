@@ -579,13 +579,11 @@ Electro-thermal version with extra thermal port: bjt_t
 bsim3: Intrinsic BSIM3 MOSFET Model (version 3.2.4)
 ---------------------------------------------------
 
-*(This implementation may require more testing)*
-
 This model mainly converted from fREEDA 2.0 mosnbsim3 model
 written by Ramya Mohan (http://www.freeda.org/). Also includes
-some code taken from pyEDA EDA Framework
-(https://github.com/cogenda/pyEDA) and ngspice
-(http://ngspice.sourceforge.net/).
+some code taken from ngspice (http://ngspice.sourceforge.net/) and
+pyEDA EDA Framework (https://github.com/cogenda/pyEDA).  *Results
+are reasonable but requires more testing*
 
 Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
 
@@ -687,12 +685,12 @@ Parameters
  lwlc         0                         Length reduction parameter for CV                    
  lwn          1                         Length reduction parameter                           
  moin         15                        Coefficient for gate-bias dependent surface potential 
- nch          1.7e+17                   Channel doping concentration                         
+ nch          1.7e+17      cm^{-3}      Channel doping concentration                         
  nfactor      1                         Subthreshold swing coefficient                       
  ngate        0            cm^{-3}      Poly-gate doping concentration                       
  nlx          1.74e-07     m            Lateral non-uniform doping effect                    
  noff         1                         C-V turn-on/off parameter                            
- nsub         6.0e+16                   Substrate doping concentration                       
+ nsub         6.0e+16      cm^{-3}      Substrate doping concentration                       
  pclm         1.3                       Channel length modulation coefficient                
  pdibl1       0.39                      Drain-induced barrier lowering oefficient            
  pdibl2       0.0086                    Drain-induced barrier lowering oefficient            

@@ -5,6 +5,8 @@ News
 Version 0.4.3
 ^^^^^^^^^^^^^
 
+     * Added BSIM3v3 model from freeda
+
      * Plots no longer block program execution
 
      * Added support for time delays in nonlinear device models (also
