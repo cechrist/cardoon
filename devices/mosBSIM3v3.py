@@ -38,10 +38,27 @@ class Device(cir.Element):
     --------------------------------------------
     
     This model mainly converted from fREEDA 2.0 mosnbsim3 model
-    written by Ramya Mohan (http://www.freeda.org/). Also includes
-    some code taken from ngspice (http://ngspice.sourceforge.net/) and
-    pyEDA EDA Framework (https://github.com/cogenda/pyEDA).  *Results
-    are reasonable but requires more testing*
+    written by Ramya Mohan (http://www.freeda.org/) with some
+    improvements. Also includes some code taken from ngspice
+    (http://ngspice.sourceforge.net/) and pyEDA EDA Framework
+    (https://github.com/cogenda/pyEDA).  *Results are reasonable but
+    requires more testing*
+
+    Default parameters listed for NMOS type. Default values for some
+    parameters such as u0 and vth0 are different for PMOS type.
+
+    Notes:
+
+       * Most parameters are not checked for valid values
+
+       * According to ngspice documentation, temperature specification
+         is not functional (probably the same applies here)
+
+       * Parameter descriptions need reviewing
+
+       * The code to internally calculate k1 and k2 is disabled by
+         default because using default values seems to give more
+         reasonable results (use ``k1enable`` to enable).
 
     Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
 
@@ -93,12 +110,16 @@ class Device(cir.Element):
     paramDict = dict(
         cir.Element.tempItem,
         type = ('N- or P-channel MOS (n or p)', '', str, 'n'),
+        k1enable = ('Enable k1, k2 internal calculation', '', bool, False),
+        vth0 = (
+            'Threshold voltage of long channel device at Vbs=0 and small Vds',
+            'V', float, 0.7),
         l = ('Length', 'm', float, 1e-06),
         w = ('Width', 'm', float, 1e-06),
         tox = ('Gate oxide thickness', 'm', float, 1.5e-08),
         toxm = ('Gate oxide thickness used in extraction', '', float, 1.5e-08),
         cdsc = ('Drain/Source and channel coupling capacitance', 'F/m^2', 
-                float, -0.00024),
+                float, 0.00024),
         cdscb = ('Body-bias dependence of cdsc', 'F/V/m^2', float, 0),
         cdscd = ('Drain-bias dependence of cdsc', 'F/V/m^2', float, 0),
         cit = ('Interface state capacitance', '', float, 0),
@@ -116,7 +137,7 @@ class Device(cir.Element):
         nch = ('Channel doping concentration', 'cm^{-3}', float, 1.7e+17),
         ngate = ('Poly-gate doping concentration', 'cm^{-3}', float, 0),
         vbm = ('Maximum body voltage', 'V', float, -3),
-        xt1 = ('Doping depth', 'm', float, 1.55e-07),
+        xt = ('Doping depth', 'm', float, 1.55e-07),
         kt1 = ('Temperature coefficient of Vth', 'V', float, -0.11),
         kt1l = ('Temperature coefficient of Vth', 'V m', float, 0),
         kt2 = ('Body-coefficient of kt1', '', float, 0.022),
@@ -136,7 +157,7 @@ class Device(cir.Element):
         ub = ('Quadratic gate dependence of mobility', '(m/V)^2', 
               float, 5.87e-19),
         uc = ('Body-bias dependence of mobility', 'm/V^2', float, -4.65e-11),
-        u0 = ('Low-field mobility at Tnom', 'cm^2/V/s', float, 0.067),
+        u0 = ('Low-field mobility at Tnom', 'cm^2/V/s', float, 670),
         voff = ('Threshold voltage offset', 'V', float, -0.08),
         tnom = ('Nominal temperature', 'C', float, 27.),
         elm = ('Non-quasi-static Elmore Constant Parameter', '', float, 5),
@@ -234,6 +255,9 @@ class Device(cir.Element):
             self._tf = 1.
         elif self.type == 'p':
             self._tf = -1.
+            # Change parameter default values
+            if not self.is_set('u0'):
+                self.u0 = 250
         else:
             raise cir.CircuitError(
                 '{0}: unrecognized type: {1}. Valid types are "n" or "p"'.format(self.nodeName, self.type))
@@ -244,9 +268,9 @@ class Device(cir.Element):
         self._Vtn = const.k * self._Tn / const.q
 
         self.factor1 = np.sqrt(const.epSi / const.epOx * self.tox)
-        self.Eg0 = 1.16 - (7.02e-4 * self._Tn ** 2) / (self._Tn + 1108.0)
+        Eg0 = 1.16 - 7.02e-4 * (self._Tn**2) / (self._Tn + 1108.0)
         ni = 1.45e10 * (self._Tn / 300.15) * np.sqrt(self._Tn / 300.15) \
-            * ad.safe_exp(21.5565981 - self.Eg0 / (2. * self._Vtn))
+            * np.exp(21.5565981 - Eg0 / (2. * self._Vtn))
         #self.esi = 11.7 * const.epsilon0 (replaced by const.epSi)
         self.ldrn = self.l
         self.wdrn = self.w
@@ -276,46 +300,48 @@ class Device(cir.Element):
         # was epOx = 3.453133e-11
         self.cox = const.epOx / self.tox
 
-        self.phi = 2.0 * self._Vtn * np.log(self.nch / ni)
+        self.phi = 2. * self._Vtn * np.log(self.nch / ni)
         self.sqrtPhi = np.sqrt(self.phi)
         self.phis3 = self.sqrtPhi * self.phi
 
         self.Xdep0 = np.sqrt(2. * const.epSi / 
                           (const.q * self.nch * 1e6)) * self.sqrtPhi
-        self.litl = np.sqrt(3.0 * self.xj * self.tox)
+        self.litl = np.sqrt(3. * self.xj * self.tox)
         self.vbi = self._Vtn * np.log(1.0e20 * self.nch / (ni**2))
         self.cdep0 = np.sqrt(const.q * const.epSi * self.nch * 1e6 
                           / 2. / self.phi)
-
-        vbx = self.phi - 7.7348e-4  * self.nch * self.xt1**2
-        # From ngspice
-        vbx = -abs(vbx)
-        Vbm = -abs(self.vbm)
 
         if not self.is_set('toxm'):
             self.toxm = self.tox
         if not self.is_set('dsub'):
             self.dsub = self.drout
 
-# This does not seem to work:
-#        gamma1 = 5.753e-12 * np.sqrt(self.nch) / self.cox
-#        gamma2 = 5.753e-12 * np.sqrt(self.nsub) / self.cox
-#        if not (self.is_set('k1') and self.is_set('k2')):
-#            # if values of K1 and K2 are not supplied, calculate them
-#            # see BSIM3v3 manual app-A, notes NI-2
-#            T0 = gamma1 - gamma2
-#            T1 = np.sqrt(self.phi - vbx) - self.sqrtPhi
-#            T2 = np.sqrt(self.phi * (self.phi - Vbm)) - self.phi
-#            self._k2 = T0 * T1 / (2. * T2 + Vbm)
-#            self._k1 = gamma2 - 2. * self._k2 * np.sqrt(self.phi - Vbm)
-#            print self._k1, self._k2
-#        else:
-#            self._k1 = self.k1
-#            self._k2 = self.k2
-        self._k1 = self.k1
-        self._k2 = self.k2
+        self.ldeb = np.sqrt(const.epSi * self._Vtn
+                           / (const.q * self.nch * 1e6)) / 3.
+        
+        #import pdb; pdb.set_trace()
+        if self.k1enable and not (self.is_set('k1') or self.is_set('k2')):
+            vbx = self.phi - 7.7348e-4  * self.nch * self.xt**2
+            # From ngspice
+            vbx = -abs(vbx)
+            Vbm = -abs(self.vbm)
+            gamma1 = 5.753e-12 * np.sqrt(self.nch) / self.cox
+            gamma2 = 5.753e-12 * np.sqrt(self.nsub) / self.cox
+            T0 = gamma1 - gamma2
+            T1 = np.sqrt(self.phi - vbx) - self.sqrtPhi
+            T2 = np.sqrt(self.phi * (self.phi - Vbm)) - self.phi
+            self._k2 = T0 * T1 / (2. * T2 + Vbm)
+            self._k1 = gamma2 - 2. * self._k2 * np.sqrt(self.phi - Vbm)
+            # print self._k1, self._k2
+        else:
+            self._k1 = self.k1
+            self._k2 = self.k2
+        
+        if not self.is_set('vth0'):
+            self._vth0 = self.vfb + self.phi + self._k1 * self.sqrtPhi
+        else:
+            self._vth0 = abs(self.vth0)
 
-        self.vth0 = self.vfb + self.phi + self._k1 * self.sqrtPhi
         self.k1ox = self._k1 * self.tox / self.toxm
         self.k2ox = self._k2 * self.tox / self.toxm
 
@@ -471,7 +497,7 @@ class Device(cir.Element):
         dDIBL_Sft_dVd = T3 * self.theta0vb0
         DIBL_Sft = dDIBL_Sft_dVd * VDS
         
-        Vth = self.vth0 - self._k1 * self.sqrtPhi + self.k1ox * sqrtPhis \
+        Vth = self._vth0 - self._k1 * self.sqrtPhi + self.k1ox * sqrtPhis \
             - self.k2ox * Vbseff - Delt_vth - T2 \
             + (self.k3 + self.k3b * Vbseff) * TMP2 + T1 - DIBL_Sft
         
@@ -731,7 +757,7 @@ class Device(cir.Element):
             + (self.kt1 + self.kt1l / self.leff) * self._ToTnm1
 
         T0 = np.sqrt(1. + self.nlx / self.leff)
-        T6 = self.vth0 - T2 -T3 + self.k3 * T4 + T5
+        T6 = self._vth0 - T2 -T3 + self.k3 * T4 + T5
         vfbzb = T6 - self.phi - self._k1 * self.sqrtPhi
         
         #Calculation for VbseffCV
@@ -760,20 +786,18 @@ class Device(cir.Element):
         T0 = (Vgs_eff - VbseffCV - vfbzb) / self._Tox
         
         #Calculation for Tcen
-        ldeb = np.sqrt(const.epSi * self._Vt/(const.q * self.nch * 1e6)) / 3.
-        
         T1 = T0 * self.acde
         
         Tcen = ad.condassign(EXP_THRESHOLD + T1,
-                             ldeb * np.exp(T1),
-                             ldeb * MIN_EXP)
+                             self.ldeb * np.exp(T1),
+                             self.ldeb * MIN_EXP)
         Tcen = ad.condassign(-EXP_THRESHOLD + T1,
-                             ldeb * MAX_EXP,
+                             self.ldeb * MAX_EXP,
                              Tcen)
         
-        V3 = ldeb - Tcen - 1e-3 * self.tox
-        V4 = np.sqrt(V3**2 + 4e-3 * self.tox * ldeb)
-        Tcen = ldeb - .5 * (V3 + V4)
+        V3 = self.ldeb - Tcen - 1e-3 * self.tox
+        V4 = np.sqrt(V3**2 + 4e-3 * self.tox * self.ldeb)
+        Tcen = self.ldeb - .5 * (V3 + V4)
         Ccen = const.epSi / Tcen
         Coxeff = Ccen * self.cox / (Ccen + self.cox)
         
@@ -812,7 +836,7 @@ class Device(cir.Element):
         
         #The calculation for Tcen must be done once more
         # fREEDA:
-        #T0 = (Vgsteff + 4.*(self.vth0 - self.vfb - self.phi))/ (2. * self._Tox)
+        #T0 = (Vgsteff + 4.*(self._vth0 - self.vfb - self.phi))/ (2. * self._Tox)
         # ngspice:
         T3 =  4. * (Vth - vfbzb - self.phi)
         T0 = ad.condassign(T3,

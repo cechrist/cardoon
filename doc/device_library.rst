@@ -580,10 +580,22 @@ bsim3: Intrinsic BSIM3 MOSFET Model (version 3.2.4)
 ---------------------------------------------------
 
 This model mainly converted from fREEDA 2.0 mosnbsim3 model
-written by Ramya Mohan (http://www.freeda.org/). Also includes
-some code taken from ngspice (http://ngspice.sourceforge.net/) and
-pyEDA EDA Framework (https://github.com/cogenda/pyEDA).  *Results
-are reasonable but requires more testing*
+written by Ramya Mohan (http://www.freeda.org/) with some
+improvements. Also includes some code taken from ngspice
+(http://ngspice.sourceforge.net/) and pyEDA EDA Framework
+(https://github.com/cogenda/pyEDA).  *Results are reasonable but
+requires more testing*
+
+Default parameters listed for NMOS type. Default values for some
+parameters such as u0 and vth0 are different for PMOS type.
+
+Notes:
+
+   * Most parameters are not checked for valid values
+
+   * The code to internally calculate k1 and k2 is disabled by
+     default because using default values seems to give more
+     reasonable results (use ``k1enable`` to enable).
 
 Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
 
@@ -646,7 +658,7 @@ Parameters
  b0           0                         Abulk narrow width parameter                         
  b1           0                         Abulk narrow width parameter                         
  beta0        30           V            Diode limiting current                               
- cdsc         -0.00024     F/m^2        Drain/Source and channel coupling capacitance        
+ cdsc         0.00024      F/m^2        Drain/Source and channel coupling capacitance        
  cdscb        0            F/V/m^2      Body-bias dependence of cdsc                         
  cdscd        0            F/V/m^2      Drain-bias dependence of cdsc                        
  cit          0                         Interface state capacitance                          
@@ -667,6 +679,7 @@ Parameters
  eta0         0.08                      Subthreshold region DIBL coefficeint                 
  etab         -0.07                     Subthreshold region DIBL coefficeint                 
  k1           0.53         V^{0.5}      First order body effect coefficient                  
+ k1enable     0                         Enable k1, k2 internal calculation                   
  k2           -0.0186                   Second order body effect coefficient                 
  k3           80                        Narrow width effect coefficient                      
  k3b          0                         Body effect coefficient of k3                        
@@ -707,7 +720,7 @@ Parameters
  tox          1.5e-08      m            Gate oxide thickness                                 
  toxm         1.5e-08                   Gate oxide thickness used in extraction              
  type         n                         N- or P-channel MOS (n or p)                         
- u0           0.067        cm^2/V/s     Low-field mobility at Tnom                           
+ u0           670          cm^2/V/s     Low-field mobility at Tnom                           
  ua           2.25e-09     m/V          Linear gate dependence of mobility                   
  ua1          4.31e-09     m/V          Temperature coefficient for ua                       
  ub           5.87e-19     (m/V)^2      Quadratic gate dependence of mobility                
@@ -720,6 +733,7 @@ Parameters
  voff         -0.08        V            Threshold voltage offset                             
  voffcv       0                         C-V lateral shift parameter                          
  vsat         80000        m/s          Saturationvelocity at tnom                           
+ vth0         0.7          V            Threshold voltage of long channel device at Vbs=0 and small Vds 
  w            1.0e-06      m            Width                                                
  w0           2.5e-06      m            Narrow width effect parameter                        
  wint         0            m            Width reduction parameter                            
@@ -733,7 +747,7 @@ Parameters
  wwlc         0                         Width reduction parameter for CV                     
  wwn          1                         Width reduction parameter                            
  xj           1.5e-07      m            Junction depth                                       
- xt1          1.55e-07     m            Doping depth                                         
+ xt           1.55e-07     m            Doping depth                                         
  =========== ============ ============ ===================================================== 
 
 
