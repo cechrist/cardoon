@@ -89,7 +89,7 @@ def extrinsic_bjt(IBJT):
             mjs = ('substrate junction exponential factor', '', float, 0.),
             vjs = ('substrate junction built in potential', 'V', float, 0.75),
             ns = ('substrate p-n coefficient', '', float, 1.),
-            iss = ('Substrate saturation current', 'A', float, 0.)
+            iss = ('Substrate saturation current', 'A', float, 1e-14)
             )
 
         def __init__(self, instanceName):

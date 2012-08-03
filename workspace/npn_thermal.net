@@ -3,19 +3,21 @@
 .options temp=25
 .analysis dc device=vdc:vb param=vdc start=0 stop=12 shell=1
 
-.model mynpn svbjt_t (bf=200 vaf=100 ikf=10e-3 rb=1k)
+.model mynpn bjt_t (bf=200 vaf=100 ikf=10e-3 rb=1k)
 
 vdc:vce 10 gnd vdc=12
 res:rc 10 1 r=1k
 vdc:vb 3 0 vdc=10
 res:rb 3 2 r=96k
 
-svbjt_t:q1 1 2 0 0 t1 gnd model=mynpn
+bjt_t:q1 1 2 0 subs t1 gnd model=mynpn
+res:rbulk subs 0 r=1
 
 res:rth t1 0 r=100.
 
 .plot dc t1 
-.plot dc 1 2 
+.plot dc 1 2
+.plot dc subs
 
 .end
 
