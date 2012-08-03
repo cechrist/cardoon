@@ -215,7 +215,7 @@ Can only be {1} or {2}, {3} found.'.format(self.nodeName,
             """
             pout = IBJT.power(self, vPort, currV)
             if self.__addCBjtn:
-                # add power from substrate junction and RE, RC
+                # add power from substrate junction (RE, RC not counted)
                 pout += vPort[self.__bccn] * currV[self.__bcon]
 
             return pout

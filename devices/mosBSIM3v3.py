@@ -224,8 +224,9 @@ class Device(cir.Element):
     
     numTerms = 4
 
-    # Create electrothermal device
-    makeAutoThermal = True
+    # Create electrothermal device (not for now as temperature
+    # dependence not reliable)
+    # makeAutoThermal = True
 
     isNonlinear = True
 
