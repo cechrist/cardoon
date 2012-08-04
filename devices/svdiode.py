@@ -50,28 +50,27 @@ class SVJunction:
         self._k4 = 1. - self.m
 
 
-    def set_temp_vars(self, obj):
+    def set_temp_vars(self, Tabs, Tnomabs, vt, egapn, egap_t):
         """
-        Calculate temperature-dependent variables for temp given in C
-
-        obj is an object instance containing the following attributes:
-        tnratio, Tabs, Tnomabs, vt, egapn, egap_t
+        Calculate temperature-dependent variables
         """
-        self._t_is = self.isat * pow(obj.tnratio, self._k1) \
-            * np.exp(self._k2 - self._k3 / obj.Tabs) 
+        # Normalized temp
+        tnratio = Tabs / Tnomabs
+        self._t_is = self.isat * pow(tnratio, self._k1) \
+            * np.exp(self._k2 - self._k3 / Tabs) 
         # Maximum argument in exponential function (no need to use
         # safe_exp() with this model)
-        self._alpha = 1. / self.n / obj.vt
+        self._alpha = 1. / self.n / vt
         max_exp_arg = 5e10
         self._svth = np.log(max_exp_arg / self._alpha) / self._alpha
-        self._kexp = self.n * obj.vt * max_exp_arg
+        self._kexp = self.n * vt * max_exp_arg
         # Capacitance
         if self.cj0:
-            self._t_vj = self.vj * obj.tnratio \
-                - 3. * obj.vt * np.log(obj.tnratio) \
-                - obj.tnratio * obj.egapn + obj.egap_t
+            self._t_vj = self.vj * tnratio \
+                - 3. * vt * np.log(tnratio) \
+                - tnratio * egapn + egap_t
             self._t_cj0 = self.cj0 * (1. + self.m 
-                                     * (.0004 * (obj.Tabs - obj.Tnomabs) 
+                                     * (.0004 * (Tabs - Tnomabs) 
                                          + 1. - self._t_vj / self.vj))
             self._k5 = self._t_vj * self._t_cj0 / self._k4
             self._k6 = self._t_cj0 * pow(1. - self.fc, - self.m - 1.)
@@ -291,10 +290,9 @@ class Device(cir.Element):
         # Temperature-adjusted egap
         self.egap_t = self.eg0 - .000702 * (self.Tabs**2) / (self.Tabs + 1108.)
         self._Sthermal = 4. * const.k * self.Tabs * self.rs
-        # Normalized temp
-        self.tnratio = self.Tabs / self.Tnomabs
         # Everything else is handled by the PN junction
-        self.jtn.set_temp_vars(self)
+        self.jtn.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
+                               self.egapn, self.egap_t)
 
     #---------------------------------------------------------------
     # Nonlinear device methods (isNonlinear = True)
