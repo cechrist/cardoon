@@ -21,9 +21,6 @@ Longer term goals and other tasks to be done at some time:
 
   * Implement Harmonic Balance analysis (or equivalent)
 
-  * Implement extrinsic model for MOS trasistors using an approach
-    similar to the BJT implementation.
-  
   * Add "+" notation for multiple lines in parser 
   
   * Implement sparse-matrix-based AC analysis

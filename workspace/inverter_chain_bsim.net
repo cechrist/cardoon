@@ -16,8 +16,8 @@ cap:cload out gnd c=20fF
 
 .subckt inverter in out 1 gnd
 # m1 connected in reverse mode (to test model)
-bsim3:m1 1 in out 1 type = p
-bsim3:m2 out in gnd gnd type = n
+mosbsim3:m1 1 in out 1 type = p
+mosbsim3:m2 out in gnd gnd type = n
 #cap:cload out gnd c=.01pF
 .ends
 

@@ -2,10 +2,12 @@
 News
 ----
 
-Version 0.4.3
-^^^^^^^^^^^^^
+Version 0.5
+^^^^^^^^^^^
 
-     * Added BSIM3v3 model from freeda
+     * Added extrinsic MOSFET model (as an add-on to intrinsic models)
+
+     * Added BSIM3v3 model
 
      * Plots no longer block program execution
 

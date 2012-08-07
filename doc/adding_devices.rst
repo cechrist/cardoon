@@ -73,6 +73,20 @@ class defined as follows::
             # Calculate temperature-dependent variables (if any)
             # self.set_temp_vars(self.temp)
 
+If the class name is not ``Device`` as shown in this example, the
+corresponding class name (or names) must be added to a list to tell
+the program which of the defined classes contain device models (see
+mosEKV.py for an example). This allows the definition of two or more
+device models in the same module::
+
+    class IntEKV(cir.Element):
+    	  pass
+
+    class EKV(IntEKV):
+          pass
+
+    devList = [IntEKV, EKV]
+
 It is recommended to copy one of the existing device files to a new
 file name and use that as a starting point to create a new device.
 

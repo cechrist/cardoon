@@ -16,14 +16,14 @@ res:r1 1 gnd r=1e12
 # -------------------------------------------------------------------
 # NMOS
 # -------------------------------------------------------------------
-mosacms:m1 2 2 gnd gnd model=n_typ l=61.6u w=1u
-mosacms:m2 1 2 3 gnd  model=n_typ l=6.16u w=5u
-mosacms:m3 4 4 gnd gnd  model=n_typ l=123.2u w=1u
-mosacms:m4 3 4 gnd gnd  model=n_typ l=98.56u w=1u
+acms_i:m1 2 2 gnd gnd model=n_typ l=61.6u w=1u
+acms_i:m2 1 2 3 gnd  model=n_typ l=6.16u w=5u
+acms_i:m3 4 4 gnd gnd  model=n_typ l=123.2u w=1u
+acms_i:m4 3 4 gnd gnd  model=n_typ l=98.56u w=1u
 
 # Generic technology parameters
-.model n_typ mosacms (type=n vth=500m isq=85n tcv=.75m bex=-1.8)
-.model p_typ mosacms (type=p vth=-700m isq=25n)
+.model n_typ acms_i (type=n vth=500m isq=85n tcv=.75m bex=-1.8)
+.model p_typ acms_i (type=p vth=-700m isq=25n)
 
 .save dc 6 3 2 4
 

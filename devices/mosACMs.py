@@ -15,8 +15,8 @@ from mosACM import inv_f, inv_f1
 
 class Device(cir.Element):
     """
-    Simplified ACM MOSFET
-    ---------------------
+    Simplified ACM Intrinsic MOSFET
+    -------------------------------
 
     This model uses the simple equations for hand analysis. Only DC
     equations (with temperature dependence) included for now. 
@@ -39,8 +39,8 @@ class Device(cir.Element):
 
     Netlist examples::
 
-        mosacms:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
-        mosacms:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+        acms_i:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
+        acms_i:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
 
     Internal topology
     +++++++++++++++++
@@ -67,7 +67,7 @@ class Device(cir.Element):
     # Device category
     category = "Semiconductor devices"
 
-    devType = "mosacms"
+    devType = "acms_i"
     paramDict = dict(
         cir.Element.tempItem,
         type = ('N- or P-channel MOS (n or p)', '', str, 'n'),

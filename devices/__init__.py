@@ -49,14 +49,27 @@ __all__ = netElemList + ['cppaddev']
 
 devClass = {}
 parType = {}
+
+def add_device(device):
+    """
+    Appends one device model to the global dictionary (devClass)
+    """
+    devClass[device.devType] = device
+    # If device has defined the makeAutoThermal flag then attempt
+    # to create electrothermal device
+    if device.makeAutoThermal:
+        tDevice = autoThermal.thermal_device(device)
+        devClass[tDevice.devType] = tDevice
+
 for modname in netElemList:
     module = __import__(modname, globals(), locals())
-    devClass[module.Device.devType] = module.Device
-    # If module has defined the makeAutoThermal flag then attempt
-    # to create electrothermal device
-    if module.Device.makeAutoThermal:
-        Device = autoThermal.thermal_device(module.Device)
-        devClass[Device.devType] = Device
+    try:
+        for device in module.devList:
+            add_device(device)
+    except AttributeError:
+        # If there is no deviceList then there must be a Device class
+        add_device(module.Device)
+
 
         
         

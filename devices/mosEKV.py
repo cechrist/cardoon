@@ -11,8 +11,56 @@ import numpy as np
 from globalVars import const, glVar
 import circuit as cir
 import cppaddev as ad
+import mosExt
 
-class Device(cir.Element):
+#-------------------------------------------------------------------------
+# Helper functions
+
+def f_simple(v):
+    """
+    Simple interpolation function for F(v)
+
+    Not accurate for moderate inversion
+    """
+    # Have to treat the function for large negative v specially
+    # otherwise exp(.5*v) << 1 and we get log(1) = 0
+    b = v + 20.
+    d = np.exp(.5 * v)
+    c = np.log(1. + d)
+    # f = (b > -20) ? c : d
+    f = ad.condassign(b, c, d)
+    return f**2
+
+
+def f_accurate(v):
+    """
+    Calculate a more accurate value of F(v) 
+
+    Eq. (41) and (42) in [1]
+    
+    Refine f_simple with a few Newton iterations. This function
+    performs the Newton iterations even if not needed on purpose to
+    store the operations in the AD tape.
+    """
+    # get initial estimate
+    i = f_simple(v)
+    # Apply 3 Newton iterations to refine approximation
+    for j in range(3):
+        k1 = np.sqrt(0.25 + i)
+        f = v - (2.*k1 - 1. + np.log(k1 - .5))
+        vprime = -1./(2.*k1*(0.5 - k1)) + 1./k1
+        i += f / vprime
+    b = v + 20.
+    # If b is very negative we need this to avoid the singularity that
+    # happens when i is very small: k1 = 0.5 and the log goes to infinity
+    i = ad.condassign(b, i, np.exp(v))
+    #print v, i, np.exp(v)
+    return i
+
+# -----------------------------------------------------------------------
+# Device classes
+
+class IntEKV(cir.Element):
     """
     Intrinsic EPFL EKV 2.6 MOSFET
     -----------------------------
@@ -66,13 +114,13 @@ class Device(cir.Element):
 
     Netlist examples::
 
-        mosekv:m1 2 3 4 gnd w=30e-6 l=1e-6 type = n ekvint=0
+        ekv_i:m1 2 3 4 gnd w=30e-6 l=1e-6 type = n ekvint=0
 
         # Electro-thermal version
-        mosekv_t:m1 2 3 4 gnd 1000 gnd w=30e-6 l=1e-6 type = n
+        ekv_i_t:m1 2 3 4 gnd 1000 gnd w=30e-6 l=1e-6 type = n
 
         # Model statement
-        .model ekvn mosekv (type = n kp = 200u theta = 0.6)
+        .model ekvn ekv_i (type = n kp = 200u theta = 0.6)
 
     Internal Topology
     +++++++++++++++++
@@ -101,7 +149,7 @@ class Device(cir.Element):
     # Device category
     category = "Semiconductor devices"
 
-    devType = "mosekv"
+    devType = "ekv_i"
     
     # Create electrothermal device
     makeAutoThermal = True
@@ -603,46 +651,8 @@ class Device(cir.Element):
     eval_and_deriv = ad.eval_and_deriv
     get_op_vars = ad.get_op_vars
     
-#-------------------------------------------------------------------------
-# Helper functions
 
-def f_simple(v):
-    """
-    Simple interpolation function for F(v)
+# Define extrinsic model
+EKV = mosExt.extrinsic_mos(IntEKV)
 
-    Not accurate for moderate inversion
-    """
-    # Have to treat the function for large negative v specially
-    # otherwise exp(.5*v) << 1 and we get log(1) = 0
-    b = v + 20.
-    d = np.exp(.5 * v)
-    c = np.log(1. + d)
-    # f = (b > -20) ? c : d
-    f = ad.condassign(b, c, d)
-    return f**2
-
-
-def f_accurate(v):
-    """
-    Calculate a more accurate value of F(v) 
-
-    Eq. (41) and (42) in [1]
-    
-    Refine f_simple with a few Newton iterations. This function
-    performs the Newton iterations even if not needed on purpose to
-    store the operations in the AD tape.
-    """
-    # get initial estimate
-    i = f_simple(v)
-    # Apply 3 Newton iterations to refine approximation
-    for j in range(3):
-        k1 = np.sqrt(0.25 + i)
-        f = v - (2.*k1 - 1. + np.log(k1 - .5))
-        vprime = -1./(2.*k1*(0.5 - k1)) + 1./k1
-        i += f / vprime
-    b = v + 20.
-    # If b is very negative we need this to avoid the singularity that
-    # happens when i is very small: k1 = 0.5 and the log goes to infinity
-    i = ad.condassign(b, i, np.exp(v))
-    #print v, i, np.exp(v)
-    return i
+devList = [IntEKV, EKV]

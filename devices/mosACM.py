@@ -77,8 +77,8 @@ def fifr(i):
 
 class Device(cir.Element):
     """
-    Incomplete ACM MOSFET
-    ---------------------
+    Incomplete Intrinsic ACM MOSFET
+    -------------------------------
 
     Only (some) DC equations are implemented for now. Temperature
     dependence is not complete.  Terminal order: 0 Drain, 1 Gate, 2
@@ -100,8 +100,8 @@ class Device(cir.Element):
 
     Netlist examples::
 
-        mosacm:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
-        mosacm:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+        acm_i:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
+        acm_i:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
 
     Internal topology
     +++++++++++++++++
@@ -128,7 +128,7 @@ class Device(cir.Element):
     # Device category
     category = "Semiconductor devices"
 
-    devType = "mosacm"
+    devType = "acm_i"
     paramDict = dict(
         cir.Element.tempItem,
         type = ('N- or P-channel MOS (n or p)', '', str, 'n'),

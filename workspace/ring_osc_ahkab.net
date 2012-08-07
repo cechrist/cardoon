@@ -8,7 +8,7 @@ x2 3 4 2 0 inv1
 x3 4 1 2 0 inv1
 
 .subckt inv1 in out psupply nsupply
-mosekv:m1 out in psupply psupply model=pch w=3u l=1u
+mosekv:m1 out in psupply psupply model=pch w=3u l=1u rsh=60 cgdo=4e-11
 mosekv:m2 out in nsupply nsupply model=nch w=1u l=1u
 #cap:c1 out 0 c=10f
 .ends

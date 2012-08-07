@@ -398,6 +398,150 @@ Parameters
 Semiconductor devices
 =====================
 
+acm_i: Incomplete Intrinsic ACM MOSFET
+--------------------------------------
+
+Only (some) DC equations are implemented for now. Temperature
+dependence is not complete.  Terminal order: 0 Drain, 1 Gate, 2
+Source, 3 Bulk::
+
+           Drain 0
+                   o
+                   |
+                   |
+               |---+
+               |
+  Gate 1 o-----|<-----o 3 Bulk
+               |
+               |---+
+                   |
+                   |
+                   o
+          Source 2
+
+Netlist examples::
+
+    acm_i:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
+    acm_i:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+
+Internal topology
++++++++++++++++++
+
+For now only ids is implemented::
+
+                       ,--o 0 (D)
+                       |
+                       |
+                       |
+                       |       
+                      /|\       
+      (G) 1 o-       ( | ) ids(VD, VG, VS, VB)
+                      \V/      
+                       |       
+                       |
+                       |
+                       |
+      (B) 3 o-         `--o 2 (S)
+              
+
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ gamma        0.631        V^(1/2)      Bulk Threshold Parameter                             
+ kp           0.0005106    A/V^2        Transconductance Parameter                           
+ l            1.0e-05      m            Channel length                                       
+ phi          0.55         V            Surface Potential                                    
+ temp         None         C            Device temperature (None: use global temp.)          
+ theta        0.814        1/V          Mobility Saturation Parameter                        
+ tnom         27.0         C            Nominal temperature of model parameters              
+ tox          7.5e-09      m            Oxide Thickness                                      
+ type         n                         N- or P-channel MOS (n or p)                         
+ vsat         80000.0      m/s          Saturation Velocity                                  
+ vt0          0.532        V            Threshold Voltage                                    
+ w            1.0e-05      m            Channel width                                        
+ =========== ============ ============ ===================================================== 
+
+
+Electro-thermal version with extra thermal port: acm_i_t 
+
+acms_i: Simplified ACM Intrinsic MOSFET
+---------------------------------------
+
+This model uses the simple equations for hand analysis. Only DC
+equations (with temperature dependence) included for now. 
+
+Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
+
+           Drain 0
+                   o
+                   |
+                   |
+               |---+
+               |
+  Gate 1 o-----|<-----o 3 Bulk
+               |
+               |---+
+                   |
+                   |
+                   o
+          Source 2
+
+Netlist examples::
+
+    acms_i:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
+    acms_i:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+
+Internal topology
++++++++++++++++++
+
+Only ids is implemented. In the future charges will be added::
+
+                       ,--o 0 (D)
+                       |
+                       |
+                       |
+                       |       
+                      /|\       
+      (G) 1 o-       ( | ) ids(VD, VG, VS, VB)
+                      \V/      
+                       |       
+                       |
+                       |
+                       |
+      (B) 3 o-         `--o 2 (S)
+              
+
+
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ bex          -1.5                      Mobility temperature exponent                        
+ cox          0.0007       F/m^2        Gate oxide capacitance per area                      
+ isq          1.0e-07      A/V^2        Sheet normalization current                          
+ l            1.0e-05      m            Channel length                                       
+ n            1.3          F/m^2        Subthreshold slope factor                            
+ tcv          0.001        V/K          Threshold voltage temperature coefficient            
+ temp         None         C            Device temperature (None: use global temp.)          
+ tnom         27.0         C            Nominal temperature of model parameters              
+ type         n                         N- or P-channel MOS (n or p)                         
+ vth          0.5          V            Threshold Voltage                                    
+ w            1.0e-05      m            Channel width                                        
+ =========== ============ ============ ===================================================== 
+
+
+Electro-thermal version with extra thermal port: acms_i_t 
+
 bjt: Bipolar Junction Transistor
 --------------------------------
 
@@ -542,7 +686,7 @@ Parameters
  isat         1.0e-16      A            Transport saturation current                         
  isc          0.0          A            Base collector leakage saturation current            
  ise          0.0          A            Base-emitter leakage saturation current              
- iss          0.0          A            Substrate saturation current                         
+ iss          1.0e-14      A            Substrate saturation current                         
  itf          0.0          A            Transit time dependency on ic                        
  mjc          0.33                      Base collector p-n grading factor                    
  mje          0.33                      Base emitter p-n grading factor                      
@@ -576,8 +720,8 @@ Parameters
 
 Electro-thermal version with extra thermal port: bjt_t 
 
-bsim3: Intrinsic BSIM3 MOSFET Model (version 3.2.4)
----------------------------------------------------
+bsim3_i: Intrinsic BSIM3 MOSFET Model (version 3.2.4)
+-----------------------------------------------------
 
 This model mainly converted from fREEDA 2.0 mosnbsim3 model
 written by Ramya Mohan (http://www.freeda.org/) with some
@@ -592,6 +736,11 @@ parameters such as u0 and vth0 are different for PMOS type.
 Notes:
 
    * Most parameters are not checked for valid values
+
+   * According to ngspice documentation, temperature specification
+     is not functional (probably the same applies here)
+
+   * Parameter descriptions need reviewing
 
    * The code to internally calculate k1 and k2 is disabled by
      default because using default values seems to give more
@@ -615,8 +764,8 @@ Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
 
 Netlist examples::
 
-    bsim3:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
-    bsim3:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+    bsim3_i:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
+    bsim3_i:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
 
 Internal topology
 +++++++++++++++++
@@ -750,9 +899,6 @@ Parameters
  xt           1.55e-07     m            Doping depth                                         
  =========== ============ ============ ===================================================== 
 
-
-Electro-thermal version with extra thermal port: bsim3_t 
-
 diode: Junction Diode
 ---------------------
 
@@ -834,6 +980,144 @@ Parameters
 
 
 Electro-thermal version with extra thermal port: diode_t 
+
+ekv_i: Intrinsic EPFL EKV 2.6 MOSFET
+------------------------------------
+
+Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
+    
+             Drain 0
+                     o
+                     |
+                     |
+                 |---+
+                 |
+    Gate 1 o-----|<-----o 3 Bulk
+                 |
+                 |---+
+                     |
+                     |
+                     o
+            Source 2
+
+Mostly based on [1], but some updates from a later revision (dated
+1999) are also included.
+
+[1] The EPFL-EKV MOSFET Model Equations for Simulation, Technical
+Report, Model Version 2.6, June, 1997, Revision I, September,
+1997, Revision II, July, 1998, Bucher, Christophe Lallement,
+Christian Enz, Fabien Theodoloz, Francois Krummenacher,
+Electronics Laboratories, Swiss Federal Institute of Technology
+(EPFL), Lausanne, Switzerland
+
+This implementation includes accurate current interpolation
+function (optional), works for negative VDS and includes
+electrothermal model, DC operating point paramenters and noise
+equations.
+
+Code originally based on fREEDA 1.4 implementation
+<http://www.freeda.org>::
+
+    // Element information
+    ItemInfo Mosnekv::einfo =
+    {
+      "mosnekv",
+      "EPFL EKV MOSFET model",
+      "Wonhoon Jang",
+      DEFAULT_ADDRESS"transistor>mosfet",
+      "2003_05_15"
+    };
+
+Parameter limit checking, simple capacitance calculations for
+operating point are not yet implemented.
+
+Netlist examples::
+
+    ekv_i:m1 2 3 4 gnd w=30e-6 l=1e-6 type = n ekvint=0
+
+    # Electro-thermal version
+    ekv_i_t:m1 2 3 4 gnd 1000 gnd w=30e-6 l=1e-6 type = n
+
+    # Model statement
+    .model ekvn ekv_i (type = n kp = 200u theta = 0.6)
+
+Internal Topology
++++++++++++++++++
+
+The internal topology is the following::
+
+         ,----------------------------+-------------+--o 0 (D)
+         |                            |             |
+        /|\                           |             |
+       ( | ) idb (Vds > 0)          -----           |
+        \V/                         ----- qd        |       
+         |             1 (G)          |            /|\       
+         |               o            |           ( | ) ids    
+         |               |            |            \V/      
+         |               |            |             |       
+         |             -----          |             |
+         |             ----- qg       |      qs     |
+         |               |            |      ||     |
+ (B) 3 o-+---------------+------------+------||-----+--o 2 (S)
+                                             ||
+
+The impact ionization current (idb) is normally added to the drain
+current, but if the device is in reverse (Vds < 0 for N-channel)
+mode, it is added to the source current.
+
+
+Parameters
+++++++++++
+
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ Lambda       0.5                       Channel-length modulation                            
+ af           1.0                       Flicker noise exponent                               
+ agamma       0.0          V^(1/2)m     Area related body effect mismatch parameter          
+ akp          0.0          m            Area related gain mismatch parameter                 
+ avto         0.0          Vm           Area related threshold voltage mismatch parameter    
+ bex          -1.5                      Mobility temperature exponent                        
+ cox          0.0007       F/m^2        Gate oxide capacitance per area                      
+ dl           0.0          m            Channel length correction                            
+ dw           0.0          m            Channel width correction                             
+ e0           1.0e+12      V/m          Mobility reduction coefficient                       
+ ekvint       0                         Interpolation function (0: accurate, 1: simple)      
+ gamma        1.0          V^1/2        Body effect parameter                                
+ iba          0.0          1/m          First impact ionization coefficient                  
+ ibb          3.0e+08      V/m          Second impact ionization coefficient                 
+ ibbt         0.0009       1/K          Temperature coefficient for IBB                      
+ ibn          1.0                       Saturation voltage factor for impact ionization      
+ kf           0.0                       Flicker noise coefficient                            
+ kp           5.0e-05      A/V^2        Transconductance parameter                           
+ l            1.0e-06      m            Gate length                                          
+ leta         0.1                       Short-channel effect coefficient                     
+ lk           2.9e-07      m            Reverse short channel effect characteristic length   
+ np           1.0                       Parallel multiple device number                      
+ ns           1.0                       Serial multiple device number                        
+ nsub         None         1/cm^3       Channel doping                                       
+ phi          0.7          V            Bulk Fermi potential                                 
+ q0           0.0          A.s/m^2      Reverse short channel effect peak charge density     
+ satlim       54.5982                   Ratio defining the saturation limit if/ir            
+ tcv          0.001        V/K          Threshold voltage temperature coefficient            
+ temp         None         C            Device temperature (None: use global temp.)          
+ theta        0.0          1/V          Mobility recuction coefficient                       
+ tnom         27.0         C            Nominal temperature of model parameters              
+ tox          None         m            Oxide thickness                                      
+ type         n                         N- or P-channel MOS (n or p)                         
+ u0           None         cm^2/(V.s)   Low-field mobility                                   
+ ucex         0.8                       Longitudinal critical field temperature exponent     
+ ucrit        2.0e+06      V/m          Longitudinal critical field                          
+ vfb          None         V            Flat-band voltage                                    
+ vmax         None         m/s          Saturation velocity                                  
+ vt0          0.5          V            Long_channel threshold voltage                       
+ w            1.0e-06      m            Gate width                                           
+ weta         0.25                      Narrow-channel effect coefficient                    
+ xj           1.0e-07      m            Junction depth                                       
+ =========== ============ ============ ===================================================== 
+
+
+Electro-thermal version with extra thermal port: ekv_i_t 
 
 mesfetc: Cubic Curtice-Ettemberg Intrinsic MESFET Model
 -------------------------------------------------------
@@ -922,233 +1206,218 @@ Parameters
 
 Electro-thermal version with extra thermal port: mesfetc_t 
 
-mosacm: Incomplete ACM MOSFET
------------------------------
-
-Only (some) DC equations are implemented for now. Temperature
-dependence is not complete.  Terminal order: 0 Drain, 1 Gate, 2
-Source, 3 Bulk::
-
-           Drain 0
-                   o
-                   |
-                   |
-               |---+
-               |
-  Gate 1 o-----|<-----o 3 Bulk
-               |
-               |---+
-                   |
-                   |
-                   o
-          Source 2
+mosbsim3: Extrinsic Silicon MOSFET 
+----------------------------------
 
 Netlist examples::
 
-    mosacm:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
-    mosacm:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+    mos<type>:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n as=4e-12 ps=8e=12
+    mos<type>:m2 4 5 6 6 w=30e-6 l=1e-6 type = p pd=8u ps=16u 
 
-Internal topology
-+++++++++++++++++
+Extrinsic Internal Topology
++++++++++++++++++++++++++++
 
-For now only ids is implemented::
+The model adds the following to the intrinsic model (for NMOS)::
 
-                       ,--o 0 (D)
-                       |
-                       |
-                       |
-                       |       
-                      /|\       
-      (G) 1 o-       ( | ) ids(VD, VG, VS, VB)
-                      \V/      
-                       |       
-                       |
-                       |
-                       |
-      (B) 3 o-         `--o 2 (S)
-              
+                                 o D (0)
+                                 |
+                                 \ 
+                  Cgdo           / Rd       Drain/source area plus
+                                 \          sidewall model
+                   ||            |-----------,-----,
+            ,------||------------|           |     |   
+            |      ||            |         ----- ----- 
+            |                ||---         -----  / \  
+            |                ||              |   -----
+  G (1) o---+----------------||<-------------+-----+------o B (3)
+            |                ||              |   -----
+            |                ||---         -----  \ / 
+            |      ||            |         ----- -----
+            `------||------------|           |     |
+                   ||            |-----------'-----'
+                                 \ 
+                  Cgso           / Rs 
+                                 \ 
+                                 |
+                                 o S (2)
 
-
-
-
-Parameters
-++++++++++
-
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- gamma        0.631        V^(1/2)      Bulk Threshold Parameter                             
- kp           0.0005106    A/V^2        Transconductance Parameter                           
- l            1.0e-05      m            Channel length                                       
- phi          0.55         V            Surface Potential                                    
- temp         None         C            Device temperature (None: use global temp.)          
- theta        0.814        1/V          Mobility Saturation Parameter                        
- tox          7.5e-09      m            Oxide Thickness                                      
- type         n                         N- or P-channel MOS (n or p)                         
- vsat         80000.0      m/s          Saturation Velocity                                  
- vt0          0.532        V            Threshold Voltage                                    
- w            1.0e-05      m            Channel width                                        
- =========== ============ ============ ===================================================== 
-
-
-Electro-thermal version with extra thermal port: mosacm_t 
-
-mosacms: Simplified ACM MOSFET
-------------------------------
-
-This model uses the simple equations for hand analysis. Only DC
-equations (with temperature dependence) included for now. 
-
-Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
-
-           Drain 0
-                   o
-                   |
-                   |
-               |---+
-               |
-  Gate 1 o-----|<-----o 3 Bulk
-               |
-               |---+
-                   |
-                   |
-                   o
-          Source 2
-
-Netlist examples::
-
-    mosacms:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
-    mosacms:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
-
-Internal topology
-+++++++++++++++++
-
-Only ids is implemented. In the future charges will be added::
-
-                       ,--o 0 (D)
-                       |
-                       |
-                       |
-                       |       
-                      /|\       
-      (G) 1 o-       ( | ) ids(VD, VG, VS, VB)
-                      \V/      
-                       |       
-                       |
-                       |
-                       |
-      (B) 3 o-         `--o 2 (S)
-              
-
-
-
-
-Parameters
-++++++++++
-
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- bex          -1.5                      Mobility temperature exponent                        
- cox          0.0007       F/m^2        Gate oxide capacitance per area                      
- isq          1.0e-07      A/V^2        Sheet normalization current                          
- l            1.0e-05      m            Channel length                                       
- n            1.3          F/m^2        Subthreshold slope factor                            
- tcv          0.001        V/K          Threshold voltage temperature coefficient            
- temp         None         C            Device temperature (None: use global temp.)          
- tnom         27.0         C            Nominal temperature of model parameters              
- type         n                         N- or P-channel MOS (n or p)                         
- vth          0.5          V            Threshold Voltage                                    
- w            1.0e-05      m            Channel width                                        
- =========== ============ ============ ===================================================== 
-
-
-Electro-thermal version with extra thermal port: mosacms_t 
-
-mosekv: Intrinsic EPFL EKV 2.6 MOSFET
--------------------------------------
-
-Terminal order: 0 Drain, 1 Gate, 2 Source, 3 Bulk::
     
-             Drain 0
-                     o
-                     |
-                     |
-                 |---+
-                 |
-    Gate 1 o-----|<-----o 3 Bulk
-                 |
-                 |---+
-                     |
-                     |
-                     o
-            Source 2
+Intrinsic model
++++++++++++++++
 
-Mostly based on [1], but some updates from a later revision (dated
-1999) are also included.
+See bsim3_i intrinsic model documentation.
+    
 
-[1] The EPFL-EKV MOSFET Model Equations for Simulation, Technical
-Report, Model Version 2.6, June, 1997, Revision I, September,
-1997, Revision II, July, 1998, Bucher, Christophe Lallement,
-Christian Enz, Fabien Theodoloz, Francois Krummenacher,
-Electronics Laboratories, Swiss Federal Institute of Technology
-(EPFL), Lausanne, Switzerland
+Parameters
+++++++++++
 
-This implementation includes accurate current interpolation
-function (optional), works for negative VDS and includes
-electrothermal model, DC operating point paramenters and noise
-equations.
+ =========== ============ ============ ===================================================== 
+ Name         Default      Unit         Description                                          
+ =========== ============ ============ ===================================================== 
+ a0           1                         Non-uniform depletion width effect coefficient       
+ a1           0                         Non-saturation effect coefficient                    
+ a2           1                         Non-saturation effect coefficient                    
+ acde         1                         Exponential coefficient for finite charge thickness  
+ ad           0.0          m^2          Drain area                                           
+ ags          0                         Gate bias coefficient of Abulk                       
+ alpha0       0            m/V          Substrate current model parameter                    
+ alpha1       0            V^{-1}       Substrate current model parameter                    
+ asrc         0.0          m^2          Source area                                          
+ at           33000        m/s          Temperature coefficient of vsat                      
+ b0           0                         Abulk narrow width parameter                         
+ b1           0                         Abulk narrow width parameter                         
+ beta0        30           V            Diode limiting current                               
+ cdsc         0.00024      F/m^2        Drain/Source and channel coupling capacitance        
+ cdscb        0            F/V/m^2      Body-bias dependence of cdsc                         
+ cdscd        0            F/V/m^2      Drain-bias dependence of cdsc                        
+ cgbo         0.0          F/m          Gate-bulk overlap capacitance per meter channel length 
+ cgdo         0.0          F/m          Gate-drain overlap capacitance per meter channel width 
+ cgso         0.0          F/m          Gate-source overlap capacitance per meter channel width 
+ cit          0                         Interface state capacitance                          
+ cj           0.0          F/m^2        Source drain junction capacitance per unit area      
+ cjsw         0.0          F/m          Source drain junction sidewall capacitance per unit length 
+ clc          1.0e-07                   Vdsat paramater for C-V model                        
+ cle          0.6                       Vdsat paramater for C-V model                        
+ delta        0.01         V            Effective Vds parameter                              
+ drout        0.56                      DIBL coefficient of output resistance                
+ dsub         0.56                      DIBL coefficient in the subthreshold region          
+ dvt0         2.2                       Short channel effect coefficient 0                   
+ dvt0w        0            m^{-1}       Narrow width effect coefficient 0                    
+ dvt1         0.53                      Short channel effect coefficient 1                   
+ dvt1w        5.3e+06      m^{-1}       Narrow width effect coefficient 1                    
+ dvt2         -0.032       V^{-1}       Short channel effect coefficient 2                   
+ dvt2w        -0.032       V^{-1}       Narrow width effect coefficient 2                    
+ dwb          0            m/V          Width reduction parameter                            
+ dwg          0            m/V          Width reduction parameter                            
+ eg0          1.11         eV           Energy bandgap                                       
+ elm          5                         Non-quasi-static Elmore Constant Parameter           
+ eta0         0.08                      Subthreshold region DIBL coefficeint                 
+ etab         -0.07                     Subthreshold region DIBL coefficeint                 
+ fc           0.5                       Coefficient for forward-bias depletion capacitances  
+ js           0.0          A/m^2        Source drain junction current density                
+ k1           0.53         V^{0.5}      First order body effect coefficient                  
+ k1enable     0                         Enable k1, k2 internal calculation                   
+ k2           -0.0186                   Second order body effect coefficient                 
+ k3           80                        Narrow width effect coefficient                      
+ k3b          0                         Body effect coefficient of k3                        
+ keta         -0.047                    Body-bias coefficient of non-uniform depletion width effect 
+ kt1          -0.11        V            Temperature coefficient of Vth                       
+ kt1l         0            V m          Temperature coefficient of Vth                       
+ kt2          0.022                     Body-coefficient of kt1                              
+ l            1.0e-06      m            Length                                               
+ lint         0            m            Length reduction parameter                           
+ ll           0                         Length reduction parameter                           
+ llc          0                         Length reduction parameter for CV                    
+ lln          1                         Length reduction parameter                           
+ lw           0                         Length reduction parameter                           
+ lwc          0                         Length reduction parameter for CV                    
+ lwl          0                         Length reduction parameter                           
+ lwlc         0                         Length reduction parameter for CV                    
+ lwn          1                         Length reduction parameter                           
+ mj           0.5                       Grading coefficient of source drain junction         
+ mjsw         0.33                      Grading coefficient of source drain junction sidewall 
+ moin         15                        Coefficient for gate-bias dependent surface potential 
+ nch          1.7e+17      cm^{-3}      Channel doping concentration                         
+ nfactor      1                         Subthreshold swing coefficient                       
+ ngate        0            cm^{-3}      Poly-gate doping concentration                       
+ nlx          1.74e-07     m            Lateral non-uniform doping effect                    
+ noff         1                         C-V turn-on/off parameter                            
+ nrd          1.0          squares      Number of squares in drain                           
+ nrs          1.0          squares      Number of squares in source                          
+ nsub         6.0e+16      cm^{-3}      Substrate doping concentration                       
+ pb           0.8          V            Built in potential of source drain junction          
+ pbsw         0.8          V            Built in potential of source, drain junction sidewall 
+ pclm         1.3                       Channel length modulation coefficient                
+ pd           0.0          m            Drain perimeter                                      
+ pdibl1       0.39                      Drain-induced barrier lowering oefficient            
+ pdibl2       0.0086                    Drain-induced barrier lowering oefficient            
+ pdiblb       0                         Body-effect on drain induced barrier lowering        
+ prt          0                         Temperature coefficient of parasitic resistance      
+ prwb         0                         Body-effect on parasitic resistance                  
+ prwg         0                         Gate-bias effect on parasitic resistance             
+ ps           0.0          m            Source perimeter                                     
+ pscbe1       4.24e+08     V/m          Substrate current body-effect coeffiecient           
+ pscbe2       1.0e-05      m/V          Substrate current body-effect coeffiecient           
+ pvag         0                         Gate dependence of output resistance parameter       
+ rdsw         0                         Sorce-drain resistance per width                     
+ rsh          0.0          Ohm/square   Drain and source diffusion sheet resistance          
+ temp         None         C            Device temperature (None: use global temp.)          
+ tnom         27.0         C            Nominal temperature                                  
+ tox          1.5e-08      m            Gate oxide thickness                                 
+ toxm         1.5e-08                   Gate oxide thickness used in extraction              
+ type         n                         N- or P-channel MOS (n or p)                         
+ u0           670          cm^2/V/s     Low-field mobility at Tnom                           
+ ua           2.25e-09     m/V          Linear gate dependence of mobility                   
+ ua1          4.31e-09     m/V          Temperature coefficient for ua                       
+ ub           5.87e-19     (m/V)^2      Quadratic gate dependence of mobility                
+ ub1          -7.61e-18    (m/V)^2      Temperature coefficient for ub                       
+ uc           -4.65e-11    m/V^2        Body-bias dependence of mobility                     
+ uc1          -5.6e-11     m/V^2        Temperature coefficient for uc                       
+ ute          -1.5                      Temperature coefficient of mobility                  
+ vbm          -3           V            Maximum body voltage                                 
+ vfb          -1           V            Flat band voltage                                    
+ voff         -0.08        V            Threshold voltage offset                             
+ voffcv       0                         C-V lateral shift parameter                          
+ vsat         80000        m/s          Saturationvelocity at tnom                           
+ vth0         0.7          V            Threshold voltage of long channel device at Vbs=0 and small Vds 
+ w            1.0e-06      m            Width                                                
+ w0           2.5e-06      m            Narrow width effect parameter                        
+ wint         0            m            Width reduction parameter                            
+ wl           0                         Width reduction parameter                            
+ wlc          0                         Width reduction parameter for CV                     
+ wln          1                         Width reduction parameter                            
+ wr           1                         Width dependence of rds                              
+ ww           0                         Width reduction parameter                            
+ wwc          0                         Width reduction parameter for CV                     
+ wwl          0                         Width reduction parameter                            
+ wwlc         0                         Width reduction parameter for CV                     
+ wwn          1                         Width reduction parameter                            
+ xj           1.5e-07      m            Junction depth                                       
+ xt           1.55e-07     m            Doping depth                                         
+ xti          3.0                       Junction saturation current temperature exponent     
+ =========== ============ ============ ===================================================== 
 
-Code originally based on fREEDA 1.4 implementation
-<http://www.freeda.org>::
-
-    // Element information
-    ItemInfo Mosnekv::einfo =
-    {
-      "mosnekv",
-      "EPFL EKV MOSFET model",
-      "Wonhoon Jang",
-      DEFAULT_ADDRESS"transistor>mosfet",
-      "2003_05_15"
-    };
-
-Parameter limit checking, simple capacitance calculations for
-operating point are not yet implemented.
+mosekv: Extrinsic Silicon MOSFET 
+--------------------------------
 
 Netlist examples::
 
-    mosekv:m1 2 3 4 gnd w=30e-6 l=1e-6 type = n ekvint=0
+    mos<type>:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n as=4e-12 ps=8e=12
+    mos<type>:m2 4 5 6 6 w=30e-6 l=1e-6 type = p pd=8u ps=16u 
 
-    # Electro-thermal version
-    mosekv_t:m1 2 3 4 gnd 1000 gnd w=30e-6 l=1e-6 type = n
+Extrinsic Internal Topology
++++++++++++++++++++++++++++
 
-    # Model statement
-    .model ekvn mosekv (type = n kp = 200u theta = 0.6)
+The model adds the following to the intrinsic model (for NMOS)::
 
-Internal Topology
-+++++++++++++++++
+                                 o D (0)
+                                 |
+                                 \ 
+                  Cgdo           / Rd       Drain/source area plus
+                                 \          sidewall model
+                   ||            |-----------,-----,
+            ,------||------------|           |     |   
+            |      ||            |         ----- ----- 
+            |                ||---         -----  / \  
+            |                ||              |   -----
+  G (1) o---+----------------||<-------------+-----+------o B (3)
+            |                ||              |   -----
+            |                ||---         -----  \ / 
+            |      ||            |         ----- -----
+            `------||------------|           |     |
+                   ||            |-----------'-----'
+                                 \ 
+                  Cgso           / Rs 
+                                 \ 
+                                 |
+                                 o S (2)
 
-The internal topology is the following::
+    
+Intrinsic model
++++++++++++++++
 
-         ,----------------------------+-------------+--o 0 (D)
-         |                            |             |
-        /|\                           |             |
-       ( | ) idb (Vds > 0)          -----           |
-        \V/                         ----- qd        |       
-         |             1 (G)          |            /|\       
-         |               o            |           ( | ) ids    
-         |               |            |            \V/      
-         |               |            |             |       
-         |             -----          |             |
-         |             ----- qg       |      qs     |
-         |               |            |      ||     |
- (B) 3 o-+---------------+------------+------||-----+--o 2 (S)
-                                             ||
-
-The impact ionization current (idb) is normally added to the drain
-current, but if the device is in reverse (Vds < 0 for N-channel)
-mode, it is added to the source current.
-
+See ekv_i intrinsic model documentation.
+    
 
 Parameters
 ++++++++++
@@ -1157,31 +1426,50 @@ Parameters
  Name         Default      Unit         Description                                          
  =========== ============ ============ ===================================================== 
  Lambda       0.5                       Channel-length modulation                            
+ ad           0.0          m^2          Drain area                                           
  af           1.0                       Flicker noise exponent                               
  agamma       0.0          V^(1/2)m     Area related body effect mismatch parameter          
  akp          0.0          m            Area related gain mismatch parameter                 
+ asrc         0.0          m^2          Source area                                          
  avto         0.0          Vm           Area related threshold voltage mismatch parameter    
  bex          -1.5                      Mobility temperature exponent                        
+ cgbo         0.0          F/m          Gate-bulk overlap capacitance per meter channel length 
+ cgdo         0.0          F/m          Gate-drain overlap capacitance per meter channel width 
+ cgso         0.0          F/m          Gate-source overlap capacitance per meter channel width 
+ cj           0.0          F/m^2        Source drain junction capacitance per unit area      
+ cjsw         0.0          F/m          Source drain junction sidewall capacitance per unit length 
  cox          0.0007       F/m^2        Gate oxide capacitance per area                      
  dl           0.0          m            Channel length correction                            
  dw           0.0          m            Channel width correction                             
  e0           1.0e+12      V/m          Mobility reduction coefficient                       
+ eg0          1.11         eV           Energy bandgap                                       
  ekvint       0                         Interpolation function (0: accurate, 1: simple)      
+ fc           0.5                       Coefficient for forward-bias depletion capacitances  
  gamma        1.0          V^1/2        Body effect parameter                                
  iba          0.0          1/m          First impact ionization coefficient                  
  ibb          3.0e+08      V/m          Second impact ionization coefficient                 
  ibbt         0.0009       1/K          Temperature coefficient for IBB                      
  ibn          1.0                       Saturation voltage factor for impact ionization      
+ js           0.0          A/m^2        Source drain junction current density                
  kf           0.0                       Flicker noise coefficient                            
  kp           5.0e-05      A/V^2        Transconductance parameter                           
  l            1.0e-06      m            Gate length                                          
  leta         0.1                       Short-channel effect coefficient                     
  lk           2.9e-07      m            Reverse short channel effect characteristic length   
+ mj           0.5                       Grading coefficient of source drain junction         
+ mjsw         0.33                      Grading coefficient of source drain junction sidewall 
  np           1.0                       Parallel multiple device number                      
+ nrd          1.0          squares      Number of squares in drain                           
+ nrs          1.0          squares      Number of squares in source                          
  ns           1.0                       Serial multiple device number                        
  nsub         None         1/cm^3       Channel doping                                       
+ pb           0.8          V            Built in potential of source drain junction          
+ pbsw         0.8          V            Built in potential of source, drain junction sidewall 
+ pd           0.0          m            Drain perimeter                                      
  phi          0.7          V            Bulk Fermi potential                                 
+ ps           0.0          m            Source perimeter                                     
  q0           0.0          A.s/m^2      Reverse short channel effect peak charge density     
+ rsh          0.0          Ohm/square   Drain and source diffusion sheet resistance          
  satlim       54.5982                   Ratio defining the saturation limit if/ir            
  tcv          0.001        V/K          Threshold voltage temperature coefficient            
  temp         None         C            Device temperature (None: use global temp.)          
@@ -1198,6 +1486,7 @@ Parameters
  w            1.0e-06      m            Gate width                                           
  weta         0.25                      Narrow-channel effect coefficient                    
  xj           1.0e-07      m            Junction depth                                       
+ xti          3.0                       Junction saturation current temperature exponent     
  =========== ============ ============ ===================================================== 
 
 
@@ -1371,7 +1660,7 @@ Parameters
  isat         1.0e-16      A            Transport saturation current                         
  isc          0.0          A            Base collector leakage saturation current            
  ise          0.0          A            Base-emitter leakage saturation current              
- iss          0.0          A            Substrate saturation current                         
+ iss          1.0e-14      A            Substrate saturation current                         
  itf          0.0          A            Transit time dependency on ic                        
  mjc          0.33                      Base collector p-n grading factor                    
  mje          0.33                      Base emitter p-n grading factor                      

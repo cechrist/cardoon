@@ -11,7 +11,7 @@ import numpy as np
 from globalVars import const, glVar
 import circuit as cir
 import cppaddev as ad
-from mosACM import inv_f, inv_f1
+import mosExt
 
 # KboQ = 8.617087e-5  #/* Kb / q  where q = 1.60219e-19 */
 # EPSOX = 3.453133e-11
@@ -32,7 +32,7 @@ def log1pexp(x):
                           np.exp(x),
                           y1)
 
-class Device(cir.Element):
+class BSIM3(cir.Element):
     """
     Intrinsic BSIM3 MOSFET Model (version 3.2.4)
     --------------------------------------------
@@ -78,8 +78,8 @@ class Device(cir.Element):
 
     Netlist examples::
 
-        bsim3:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
-        bsim3:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
+        bsim3_i:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n 
+        bsim3_i:m2 4 5 6 6 w=30e-6 l=1e-6 type = p 
 
     Internal topology
     +++++++++++++++++
@@ -106,7 +106,7 @@ class Device(cir.Element):
     # Device category
     category = "Semiconductor devices"
 
-    devType = "bsim3"
+    devType = "bsim3_i"
     paramDict = dict(
         cir.Element.tempItem,
         type = ('N- or P-channel MOS (n or p)', '', str, 'n'),
@@ -959,3 +959,7 @@ class Device(cir.Element):
         return self.OP
 
 
+# Define extrinsic model
+ExtBSIM3 = mosExt.extrinsic_mos(BSIM3)
+
+devList = [BSIM3, ExtBSIM3]
