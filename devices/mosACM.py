@@ -140,7 +140,8 @@ class Device(cir.Element):
         kp = ('Transconductance Parameter', 'A/V^2', float, 510.6e-6),
         theta = ('Mobility Saturation Parameter', '1/V', float, 0.814),
         vsat = ('Saturation Velocity', 'm/s', float, 8e4),
-        tox = ('Oxide Thickness', 'm', float, 7.5e-9)
+        tox = ('Oxide Thickness', 'm', float, 7.5e-9),
+        tnom = ('Nominal temperature of model parameters', 'C', float, 27.)
         )
     
     numTerms = 4
@@ -180,6 +181,9 @@ class Device(cir.Element):
         else:
             raise cir.CircuitError(
                 '{0}: unrecognized type: {1}. Valid types are "n" or "p"'.format(self.nodeName, self.type))
+
+        # Nominal abs temperature
+        self._Tn = const.T0 + self.tnom
 
         if not thermal:
             # Calculate temperature-dependent variables
