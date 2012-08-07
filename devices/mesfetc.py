@@ -168,11 +168,11 @@ class Device(cir.Element):
         self.vt = const.k * self.Tabs / const.q
         # Temperature-adjusted egap
         self.egap_t = self.eg0 - .000702 * (self.Tabs**2) / (self.Tabs + 1108.)
-        # Normalized temp
-        self.tnratio = self.Tabs / self.Tnomabs
         # Everything else is handled by junctions
-        self.diogs.set_temp_vars(self)
-        self.diogd.set_temp_vars(self)
+        self.diogs.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
+                                 self.egapn, self.egap_t)
+        self.diogd.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
+                                 self.egapn, self.egap_t)
 
         delta_T = temp - self.tnom
         self._k6 = self.nr * self.vt

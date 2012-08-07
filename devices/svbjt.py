@@ -283,14 +283,18 @@ class SVBJTi(cir.Element):
         # Temperature-adjusted egap
         self.egap_t = self.eg - .000702 * (self.Tabs**2) / (self.Tabs + 1108.)
         # set temperature in juctions
-        self.jif.set_temp_vars(self)
-        self.jir.set_temp_vars(self)
+        self.jif.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
+                               self.egapn, self.egap_t)
+        self.jir.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
+                               self.egapn, self.egap_t)
         # Adjust ise and isc (which have different temperature variation)
         if self.ise:
-            self.jile.set_temp_vars(self)
+            self.jile.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
+                                    self.egapn, self.egap_t)
             self.jile._t_is /= tnXTB
         if self.isc:
-            self.jilc.set_temp_vars(self)
+            self.jilc.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
+                                    self.egapn, self.egap_t)
             self.jilc._t_is /= tnXTB
         # Now some BJT-only variables
         self._bf_t = self.bf * tnXTB
