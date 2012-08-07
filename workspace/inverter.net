@@ -10,9 +10,9 @@ vdc:vin in gnd vdc=1
 x1 in out 1 gnd inverter
 
 .subckt inverter in out 1 gnd
-bsim3_i:m1 out in 1 1 type = p
+mosbsim3:m1 out in 1 1 type = p m=3
 #res:r1 out gnd r=100k
-bsim3_i:m2 out in gnd gnd type = n
+mosbsim3:m2 out in gnd gnd type = n
 .ends
 
 .plot dc out

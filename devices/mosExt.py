@@ -21,7 +21,7 @@ Requirements for intrinsic model classes:
  6. Intrinsic device name must not include ``mos`` and must end with
     ``_i``. Extrinsic device name is: ``mos<intrinsic minus _i>``
 
- 7. Define absolute nominal temperature in param_init(): self._Tn
+ 7. Make sure parameter names do not collide
 
  8. Noise ports/model not implemented here yet.
 
@@ -91,6 +91,7 @@ def extrinsic_mos(IMOS):
 
         paramDict = dict(
             IMOS.paramDict.items(),
+            m = ('Parallel multiplier', '', float, 1.),
             cgdo = ('Gate-drain overlap capacitance per meter channel width',
                     'F/m', float, 0.),
             cgso = ('Gate-source overlap capacitance per meter channel width',
@@ -128,11 +129,6 @@ def extrinsic_mos(IMOS):
 
         def __init__(self, instanceName):
             IMOS.__init__(self, instanceName)
-            # Create one junction for each (nonlinear) capacitance
-            self.dj = Junction()
-            self.djsw = Junction()
-            self.sj = Junction()
-            self.sjsw = Junction()
             self.__doc__ += IMOS.__doc__
 
         def process_params(self, thermal = False):
@@ -142,7 +138,7 @@ def extrinsic_mos(IMOS):
             # Remove internal terminals (there should be none created
             # by intrinsic model)
             self.clean_internal_terms()
-            # Tell autothermal to re-generate thermal ports
+            # Tell autothermal (if used) to re-generate thermal ports
             self.__addThermalPorts = True
 
             # By default drain and source are terminals 0 and 2
@@ -175,7 +171,7 @@ def extrinsic_mos(IMOS):
             if self.cgbo:
                 # Gate-bulk ovelrlap cap
                 extraVCQS += [((1, 3), (1, 3),
-                               self.cgdo * self.l)]
+                               self.cgbo * self.l)]
 
             # Add extra linear resistors/caps (if any)
             self.linearVCCS = extraVCCS
@@ -191,43 +187,49 @@ def extrinsic_mos(IMOS):
                 # One charge source connected to each D, G, S
                 self.qsOutPorts = [(self.__di, 3), (1, 3), (self.__si, 3)]
 
-            # Process parameters from intrinsic device: drain and
-            # source terminals are already substituted.
-            IMOS.process_params(self)
-
-            self.egapn = self.eg0 - .000702 * (self._Tn**2) \
-                / (self._Tn + 1108.)
+            # Calculate some variables (that may also be calculated in
+            # intrinsic model)
+            self.__Tnabs = const.T0 + self.tnom
+            self.__egapn = self.eg0 - .000702 * (self.__Tnabs**2) \
+                / (self.__Tnabs + 1108.)
             # Initialize variables in junctions
             if self.ad:
+                self.dj = Junction()
                 self.dj.process_params(isat = self.js * self.ad, 
                                        cj0 = self.cj * self.ad, 
                                        vj = self.pb, m = self.mj, 
                                        n = 1., fc = self.fc, 
                                        xti = self.xti, eg0 = self.eg0, 
-                                       TnomAbs = self._Tn)
+                                       Tnomabs = self.__Tnabs)
             if self.asrc:
+                self.sj = Junction()
                 self.sj.process_params(isat = self.js * self.asrc, 
                                        cj0 = self.cj * self.asrc, 
                                        vj = self.pb, m = self.mj, 
                                        n = 1., fc = self.fc, 
                                        xti = self.xti, eg0 = self.eg0, 
-                                       TnomAbs = self._Tn)
+                                       Tnomabs = self.__Tnabs)
             if self.pd:
+                self.djsw = Junction()
                 self.djsw.process_params(isat = 0., 
                                          cj0 = self.cjsw * self.pd, 
                                          vj = self.pbsw, m = self.mjsw, 
                                          n = 1., fc = self.fc, 
                                          xti = self.xti, eg0 = self.eg0, 
-                                         TnomAbs = self._Tn)
+                                         Tnomabs = self.__Tnabs)
             if self.ps:
+                self.sjsw = Junction()
                 self.sjsw.process_params(isat = 0., 
                                          cj0 = self.cjsw * self.ps, 
                                          vj = self.pbsw, m = self.mjsw, 
                                          n = 1., fc = self.fc, 
                                          xti = self.xti, eg0 = self.eg0, 
-                                         TnomAbs = self._Tn)
-            # Adjust temperature
-            self.set_temp_vars(self.temp)
+                                         Tnomabs = self.__Tnabs)
+
+            # Process parameters from intrinsic device:
+            # set_temp_vars() called there
+            IMOS.process_params(self)
+
             
         def set_temp_vars(self, temp):
             """
@@ -241,19 +243,21 @@ def extrinsic_mos(IMOS):
             Tabs = temp + const.T0
             # Temperature-adjusted egap
             egap_t = self.eg0 - .000702 * (Tabs**2) / (Tabs + 1108.)
+            # Thermal voltage
+            Vt = const.k * Tabs / const.q
             # Adjust junction temperatures
             if self.ad:
-                self.dj.set_temp_vars(Tabs, self._Tn, self._Vt, 
-                                      self.egapn, egap_t)
+                self.dj.set_temp_vars(Tabs, self.__Tnabs, Vt, 
+                                      self.__egapn, egap_t)
             if self.pd:
-                self.djsw.set_temp_vars(Tabs, self._Tn, self._Vt, 
-                                        self.egapn, egap_t)
+                self.djsw.set_temp_vars(Tabs, self.__Tnabs, Vt, 
+                                        self.__egapn, egap_t)
             if self.asrc:
-                self.sj.set_temp_vars(Tabs, self._Tn, self._Vt, 
-                                      self.egapn, egap_t)
+                self.sj.set_temp_vars(Tabs, self.__Tnabs, Vt, 
+                                      self.__egapn, egap_t)
             if self.ps:
-                self.sjsw.set_temp_vars(Tabs, self._Tn, self._Vt, 
-                                        self.egapn, egap_t)
+                self.sjsw.set_temp_vars(Tabs, self.__Tnabs, Vt, 
+                                        self.__egapn, egap_t)
             
 
         def eval_cqs(self, vPort, saveOP = False):
@@ -270,7 +274,7 @@ def extrinsic_mos(IMOS):
             if self.ad:
                 # substract to idb
                 iVec[1] -= self.dj.get_id(v1) * self._tf
-                if self.cjs:
+                if self.cj:
                     # substract to qd
                     qVec[0] -= self.dj.get_qd(v1) * self._tf
             if self.pd and self.cjsw:
@@ -280,11 +284,15 @@ def extrinsic_mos(IMOS):
             if self.asrc:
                 # substract to isb
                 iVec[2] -= self.sj.get_id(v1) * self._tf
-                if self.cjs:
+                if self.cj:
                     # substract to qs
                     qVec[2] -= self.sj.get_qd(v1) * self._tf
             if self.ps and self.cjsw:
                 qVec[2] -= self.sjsw.get_qd(v1) * self._tf
+
+            # Apply parallel multiplier
+            iVec *= self.m
+            qVec *= self.m
 
             if saveOP:
                 return (iVec, qVec, opVec)

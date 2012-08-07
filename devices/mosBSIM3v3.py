@@ -174,9 +174,9 @@ class BSIM3(cir.Element):
                   float, 0.0086),
         pdiblb = ('Body-effect on drain induced barrier lowering', '', 
                   float, 0),
-        pscbe1 = ('Substrate current body-effect coeffiecient', 'V/m', 
+        pscbe1 = ('Substrate current body-effect coeffiecient 1', 'V/m', 
                   float, 4.24e+08),
-        pscbe2 = ('Substrate current body-effect coeffiecient', 'm/V', 
+        pscbe2 = ('Substrate current body-effect coeffiecient 2', 'V/m', 
                   float, 1e-05),
         pvag = ('Gate dependence of output resistance parameter', '', float, 0),
         vfb = ('Flat band voltage', 'V', float, -1),
@@ -671,11 +671,14 @@ class BSIM3(cir.Element):
         Va = Vasat + T0 * T1
         
         #Calculate VASCBE
-        rcpVASCBE = ad.condassign(
-            abs(diffVds),
-            self.pscbe2 * ad.safe_exp(-self.pscbe1 * self.litl/diffVds) \
-                / self.leff,
-            0.)
+        if self.pscbe1:
+            rcpVASCBE = ad.condassign(
+                abs(diffVds),
+                self.pscbe2 * ad.safe_exp(-self.pscbe1 * self.litl/diffVds) \
+                    / self.leff,
+                0.)
+        else:
+            rcpVASCBE = self.pscbe2 / self.leff
 
         # Original:
         #VASCBE = ad.condassign(

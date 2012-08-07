@@ -133,7 +133,7 @@ class CircuitError(Exception):
 
 
 #---------------------------------------------------------------------
-class GraphNode:
+class GraphNode(object):
     """
     Simple graph node base class (not circuit node) 
 
