@@ -76,6 +76,13 @@ def extrinsic_mos(IMOS):
                                      \ 
                                      |
                                      o S (2)
+    
+    Important Note
+    ++++++++++++++
+
+    This implementation does not account for the power dissipation
+    in Rd and Rs. Use external thermal resistors if that is needed.
+    
 
         """ 
         # Additional documentation
@@ -83,7 +90,7 @@ def extrinsic_mos(IMOS):
     Intrinsic model
     +++++++++++++++
 
-    See {0} intrinsic model documentation.
+    See **{0}** intrinsic model documentation.
         """.format(IMOS.devType)
 
         # devtype is the 'model' name: remove the '_i' from intrinsic name

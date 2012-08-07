@@ -187,7 +187,10 @@ Parameters
  =========== ============ ============ ===================================================== 
 
 
-Electro-thermal version with extra thermal port: res_t 
+Electro-thermal version
++++++++++++++++++++++++
+
+Electro-thermal version with extra thermal port: **res_t**
 
 Controlled Sources
 ==================
@@ -468,7 +471,10 @@ Parameters
  =========== ============ ============ ===================================================== 
 
 
-Electro-thermal version with extra thermal port: acm_i_t 
+Electro-thermal version
++++++++++++++++++++++++
+
+Electro-thermal version with extra thermal port: **acm_i_t**
 
 acms_i: Simplified ACM Intrinsic MOSFET
 ---------------------------------------
@@ -540,7 +546,10 @@ Parameters
  =========== ============ ============ ===================================================== 
 
 
-Electro-thermal version with extra thermal port: acms_i_t 
+Electro-thermal version
++++++++++++++++++++++++
+
+Electro-thermal version with extra thermal port: **acms_i_t**
 
 bjt: Bipolar Junction Transistor
 --------------------------------
@@ -718,7 +727,10 @@ Parameters
  =========== ============ ============ ===================================================== 
 
 
-Electro-thermal version with extra thermal port: bjt_t 
+Electro-thermal version
++++++++++++++++++++++++
+
+Electro-thermal version with extra thermal port: **bjt_t**
 
 bsim3_i: Intrinsic BSIM3 MOSFET Model (version 3.2.4)
 -----------------------------------------------------
@@ -860,8 +872,8 @@ Parameters
  prt          0                         Temperature coefficient of parasitic resistance      
  prwb         0                         Body-effect on parasitic resistance                  
  prwg         0                         Gate-bias effect on parasitic resistance             
- pscbe1       4.24e+08     V/m          Substrate current body-effect coeffiecient           
- pscbe2       1.0e-05      m/V          Substrate current body-effect coeffiecient           
+ pscbe1       4.24e+08     V/m          Substrate current body-effect coeffiecient 1         
+ pscbe2       1.0e-05      V/m          Substrate current body-effect coeffiecient 2         
  pvag         0                         Gate dependence of output resistance parameter       
  rdsw         0                         Sorce-drain resistance per width                     
  temp         None         C            Device temperature (None: use global temp.)          
@@ -979,7 +991,10 @@ Parameters
  =========== ============ ============ ===================================================== 
 
 
-Electro-thermal version with extra thermal port: diode_t 
+Electro-thermal version
++++++++++++++++++++++++
+
+Electro-thermal version with extra thermal port: **diode_t**
 
 ekv_i: Intrinsic EPFL EKV 2.6 MOSFET
 ------------------------------------
@@ -1117,7 +1132,10 @@ Parameters
  =========== ============ ============ ===================================================== 
 
 
-Electro-thermal version with extra thermal port: ekv_i_t 
+Electro-thermal version
++++++++++++++++++++++++
+
+Electro-thermal version with extra thermal port: **ekv_i_t**
 
 mesfetc: Cubic Curtice-Ettemberg Intrinsic MESFET Model
 -------------------------------------------------------
@@ -1204,7 +1222,10 @@ Parameters
  =========== ============ ============ ===================================================== 
 
 
-Electro-thermal version with extra thermal port: mesfetc_t 
+Electro-thermal version
++++++++++++++++++++++++
+
+Electro-thermal version with extra thermal port: **mesfetc_t**
 
 mosbsim3: Extrinsic Silicon MOSFET 
 ----------------------------------
@@ -1241,11 +1262,18 @@ The model adds the following to the intrinsic model (for NMOS)::
                                  |
                                  o S (2)
 
+Important Note
+++++++++++++++
+
+This implementation does not account for the power dissipation
+in Rd and Rs. Use external thermal resistors if that is needed.
+
+
     
 Intrinsic model
 +++++++++++++++
 
-See bsim3_i intrinsic model documentation.
+See **bsim3_i** intrinsic model documentation.
     
 
 Parameters
@@ -1314,6 +1342,7 @@ Parameters
  lwl          0                         Length reduction parameter                           
  lwlc         0                         Length reduction parameter for CV                    
  lwn          1                         Length reduction parameter                           
+ m            1.0                       Parallel multiplier                                  
  mj           0.5                       Grading coefficient of source drain junction         
  mjsw         0.33                      Grading coefficient of source drain junction sidewall 
  moin         15                        Coefficient for gate-bias dependent surface potential 
@@ -1336,8 +1365,8 @@ Parameters
  prwb         0                         Body-effect on parasitic resistance                  
  prwg         0                         Gate-bias effect on parasitic resistance             
  ps           0.0          m            Source perimeter                                     
- pscbe1       4.24e+08     V/m          Substrate current body-effect coeffiecient           
- pscbe2       1.0e-05      m/V          Substrate current body-effect coeffiecient           
+ pscbe1       4.24e+08     V/m          Substrate current body-effect coeffiecient 1         
+ pscbe2       1.0e-05      V/m          Substrate current body-effect coeffiecient 2         
  pvag         0                         Gate dependence of output resistance parameter       
  rdsw         0                         Sorce-drain resistance per width                     
  rsh          0.0          Ohm/square   Drain and source diffusion sheet resistance          
@@ -1412,11 +1441,18 @@ The model adds the following to the intrinsic model (for NMOS)::
                                  |
                                  o S (2)
 
+Important Note
+++++++++++++++
+
+This implementation does not account for the power dissipation
+in Rd and Rs. Use external thermal resistors if that is needed.
+
+
     
 Intrinsic model
 +++++++++++++++
 
-See ekv_i intrinsic model documentation.
+See **ekv_i** intrinsic model documentation.
     
 
 Parameters
@@ -1456,6 +1492,7 @@ Parameters
  l            1.0e-06      m            Gate length                                          
  leta         0.1                       Short-channel effect coefficient                     
  lk           2.9e-07      m            Reverse short channel effect characteristic length   
+ m            1.0                       Parallel multiplier                                  
  mj           0.5                       Grading coefficient of source drain junction         
  mjsw         0.33                      Grading coefficient of source drain junction sidewall 
  np           1.0                       Parallel multiple device number                      
@@ -1490,7 +1527,10 @@ Parameters
  =========== ============ ============ ===================================================== 
 
 
-Electro-thermal version with extra thermal port: mosekv_t 
+Electro-thermal version
++++++++++++++++++++++++
+
+Electro-thermal version with extra thermal port: **mosekv_t**
 
 svbjt: Bipolar Junction Transistor
 ----------------------------------
@@ -1692,7 +1732,10 @@ Parameters
  =========== ============ ============ ===================================================== 
 
 
-Electro-thermal version with extra thermal port: svbjt_t 
+Electro-thermal version
++++++++++++++++++++++++
+
+Electro-thermal version with extra thermal port: **svbjt_t**
 
 svdiode: State-Variable-Based Diode
 -----------------------------------
@@ -1780,7 +1823,10 @@ Parameters
  =========== ============ ============ ===================================================== 
 
 
-Electro-thermal version with extra thermal port: svdiode_t 
+Electro-thermal version
++++++++++++++++++++++++
+
+Electro-thermal version with extra thermal port: **svdiode_t**
 
 Sources
 =======

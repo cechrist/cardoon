@@ -91,8 +91,13 @@ def device_catalog():
                 key = dev.devType
                 if key[-2:] == '_t':
                     #print('-' * len(key) + '\n', file=f)
-                    print('\nElectro-thermal version with extra thermal port:', 
-                          key, '\n', file=f)
+                    ts = """
+Electro-thermal version
++++++++++++++++++++++++
+
+Electro-thermal version with extra thermal port: **{0}**
+"""
+                    print(ts.format(key), file=f)
                     continue
                 # Print doc string
                 doc = dev.__doc__

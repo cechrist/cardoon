@@ -1,6 +1,6 @@
 # CMOS inverter chain with BSIM3 model 
 
-.options maxdelta = 1. maxiter=30 sparse=0
+.options maxdelta = 1. maxiter=30 
 *.analysis dc device=vdc:vin param=vdc start=0 stop=3V verbose=0 num=100
 .analysis tran tstop=20n tstep=.1n im=trap verbose=0 saveall=1 shell=0
 
