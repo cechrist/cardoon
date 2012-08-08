@@ -98,7 +98,7 @@ def extrinsic_mos(IMOS):
     Intrinsic model
     +++++++++++++++
 
-    See **{0}** intrinsic model documentation.
+    See **{1}** intrinsic model documentation.
 
         """.format(devType, IMOS.devType)
 

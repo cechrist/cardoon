@@ -1278,7 +1278,7 @@ extrinsic parameters shown in example)::
 Intrinsic model
 +++++++++++++++
 
-See **mosbsim3** intrinsic model documentation.
+See **bsim3_i** intrinsic model documentation.
 
     
 
@@ -1463,7 +1463,7 @@ extrinsic parameters shown in example)::
 Intrinsic model
 +++++++++++++++
 
-See **mosekv** intrinsic model documentation.
+See **ekv_i** intrinsic model documentation.
 
     
 
