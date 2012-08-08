@@ -45,11 +45,6 @@ def extrinsic_mos(IMOS):
     Extrinsic Silicon MOSFET 
     ------------------------
 
-    Netlist examples::
-    
-        mos<type>:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n as=4e-12 ps=8e=12
-        mos<type>:m2 4 5 6 6 w=30e-6 l=1e-6 type = p pd=8u ps=16u 
-    
     Extrinsic Internal Topology
     +++++++++++++++++++++++++++
 
@@ -77,24 +72,35 @@ def extrinsic_mos(IMOS):
                                      |
                                      o S (2)
     
-    Important Note
-    ++++++++++++++
 
-    This implementation does not account for the power dissipation
-    in Rd and Rs. Use external thermal resistors if that is needed.
-    
+    Note: electrothermal implementation (if any) does not account for
+    the power dissipation in Rd and Rs. Use external thermal resistors
+    if that is needed.
 
         """ 
+        # devtype is the 'model' name: remove the '_i' from intrinsic name
+        devType = 'mos' + IMOS.devType.split('_i')[0]
+
         # Additional documentation
         extraDoc = """
+
+    Netlist examples
+    ++++++++++++++++
+
+    The model accepts extrinsic plus intrinsic parameters (only
+    extrinsic parameters shown in example)::
+    
+        {0}:m1 2 3 4 gnd w=10u l=1u asrc=4e-12 ps=8e=12 model=nch
+        {0}:m2 4 5 6 6 w=30e-6 l=1e-6 pd=8u ps=16u type=p
+
+        .model nch {0} (type=n js=1e-3 cj=2e-4 cjsw=1n)
+    
     Intrinsic model
     +++++++++++++++
 
     See **{0}** intrinsic model documentation.
-        """.format(IMOS.devType)
 
-        # devtype is the 'model' name: remove the '_i' from intrinsic name
-        devType = 'mos' + IMOS.devType.split('_i')[0]
+        """.format(devType, IMOS.devType)
 
         paramDict = dict(
             IMOS.paramDict.items(),

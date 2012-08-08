@@ -1230,11 +1230,6 @@ Electro-thermal version with extra thermal port: **mesfetc_t**
 mosbsim3: Extrinsic Silicon MOSFET 
 ----------------------------------
 
-Netlist examples::
-
-    mos<type>:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n as=4e-12 ps=8e=12
-    mos<type>:m2 4 5 6 6 w=30e-6 l=1e-6 type = p pd=8u ps=16u 
-
 Extrinsic Internal Topology
 +++++++++++++++++++++++++++
 
@@ -1262,18 +1257,29 @@ The model adds the following to the intrinsic model (for NMOS)::
                                  |
                                  o S (2)
 
-Important Note
-++++++++++++++
 
-This implementation does not account for the power dissipation
-in Rd and Rs. Use external thermal resistors if that is needed.
-
+Note: electrothermal implementation (if any) does not account for
+the power dissipation in Rd and Rs. Use external thermal resistors
+if that is needed.
 
     
+
+Netlist examples
+++++++++++++++++
+
+The model accepts extrinsic plus intrinsic parameters (only
+extrinsic parameters shown in example)::
+
+    mosbsim3:m1 2 3 4 gnd w=10u l=1u asrc=4e-12 ps=8e=12 model=nch
+    mosbsim3:m2 4 5 6 6 w=30e-6 l=1e-6 pd=8u ps=16u type=p
+
+    .model nch mosbsim3 (type=n js=1e-3 cj=2e-4 cjsw=1n)
+
 Intrinsic model
 +++++++++++++++
 
-See **bsim3_i** intrinsic model documentation.
+See **mosbsim3** intrinsic model documentation.
+
     
 
 Parameters
@@ -1409,11 +1415,6 @@ Parameters
 mosekv: Extrinsic Silicon MOSFET 
 --------------------------------
 
-Netlist examples::
-
-    mos<type>:m1 2 3 4 gnd w=10e-6 l=1e-6 type = n as=4e-12 ps=8e=12
-    mos<type>:m2 4 5 6 6 w=30e-6 l=1e-6 type = p pd=8u ps=16u 
-
 Extrinsic Internal Topology
 +++++++++++++++++++++++++++
 
@@ -1441,18 +1442,29 @@ The model adds the following to the intrinsic model (for NMOS)::
                                  |
                                  o S (2)
 
-Important Note
-++++++++++++++
 
-This implementation does not account for the power dissipation
-in Rd and Rs. Use external thermal resistors if that is needed.
-
+Note: electrothermal implementation (if any) does not account for
+the power dissipation in Rd and Rs. Use external thermal resistors
+if that is needed.
 
     
+
+Netlist examples
+++++++++++++++++
+
+The model accepts extrinsic plus intrinsic parameters (only
+extrinsic parameters shown in example)::
+
+    mosekv:m1 2 3 4 gnd w=10u l=1u asrc=4e-12 ps=8e=12 model=nch
+    mosekv:m2 4 5 6 6 w=30e-6 l=1e-6 pd=8u ps=16u type=p
+
+    .model nch mosekv (type=n js=1e-3 cj=2e-4 cjsw=1n)
+
 Intrinsic model
 +++++++++++++++
 
-See **ekv_i** intrinsic model documentation.
+See **mosekv** intrinsic model documentation.
+
     
 
 Parameters
