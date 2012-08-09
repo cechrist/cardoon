@@ -20,30 +20,37 @@ also be found at:
 
 A secondary objective is to add features and make the program
 efficient enough to be useful for general use, if possible. The
-program is still at the early development stage but it has already
-enough functionality to be useful for some tasks. It can currently
-simulate circuits with a few thousand nodes in reasonable times. As of
-June 2012, Cardoon is probably the fastest available Python-based
-circuit simulator. The program takes approximately 1.7 times the
-ngspice time to run a transient analysis of the soliton line circuit
-(3022 nodes), which is quite good considering it is running on an
-interpreter.  If you plan to use this program please be aware that as
-it is developed interfaces may have to be changed, sometimes *breaking
-compatibility with earlier versions*.
+program has already enough functionality to be useful for some
+tasks. Currently basic DC/AC/Transient analyses have been
+implemented. DC and Transient can use sparse or dense matrices. It can
+currently simulate circuits with a few thousand nodes in reasonable
+times. As of June 2012, Cardoon is probably the fastest available
+Python-based circuit simulator. The program takes approximately 1.7
+times the ngspice time to run a transient analysis of the soliton line
+circuit (3022 nodes), which is quite good considering it is running on
+an interpreter.
 
-State-variable nonlinear device modeling (in the fREEDA sense) is
-supported. A state-variable PN junction model is included. This
-junction is used to implement a diode (svdiode) and a bipolar
-transistor device (svbjt). Regular voltage controlled models for the
-diode and BJT are also available.  Electro-thermal models are
-automatically generated from electrical models.  Nonlinear models use
-automatic differentiation for Jacobian calculation. In addition,
-automatic differentiation can also be used to calculate sensitivities.
+The device library includes basic components and several non-trivial
+nonlinear models such as Gummel-Poon model for BJTs, EKV 2.6 and
+BSIM3v3 for MOSFETs.  Most of the device models interface should be
+reasonably stable by now, but some changes may happen for
+frequency-defined devices as they become better supported by the
+analyses. The noise interface is not being used yet and may change
+significantly. 
 
-Please see the list of supported analysis types in the analysis
-library catalog. Currently basic DC/AC/Transient analyses have been
-implemented. DC and Transient can use sparse or dense matrices (sparse
-by default).
+It is likely easier to implement a new device model in Cardoon than it
+is on most other simulators. Perhaps the main reason for this is due
+to the Python language: the code tends to be more compact and it is
+easier to debug and test modifications.  As with other simulators,
+nonlinear models can use automatic differentiation for Jacobian
+calculation, thus there is no need to write code for the
+derivatives. In cardoon, the automatic differentiation library is also
+used to speed up the evaluation of nonlinear equations.  Due to the
+dynamic nature of the Python language automatic differentiation could
+also be used to calculate sensitivities without any modification in
+the device model code.  Another design feature is that electro-thermal
+models (*i.e.*, with an additional thermal port) can be automatically
+generated from temperature-dependent electrical models.
 
 Cardoon is being developed with Python 2.6 on Debian Squeeze, but it
 should work OK with Python 2.7 under other operating systems.
