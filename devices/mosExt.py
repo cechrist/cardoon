@@ -114,6 +114,8 @@ def extrinsic_mos(IMOS):
             rsh = ('Drain and source diffusion sheet resistance', 
                    'Ohm/square', float, 0.),
             js = ('Source drain junction current density', 'A/m^2', float, 0.),
+            jssw = ('Source drain sidewall junction current density', 
+                    'A/m', float, 0.),
             pb = ('Built in potential of source drain junction', 
                   'V', float, .8),
             mj = ('Grading coefficient of source drain junction', 
@@ -224,7 +226,7 @@ def extrinsic_mos(IMOS):
                                        Tnomabs = self.__Tnabs)
             if self.pd:
                 self.djsw = Junction()
-                self.djsw.process_params(isat = 0., 
+                self.djsw.process_params(isat = self.jssw * self.pd, 
                                          cj0 = self.cjsw * self.pd, 
                                          vj = self.pbsw, m = self.mjsw, 
                                          n = 1., fc = self.fc, 
@@ -232,7 +234,7 @@ def extrinsic_mos(IMOS):
                                          Tnomabs = self.__Tnabs)
             if self.ps:
                 self.sjsw = Junction()
-                self.sjsw.process_params(isat = 0., 
+                self.sjsw.process_params(isat = self.jssw * self.ps, 
                                          cj0 = self.cjsw * self.ps, 
                                          vj = self.pbsw, m = self.mjsw, 
                                          n = 1., fc = self.fc, 
@@ -290,8 +292,11 @@ def extrinsic_mos(IMOS):
                 if self.cj:
                     # substract to qd
                     qVec[0] -= self.dj.get_qd(v1) * self._tf
-            if self.pd and self.cjsw:
-                qVec[0] -= self.djsw.get_qd(v1) * self._tf
+            if self.pd:
+                # substract to idb
+                iVec[1] -= self.djsw.get_id(v1) * self._tf
+                if self.cjsw:
+                    qVec[0] -= self.djsw.get_qd(v1) * self._tf
             # Add contribution source diode
             v1 = -vPort[2] * self._tf
             if self.asrc:
@@ -300,8 +305,11 @@ def extrinsic_mos(IMOS):
                 if self.cj:
                     # substract to qs
                     qVec[2] -= self.sj.get_qd(v1) * self._tf
-            if self.ps and self.cjsw:
-                qVec[2] -= self.sjsw.get_qd(v1) * self._tf
+            if self.ps:
+                # substract to isb
+                iVec[2] -= self.sjsw.get_id(v1) * self._tf
+                if self.cjsw:
+                    qVec[2] -= self.sjsw.get_qd(v1) * self._tf
 
             # Apply parallel multiplier
             iVec *= self.m

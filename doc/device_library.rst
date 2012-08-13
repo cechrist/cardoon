@@ -1329,6 +1329,7 @@ Parameters
  etab         -0.07                     Subthreshold region DIBL coefficeint                 
  fc           0.5                       Coefficient for forward-bias depletion capacitances  
  js           0.0          A/m^2        Source drain junction current density                
+ jssw         0.0          A/m          Source drain sidewall junction current density       
  k1           0.53         V^{0.5}      First order body effect coefficient                  
  k1enable     0                         Enable k1, k2 internal calculation                   
  k2           -0.0186                   Second order body effect coefficient                 
@@ -1499,6 +1500,7 @@ Parameters
  ibbt         0.0009       1/K          Temperature coefficient for IBB                      
  ibn          1.0                       Saturation voltage factor for impact ionization      
  js           0.0          A/m^2        Source drain junction current density                
+ jssw         0.0          A/m          Source drain sidewall junction current density       
  kf           0.0                       Flicker noise coefficient                            
  kp           5.0e-05      A/V^2        Transconductance parameter                           
  l            1.0e-06      m            Gate length                                          
