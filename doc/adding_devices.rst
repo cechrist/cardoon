@@ -79,13 +79,16 @@ the program which of the defined classes contain device models (see
 mosEKV.py for an example). This allows the definition of two or more
 device models in the same module::
 
-    class IntEKV(cir.Element):
+    # First device model class
+    class MOSlevel1(cir.Element):
     	  pass
 
-    class EKV(IntEKV):
+    # Second device model class
+    class MOSlevel2(cir.Element):
           pass
 
-    devList = [IntEKV, EKV]
+    # List with all device models defined in module
+    devList = [MOSlevel1, MOSlevel2]
 
 It is recommended to copy one of the existing device files to a new
 file name and use that as a starting point to create a new device.

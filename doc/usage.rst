@@ -138,7 +138,7 @@ blocks.
 
 **End of netlist line**
 
-  It a ``.end`` line is read, the parser stops readin the file and any
+  It a ``.end`` line is read, the parser stops reading the file and any
   additional lines are ignored.
 
 **Line continuation**
