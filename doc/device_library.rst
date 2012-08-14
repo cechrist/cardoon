@@ -80,11 +80,19 @@ mem: Memristor
 
 Connection diagram::
 
-            _______________
+
+              +  Vin   -      Iin
+            _______________  ---->
     0      |_   _   _   _| |         1
       o----| |_| |_| |_| | |-------o    External view
            |_____________|_|
                             
+Device equation:  
+
+.. math::    
+
+     V_{in} = M(q) I_{in}
+
 Netlist example::
 
     mem:m1 1 0 m = '1e3 * (np.cosh(1e6 * q)-1.)' 
@@ -94,9 +102,10 @@ Notes:
   * not really a basic component as the memristor is nonlinear,
     otherwise memristance could become negative
 
-  * the memristance function is given as an expression in the
-    ``m`` parameter. Constants and mathematical functions can be
-    used. The independent variable is the memristor charge (``q``)
+  * the memristance function (:math:`M(q)`) is given as an
+    expression in the ``m`` parameter. Constants and mathematical
+    functions can be used. The independent variable is the
+    memristor charge (``q``)
 
   * The initial charge can be adjusted with the ``q0`` parameter
 

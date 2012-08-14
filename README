@@ -32,11 +32,11 @@ an interpreter.
 
 The device library includes basic components and several non-trivial
 nonlinear models such as Gummel-Poon model for BJTs, EKV 2.6 and
-BSIM3v3 for MOSFETs.  Most of the device models interface should be
-reasonably stable by now, but some changes may happen for
-frequency-defined devices as they become better supported by the
-analyses. The noise interface is not being used yet and may change
-significantly. 
+BSIM3v3 for MOSFETs (there is also a memristor model).  Most of the
+device models interface should be reasonably stable by now, but some
+changes may happen for frequency-defined devices as they become better
+supported by the analyses. The noise interface is not being used yet
+and may change significantly.
 
 It is likely easier to implement a new device model in Cardoon than it
 is on most other simulators. Perhaps the main reason for this is due
