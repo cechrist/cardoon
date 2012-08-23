@@ -23,9 +23,9 @@ The netlist is the following::
     
     x1 in out 1 gnd inverter
     
-    .subckt inverter in out 1 gnd
-    mosekv:m1 out in 1 1 type = p
-    mosekv:m2 out in gnd gnd type = n
+    .subckt inverter in out vdd vss
+    mosekv:m1 out in vdd vdd type = p
+    mosekv:m2 out in vss vss type = n
     .ends
     
     .plot dc out
@@ -34,15 +34,23 @@ The netlist is the following::
 
 Running this netlist produces the following output::
 
-    cechrist@phobos:~/src/cardoon/examples$ cardoon inverter.net
+    cechrist@moon:~/wd/cardoon/examples$ cardoon inverter.net 
+    
+    Cardoon Circuit Simulator 0.5 release 0.5.0.dev
     ******************************************************
                      DC sweep analysis
     ******************************************************
     
      # CMOS inverter DC Sweep 
     
-    Average iterations: 4
-    Average residual: 1.64815116274e-09
+    System dimension: 5
+    Sweep:  Device: vdc:vin  Parameter: vdc
+    Average iterations: 3
+    Average residual: 5.33145579173e-06
+    
+    dc analysis time: 0.48 s
+    
+    Press [Enter] to exit ...
 
 The output plot of the inverter's output voltage is shown below.
 

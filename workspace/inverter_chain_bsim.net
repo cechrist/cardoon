@@ -14,11 +14,11 @@ x2 o1 o2 1 gnd inverter
 x3 o2 out 1 gnd inverter
 cap:cload out gnd c=20fF
 
-.subckt inverter in out 1 gnd
+.subckt inverter in out 1 2
 # m1 connected in reverse mode (to test model)
 mosbsim3:m1 1 in out 1 model=pch ad=8p asrc=8p cj=2e-4 cjsw=1n ps=8u m=3
-mosbsim3:m2 out in gnd gnd model=nch ad=8p asrc=8p cj=2e-4 cjsw=1n ps=8u
-#cap:cload out gnd c=.01pF
+mosbsim3:m2 out in 2 2 model=nch ad=8p asrc=8p cj=2e-4 cjsw=1n ps=8u
+#cap:cload out 2 c=.01pF
 .ends
 
 .model nch mosbsim3 (type=n tnom=27.0 js=1e-3\

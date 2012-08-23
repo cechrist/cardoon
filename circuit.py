@@ -7,6 +7,32 @@
 Example of how to use this module
 +++++++++++++++++++++++++++++++++
 
+The following example was originally taken from
+``analyses/nodal.py``. The objective of this code is to assign
+row/column numbers to all non-reference nodes and -1 to all reference
+nodes in a ``Circuit`` instance (``ckt``)::
+
+    # make a list of all non-reference terminals in circuit 
+    ckt.nD_termList = ckt.termDict.values() + ckt.get_internal_terms()
+    # get reference node (if any)
+    if ckt.has_term('gnd'):
+        ckt.nD_ref = ckt.get_term('gnd')
+        # remove ground node from terminal list
+        ckt.nD_termList.remove(ckt.nD_ref)
+    # remove ground node from terminal list
+    ckt.nD_termList.remove(ckt.nD_ref)
+    # For reference nodes assign -1
+    ckt.nD_ref.nD_namRC = -1
+    # Make a list of all elements
+    ckt.nD_elemList = ckt.elemDict.values()
+    # Set RC number of reference terminals to -1
+    for elem in ckt.nD_elemList:
+        if elem.localReference:
+            elem.neighbour[elem.localReference].nD_namRC = -1
+    # Assign a number (starting from 0) to all nodes.
+    for i, term in enumerate(ckt.nD_termList):
+        term.nD_namRC = i
+
 The following example shows how to create and add devices from the
 point of view of a parser::
 
@@ -45,54 +71,13 @@ point of view of a parser::
     # Connect subcircuit instance with cir.connect()
     
     # Subcircuit definition: tl2 are the external connections
-    tl2 = ['vdd', 'gnd', 'in', 'out']
+    tl2 = ['vdd', 'vee', 'in', 'out']
     amp1 = cir.SubCircuit('LM741', tl2)
     # now you can treat amp1 as a regular circuit instance
     dev = devClass['ind']('L2')
     dev.override = [('l', 2e-9)] 
     amp1.add_elem(dev)
     amp1.connect(dev, ['in', 'n1'])
-
-The following example taken from ``analyses/nodal.py``. Here ``ckt``
-is a reference to a ``Circuit`` object::
-
-    # get ground node
-    ckt.nD_ref = ckt.get_term(reference)
-
-    # make a list of all non-reference terminals in circuit 
-    ckt.nD_termList = ckt.termDict.values() + ckt.get_internal_terms()
-    # remove ground node from terminal list
-    ckt.nD_termList.remove(ckt.nD_ref)
-    # Assign a number (0-inf) to all nodes. For reference nodes
-    # assign -1 
-    ckt.nD_ref.nD_namRC = -1
-    # Make a list of all elements
-    ckt.nD_elemList = ckt.elemDict.values()
-    # Set RC number of reference terminals to -1
-    for elem in ckt.nD_elemList:
-        if elem.localReference:
-            elem.neighbour[elem.localReference].nD_namRC = -1
-    # For the future: use graph techniques to find the optimum
-    # terminal order
-    for i, term in enumerate(ckt.nD_termList):
-        term.nD_namRC = i
-
-    # Store internal RC numbers for later use
-    for elem in ckt.nD_elemList:
-        elem.nD_intRC = [term.nD_namRC for term in 
-                         elem.neighbour[elem.numTerms:]]
-
-    # Dimension is the number of unknowns to solve for
-    ckt.nD_dimension = len(ckt.nD_termList)
-    # Number of external terminals excluding reference
-    ckt.nd_nterms = len(ckt.termDict.values()) - 1
-
-    # Create specialized element lists
-    ckt.nD_nlinElem = filter(lambda x: x.isNonlinear, ckt.nD_elemList)
-    ckt.nD_freqDefinedElem = filter(lambda x: x.isFreqDefined, ckt.nD_elemList)
-    ckt.nD_sourceDCElem = filter(lambda x: x.isDCSource, ckt.nD_elemList)
-    ckt.nD_sourceTDElem = filter(lambda x: x.isTDSource, ckt.nD_elemList)
-    ckt.nD_sourceFDElem = filter(lambda x: x.isFDSource, ckt.nD_elemList)
 
 
 Notes
@@ -533,7 +518,8 @@ class Circuit:
 
     There are 2 global dictionaries defined at the class level:
 
-    * cktDict: Contains references to all circuit/subcircuit instances
+    * cktDict: Contains references to all circuit/subcircuit
+      definitions
 
     * modelDict: References to all models in any circuit. Thus .model
       statements are global and can be defined and referred anywhere
@@ -548,8 +534,8 @@ class Circuit:
     Internal terminals must be accessed directly from the parent
     Element instance.
 
-    Ground node: treated specially. Nodes '0' and 'gnd' are considered
-    to be the same. If a circuit does not contain a ground node then
+    Ground node: terminals '0' and 'gnd' are considered to be the same
+    reference node. If a circuit does not contain a ground node then
     it is up to the user to set a reference.
 
     Plot/Save requests are stored in lists: plotReqList/saveReqList
@@ -762,6 +748,9 @@ class Circuit:
                         # Must get terminal name from xsubckt
                         termName = \
                             xsubckt.neighbour[term.subCKTconnection].nodeName
+                    elif term.nodeName == 'gnd':
+                        # Special treatment for global reference node
+                        termName = 'gnd'
                     else:
                         termName = xsubckt.nodeName + ':' + term.nodeName
                     termList.append(termName)
@@ -954,8 +943,43 @@ class Circuit:
 #---------------------------------------------------------------------
 class SubCircuit(Circuit):
     """
-    Almost identical to Circuit but adds support for external
-    connections.
+    Almost identical to Circuit but adds support for external connections.
+
+    External subcircuit terminals have an additional attribute set:
+    ``subCKTconnection``. This attribute is set to the subcircuit's
+    connection number. Example::
+
+        .subckt  inverter in out vplus vminus
+        
+        in.subCKTconnection = 0
+        out.subCKTconnection = 1
+        vplus.subCKTconnection = 2
+        vminus.subCKTconnection = 3
+
+    The reference node ('gnd' or '0') is global , *i.e.*, a terminal
+    named 'gnd' in a subcircuit is assumed to be connected to the same
+    ground node in all other circuits/subcircuits. To avoid problems,
+    the ground terminal can not be included in the external terminal
+    list. One of the possible problems is short-circuiting a node to
+    ground when a subcircuit is connected. Example of invalid code::
+
+        vdc:vcc 1 0 vdc=10V
+        vdc:vee 2 0 vdc=-10V
+        xamp1 1 2 in out amplifier
+        
+        .subckt amplifier 1 gnd in out
+        res:rc 1 out r=5k
+        cap:cin in 2 c=1uF
+        bjt:q1 out 2 gnd type=npn
+        .ends
+
+    Possible solutions: 
+
+      1. Rename 'gnd' node in subcircuit to something else 
+
+      2. Remove 'gnd' node (implicitly connected to terminal '0' in
+         main circuit) from subcircuit external terminal list
+
     """
     def __init__(self, name, termList):
         """
@@ -967,6 +991,10 @@ class SubCircuit(Circuit):
         self.extConnectionList = termList
         for i, termName in enumerate(termList):
             terminal = self.get_term(termName)
+            if terminal.nodeName == 'gnd':
+                raise CircuitError(name +
+""": gnd is the global reference. It is implicitly connected and can 
+not be included in the external terminal list in subckt""")
             # Save terminal connection number here
             terminal.subCKTconnection = i
 
@@ -975,11 +1003,14 @@ class SubCircuit(Circuit):
         Returns a list of subcircuit terminals
         """
         return [self.get_term(termName) 
-                for termName in enumerate(self.extConnectionList)]
+                for termName in self.extConnectionList]
 
     def netlist_string(self):
         """
-        Just adds an extra .subckt line
+        Ganerates a 'netlist-like' description of subcircuit.
+
+        Produces the same output as the Circuit class plus extra
+        .subckt and .ends lines.
         """
         desc = '#-----------------------------------------------------\n'
         desc += '.subckt ' + self.name 

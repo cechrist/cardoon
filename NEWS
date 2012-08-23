@@ -5,6 +5,9 @@ News
 Version 0.5
 ^^^^^^^^^^^
 
+     * Ground node (gnd) made global. Can not be included in
+       subcircuit connection list anymore
+
      * Added extrinsic MOSFET model (as an add-on to intrinsic models)
 
      * Added BSIM3v3 model

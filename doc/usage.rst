@@ -178,6 +178,10 @@ blocks.
 
       <element type>:<name> <node list> [<model>] <parameter list>
 
+  Node names can be strings or numbers. A terminal named ``gnd`` (or
+  ``0``) is assumed to be the global reference node for all
+  circuits/subcircuits.
+
   <model> is optional. Parameters specified in the element line
   override parameters in model. In the following example, ``tc1`` is
   set to 1e-5::
@@ -217,15 +221,29 @@ blocks.
    
 **Subcircuits**
 
-  Subcircuits use a syntax similar to spice. Example::
+  Subcircuits use a syntax similar to spice. general form for
+  subcircuit definition::
 
-      x1 2 3 4 X1
-      x2 2 gnd 3 X1
+    .subckt <name> <list of external nodes> 
+    
+    .ends
 
-      .subckt X1 in out gnd
+  The global reference node (``gnd`` or ``0``) can not be included as
+  an external node, but if present in the subckt definition it is
+  **assumed to be connected to the ``gnd`` node of other
+  circuits/subcircuits**.  Example::
+
+      res:r1 2 gnd r=40.
+      x1 2 3 parasitic1
+      x2 3 4 parasitic1
+
+      .subckt parasitic1 in out
       res:r1 in out r=1kOhm
       cap:c2 out gnd c=1nH
       .ends
+
+  Here ``gnd`` in the ``parasitic1`` definition is the same node as
+  ``gnd`` in the main circuit.
 
 **Include files**
 

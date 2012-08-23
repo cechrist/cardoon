@@ -7,9 +7,9 @@ vdc:vin in gnd vdc=1
 
 x1 in out 1 gnd inverter
 
-.subckt inverter in out 1 gnd
-mosekv:m1 out in 1 1 type = p
-mosekv:m2 out in gnd gnd type = n
+.subckt inverter in out vdd vss
+mosekv:m1 out in vdd vdd type = p
+mosekv:m2 out in vss vss type = n
 .ends
 
 .plot dc out

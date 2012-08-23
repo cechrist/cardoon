@@ -14,9 +14,9 @@ x2 o1 o2 1 gnd inverter
 x3 o2 out 1 gnd inverter
 cap:cload out gnd c=20fF
 
-.subckt inverter in out 1 gnd
+.subckt inverter in out 1 2
 mosekv:m1 out in 1 1 type = p
-mosekv:m2 out in gnd gnd type = n
+mosekv:m2 out in 2 2 type = n
 .ends
 
 #.plot dc o1 o2 out

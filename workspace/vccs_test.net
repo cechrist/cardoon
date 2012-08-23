@@ -11,9 +11,9 @@ vccs:g1 gnd 2 out gnd g=1mS
 vdc:amp 2 cout
 res:rload cout gnd r=1k
 
-.subckt inverter in out 1 gnd
+.subckt inverter in out 1 2
 mosekv:m1 out in 1 1 type = p
-mosekv:m2 out in gnd gnd type = n
+mosekv:m2 out in 2 2 type = n
 .ends
 
 .plot dc out 

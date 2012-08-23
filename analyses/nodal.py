@@ -12,6 +12,7 @@ independently.
 """
 
 from __future__ import print_function
+#import copy
 import numpy as np
 from fsolve import fsolve_Newton, NoConvergenceError
 from integration import BEuler
@@ -107,7 +108,7 @@ def delay_interp(td, vp, h, tsV, vpV):
 
 # ********************** Regular functions *****************************
 
-def make_nodal_circuit(ckt, reference='gnd'):
+def make_nodal_circuit(ckt):
     """
     Add attributes to Circuit/Elements/Terminals for nodal analysis
 
@@ -115,34 +116,57 @@ def make_nodal_circuit(ckt, reference='gnd'):
     analysis (DC, AC, TRAN, HB, etc.)
 
     Takes a Circuit instance (ckt) as an argument. If the circuit
-    contains the 'gnd' node, it is used as the reference. Otherwise a
-    reference node must be indicated.
+    contains the 'gnd' node, it is used as the reference. Otherwise an
+    indefinite matrix with no reference is assumed.
 
     New attributes are added in Circuit/Element/Terminal
     instances. All new attributes start with ``nD_``
 
-    Works with subcircuits too (see ``nD_namRClist`` attribute)
+    Works with subcircuits too: in this case the external terminals
+    are assigned the first row/column (RC) numbers in the same order
+    returned by ``Subcircuit.get_connections()``. For convenience, RC
+    numbers for external terminals are stored in the ``nD_extRClist``
+    attribute.
     """
-    # get ground node
-    ckt.nD_ref = ckt.get_term(reference)
 
-    # make a list of all non-reference terminals in circuit 
+    # make a list of all terminals in circuit 
     ckt.nD_termList = ckt.termDict.values() + ckt.get_internal_terms()
-    # remove ground node from terminal list
-    ckt.nD_termList.remove(ckt.nD_ref)
-    # Assign a number (0-inf) to all nodes. For reference nodes
-    # assign -1 
-    ckt.nD_ref.nD_namRC = -1
+    # get reference node (if any)
+    if ckt.has_term('gnd'):
+        ckt.nD_ref = ckt.get_term('gnd')
+        # remove ground node from terminal list
+        ckt.nD_termList.remove(ckt.nD_ref)
+        # --------------------------------------------------------------
+        # Assign a number (0-inf) to all nodes. For reference nodes
+        # assign -1 
+        ckt.nD_ref.nD_namRC = -1
     # Make a list of all elements
     ckt.nD_elemList = ckt.elemDict.values()
     # Set RC number of reference terminals to -1
     for elem in ckt.nD_elemList:
         if elem.localReference:
             elem.neighbour[elem.localReference].nD_namRC = -1
-    # For the future: use graph techniques to find the optimum
-    # terminal order
-    for i, term in enumerate(ckt.nD_termList):
-        term.nD_namRC = i
+    # Check for subcircuit
+    if hasattr(ckt, 'get_connections'):
+        # Subcircuit: put external terminals in the first row/column
+        # positions in matrix
+        connectTerms = ckt.get_connections()
+        # Move external connections to beginning of list
+        for term in connectTerms:
+            ckt.nD_termList.remove(term)
+        ckt.nD_termList = connectTerms + ckt.nD_termList
+        # Assign RC numbers to all nodes: external terminals are at
+        # the beginning of list
+        for i, term in enumerate(ckt.nD_termList):
+            term.nD_namRC = i
+        # List of RC numbers of external connections
+        ckt.nD_extRClist = [term.nD_namRC for term in connectTerms]
+    else:
+        # Not a subcircuit: just assign arbitrary RC numbers to all
+        # nodes
+        for i, term in enumerate(ckt.nD_termList):
+            term.nD_namRC = i
+    # --------------------------------------------------------------
 
     # Store internal RC numbers for later use
     for elem in ckt.nD_elemList:
@@ -168,14 +192,6 @@ def make_nodal_circuit(ckt, reference='gnd'):
     for elem in ckt.nD_elemList:
         process_nodal_element(elem, ckt)
 
-    # Subcircuit-connection processing
-    try:
-        connectTerms = ckt.get_connections()
-        # List of RC numbers of external connections
-        ckt.nD_namRClist = [term.nD_namRC for term in connectTerms]
-    except AttributeError:
-        # Not a subcircuit
-        pass
 
 def restore_RCnumbers(elem):
     """
@@ -581,7 +597,7 @@ class DCNodal(_NLFunction):
         self.Jac = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
         self.sVec = np.empty(self.ckt.nD_dimension)
         self.iVec = np.empty(self.ckt.nD_dimension)
-        if hasattr(self.ckt, 'nD_namRClist'):
+        if hasattr(self.ckt, 'nD_extRClist'):
             # Allocate external currents vector
             self.extSVec = np.empty(self.ckt.nD_dimension)
         self.refresh()
@@ -615,9 +631,9 @@ class DCNodal(_NLFunction):
         """
         # This idea still needs some testing
         assert sum(extIvec[:ncurrents]) == 0
-        ncurrents = len(self.ckt.nD_namRClist)
+        ncurrents = len(self.ckt.nD_extRClist)
         # Must do the loop in case there are repeated connections
-        for val,rcnum in zip(extIvec, self.ckt.nD_namRClist):
+        for val,rcnum in zip(extIvec, self.ckt.nD_extRClist):
             self.extSVec[rcnum] = val
 
     def get_guess(self):
@@ -804,7 +820,7 @@ class TransientNodal(_NLFunction):
         # Source vector at current time s(t) 
         self.sVec = np.empty(self.ckt.nD_dimension)
 
-#        if hasattr(self.ckt, 'nD_namRClist'):
+#        if hasattr(self.ckt, 'nD_extRClist'):
 #            # Allocate external currents vector
 #            self.extSVec = np.empty(self.ckt.nD_dimension)
         self.refresh()
