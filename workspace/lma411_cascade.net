@@ -1,7 +1,7 @@
 *** Two LMA 411 in cascade ***
 
 .options sparse = 1 abstol=1e-8 reltol=1e-6
-.analysis ac start=5GHz stop=16GHz num= 50 log=False
+*.analysis ac start=5GHz stop=16GHz num= 50 log=False
 .analysis tran tstep= .5ps tstop=1ns shell=0 im=trap shell = 0
 
 * Input: 2 , output: 26

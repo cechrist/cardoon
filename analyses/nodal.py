@@ -123,23 +123,24 @@ def make_nodal_circuit(ckt):
     instances. All new attributes start with ``nD_``
 
     Works with subcircuits too: in this case the external terminals
-    are assigned the first row/column (RC) numbers in the same order
+    are assigned the last row/column (RC) numbers in the same order
     returned by ``Subcircuit.get_connections()``. For convenience, RC
     numbers for external terminals are stored in the ``nD_extRClist``
     attribute.
     """
-
+    # --------------------------------------------------------------
     # make a list of all terminals in circuit 
     ckt.nD_termList = ckt.termDict.values() + ckt.get_internal_terms()
     # get reference node (if any)
-    if ckt.has_term('gnd'):
-        ckt.nD_ref = ckt.get_term('gnd')
+    try:
+        ckt.nD_ref = ckt.termDict['gnd']
         # remove ground node from terminal list
         ckt.nD_termList.remove(ckt.nD_ref)
-        # --------------------------------------------------------------
-        # Assign a number (0-inf) to all nodes. For reference nodes
-        # assign -1 
+        # For reference nodes assign -1 
         ckt.nD_ref.nD_namRC = -1
+    except KeyError:
+        # ignore if no reference
+        pass
     # Make a list of all elements
     ckt.nD_elemList = ckt.elemDict.values()
     # Set RC number of reference terminals to -1
@@ -154,9 +155,9 @@ def make_nodal_circuit(ckt):
         # Move external connections to beginning of list
         for term in connectTerms:
             ckt.nD_termList.remove(term)
-        ckt.nD_termList = connectTerms + ckt.nD_termList
+        ckt.nD_termList =  ckt.nD_termList + connectTerms
         # Assign RC numbers to all nodes: external terminals are at
-        # the beginning of list
+        # the end of list
         for i, term in enumerate(ckt.nD_termList):
             term.nD_namRC = i
         # List of RC numbers of external connections
