@@ -13,7 +13,6 @@ http://www.gnu.org/licenses/gpl.html
 """
 
 from globalVars import glVar
-from IPython.Shell import IPShellEmbed
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -34,13 +33,25 @@ def ipython_drop(msg, glo, loc):
     glo: globals()
     loc: locals()
     """
-    args = ['-pi1','In <\\#>: ','-pi2','   .\\D.: ',
-            '-po','Out<\\#>: ','-nosep']
-    ipshell = IPShellEmbed(
-        args, 
-        banner = 'Dropping into IPython, type CTR-D to exit' + msg,
-        exit_msg = 'Leaving Interpreter, back to program.')
-    ipshell(global_ns = glo, local_ns = loc)
+    import IPython
+    banner = 'Dropping into IPython, type CTR-D to exit' + msg
+    try:
+        # Try pre-0.11 syntax first
+        args = ['-pi1','In <\\#>: ','-pi2','   .\\D.: ',
+                '-po','Out<\\#>: ','-nosep']
+        ipshell = IPython.Shell.IPShellEmbed(
+            args, 
+            banner = banner,
+            exit_msg = 'Leaving Interpreter, back to program.')
+        ipshell(global_ns = glo, local_ns = loc)
+    except AttributeError:
+        # try the new syntax: post-0.11
+        #from IPython.config.loader import Config
+        #cfg = Config()
+        # directly open the shell
+        IPython.embed(user_ns=loc, banner2=banner)
+        #from IPython import embed
+        #embed()
 
 
 def process_requests(circuit, reqtype, xaxis, xlabel, attribute, 

@@ -190,7 +190,6 @@ if __name__ == "__main__":
     elif sys.argv[1] == '-i':
         # drop to ipython shell
         import devices
-        from IPython.Shell import IPShellEmbed
 
         def newElem(elemType, name, **kwargs):
             """
@@ -221,12 +220,8 @@ To create element instances, use newElem() function. Example:
     r = newElem('res','r1',r=50.)
 
 """
-        args = ['-pi1','In <\\#>: ','-pi2','   .\\D.: ',
-                '-po','Out<\\#>: ','-nosep']
-        ipshell = IPShellEmbed(args, 
-                               banner = msg + 'Type CTR-D to exit',
-                               exit_msg = 'Leaving Interpreter.')
-        ipshell()
+        analyses.analysis.ipython_drop(msg, globals(), locals())
+
     else:
         # Use 'main' circuit
         try:
