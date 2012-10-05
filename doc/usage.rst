@@ -15,18 +15,19 @@ Debian-based distributions (Ubuntu, Linux Mint and others) all of
 these libraries except pycppad can be installed as packages::
 
   apt-get install libsuperlu3 python-numpy python-scipy python-matplotlib \
-  python-pyparsing ipython python-sphinx pylint
+  python-pyparsing ipython python-sphinx pylint libboost-python-dev
 
-I have added libsuperlu3 because I do not see it in the python-scipy
-dependencies.  To install pycppad install cppad first by following the
-instructions on their websites. The corresponding websites for each
-library are listed below:
+To install pycppad install cppad first by following the instructions
+on their websites. The corresponding websites for each library are
+listed below:
 
 * pycppad: Automatic differentiation
 
   - cppad:  http://www.coin-or.org/CppAD/Doc/cppad.xml
 
   - pycppad:  http://www.seanet.com/~bradbell/pycppad/pycppad.xml 
+
+  - pycppad uses the boost.python library http://www.boost.org/libs/python/
 
 * numpy:  http://numpy.scipy.org/ (matrix and vector support)
 
@@ -43,8 +44,13 @@ library are listed below:
 * pyreverse from the pylint package: http://www.logilab.org/2560 (to
   generate UML diagrams)
 
-You may also need to install *git* to fetch the source code from
-the github repository::
+Most of these libraries in turn depend on other libraries They should
+be automatically installed. Some must be installed manually such as
+libsuperlu3 (http://crd-legacy.lbl.gov/~xiaoye/SuperLU/) because it is
+not in the python-scipy dependencies.
+
+You may also install *git* to fetch the source code from the github
+repository::
 
     git clone git://github.com/cechrist/cardoon.git
 
