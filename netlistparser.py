@@ -295,9 +295,11 @@ def parse_subcktInst(tok):
     # last token in 'nodes'
     defName = tok.nodes[-1]
     nodelist = tok.nodes[:-1]
-    if len(nodelist) < 2:
-        raise ParseError('Insufficient number of connections in '
-                        + tok.instanceName + '. (Minimum is 2)')
+    # import pdb; pdb.set_trace()
+    # 1 connection node is OK if gnd is global: the code below not needed
+    #    if len(nodelist) < 2:
+    #        raise ParseError('Insufficient number of connections in '
+    #                        + tok.instanceName + '. (Minimum is 2)')
     xckt = cir.Xsubckt(tok.instanceName, defName)
     cktStack[-1].add_subckt(xckt)
     cktStack[-1].connect(xckt, nodelist)
@@ -331,7 +333,6 @@ def parse_analysis(tok):
 def parse_plot(tok):
     # Create output request and add to circuit
     outreq = cir.OutRequest(tok.Type, tok.Vars)
-    #import pdb; pdb.set_trace()
     # Add requests always to main circuit
     cktStack[0].add_plot_request(outreq)
 
@@ -417,11 +418,11 @@ def parse_file(filename, ckt):
     varsline = pp.Suppress(pp.Keyword('.vars', caseless=True)) \
         + parameters('vars') 
 
-    # example: .subckt LM741 in out vdd gnd
+    # example: .subckt LM741 in out vdd vee
     subcktDefLine = pp.Suppress(pp.Keyword('.subckt', caseless=True)) \
         + identifier('subName') + nodes('nodes')
 
-    # example: xamp1 2 5 1 gnd LM741
+    # example: xamp1 2 5 1 3 LM741
     # Treat the last node as the subcircuit definition name. Sorry
     subcktInstLine = pp.Word('xX', pp.alphanums + '_')('instanceName') \
         + nodes('nodes')

@@ -123,7 +123,7 @@ def make_nodal_circuit(ckt):
     instances. All new attributes start with ``nD_``
 
     Works with subcircuits too: in this case the external terminals
-    are assigned the last row/column (RC) numbers in the same order
+    are assigned the first row/column (RC) numbers in the same order
     returned by ``Subcircuit.get_connections()``. For convenience, RC
     numbers for external terminals are stored in the ``nD_extRClist``
     attribute.
@@ -155,9 +155,9 @@ def make_nodal_circuit(ckt):
         # Move external connections to beginning of list
         for term in connectTerms:
             ckt.nD_termList.remove(term)
-        ckt.nD_termList =  ckt.nD_termList + connectTerms
+        ckt.nD_termList =  connectTerms + ckt.nD_termList
         # Assign RC numbers to all nodes: external terminals are at
-        # the end of list
+        # the beginning of list
         for i, term in enumerate(ckt.nD_termList):
             term.nD_namRC = i
         # List of RC numbers of external connections
