@@ -84,14 +84,14 @@ def set_Jac_triplet(M, posRows, negRows, posCols, negCols, Jac):
 
 # ********************  Regular functions *******************************
 
-def make_nodal_circuit(ckt):
+def make_nodal_circuit(ckt, termList = None):
     """
     Add attributes to Circuit/Elements/Terminals for nodal analysis
 
     Similar to nodal.make_nodal_circuit but in addition calls
     create_additional_indexes()
     """
-    nodal.make_nodal_circuit(ckt)
+    nodal.make_nodal_circuit(ckt, termList)
     # Generate sparse-matrix index mappings
     for elem in ckt.nD_nlinElem:
         create_additional_indexes(elem)

@@ -108,7 +108,7 @@ def delay_interp(td, vp, h, tsV, vpV):
 
 # ********************** Regular functions *****************************
 
-def make_nodal_circuit(ckt):
+def make_nodal_circuit(ckt, termList = None):
     """
     Add attributes to Circuit/Elements/Terminals for nodal analysis
 
@@ -119,14 +119,13 @@ def make_nodal_circuit(ckt):
     contains the 'gnd' node, it is used as the reference. Otherwise an
     indefinite matrix with no reference is assumed.
 
+    If termList is provided, the terminals in that list are assigned
+    the first positions in the NAM matrix. Row/Column numbers for
+    external terminals are stored in the ``nD_extRClist`` attribute.
+
     New attributes are added in Circuit/Element/Terminal
     instances. All new attributes start with ``nD_``
 
-    Works with subcircuits too: in this case the external terminals
-    are assigned the first row/column (RC) numbers in the same order
-    returned by ``Subcircuit.get_connections()``. For convenience, RC
-    numbers for external terminals are stored in the ``nD_extRClist``
-    attribute.
     """
     # --------------------------------------------------------------
     # make a list of all terminals in circuit 
@@ -148,23 +147,21 @@ def make_nodal_circuit(ckt):
         if elem.localReference:
             elem.neighbour[elem.localReference].nD_namRC = -1
     # Check for subcircuit
-    if hasattr(ckt, 'get_connections'):
-        # Subcircuit: put external terminals in the first row/column
-        # positions in matrix
-        connectTerms = ckt.get_connections()
-        # Move external connections to beginning of list
-        for term in connectTerms:
+    if termList != None:
+        assert len(termList) > 0
+        # Put terminals in the first row/column positions in matrix
+        for term in termList:
             ckt.nD_termList.remove(term)
-        ckt.nD_termList =  connectTerms + ckt.nD_termList
+        ckt.nD_termList =  termList + ckt.nD_termList
         # Assign RC numbers to all nodes: external terminals are at
         # the beginning of list
         for i, term in enumerate(ckt.nD_termList):
             term.nD_namRC = i
         # List of RC numbers of external connections
-        ckt.nD_extRClist = [term.nD_namRC for term in connectTerms]
+        ckt.nD_extRClist = [term.nD_namRC for term in termList]
     else:
-        # Not a subcircuit: just assign arbitrary RC numbers to all
-        # nodes
+        # termList not provided: just assign arbitrary RC numbers to
+        # all nodes
         for i, term in enumerate(ckt.nD_termList):
             term.nD_namRC = i
     # --------------------------------------------------------------
