@@ -512,7 +512,7 @@ class OutRequest:
 
 
 #---------------------------------------------------------------------
-class Circuit:
+class Circuit(object):
     """
     Holds a circuit. 
 
@@ -630,6 +630,47 @@ class Circuit:
 
     # Actions on the whole circuit --------------------------------------
 
+    def copy(self, newName):
+        """ 
+        Make a copy of an uninitialized circuit
+
+        newName is the circuit name for the copy
+
+        The elements in the copy point to the ParamSet of the original
+        element (models are not cloned). Elements are shallow-copied,
+        but terminal connections are re-generated.
+
+        If the circuit has been flattened, the copy does not include
+        subcircuit instances, otherwise a shallow copy of subcircuit
+        instances are generated.
+        """
+        assert not self._initialized 
+        # create new circuit with given name
+        cktCopy = Circuit(newName)
+        # Get all elements, add and connect them to this circuit
+        for elem in self.elemDict.itervalues():
+            # We need a copy of the element without the terminal
+            # connections. Make shallow copy:
+            elemCopy = copy.copy(elem)
+            # Clean terminal list
+            elemCopy.neighbour = []
+            # Add to circuit 
+            cktCopy.add_elem(elemCopy)
+            # Create connection list
+            termList = [term.nodeName for term in elem.neighbour]
+            self.connect(elemCopy, termList)
+        if not self._flattened:
+            for xsubckt in self.subcktDict.itervalues():
+                xsubcktCopy = copy.copy(xsubckt)
+                # Clean terminal list
+                xsubcktCopy.neighbour = []
+                # Add to circuit 
+                cktCopy.add_subckt(xsubcktCopy)
+                # Create connection list
+                termList = [term.nodeName for term in xsubckt.neighbour]
+                self.connect(xsubcktCopy, termList)
+        return cktCopy
+
     def init(self):
         """
         To be used after all elements/terminals have been created. Can
@@ -730,32 +771,8 @@ class Circuit:
             # Recursively flatten nested subcircuits
             if not cktDef._flattened:
                 cktDef.flatten()
-            # Get all elements, add and connect them to this circuit
-            for elem in cktDef.elemDict.itervalues():
-                # We need a copy of the element without the terminal
-                # connections. Make shallow copy:
-                newelem = copy.copy(elem)
-                # Clean terminal list
-                newelem.neighbour = []
-                # Change instance name
-                newelem.nodeName = xsubckt.nodeName + ':' + elem.nodeName
-                # Add to circuit 
-                self.add_elem(newelem)
-                # Create connection list
-                termList = []
-                for term in elem.neighbour:
-                    if hasattr(term, 'subCKTconnection'):
-                        # Must get terminal name from xsubckt
-                        termName = \
-                            xsubckt.neighbour[term.subCKTconnection].nodeName
-                    elif term.nodeName == 'gnd':
-                        # Special treatment for global reference node
-                        termName = 'gnd'
-                    else:
-                        termName = xsubckt.nodeName + ':' + term.nodeName
-                    termList.append(termName)
-                self.connect(newelem, termList)
-
+            # Get circuit from subcircuit definition
+            cktDef.get_circuit(xsubckt, self)
         self._flattened = True
 
     def check_sanity(self):
@@ -998,12 +1015,85 @@ not be included in the external terminal list in subckt""")
             # Save terminal connection number here
             terminal.subCKTconnection = i
 
+    def copy(self, newName):
+        """ 
+        Make a copy of an uninitialized circuit
+
+        newName is the circuit name for the copy
+
+        Similar as Circuit.copy() but also takes care of subcircuit
+        connections
+        """
+        assert not self._initialized 
+        # create new circuit with the given name
+        cktCopy = SubCircuit(newName, self.extConnectionList)
+        # Get all elements, add and connect them to this circuit
+        for elem in self.elemDict.itervalues():
+            # We need a copy of the element without the terminal
+            # connections. Make shallow copy:
+            elemCopy = copy.copy(elem)
+            # Clean terminal list
+            elemCopy.neighbour = []
+            # Add to circuit 
+            cktCopy.add_elem(elemCopy)
+            # Create connection list
+            termList = [term.nodeName for term in elem.neighbour]
+            self.connect(elemCopy, termList)
+        if not self._flattened:
+            for xsubckt in self.subcktDict.itervalues():
+                xsubcktCopy = copy.copy(xsubckt)
+                # Clean terminal list
+                xsubcktCopy.neighbour = []
+                # Add to circuit 
+                cktCopy.add_subckt(xsubcktCopy)
+                # Create connection list
+                termList = [term.nodeName for term in xsubckt.neighbour]
+                self.connect(xsubcktCopy, termList)
+
+
+        return cktCopy
+
     def get_connections(self):
         """
         Returns a list of subcircuit terminals
         """
         return [self.get_term(termName) 
                 for termName in self.extConnectionList]
+
+    def get_circuit(self, xsubckt, target):
+        """
+        Dump copy of circuit into target (for hierarchy flattening)
+
+        Subcircuit instances are ignored
+        """
+        # This code (originally in Circuit class) belongs here because
+        # it uses attributes known only by the SubCircuit class.
+        assert self._flattened
+        # Get all elements, add and connect them to this circuit
+        for elem in self.elemDict.itervalues():
+            # We need a copy of the element without the terminal
+            # connections. Make shallow copy:
+            elemCopy = copy.copy(elem)
+            # Clean terminal list
+            elemCopy.neighbour = []
+            # Change instance name
+            elemCopy.nodeName = xsubckt.nodeName + ':' + elem.nodeName
+            # Add to circuit 
+            target.add_elem(elemCopy)
+            # Create connection list
+            termList = []
+            for term in elem.neighbour:
+                if hasattr(term, 'subCKTconnection'):
+                    # Must get terminal name from xsubckt
+                    termName = \
+                        xsubckt.neighbour[term.subCKTconnection].nodeName
+                elif term.nodeName == 'gnd':
+                    # Special treatment for global reference node
+                    termName = 'gnd'
+                else:
+                    termName = xsubckt.nodeName + ':' + term.nodeName
+                termList.append(termName)
+            target.connect(elemCopy, termList)
 
     def netlist_string(self):
         """
