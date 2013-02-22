@@ -783,7 +783,8 @@ class TransientNodal(_NLFunction):
     here. This is to centralize all allocations and avoid repetitions.
 
     Requires a nodal-ready Circuit instance (ckt) instance (see
-    make_nodal_circuit())
+    make_nodal_circuit()). The circuit is not modified, one circuit
+    can be shared amongst several TransientNodal objects.
     """
 
     def __init__(self, ckt, im):
@@ -817,7 +818,10 @@ class TransientNodal(_NLFunction):
         self.qVec = np.empty(self.ckt.nD_dimension)
         # Source vector at current time s(t) 
         self.sVec = np.empty(self.ckt.nD_dimension)
-
+        # List of time-delay vectors: they are stored here to allow
+        # sharing of one circuit amongst several TransientNodal
+        # objects, to use in hierarchical simulation.
+        self.tdVecList = []
 #        if hasattr(self.ckt, 'nD_extRClist'):
 #            # Allocate external currents vector
 #            self.extSVec = np.empty(self.ckt.nD_dimension)
@@ -869,13 +873,13 @@ class TransientNodal(_NLFunction):
         self._dpsteps = nsteps * [h]
         for elem in self.ckt.nD_nlinElem:
             if elem.nDelays:
-                elem.tran_dpvolt = []
+                self.tdVecList.append([])
                 # first have to retrieve port voltages from xVec
                 xin = np.zeros(elem.nD_nxin)
                 set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec) 
                 # Extract delayed ports and append to element list
                 for i in xrange(-elem.nDelays, 0):
-                    elem.tran_dpvolt.append(nsteps * [xin[i]])
+                    self.tdVecList[-1].append(nsteps * [xin[i]])
 
 
     def update_Gp(self):
@@ -913,13 +917,13 @@ class TransientNodal(_NLFunction):
         # Store here xVec components. Optimally this would be
         # performed in the same loop as update_q, but kept here for
         # clarity.
-        for elem in self.ckt.nD_delayElem:
+        for tdVec,elem in zip(self.tdVecList, self.ckt.nD_delayElem):
             # first have to retrieve port voltages from xVec
             xin = np.zeros(elem.nD_nxin)
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec) 
             # Extract delayed ports and append to element lists
             for i in xrange(-elem.nDelays, 0):
-                elem.tran_dpvolt[i].append(xin[i])
+                tdVec[i].append(xin[i])
 
 
     def get_source(self, ctime):
@@ -983,6 +987,7 @@ class TransientNodal(_NLFunction):
         """
         # Linear contribution
         self.iVec[:] = np.dot(self.Gp, xVec)
+        dcounter = 0
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
@@ -994,7 +999,8 @@ class TransientNodal(_NLFunction):
                     (xin[i], dc) = delay_interp(elem.nD_delay[i], 
                                                 xin[i], self.im.h, 
                                                 self._dpsteps, 
-                                                elem.tran_dpvolt[i])
+                                                self.tdVecList[dcounter][i])
+                dcounter += 1
             outV = elem.eval(xin)
             # Update iVec. outV may have extra charge elements but
             # they are not used in the following
@@ -1021,6 +1027,7 @@ class TransientNodal(_NLFunction):
         # Linear contribution
         self.iVec[:] = np.dot(self.Gp, xVec)
         self.Jac[:,:] = self.Gp
+        dcounter = 0
         # Nonlinear contribution
         for elem in self.ckt.nD_nlinElem:
             # first have to retrieve port voltages from xVec
@@ -1034,7 +1041,8 @@ class TransientNodal(_NLFunction):
                     (xin[i], dc[i]) = delay_interp(elem.nD_delay[i], 
                                                    xin[i], self.im.h, 
                                                    self._dpsteps, 
-                                                   elem.tran_dpvolt[i])
+                                                   self.tdVecList[dcounter][i])
+                dcounter += 1
                 (outV, outJac) = elem.eval_and_deriv(xin)
                 # Multiply Jacobian columns by derivative factors
                 for i in xrange(-elem.nDelays, 0):
