@@ -136,7 +136,7 @@ class GraphNode(object):
 
     def __str__(self):
         """convert to string"""
-        desc = self.nodeName + '\n' 
+        desc = '"' + self.nodeName + '"\n' 
         desc += 'Linked nodes: '
         for n in self.neighbour:
             desc += ' ' + n.nodeName
@@ -159,8 +159,13 @@ class Terminal(GraphNode):
 
     def __str__(self):
         """convert to string"""
-        desc = 'Terminal({0}): {1}'.format(self.unit, GraphNode.__str__(self))
+        desc = 'Terminal: {1}\nUnit: {0}'.format(self.unit, 
+                                                 GraphNode.__str__(self))
         return(desc)
+    
+    def get_label(self):
+        """Return label for plots/tables in a formatted string"""
+        return 'T: "{0}"'.format(self.nodeName)
 
 #---------------------------------------------------------------------
 class InternalTerminal(Terminal):
@@ -183,15 +188,18 @@ class InternalTerminal(Terminal):
         self.neighbour.append(element)
         element.neighbour.append(self)
         
-
     def __str__(self):
         """convert to string"""
-        desc = 'Internal Terminal ({0}): {1}:{2}'.format(
+        desc = 'Internal Terminal: "{1}:{2}", Unit: {0}'.format(
             self.unit,
             self.neighbour[0].nodeName,
             self.nodeName)
         return(desc)
 
+    def get_label(self):
+        """Return label for plots/tables in a formatted string"""
+        return 'IT: "{0}:{1}"'.format(self.neighbour[0].nodeName,
+                                      self.nodeName)
 
 #---------------------------------------------------------------------
 class Element(GraphNode, ParamSet):
@@ -247,7 +255,7 @@ class Element(GraphNode, ParamSet):
     # Printing and info-related functions ----------------------------------
     def __str__(self):
         """convert to string"""
-        desc = 'Element ' + GraphNode.__str__(self)
+        desc = 'Element: ' + GraphNode.__str__(self)
         desc += '\nDevice type: ' + self.devType + '\n' 
         if self.dotModel:
             desc += 'Model: {0}\n'.format(self.dotModel.name)

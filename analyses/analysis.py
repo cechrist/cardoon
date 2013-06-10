@@ -90,10 +90,10 @@ def process_requests(circuit, reqtype, xaxis, xlabel, attribute,
                 else:
                     unit = term.unit
                 pltfunc(xaxis, f1(getattr(term, attribute)), 
-                        label = 'Term: {0} [{1}]'.format(term.nodeName, unit)) 
+                        label = '{0} [{1}]'.format(term.get_label(), unit)) 
             if len(outreq.varlist) == 1:
                 plt.ylabel(
-                    'Term: {0} [{1}]'.format(term.nodeName, unit))
+                    '{0} [{1}]'.format(term.get_label(), unit))
             else:
                 plt.legend()
     if flag:
