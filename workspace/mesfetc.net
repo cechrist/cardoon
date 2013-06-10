@@ -1,7 +1,7 @@
 *** Sample netlist for a MESFET using the Curtice model (from fREEDA) ***
 
 .options sparse=1
-.analysis ac start=1GHz stop=10GHz num= 40 log=False 
+.analysis ac start=1GHz stop=10GHz num= 40 log=False shell=1
 .analysis tran tstep=5ps tstop=2ns
 
 .plot ac_mag 3 4 

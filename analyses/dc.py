@@ -239,7 +239,7 @@ class DCSweep(ParamSet):
                                   'dC_v')
 
         def getvec(termname):
-            return circuit.termDict[termname].dC_v
+            return circuit.find_term(termname).dC_v
 
         if self.shell:
             analysis.ipython_drop("""

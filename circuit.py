@@ -932,6 +932,49 @@ class Circuit(object):
         else:
             return False
             
+    def find_term(self, termName):
+        """
+        Find a terminal (external/internal) by name
+
+        termName: full name, including container Element name for
+                  internal terminals
+
+        Returns terminal instance if found or raises CircuitError
+        exception if not
+        """
+        result = None
+        # May be it is an internal terminal. Search for
+        # containing element
+        token = termName.rpartition(':')
+        if token[0]:
+            # looks like an internal terminal
+            t1 = token[0].rpartition(':')
+            if t1[0]:
+                try:
+                    terms = self.elemDict[token[0]].get_internal_terms()
+                    for t in terms:
+                        if t.nodeName == token[2]:
+                            result = t
+                            break
+                    if result == None:
+                        raise CircuitError('Terminal "' + token[2] + 
+                                           '" not found in element "' + 
+                                           token[0] + '"')
+                except KeyError:
+                    raise CircuitError('Element "' + token[0] + '" not found')
+            else:
+                 raise CircuitError('Terminal name syntax is wrong: "' 
+                                    + termName + '"')
+        else:
+            # It can be an external terminal
+            try:
+                result = self.termDict[termName]
+            except KeyError:
+                raise CircuitError('Terminal "' + termName + '" not found')
+
+        return result
+
+
     def remove_term(self, termName):
         """
         Removes a terminal from a circuit. Links are *not* removed, you

@@ -213,7 +213,7 @@ class Transient(ParamSet):
                                   timeVec, 'Time [s]', 'tran_v')
 
         def getvec(termname):
-            return circuit.termDict[termname].tran_v
+            return circuit.find_term(termname).tran_v
 
         if self.shell:
             analysis.ipython_drop("""

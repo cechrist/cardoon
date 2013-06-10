@@ -130,7 +130,7 @@ class ACSweep(ParamSet):
                                   'dB', self.log)
 
         def getvec(termname):
-            return circuit.termDict[termname].aC_V
+            return circuit.find_term(termname).aC_V
 
         if self.shell:
             analysis.ipython_drop("""
