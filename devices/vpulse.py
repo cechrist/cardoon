@@ -19,7 +19,7 @@ class Device(cir.Element):
     Connection diagram::
                           
                    ,---,  vout       Rint
-       0 o--------( - + )---------/\/\/\/\--------o 1
+       1 o--------( - + )---------/\/\/\/\--------o 0
                    '---'  
                  
            vout = vpulse(t)
@@ -29,7 +29,7 @@ class Device(cir.Element):
 
     Netlist example::
 
-        vpulse:vin gnd 4 v1=-1V v2=1V td=1ms pw=10ms per=20ms
+        vpulse:vin 4 0 v1=-1V v2=1V td=1ms pw=10ms per=20ms
 
 
     Internal Topology

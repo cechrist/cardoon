@@ -19,7 +19,7 @@ class Device(cir.Element):
     Connection diagram::
                           
                    ,---,  vout       Rint
-       0 o--------( - + )---------/\/\/\/\--------o 1
+       1 o--------( - + )---------/\/\/\/\--------o 0
                    '---'  
                  
            vout = vdc + mag * cos(2 * pi * freq * t + phase)
@@ -29,7 +29,7 @@ class Device(cir.Element):
 
     Netlist example::
 
-        vsin:vin gnd 4 vdc=2V amp=1V freq=1GHz phase=90 
+        vsin:vin 4 gnd vdc=2V amp=1V freq=1GHz phase=90 
 
 
     Internal Topology

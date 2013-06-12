@@ -114,6 +114,10 @@ Notes:
     solution). The values of C and Rleak can be adjusted to change
     the time constant
 
+  * The capacitor value has no effect on the memristance, but has
+    an effect in the internal model: a larger capacitor will
+    produce lower voltages at vc.
+
 Internal Topology
 +++++++++++++++++
 
@@ -123,7 +127,7 @@ Internal implementation uses a gyrator and adds 2 internal nodes::
     0  o---------+            +----------------+
                  | gyr V(im)  |                |
       +         /|\          /^\              /|\ 
-    Vin        ( | )        ( | ) gyr Vin    ( | ) gyr^2 * M(q) * V(im)
+    Vin        ( | )        ( | ) gyr Vin    ( | ) gyr * M(q) * V(im)
       -         \V/          \|/              \V/ 
                  |            |                |   q = C * vc 
     1  o---------+            +----------------+
@@ -1965,7 +1969,7 @@ vdc: DC voltage source
 Schematic::
                       
                ,---,  vdc       Rint
-   0 o--------( - + )---------/\/\/\/\--------o 1
+   1 o--------( - + )---------/\/\/\/\--------o 0
                '---'  
 
 Rint is independent of temperature. Teperature dependence of vdc
@@ -1979,7 +1983,7 @@ is as follows:
 
 Netlist example::
 
-    vdc:vdd 1 0 vdc=3V
+    vdc:vdd vddnode gnd vdc=3V
 
 
 Internal Topology
@@ -1990,7 +1994,7 @@ source if Rint is zero::
 
                                    i/gyr      Term: i
     0  o---------+            +----------------+
-                 | gyr V23    |                |
+                 | gyr V(i)   |                |
       +         /|\          /|\              /^\ 
     vin        ( | )        ( | ) gyr vin    ( | ) gyr vdc
       -         \V/          \V/              \|/  
@@ -2024,7 +2028,7 @@ vpulse: Pulse voltage source
 Connection diagram::
                       
                ,---,  vout       Rint
-   0 o--------( - + )---------/\/\/\/\--------o 1
+   1 o--------( - + )---------/\/\/\/\--------o 0
                '---'  
              
        vout = vpulse(t)
@@ -2034,7 +2038,7 @@ short circuit (or rint) for DC or frequency-domain.
 
 Netlist example::
 
-    vpulse:vin gnd 4 v1=-1V v2=1V td=1ms pw=10ms per=20ms
+    vpulse:vin 4 0 v1=-1V v2=1V td=1ms pw=10ms per=20ms
 
 
 Internal Topology
@@ -2066,7 +2070,7 @@ vsin: (Co-)Sinusoidal voltage source
 Connection diagram::
                       
                ,---,  vout       Rint
-   0 o--------( - + )---------/\/\/\/\--------o 1
+   1 o--------( - + )---------/\/\/\/\--------o 0
                '---'  
              
        vout = vdc + mag * cos(2 * pi * freq * t + phase)
@@ -2076,7 +2080,7 @@ the 'acmag' parameter is provided. By default acmag = mag.
 
 Netlist example::
 
-    vsin:vin gnd 4 vdc=2V amp=1V freq=1GHz phase=90 
+    vsin:vin 4 gnd vdc=2V amp=1V freq=1GHz phase=90 
 
 
 Internal Topology

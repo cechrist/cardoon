@@ -18,7 +18,7 @@ class Device(cir.Element):
     Schematic::
                           
                    ,---,  vdc       Rint
-       0 o--------( - + )---------/\/\/\/\--------o 1
+       1 o--------( - + )---------/\/\/\/\--------o 0
                    '---'  
    
     Rint is independent of temperature. Teperature dependence of vdc
@@ -32,7 +32,7 @@ class Device(cir.Element):
 
     Netlist example::
 
-        vdc:vdd 1 0 vdc=3V
+        vdc:vdd vddnode gnd vdc=3V
 
 
     Internal Topology
@@ -43,7 +43,7 @@ class Device(cir.Element):
 
                                        i/gyr      Term: i
         0  o---------+            +----------------+
-                     | gyr V23    |                |
+                     | gyr V(i)   |                |
           +         /|\          /|\              /^\ 
         vin        ( | )        ( | ) gyr vin    ( | ) gyr vdc
           -         \V/          \V/              \|/  

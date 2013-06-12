@@ -302,8 +302,24 @@ blocks.
     svbjt:q1:x1
 
   Check the internal topology of each device in the
-  :doc:`device_library` to find the internal terminal names for aech
-  device.
+  :doc:`device_library` to find the internal terminal names for each
+  device. In the documentation external terminals are numbered,
+  starting with ``0`` and internal terminals have alphanumeric
+  labels. Internal reference terminals (i.e., ``tref``) are not
+  accessible.  In the following example the internal terminal name is
+  'i'::
+
+        0                              i/gyr      Term: i
+           o---------+            +----------------+
+                     | gyr V(i)   |                |
+          +         /|\          /|\              /^\ 
+        vin        ( | )        ( | ) gyr vin    ( | ) gyr vdc
+          -         \V/          \V/              \|/  
+                     |            |                |
+           o---------+            +----------------+
+        1                                 |
+                                         --- tref
+                                          V
 
   Each recognized plot line generates a new figure. Results stored in
   terminals listed in a single plot line are grouped in a single
