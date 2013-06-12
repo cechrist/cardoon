@@ -52,6 +52,10 @@ class Device(cir.Element):
         solution). The values of C and Rleak can be adjusted to change
         the time constant
 
+      * The capacitor value has no effect on the memristance, but has
+        an effect in the internal model: a larger capacitor will
+        produce lower voltages at vc.
+
     Internal Topology
     +++++++++++++++++
 
@@ -61,7 +65,7 @@ class Device(cir.Element):
         0  o---------+            +----------------+
                      | gyr V(im)  |                |
           +         /|\          /^\              /|\ 
-        Vin        ( | )        ( | ) gyr Vin    ( | ) gyr^2 * M(q) * V(im)
+        Vin        ( | )        ( | ) gyr Vin    ( | ) gyr * M(q) * V(im)
           -         \V/          \|/              \V/ 
                      |            |                |   q = C * vc 
         1  o---------+            +----------------+
@@ -172,7 +176,7 @@ class Device(cir.Element):
         """
         q = self.c * vPort[1]
         M = eval(self.m)
-        iout = np.array([glVar.gyr**2 * M * vPort[0]])
+        iout = np.array([glVar.gyr * M * vPort[0]])
         if saveOP:
             opVars = np.array([M])
             return (iout, np.array([]), opVars)
