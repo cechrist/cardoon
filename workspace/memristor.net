@@ -1,18 +1,24 @@
 # Simple netlist to test memristor
 
-vpulse:vin 1 0 v1=0 v2=1 tr=1ms tf=1m pw=5ms 
-# per=4ms 
-#vsin:vin 1 0  mag=1 freq=1kHz rint=10. phase=-90
+isin:iin 0 1 mag=4.5mA freq=10Hz phase=-90
 
-res:r1 1 2 r=1k
-mem:m1 2 0 m = '1e3 * (np.cosh(1e6 * q)-1.)' q0=1uC 
+memr:m1 1 0 m = '1e3 * (3e6 * q*q + .1e3 * abs(q) + 3e-3)' c=10e-6
 
-.analysis tran tstep=100us tstop=12ms
+.analysis tran tstep=1ms tstop=95ms shell=1
 
-.plot tran 1 2
-.plot tran mem:m1:im
-.plot tran mem:m1:vc
+.plot tran 1 
+.plot tran memr:m1:im
+.plot tran memr:m1:vc
 
 .end
 
+# In the shell, run the following commands to plot hysteresis loop:
+import matplotlib.pyplot as plt
+plt.figure()
+plt.plot(getvec('memr:m1:im'), getvec('1'))
 
+# Plot M(q) as a function of time:
+plt.figure()
+# Current is in mA 
+mVec = 1e3 * getvec('1') / getvec('memr:m1:im')
+plt.plot(timeVec, mVec)

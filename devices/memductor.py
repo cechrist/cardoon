@@ -1,8 +1,8 @@
 """
-:mod:`memristor` -- Basic (nonlinear) memristor
+:mod:`memductor` -- Basic (nonlinear) memductor
 -----------------------------------------------
 
-.. module:: memristor
+.. module:: memductor
 .. moduleauthor:: Carlos Christoffersen
 """
 
@@ -13,7 +13,7 @@ import cppaddev as ad
 
 class Device(cir.Element):
     r"""
-    Memristor
+    Memductor
     ---------
 
     Connection diagram::
@@ -29,64 +29,60 @@ class Device(cir.Element):
 
     .. math::    
 
-         \varphi(t) = \varphi(q(t))
+         q(t) = q(\varphi(t))
 
-         \frac{d\varphi}{dt} = V_{in} = \frac{d\varphi}{dq} \frac{dq}{dt}
+         \frac{dq}{dt} = I_{in} = \frac{dq}{d\varphi} \frac{d\varphi}{dt}
 
-         V_{in} = M(q) I_{in}
+         I_{in} = W(q) V_{in}
 
-    :math:`M(q)` is the memristance function.
+    :math:`W(\varphi)` is the memductance function.
 
     Netlist example::
 
-        memr:m1 1 0 m = '1e3 * (np.cosh(1e6 * q)-1.)' 
+        memd:m1 1 0 w = '1e3 * (np.cosh(1e6 * phi)-1.)' 
 
     Notes: 
 
-      * the memristance function (:math:`M(q)`) is given as an
-        expression in the ``m`` parameter. Constants and mathematical
+      * the memductance function (:math:`W(\varphi)`) is given as an
+        expression in the ``w`` parameter. Constants and mathematical
         functions can be used. The independent variable is the
-        memristor charge (``q``)
+        memductor charge (``phi``)
 
-      * The initial charge can be adjusted with the ``q0`` parameter
+      * The initial flux can be adjusted with the ``phi0`` parameter
 
-      * the memristor loses its memory as the capacitor discharges
+      * the memductor loses its memory as the capacitor discharges
         through Rleak (Rleak is necessary to ensure a unique DC
         solution). The values of C and Rleak can be adjusted to change
         the time constant
 
-      * The capacitor value has no effect on the memristance, but has
+      * The capacitor value has no effect on the memductance, but has
         an effect in the internal model: a larger capacitor will
         produce lower voltages at vc.
 
     Internal Topology
     +++++++++++++++++
 
-    The internal implementation uses a gyrator and adds 2 internal
-    nodes: im and vc. The voltages at those terminals have the
-    following meaning (``gyr`` is a global variable that can be
-    changed with the ``.options`` keyword)::
+    The internal implementation uses a gyrator and adds one internal
+    nodes: vc. The voltage at that terminal has the following meaning
+    (``gyr`` is a global variable that can be changed with the
+    ``.options`` keyword)::
 
-        im: Iin / gyr                     
-        vc: q / C
+        vc: (gyr/C) * phi
 
-              --> Iin                          Term: im
-        0  o---------+            +----------------+
-                     | gyr V(im)  |                |
-          +         /|\          /^\              /|\ 
-        Vin        ( | )        ( | ) gyr Vin    ( | ) gyr^2 * M(q) * V(im)
-          -         \V/          \|/              \V/ 
-                     |            |                |   q = C * vc 
-        1  o---------+            +----------------+
-                                          |
-                                         --- tref 
-                                          - 
-
+              --> Iin      
+        0  o---------+     
+                     | 
+          +         /|\  i = w(phi) * Vin     
+        Vin        ( | ) 
+          -         \V/  phi = (C/gyr) * vc
+                     |     
+        1  o---------+     
+                           
                                      Term: vc                  
         +       +----------------+--------+---------,
                 |                |        |         |  
                /^\             -----      /        /^\       
-        vc    ( | ) gyr V(im)  ----- C    \ Rleak ( | ) q0 / C / Rleak
+        vc    ( | ) gyr Vin    ----- C    \ Rleak ( | ) phi0 * gyr / C / Rleak
                \|/               |        /        \|/     
                 |                |        |         |       
         -       +----------------+--------+---------'     
@@ -99,7 +95,7 @@ class Device(cir.Element):
     category = "Basic components"
 
     # devtype is the 'model' name
-    devType = "memr"
+    devType = "memd"
 
     # Number of terminals. If numTerms is set here, the parser knows
     # in advance how many external terminals to expect. By default the
@@ -109,8 +105,8 @@ class Device(cir.Element):
     isNonlinear = True
     
     paramDict = dict(
-        m = ('Memristance function M(q)', 'Ohms', str, 'abs(5e9*q)'),
-        q0 = ('Initial charge', 'As', float, 0.),
+        w = ('Memductance function W(phi)', 'Siemens', str, 'abs(1e-3*phi)'),
+        phi0 = ('Initial flux', 'Vs', float, 0.),
         c = ('Auxiliary capacitance', 'F', float, 10e-6),
         rleak = ('Leackage resistance', 'Ohms', float, 1e9)
         )
@@ -139,55 +135,53 @@ class Device(cir.Element):
                                    + ': capacitance can not be zero')
         # test m expression to make sure it is valid
         try:
-            q = .5
-            result = eval(self.m)
+            phi = .5
+            result = eval(self.w)
         except Exception as e:
             raise cir.CircuitError(
                 '{0}: Invalid expression: {1} ({2})'.format(self.nodeName, 
-                                                            self.m, e))
+                                                            self.w, e))
         try:
             abs(result)
         except TypeError:
             raise cir.CircuitError(
                 '{0}: Invalid expression: {1} (result not a number)'.format(
-                    self.nodeName, self.m))
+                    self.nodeName, self.w))
 
         # Connect internal terminal
-        tim = self.add_internal_term('im', '{0} A'.format(glVar.gyr)) 
         tvc = self.add_internal_term('vc', 'V') 
         tref = self.add_reference_term() 
-        # Set up source if q0 is given
-        if self.q0:
+        # Set up source if phi0 is given
+        if self.phi0:
             self.isDCSource = True
             self.sourceOutput = (tref, tvc)
-            self._i0 = self.q0 / self.c / self.rleak
+            self._i0 = self.phi0 * glVar.gyr / self.c / self.rleak
 
         # Setup gyrator
         # Access to global variables is through the glVar 
-        self.linearVCCS = [((0,1), (tref, tim), glVar.gyr), 
-                           ((tim, tref), (0,1), glVar.gyr),
-                           ((tim, tref), (tref, tvc), glVar.gyr),
+        self.linearVCCS = [((0,1), (tref, tvc), glVar.gyr), 
                            ((tvc, tref), (tvc, tref), 1./self.rleak)]
         self.linearVCQS = [((tvc, tref), (tvc, tref), self.c)]
 
-        self.controlPorts = [(tim, tref), (tvc, tref)]
-        self.csOutPorts = [(tim, tref)]
+        self.controlPorts = [(0,1), (tvc, tref)]
+        self.csOutPorts = [(0,1)]
         self.qsOutPorts = []
 
 
     def eval_cqs(self, vPort, saveOP = False):
         """
-        Returns memristor voltage given current. Charge vector is empty
+        Returns memductor current given input voltage. Charge vector
+        is empty
 
-        vPort[0] = memristor current / gyr
+        vPort[0] = memductor voltage
         vPort[1] = internal cap voltage
-        iout[0] = gyr * memristor voltage
+        iout[0] = memductor current
         """
-        q = self.c * vPort[1]
-        M = eval(self.m)
-        iout = np.array([glVar.gyr**2 * M * vPort[0]])
+        phi = self.c * vPort[1] / glVar.gyr
+        W = eval(self.w)
+        iout = np.array([W * vPort[0]])
         if saveOP:
-            opVars = np.array([M])
+            opVars = np.array([W])
             return (iout, np.array([]), opVars)
         else:
             return (iout, np.array([]))
@@ -201,15 +195,15 @@ class Device(cir.Element):
         """
         Calculates operating point information
 
-        vPort[0] = memristor current / gyr
+        vPort[0] = memductor voltage
         vPort[1] = internal cap voltage
         """
         (iout, qout) = self.eval_cqs(vPort)
         opV = self.get_op_vars(vPort)
-        self.OP = {'v': iout[0] / glVar.gyr,
-                   'i': vPort[0] * glVar.gyr,
-                   'q': self.c * vPort[1], 
-                   'M': opV[0]}
+        self.OP = {'v': vPort[0],
+                   'i': iout[0],
+                   'phi': self.c * vPort[1] / glVar.gyr, 
+                   'W': opV[0]}
         return self.OP
 
     def get_DCsource(self):

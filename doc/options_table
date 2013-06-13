@@ -1,13 +1,13 @@
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- abstol       1.0e-07      nodal unit   Absolute tolerance for nodal variables               
- errfunc      0            bool         Enable additional test for error function in Newton's method 
- gyr          0.001        S            Default gain in internal gyrators                    
- maxdelta     20.0         nodal unit   Maximum allowed change in one Newton iteration       
- maxiter      20                        Maximum number of Newton iterations                  
- reltol       0.0001                    Relative tolerance for nodal variables               
- sparse       1            bool         Use sparse matrices in analyses if possible          
- temp         27.0         C            Ambient temperature                                  
- =========== ============ ============ ===================================================== 
+ =========== ==================== ============ ===================================================== 
+ Name         Default              Unit         Description                                          
+ =========== ==================== ============ ===================================================== 
+ abstol       1.0e-07              nodal unit   Absolute tolerance for nodal variables               
+ errfunc      0                    bool         Enable additional test for error function in Newton's method 
+ gyr          0.001                S            Default gain in internal gyrators                    
+ maxdelta     20.0                 nodal unit   Maximum allowed change in one Newton iteration       
+ maxiter      20                                Maximum number of Newton iterations                  
+ reltol       0.0001                            Relative tolerance for nodal variables               
+ sparse       1                    bool         Use sparse matrices in analyses if possible          
+ temp         27.0                 C            Ambient temperature                                  
+ =========== ==================== ============ ===================================================== 
 

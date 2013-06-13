@@ -1,14 +1,14 @@
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- Np2dB        8.68589      dB/Np        Neper to dB conversion constant                      
- T0           273.15       K            Zero degree Celsius temperature                      
- c0           2.99792e+08   m s^{-1}     Speed of light in free space                         
- epOx         3.45e-11                  Permitivity of silicon oxide                         
- epSi         1.045e-10                 Permitivity of silicon                               
- epsilon0     8.85419e-12   F m^{-1}     Permittivity of free space                           
- k            1.38065e-23   J K^{-1}     Boltzmann constant                                   
- mu0          1.25664e-06   H m^{-1}     Permeability of free space                           
- q            1.60218e-19   C            Elementary charge                                    
- =========== ============ ============ ===================================================== 
+ =========== ==================== ============ ===================================================== 
+ Name         Default              Unit         Description                                          
+ =========== ==================== ============ ===================================================== 
+ Np2dB        8.68589              dB/Np        Neper to dB conversion constant                      
+ T0           273.15               K            Zero degree Celsius temperature                      
+ c0           2.99792e+08          m s^{-1}     Speed of light in free space                         
+ epOx         3.45e-11                          Permitivity of silicon oxide                         
+ epSi         1.045e-10                         Permitivity of silicon                               
+ epsilon0     8.85419e-12          F m^{-1}     Permittivity of free space                           
+ k            1.38065e-23          J K^{-1}     Boltzmann constant                                   
+ mu0          1.25664e-06          H m^{-1}     Permeability of free space                           
+ q            1.60218e-19          C            Elementary charge                                    
+ =========== ==================== ============ ===================================================== 
 

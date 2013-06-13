@@ -92,9 +92,9 @@ class ParamSet:
 
         If no parameter is specified all parameters are listed
         """
-        helpstring = ' =========== ============ ============ ===================================================== \n'
-        helpstring += ' Name         Default      Unit         Description                                          \n'
-        helpstring += ' =========== ============ ============ ===================================================== \n'
+        helpstring = ' =========== ==================== ============ ===================================================== \n'
+        helpstring += ' Name         Default              Unit         Description                                          \n'
+        helpstring += ' =========== ==================== ============ ===================================================== \n'
         if paramName:
             helpstring = self.format(paramName)
         else:
@@ -103,7 +103,7 @@ class ParamSet:
             # now.
             for key in sorted(self.paramDict.iterkeys()):
                 helpstring += self.format(key)
-        helpstring += ' =========== ============ ============ ===================================================== \n'
+        helpstring += ' =========== ==================== ============ ===================================================== \n'
         return helpstring
 
     def format(self, paramName):
@@ -115,7 +115,7 @@ class ParamSet:
         except NameError:
             out = 'Parameter not found.\n'
         else:
-            out = ' {0:<10}   {1:<10}   {2:<10}   {3:<52} \n'.format(paramName,
+            out = ' {0:<10}   {1:<18}   {2:<10}   {3:<52} \n'.format(paramName,
                                  paraminfo[3], paraminfo[1], paraminfo[0])
         return out
 

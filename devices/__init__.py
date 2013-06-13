@@ -36,7 +36,8 @@ That's all!
 import autoThermal
 
 # Regular 'netlist' elements must be listed here
-netElemList = ['resistor', 'capacitor', 'inductor', 'memristor',
+netElemList = ['resistor', 'capacitor', 'inductor', 
+               'memristor', 'memductor',
                'gyrator', 'vccs',
                'idc', 'vdc', 'isin', 'vsin', 'ipulse', 'vpulse',
                'diode', 'svdiode', 'bjt', 'svbjt', 

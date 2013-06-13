@@ -1,0 +1,18 @@
+# Simple netlist to test memristor
+
+vpulse:vin 1 0 v1=0 v2=1 tr=1ms tf=1m pw=5ms 
+# per=4ms 
+#vsin:vin 1 0  mag=1 freq=1kHz rint=10. phase=-90
+
+res:r1 1 2 r=1k
+memr:m1 2 0 m = '1e3 * (np.cosh(1e6 * q)-1.)' q0=1uC 
+
+.analysis tran tstep=100us tstop=12ms
+
+.plot tran 1 2
+.plot tran memr:m1:im
+.plot tran memr:m1:vc
+
+.end
+
+

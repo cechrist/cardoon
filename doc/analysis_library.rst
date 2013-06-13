@@ -34,15 +34,15 @@ Example::
 Parameters
 ++++++++++
 
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- log          0                         Use logarithmic scale                                
- num          50                        Number of points in sweep                            
- shell        0                         Drop to ipython shell after calculation              
- start        1.0          Hz           Frequency sweep start value                          
- stop         10.0         Hz           Frequency sweep stop value                           
- =========== ============ ============ ===================================================== 
+ =========== ==================== ============ ===================================================== 
+ Name         Default              Unit         Description                                          
+ =========== ==================== ============ ===================================================== 
+ log          0                                 Use logarithmic scale                                
+ num          50                                Number of points in sweep                            
+ shell        0                                 Drop to ipython shell after calculation              
+ start        1.0                  Hz           Frequency sweep start value                          
+ stop         10.0                 Hz           Frequency sweep stop value                           
+ =========== ==================== ============ ===================================================== 
 
 dc: DC Sweep
 ------------
@@ -91,17 +91,17 @@ Examples::
 Parameters
 ++++++++++
 
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- device                                 Instance name of device to sweep variable            
- num          50                        Number of points in sweep                            
- param                                  Parameter to sweep                                   
- shell        0                         Drop to ipython shell after calculation              
- start        0.0          (variable)   Sweep start value                                    
- stop         0.0          (variable)   Sweep stop value                                     
- verbose      0                         Show iterations for each point                       
- =========== ============ ============ ===================================================== 
+ =========== ==================== ============ ===================================================== 
+ Name         Default              Unit         Description                                          
+ =========== ==================== ============ ===================================================== 
+ device                                         Instance name of device to sweep variable            
+ num          50                                Number of points in sweep                            
+ param                                          Parameter to sweep                                   
+ shell        0                                 Drop to ipython shell after calculation              
+ start        0.0                  (variable)   Sweep start value                                    
+ stop         0.0                  (variable)   Sweep stop value                                     
+ verbose      0                                 Show iterations for each point                       
+ =========== ==================== ============ ===================================================== 
 
 op: DC Operating Point
 ----------------------
@@ -134,13 +134,13 @@ Example::
 Parameters
 ++++++++++
 
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- elemop       0                         Print element operating points                       
- intvars      0                         Print internal element nodal variables               
- shell        0                         Drop to ipython shell after calculation              
- =========== ============ ============ ===================================================== 
+ =========== ==================== ============ ===================================================== 
+ Name         Default              Unit         Description                                          
+ =========== ==================== ============ ===================================================== 
+ elemop       0                                 Print element operating points                       
+ intvars      0                                 Print internal element nodal variables               
+ shell        0                                 Drop to ipython shell after calculation              
+ =========== ==================== ============ ===================================================== 
 
 testdev: Test Equations Of a Nonlinear Device
 ---------------------------------------------
@@ -170,21 +170,21 @@ Example::
 Parameters
 ++++++++++
 
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- device                                 Instance name of device to test                      
- param                                  Parameter for outer sweep                            
- param_val    []                        Vector with parameter values to sweep                
- plot         1                         Auto-plot currents and charges                       
- ports_bias   []           V            Vector with default values of port voltages          
- shell        0                         Drop to ipython shell after calculation              
- start        0.0          V            Sweep start value                                    
- stop         0.0          V            Sweep stop value                                     
- sweep_num    0                         Number of points in sweep                            
- sweep_port   0                         Port number to be swept, starting from zero          
- useAD        1                         Use automatic differentiation                        
- =========== ============ ============ ===================================================== 
+ =========== ==================== ============ ===================================================== 
+ Name         Default              Unit         Description                                          
+ =========== ==================== ============ ===================================================== 
+ device                                         Instance name of device to test                      
+ param                                          Parameter for outer sweep                            
+ param_val    []                                Vector with parameter values to sweep                
+ plot         1                                 Auto-plot currents and charges                       
+ ports_bias   []                   V            Vector with default values of port voltages          
+ shell        0                                 Drop to ipython shell after calculation              
+ start        0.0                  V            Sweep start value                                    
+ stop         0.0                  V            Sweep stop value                                     
+ sweep_num    0                                 Number of points in sweep                            
+ sweep_port   0                                 Port number to be swept, starting from zero          
+ useAD        1                                 Use automatic differentiation                        
+ =========== ==================== ============ ===================================================== 
 
 tran: Transient Analysis
 ------------------------
@@ -220,14 +220,14 @@ Example::
 Parameters
 ++++++++++
 
- =========== ============ ============ ===================================================== 
- Name         Default      Unit         Description                                          
- =========== ============ ============ ===================================================== 
- im           trap                      Integration method                                   
- saveall      0                         Save all nodal voltages                              
- shell        0                         Drop to ipython shell after calculation              
- tstep        1.0e-05      s            Time step size                                       
- tstop        0.001        s            Simulation stop time                                 
- verbose      0                         Show iterations for each point                       
- =========== ============ ============ ===================================================== 
+ =========== ==================== ============ ===================================================== 
+ Name         Default              Unit         Description                                          
+ =========== ==================== ============ ===================================================== 
+ im           trap                              Integration method                                   
+ saveall      0                                 Save all nodal voltages                              
+ shell        0                                 Drop to ipython shell after calculation              
+ tstep        1.0e-05              s            Time step size                                       
+ tstop        0.001                s            Simulation stop time                                 
+ verbose      0                                 Show iterations for each point                       
+ =========== ==================== ============ ===================================================== 
 
