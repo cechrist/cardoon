@@ -204,6 +204,9 @@ class _NLFunctionSP(_NLFunction):
     def _get_deltax(self, errFunc, Jac):
         """
         Solves linear system: Jac deltax = errFunc
+
+        So it returns the opposite of the Newton correction, but that
+        is what fsolve() is expecting (-deltax)
         """
         # import pdb; pdb.set_trace()
         M = Jac.tocsc()

@@ -402,6 +402,9 @@ class _NLFunction(object):
     def _get_deltax(self, errFunc, Jac):
         """
         Solves linear system: Jac deltax = errFunc
+
+        So it returns the opposite of the Newton correction, but that
+        is what fsolve() is expecting (-deltax)
         """
         try:
             deltax = np.linalg.solve(Jac, errFunc)
