@@ -244,11 +244,54 @@ the two circuits:
    :scale: 100 %
    :alt: Transmission line input voltages
 
-Collector current plot:
-
 .. image:: tline_out.png
    :scale: 100 %
    :alt: Transmission line output voltages
+
+Memductor Hysteresis Loop
+-------------------------
+
+This circuit is composed of an ideal sinusoidal voltage source
+connected to a memductor (or flux-controlled memristor)::
+
+    # Simple netlist to test memductor
+    
+    vsin:vin 1 0  mag=4.5 freq=10Hz phase=-90
+    memd:w1 1 0 w = '3 * phi*phi + .1 * abs(phi) + 3e-3' 
+    
+    .analysis tran tstep=1ms tstop=95ms shell=1
+    
+    .plot tran 1 
+    .plot tran vsin:vin:i
+    
+    .end
+    
+    # In the shell, run the following commands to plot hysteresis loop:
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.plot(getvec('1'), -getvec('vsin:vin:i'))
+
+Note that any lines after ``.end`` are ignored by the
+simulator. Running this netlist produces the plots of the voltage and
+current in the memductor:
+
+.. image:: memd_v.png
+   :scale: 100 %
+   :alt: Voltage applied to memductor
+
+.. image:: memd_i.png
+   :scale: 100 %
+   :alt: Current in memductor (in mA)
+
+Executing the commands listed at the end of the netlist in the shell
+produces the hysteresis loop (type 'g' in the graph window to turn on
+the grid). The stop time in the transient analysis is set to be less
+than one period in order to visualize the direction of the loop:
+
+.. image:: memd_loop.png
+   :scale: 100 %
+   :alt: Voltage-current hysteresis loop
+
 
 
 .. include:: ../../examples/README

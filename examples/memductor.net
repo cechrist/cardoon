@@ -1,0 +1,28 @@
+# Simple netlist to test memductor
+
+vsin:vin 1 0  mag=4.5 freq=10Hz phase=-90
+
+memd:w1 1 0 w = '3 * phi*phi + .1 * abs(phi) + 3e-3' 
+
+.analysis tran tstep=1ms tstop=95ms shell=1
+#.analysis op intvars=1 elemop=1
+
+.plot tran 1 
+#.plot tran memd:w1:vc
+.plot tran vsin:vin:i
+
+.end
+
+# In the shell, run the following commands to plot hysteresis loop:
+import matplotlib.pyplot as plt
+plt.figure()
+plt.plot(getvec('1'), -getvec('vsin:vin:i'))
+
+# Plot W(phi) as a function of time:
+plt.figure()
+# Current is in mA => plot in mS
+wVec = -getvec('vsin:vin:i') / getvec('1')
+plt.plot(timeVec, wVec)
+
+
+

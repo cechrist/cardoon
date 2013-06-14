@@ -33,3 +33,6 @@ Brief description of each file:
     complete.
 
  #. ``lma411.net``: X-Band MMIC amplifier. 
+
+ #. ``memductor.net``: illustrates the behaviour of a memductor and
+    how to use simulation results in an interactive shell

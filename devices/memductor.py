@@ -63,11 +63,10 @@ class Device(cir.Element):
     +++++++++++++++++
 
     The internal implementation uses a gyrator and adds one internal
-    nodes: vc. The voltage at that terminal has the following meaning
-    (``gyr`` is a global variable that can be changed with the
-    ``.options`` keyword)::
+    node: vc. The voltage at that terminal is equal to: (gyr/C) * phi,
+    where ``gyr`` is a global variable that can be changed with the
+    ``.options`` keyword::
 
-        vc: (gyr/C) * phi
 
               --> Iin      
         0  o---------+     
