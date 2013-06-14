@@ -31,7 +31,7 @@ class Device(cir.Element):
 
          \varphi(t) = \varphi(q(t))
 
-         \frac{d\varphi}{dt} = V_{in} = \frac{d\varphi}{dq} \frac{dq}{dt}
+         \frac{d\varphi}{dt} = \frac{d\varphi}{dq} \frac{dq}{dt}
 
          V_{in} = M(q) I_{in}
 
@@ -43,10 +43,10 @@ class Device(cir.Element):
 
     Notes: 
 
-      * the memristance function (:math:`M(q)`) is given as an
-        expression in the ``m`` parameter. Constants and mathematical
-        functions can be used. The independent variable is the
-        memristor charge (``q``)
+      * the memristance function (``M(q)``) is given as an expression
+        in the ``m`` parameter. The independent variable is the
+        memristor charge (``q``). Constants and mathematical functions
+        can also be used in the definition.
 
       * The initial charge can be adjusted with the ``q0`` parameter
 

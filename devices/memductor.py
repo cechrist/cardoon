@@ -31,9 +31,9 @@ class Device(cir.Element):
 
          q(t) = q(\varphi(t))
 
-         \frac{dq}{dt} = I_{in} = \frac{dq}{d\varphi} \frac{d\varphi}{dt}
+         \frac{dq}{dt} = \frac{dq}{d\varphi} \frac{d\varphi}{dt}
 
-         I_{in} = W(q) V_{in}
+         I_{in} = W(\varphi) V_{in}
 
     :math:`W(\varphi)` is the memductance function.
 
@@ -43,10 +43,10 @@ class Device(cir.Element):
 
     Notes: 
 
-      * the memductance function (:math:`W(\varphi)`) is given as an
-        expression in the ``w`` parameter. Constants and mathematical
-        functions can be used. The independent variable is the
-        memductor charge (``phi``)
+      * the memductance function (``W(phi)``) is given as an
+        expression in the ``w`` parameter. The independent variable is
+        the memductor flux: ``phi``. Constants and mathematical
+        functions can also be used in the definition of ``w``.
 
       * The initial flux can be adjusted with the ``phi0`` parameter
 
@@ -63,7 +63,7 @@ class Device(cir.Element):
     +++++++++++++++++
 
     The internal implementation uses a gyrator and adds one internal
-    node: vc. The voltage at that terminal is equal to: (gyr/C) * phi,
+    node: ``vc``. The voltage at ``vc`` is equal to ``(gyr/C) * phi``,
     where ``gyr`` is a global variable that can be changed with the
     ``.options`` keyword::
 
