@@ -3,8 +3,8 @@
 Installation and Usage
 ======================
 
-Installation
-------------
+Installation on GNU/Linux
+-------------------------
 
 Cardoon is being developed in Debian GNU/Linux
 <http://www.debian.org>, but it should work in other environments if
@@ -35,7 +35,8 @@ listed below:
 
 * matplotlib:  http://matplotlib.sourceforge.net/ (plotting)
 
-* pyparsing:  http://pyparsing.wikispaces.com/ (parser)
+* pyparsing:  http://pyparsing.wikispaces.com/ (parser, cardoon tested
+  with up to version 1.5.2)
 
 * ipython:  http://ipython.org/ (iterative shells)
 
@@ -58,7 +59,63 @@ Alternatively the source code can be downloaded as a zip file from:
 
 https://github.com/cechrist/cardoon
 
-Just unpack the zip file in some directory.
+Unpack the zip file in some directory and run the simulator from the
+command line.
+
+
+
+Installation on MS Windows
+--------------------------
+
+There are many possible setups, here only of them that does not
+require building libraries is discussed. If you are not building the
+pycppad library, download and install WinPython-32-bit-2.7.5.1 from
+http://code.google.com/p/winpython/ .  WinPython comes with most of
+the required libraries ready to use. Only two additional libraries are
+needed:
+
+* pycppad: Automatic differentiation
+
+  - cppad:  http://www.coin-or.org/CppAD/Doc/cppad.xml
+
+  - pycppad:  http://www.seanet.com/~bradbell/pycppad/pycppad.xml 
+
+  - pycppad uses the boost.python library http://www.boost.org/libs/python/
+
+  A pre-compiled version to be used with WinPython-32-bit-2.7.5.1 is
+  provided at: 
+  http://vision.lakeheadu.ca/cardoon/pycppad-WinPython-32bit-2.7.5.1.zip
+
+  Open the zip file and put all files in the ``python-2.7.5``
+  subdirectory of the WinPython installation::
+
+      cd WinPython-32bit-2.7.5.1\python-2.7.5
+      unzip c:\Users\user1\Downloads\pycppad-WinPython-32bit-2.7.5.1.zip
+
+  pycppad should be ready to use after this step.
+
+* pyparsing:  http://pyparsing.wikispaces.com/ (parser)
+
+  Download the source from the official site (tested up to version
+  1.5.2), open in some directory and run the following in a "WinPython
+  Command Prompt" window::
+
+    python setup.py install
+
+  pyparsing should be ready to use after this step.
+
+The source code for the cardoon simulator can be downloaded as a zip
+file from:
+
+https://github.com/cechrist/cardoon
+
+Unpack the zip file in some directory and (for now) run all commands
+from a "WinPython Command Prompt" window as follows::
+
+    c:\src\cardoon\examples> python ..\cardoon.py memductor.net
+
+(A ``.bat`` file could be created to invoke the siumulator)
+
 
 Usage
 -----
