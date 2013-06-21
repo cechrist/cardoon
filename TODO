@@ -27,6 +27,11 @@ Longer term goals and other tasks to be done at some time:
 
 Housekeeping and refinement:
 
+  * Handle RuntimeWarnings more gracefully. Currently RuntimeWarnings
+    are suppressed when the AD tapes are being cleated/evaluated as
+    some of the functions may have invalid arguments. This should have
+    no effect in results.
+
   * Check for repeated terminals ins subcircuit definitions (should
     this be allowed or not?)
 

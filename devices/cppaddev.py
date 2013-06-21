@@ -1,5 +1,4 @@
-"""
-CppAD device interface. Provides functions to implement evaluation of
+"""CppAD device interface. Provides functions to implement evaluation of
 nonlinear equations and derivatives using the pycppad library:
 
 http://www.seanet.com/~bradbell/pycppad/index.xml
@@ -23,8 +22,11 @@ import cppaddev as ad
     # Use automatic differentiation for eval and deriv function
     eval_and_deriv = ad.eval_and_deriv
     eval = ad.eval
+
+Note1: This module disables printing of RuntimeWarnings. Comment the
+filterwarnings line to see warnings.
     
-Important: use the condassign() function below to replace any if
+Note2: use the condassign() function below to replace any if
 statements dependent on AD variables in eval_cqs() and
 set_temp_vars(). Otherwise, you have to re-tape at each iteration
 (call delete_tape() at the end of eval() and eval_and_deriv() in that
@@ -43,11 +45,16 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 or later:
 
 http://www.gnu.org/licenses/gpl.html
+
 """
 
 from __future__ import print_function
 import numpy as np
 import pycppad as ad
+import warnings
+
+# Comment this out to see all warnings 
+warnings.filterwarnings('ignore', category=RuntimeWarning)
 
 def safe_exp(x):
     """
@@ -158,7 +165,13 @@ def eval_and_deriv(dev, vPort):
     except AttributeError:
         create_tape(dev, vPort)
         fout = dev._func.forward(0, vPort)
-    jac = dev._func.jacobian(vPort)
+    try:
+        jac = dev._func.jacobian(vPort)
+    except ValueError as e:
+        # Derivative can not be calculated: Return a zero jacobian
+        # (an alternative would be using a numerical derivative)
+        warnings.warn(e.message,RuntimeWarning)
+        jac = np.zeros((len(fout), len(vPort)), dtype=float)
 
     return (fout, jac)
 
