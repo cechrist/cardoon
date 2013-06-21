@@ -435,25 +435,51 @@ defined in ``csOutPorts``, in ``qVec`` are the charges defined in
 ``csOutPorts``. If there are no currents/charges, return an empty
 vector.
 
-To avoid automatic differentiation problems, use the
-``ad.condassign()`` function provided in cppaddev.py to replace
-conditional (``if``) statements dependent on variables related to
-``vPort``.
-
 The following two functions should be present, normally implemented by
 evaluating the AD tape (they run *much* faster than
-``eval_cqs()``). But we could also implement them manually by other
+``eval_cqs()``). But they could also be implemented manually by other
 means::
 
    def eval(self, vPort): same as eval_cqs()
    def eval_and_deriv(self, vPort): returns a tuple, (outVec, Jacobian)
 
-To have those automatically implemented using cppad, add the following
-to the ``Device`` class::
+To have those automatically implemented using the ``cppaddev`` module,
+add the following to the ``Device`` class::
 
    # Use functions directly from cppaddev (imported as ad)
    eval_and_deriv = ad.eval_and_deriv
    eval = ad.eval
+
+
+Note on coding models to be used with automatic differentiation
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+To allow the automatic differentiation library to record all possible
+operations performed in a model, use the ``ad.condassign()`` function
+provided in cppaddev.py to replace conditional (``if``) statements
+dependent on variables related to ``vPort``. For example, suppose the
+following calculation must be implemented::
+
+   if (e > f):
+      # Bunch of calculations 1
+      result = c
+   else:
+      # Bunch of calculations 2
+      result = d
+
+This code can be replaced by a call to ``ad.condassign()`` as
+follows::
+
+   # Bunch of calculations 1 (calculates c)
+   ...
+   # Bunch of calculations 2 (calculates d)
+   ...
+   #  Returns c if (e-f) > 0, d otherwise
+   result = ad.condassign(e-f, c, d)
+
+Note that one of ``c`` or ``d`` may not be valid numbers in the second
+implementation (depending on the relation between ``e`` and ``f``),
+but a valid value is always assigned to ``result``.
 
 
 Automatic Eletro-Thermal Models
