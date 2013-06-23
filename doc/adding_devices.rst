@@ -234,7 +234,7 @@ follows::
 The first argument in ``add_internal_terms()`` is the internal
 variable name and second is the variable unit. Internal terminals can
 be directly accessed from the terminal list of the device
-(``self.neighbour``). The return value is the internal terminal index.
+(``self.connection``). The return value is the internal terminal index.
 For models that are used as a base class for other devices such as
 electrothermal models or extrinsic models, the number of external
 terminals may change. For that reason it is *strongly recommended* to
@@ -255,7 +255,7 @@ Terminals have an attribute called ``unit``.  The unit of any existing
 terminal variable can be manually changed as follows::
 
         # Set unit for terminal 6
-        self.neighbour[6].unit = 'C'
+        self.connection[6].unit = 'C'
 
 
 Temperature Dependence

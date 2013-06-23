@@ -28,7 +28,7 @@ nodes in a ``Circuit`` instance (``ckt``)::
     # Set RC number of reference terminals to -1
     for elem in ckt.nD_elemList:
         if elem.localReference:
-            elem.neighbour[elem.localReference].nD_namRC = -1
+            elem.connection[elem.localReference].nD_namRC = -1
     # Assign a number (starting from 0) to all nodes.
     for i, term in enumerate(ckt.nD_termList):
         term.nD_namRC = i
@@ -126,20 +126,20 @@ class GraphNode(object):
     stored using lists.
     """
     
-    def __init__(self, nodeName):
+    def __init__(self, instanceName):
         """
-        nodeName is the Name of the node. No check is made here that
+        instanceName is the Name of the node. No check is made here that
         the name is not already in use.
         """
-        self.nodeName = nodeName
-        self.neighbour = []
+        self.instanceName = instanceName
+        self.connection = []
 
     def __str__(self):
         """convert to string"""
-        desc = '"' + self.nodeName + '"\n' 
+        desc = '"' + self.instanceName + '"\n' 
         desc += 'Linked nodes: '
-        for n in self.neighbour:
-            desc += ' ' + n.nodeName
+        for n in self.connection:
+            desc += ' ' + n.instanceName
         return(desc)
 
 #---------------------------------------------------------------------
@@ -165,14 +165,14 @@ class Terminal(GraphNode):
     
     def get_label(self):
         """Return label for plots/tables in a formatted string"""
-        return 'T: "{0}"'.format(self.nodeName)
+        return 'T: "{0}"'.format(self.instanceName)
 
 #---------------------------------------------------------------------
 class InternalTerminal(Terminal):
     """
     Represent terminals that are internal to one Element instance
 
-    They only have one neighbour (the parent Element instance)
+    They only have one connection (the parent Element instance)
     """
 
     def __init__(self, element, name):
@@ -185,21 +185,21 @@ class InternalTerminal(Terminal):
         # Call base class constructor
         Terminal.__init__(self, name)
         # Connect to parent element
-        self.neighbour.append(element)
-        element.neighbour.append(self)
+        self.connection.append(element)
+        element.connection.append(self)
         
     def __str__(self):
         """convert to string"""
         desc = 'Internal Terminal: "{1}:{2}", Unit: {0}'.format(
             self.unit,
-            self.neighbour[0].nodeName,
-            self.nodeName)
+            self.connection[0].instanceName,
+            self.instanceName)
         return(desc)
 
     def get_label(self):
         """Return label for plots/tables in a formatted string"""
-        return 'IT: "{0}:{1}"'.format(self.neighbour[0].nodeName,
-                                      self.nodeName)
+        return 'IT: "{0}:{1}"'.format(self.connection[0].instanceName,
+                                      self.instanceName)
 
 #---------------------------------------------------------------------
 class Element(GraphNode, ParamSet):
@@ -266,14 +266,14 @@ class Element(GraphNode, ParamSet):
         """
         Output netlist-formatted string in netlist format
         """
-        desc = '{0} '.format(self.nodeName)
+        desc = '{0} '.format(self.instanceName)
         # Add terminals
-        for i, term in enumerate(self.neighbour):
+        for i, term in enumerate(self.connection):
             # Do not include internal terminals. The following works
             # even when numTerms is not set.
             if issubclass(type(term), InternalTerminal):
                 break
-            desc += term.nodeName + ' '
+            desc += term.instanceName + ' '
         # Model (if any)
         if self.dotModel:
             desc += 'model = {0} '.format(self.dotModel.name)
@@ -365,14 +365,14 @@ class Element(GraphNode, ParamSet):
         Else sets numTerms = number of connected terminals
         """
         if self.numTerms:
-            if (len(self.neighbour) != self.numTerms):
-                raise CircuitError(self.nodeName + 
+            if (len(self.connection) != self.numTerms):
+                raise CircuitError(self.instanceName + 
                                    ': must have ' + str(self.numTerms) 
                                    + ' terminals.')
         else:
             # Set numterms to number of external connections (useful
             # to quickly find internal terminals)
-            self.numTerms = len(self.neighbour)
+            self.numTerms = len(self.connection)
 
     def disconnect(self, terminal):
         """
@@ -384,8 +384,8 @@ class Element(GraphNode, ParamSet):
         an exception is raised. 
         """
         try:
-            self.neighbour.remove(terminal)
-            terminal.neighbour.remove(self)
+            self.connection.remove(terminal)
+            terminal.connection.remove(self)
         except ValueError:
             raise CircuitError('Nodes not linked')
 
@@ -401,7 +401,7 @@ class Element(GraphNode, ParamSet):
         # Create internal term (connects automatically)
         term = InternalTerminal(self, name)
         term.unit = unit
-        return len(self.neighbour) - 1
+        return len(self.connection) - 1
 
     def add_reference_term(self):
         """
@@ -413,14 +413,14 @@ class Element(GraphNode, ParamSet):
         term = InternalTerminal(self, 'lref')
         term.unit = '-'
         # Set to reference terminal number
-        self.localReference = len(self.neighbour) - 1
+        self.localReference = len(self.connection) - 1
         return self.localReference
 
     def get_internal_terms(self):
         """
         Returns a list of internal terms (if any) excluding local references
         """
-        intTerms = self.neighbour[self.numTerms:]
+        intTerms = self.connection[self.numTerms:]
         if self.localReference:
             intTerms.pop(self.localReference - self.numTerms)
         return intTerms
@@ -432,10 +432,10 @@ class Element(GraphNode, ParamSet):
         Normally used before calling process_params() for a second
         time or when an element is removed from circuit.
         """
-        for term in self.neighbour[self.numTerms:]:
+        for term in self.connection[self.numTerms:]:
             self.disconnect(term)
         # Chop adjacency list
-        self.neighbour = self.neighbour[:self.numTerms]
+        self.connection = self.connection[:self.numTerms]
         # Clean local reference
         self.localReference = 0
 
@@ -470,9 +470,9 @@ class Xsubckt(GraphNode):
         """ 
         Convert to string in netlist format
         """
-        desc = self.nodeName + ' '
-        for term in self.neighbour:
-            desc += term.nodeName + ' '
+        desc = self.instanceName + ' '
+        for term in self.connection:
+            desc += term.instanceName + ' '
         desc += self.cktName 
         return desc
 
@@ -481,12 +481,12 @@ class Xsubckt(GraphNode):
         try:
             cktDef = Circuit.cktDict[self.cktName]
         except KeyError:
-            raise CircuitError(self.nodeName + \
+            raise CircuitError(self.instanceName + \
                                 ': subcircuit definition "'\
                                 + self.cktName + '" not found')
         else:
-            if  len(self.neighbour) != len(cktDef.extConnectionList):
-                raise CircuitError(self.nodeName + \
+            if  len(self.connection) != len(cktDef.extConnectionList):
+                raise CircuitError(self.instanceName + \
                                     ': xsubckt connections do not match '\
                                     + 'definition in "' + self.cktName \
                                     + '"')
@@ -661,21 +661,21 @@ class Circuit(object):
             # connections. Make shallow copy:
             elemCopy = copy.copy(elem)
             # Clean terminal list
-            elemCopy.neighbour = []
+            elemCopy.connection = []
             # Add to circuit 
             cktCopy.add_elem(elemCopy)
             # Create connection list
-            termList = [term.nodeName for term in elem.neighbour]
+            termList = [term.instanceName for term in elem.connection]
             self.connect(elemCopy, termList)
         if not self._flattened:
             for xsubckt in self.subcktDict.itervalues():
                 xsubcktCopy = copy.copy(xsubckt)
                 # Clean terminal list
-                xsubcktCopy.neighbour = []
+                xsubcktCopy.connection = []
                 # Add to circuit 
                 cktCopy.add_subckt(xsubcktCopy)
                 # Create connection list
-                termList = [term.nodeName for term in xsubckt.neighbour]
+                termList = [term.instanceName for term in xsubckt.connection]
                 self.connect(xsubcktCopy, termList)
         return cktCopy
 
@@ -733,7 +733,7 @@ class Circuit(object):
                             + termname[0] + ':' + termname[1])
                     iterm = None
                     for term in elem.get_internal_terms():
-                        if term.nodeName == termname[1]:
+                        if term.instanceName == termname[1]:
                             iterm = term
                             break
                     if iterm:
@@ -792,23 +792,23 @@ class Circuit(object):
         For now only works for unflattened circuits
         """
         for elem in self.elemDict.itervalues():
-            for term in elem.neighbour:
-                assert self.termDict[term.nodeName] == term
+            for term in elem.connection:
+                assert self.termDict[term.instanceName] == term
 
         if not self._flattened:
             # If flattened Xsubckt instances are ignored
             for subckt in self.subcktDict.itervalues():
-                for term in subckt.neighbour:
-                    assert self.termDict[term.nodeName] == term
+                for term in subckt.connection:
+                    assert self.termDict[term.instanceName] == term
 
         for term in self.termDict.itervalues():
             # Make sure there are no floating terminals
-            assert term.neighbour
-            for node in term.neighbour:
+            assert term.connection
+            for node in term.connection:
                 if isinstance(node, Element):
-                    assert self.elemDict[node.nodeName] == node
+                    assert self.elemDict[node.instanceName] == node
                 else:
-                    assert self.subcktDict[node.nodeName] == node
+                    assert self.subcktDict[node.instanceName] == node
 
 
     # Actions on individual elements/terminals -------------------------
@@ -834,12 +834,12 @@ class Circuit(object):
         """
         # Some sanity checking. This function should be used once per
         # element (we could change this)
-        assert not element.neighbour
+        assert not element.connection
 
         for termName in termList:
             terminal = self.get_term(termName)
-            terminal.neighbour.append(element)
-            element.neighbour.append(terminal)
+            terminal.connection.append(element)
+            element.connection.append(terminal)
     
 
     def add_elem(self, elem, modelName = None):
@@ -855,22 +855,22 @@ class Circuit(object):
     
         A check is made to make sure the instance name is unique
         """
-        if self.elemDict.has_key(elem.nodeName):
-            raise CircuitError(elem.nodeName + ': Element already exists')
+        if self.elemDict.has_key(elem.instanceName):
+            raise CircuitError(elem.instanceName + ': Element already exists')
         else:
-            self.elemDict[elem.nodeName] = elem
+            self.elemDict[elem.instanceName] = elem
     
         if modelName:
             if elem.dotModel:
                 raise CircuitError('{0} already has an ' +
-                                   'assigned model'.format(elem.nodeName))
+                                   'assigned model'.format(elem.instanceName))
             # Public model: Check if model already in circuit
             if Circuit.modelDict.has_key(modelName):
                 model = Circuit.modelDict[modelName]
                 if model.modelType != elem.devType:
                     raise CircuitError(
                         'Incorrect model type "{0}" for element "{1}"'.format(
-                            model.modelType, elem.nodeName))
+                            model.modelType, elem.instanceName))
                 elem.dotModel = model
             else:
                 elem.dotModel = Model(modelName, elem.devType, elem.paramDict)
@@ -890,19 +890,19 @@ class Circuit(object):
             # Remove internal terminals first
             elem.clean_internal_terms(self)
             # unlink connections (may be a bit slow)
-            for n1 in elem.neighbour:
+            for n1 in elem.connection:
                 # Disconnect any terminals from elem
-                n1.neighbour.remove(elem)
+                n1.connection.remove(elem)
                     
     def add_subckt(self, xsubckt):
         """
         Adds a Xsubckt instance to circuit
         """
-        if self.subcktDict.has_key(xsubckt.nodeName):
+        if self.subcktDict.has_key(xsubckt.instanceName):
             raise CircuitError('add_subckt: Subcircuit instance name "'\
-                                + xsubckt.nodeName + '" already in use')
+                                + xsubckt.instanceName + '" already in use')
         else:
-            self.subcktDict[xsubckt.nodeName] = xsubckt 
+            self.subcktDict[xsubckt.instanceName] = xsubckt 
     
     def get_term(self, termName):
         """ 
@@ -953,7 +953,7 @@ class Circuit(object):
                 try:
                     terms = self.elemDict[token[0]].get_internal_terms()
                     for t in terms:
-                        if t.nodeName == token[2]:
+                        if t.instanceName == token[2]:
                             result = t
                             break
                     if result == None:
@@ -1059,7 +1059,7 @@ class SubCircuit(Circuit):
         self.extConnectionList = termList
         for i, termName in enumerate(termList):
             terminal = self.get_term(termName)
-            if terminal.nodeName == 'gnd':
+            if terminal.instanceName == 'gnd':
                 raise CircuitError(name +
 """: gnd is the global reference. It is implicitly connected and can 
 not be included in the external terminal list in subckt""")
@@ -1084,21 +1084,21 @@ not be included in the external terminal list in subckt""")
             # connections. Make shallow copy:
             elemCopy = copy.copy(elem)
             # Clean terminal list
-            elemCopy.neighbour = []
+            elemCopy.connection = []
             # Add to circuit 
             cktCopy.add_elem(elemCopy)
             # Create connection list
-            termList = [term.nodeName for term in elem.neighbour]
+            termList = [term.instanceName for term in elem.connection]
             self.connect(elemCopy, termList)
         if not self._flattened:
             for xsubckt in self.subcktDict.itervalues():
                 xsubcktCopy = copy.copy(xsubckt)
                 # Clean terminal list
-                xsubcktCopy.neighbour = []
+                xsubcktCopy.connection = []
                 # Add to circuit 
                 cktCopy.add_subckt(xsubcktCopy)
                 # Create connection list
-                termList = [term.nodeName for term in xsubckt.neighbour]
+                termList = [term.instanceName for term in xsubckt.connection]
                 self.connect(xsubcktCopy, termList)
 
 
@@ -1126,23 +1126,24 @@ not be included in the external terminal list in subckt""")
             # connections. Make shallow copy:
             elemCopy = copy.copy(elem)
             # Clean terminal list
-            elemCopy.neighbour = []
+            elemCopy.connection = []
             # Change instance name
-            elemCopy.nodeName = xsubckt.nodeName + ':' + elem.nodeName
+            elemCopy.instanceName = xsubckt.instanceName + \
+                ':' + elem.instanceName
             # Add to circuit 
             target.add_elem(elemCopy)
             # Create connection list
             termList = []
-            for term in elem.neighbour:
+            for term in elem.connection:
                 if hasattr(term, 'subCKTconnection'):
                     # Must get terminal name from xsubckt
                     termName = \
-                        xsubckt.neighbour[term.subCKTconnection].nodeName
-                elif term.nodeName == 'gnd':
+                        xsubckt.connection[term.subCKTconnection].instanceName
+                elif term.instanceName == 'gnd':
                     # Special treatment for global reference node
                     termName = 'gnd'
                 else:
-                    termName = xsubckt.nodeName + ':' + term.nodeName
+                    termName = xsubckt.instanceName + ':' + term.instanceName
                 termList.append(termName)
             target.connect(elemCopy, termList)
 

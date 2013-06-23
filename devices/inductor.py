@@ -78,7 +78,7 @@ class Device(cir.Element):
         self.clean_internal_terms()
 
         if not self.l:
-            raise cir.CircuitError(self.nodeName 
+            raise cir.CircuitError(self.instanceName 
                                    + ': Inductance can not be zero')
         # Connect internal terminal
         til = self.add_internal_term('il', '{0} A'.format(glVar.gyr)) 

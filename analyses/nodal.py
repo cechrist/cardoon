@@ -145,7 +145,7 @@ def make_nodal_circuit(ckt, termList = None):
     # Set RC number of reference terminals to -1
     for elem in ckt.nD_elemList:
         if elem.localReference:
-            elem.neighbour[elem.localReference].nD_namRC = -1
+            elem.connection[elem.localReference].nD_namRC = -1
     # Check for subcircuit
     if termList != None:
         assert len(termList) > 0
@@ -169,7 +169,7 @@ def make_nodal_circuit(ckt, termList = None):
     # Store internal RC numbers for later use
     for elem in ckt.nD_elemList:
         elem.nD_intRC = [term.nD_namRC for term in 
-                         elem.neighbour[elem.numTerms:]]
+                         elem.connection[elem.numTerms:]]
 
     # Dimension is the number of unknowns to solve for
     ckt.nD_dimension = len(ckt.nD_termList)
@@ -197,7 +197,7 @@ def restore_RCnumbers(elem):
 
     Assumption is number of internal terminals is the same
     """
-    for term, i in zip(elem.neighbour[elem.numTerms:], elem.nD_intRC):
+    for term, i in zip(elem.connection[elem.numTerms:], elem.nD_intRC):
         term.nD_namRC = i
 
 def process_nodal_element(elem, ckt):
@@ -205,8 +205,8 @@ def process_nodal_element(elem, ckt):
     Process element for nodal analysis
     """
     # Create list with RC numbers (choose one)
-    # rcList = map(lambda x: x.nD_namRC, elem.neighbour)
-    rcList = [x.nD_namRC for x in elem.neighbour]
+    # rcList = map(lambda x: x.nD_namRC, elem.connection)
+    rcList = [x.nD_namRC for x in elem.connection]
 
     # Translate linear VCCS/VCQS format
     def convert_vcs(x):

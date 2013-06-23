@@ -112,12 +112,12 @@ class DCOP(ParamSet):
 
         if self.intvars or self.elemop:
             for elem in circuit.nD_nlinElem:
-                print('\nElement: ', elem.nodeName)
+                print('\nElement: ', elem.instanceName)
                 if self.intvars:
                     print('\n    Internal nodal variables:\n')
                     for term in elem.get_internal_terms():
                         print('    {0:10} : {1:20} {2}'.format(
-                                term.nodeName, term.nD_vOP, term.unit))
+                                term.instanceName, term.nD_vOP, term.unit))
                 if self.elemop:
                     print('\n    Operating point info:\n')
                     for line in elem.format_OP().splitlines():

@@ -71,9 +71,9 @@ def thermal_device(nle):
             # True if needed.
             if self.__addThermalPorts:
                 # Add units to thermal port
-                self.neighbour[self.numTerms-1].unit = \
+                self.connection[self.numTerms-1].unit = \
                     '+{0} C'.format(glVar.temp)
-                self.neighbour[self.numTerms-2].unit = \
+                self.connection[self.numTerms-2].unit = \
                     '+{0} C'.format(glVar.temp)
                 self.csOutPorts = self.csOutPorts + [(self.numTerms-1, 
                                                       self.numTerms-2)]

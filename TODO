@@ -27,22 +27,13 @@ Longer term goals and other tasks to be done at some time:
 
 Housekeeping and refinement:
 
-  * Handle RuntimeWarnings more gracefully. Currently RuntimeWarnings
-    are suppressed when the AD tapes are being cleated/evaluated as
-    some of the functions may have invalid arguments. This should have
-    no effect in results.
+  * Handle RuntimeWarnings more gracefully. Currently all
+    RuntimeWarnings are suppressed when the AD tapes are being
+    cleated/evaluated as sometimes function arguments are invalid.
 
-  * Check for repeated terminals ins subcircuit definitions (should
-    this be allowed or not?)
+  * Check for repeated terminals in subcircuit external connections.
+    Should the following be allowed or not?::
 
-  * Consider re-naming ``neighbour`` and ``nodeName`` in Graph class
-    to something more circuit-specific: ``connections`` and
-    ``instanceName``.
+      xamp1 12 12 2 26 myamplifier
 
-  * Review handling of hierarchical simulation: currently a copy of
-    the definition of each subcircuit instance is needed by the nodal
-    module to store nodal voltages, time-delayed variables,
-    etc. Possible solutions: (1) cloning of subcircuit definitions
-    (one per instance) or (2) allow sharing of nodal attributes in the
-    same circuit definition (for use with different instances)
 

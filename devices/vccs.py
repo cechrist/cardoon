@@ -68,7 +68,8 @@ class Device(cir.Element):
             # Nonlinear source
             if self.is_set('g'):
                 raise cir.CircuitError(
-                    '{0}: can not specify both g and f'.format(self.nodeName))
+                    '{0}: can not specify both g and f'.format(
+                        self.instanceName))
             # test f expression to make sure it is valid
             try:
                 vc = .5
@@ -76,13 +77,13 @@ class Device(cir.Element):
             except Exception as e:
                 raise cir.CircuitError(
                     '{0}: Invalid expression: {1} ({2})'.format(
-                        self.nodeName, self.f, e))
+                        self.instanceName, self.f, e))
             try:
                 abs(result)
             except TypeError:
                 raise cir.CircuitError(
                     '{0}: Invalid expression: {1} result not a number)'.format(
-                        self.nodeName, self.m))
+                        self.instanceName, self.m))
             # Set nonlinear attributes
             self.isNonlinear = True
             self.controlPorts = [(2, 3)]

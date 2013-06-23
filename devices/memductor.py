@@ -127,10 +127,10 @@ class Device(cir.Element):
 
         # Test parameters
         if not self.rleak:
-            raise cir.CircuitError(self.nodeName 
+            raise cir.CircuitError(self.instanceName 
                                    + ': leackage resistance can not be zero')
         if not self.c:
-            raise cir.CircuitError(self.nodeName 
+            raise cir.CircuitError(self.instanceName 
                                    + ': capacitance can not be zero')
         # test m expression to make sure it is valid
         try:
@@ -138,14 +138,14 @@ class Device(cir.Element):
             result = eval(self.w)
         except Exception as e:
             raise cir.CircuitError(
-                '{0}: Invalid expression: {1} ({2})'.format(self.nodeName, 
+                '{0}: Invalid expression: {1} ({2})'.format(self.instanceName, 
                                                             self.w, e))
         try:
             abs(result)
         except TypeError:
             raise cir.CircuitError(
                 '{0}: Invalid expression: {1} (result not a number)'.format(
-                    self.nodeName, self.w))
+                    self.instanceName, self.w))
 
         # Connect internal terminal
         tvc = self.add_internal_term('vc', 'V') 

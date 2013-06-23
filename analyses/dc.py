@@ -152,7 +152,7 @@ class DCSweep(ParamSet):
         if tempFlag:
             circuit.dC_var = 'Global temperature sweep: temp'
         else:
-            circuit.dC_var = 'Device: ' + dev.nodeName \
+            circuit.dC_var = 'Device: ' + dev.instanceName \
                 + '  Parameter: ' + self.param
         circuit.dC_unit = paramunit
         print('System dimension: {0}'.format(circuit.nD_dimension))

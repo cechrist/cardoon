@@ -59,7 +59,7 @@ class Device(cir.Element):
 
         # Access to global variables is through the glVar 
         if not self.c:
-            raise cir.CircuitError(self.nodeName 
+            raise cir.CircuitError(self.instanceName 
                                    + ': Capacitance can not be zero')
 
         # Adjust according to temperature (not needed so far)

@@ -97,7 +97,7 @@ class Device(cir.Element):
         ad.delete_tape(self)
         # Access to global variables is through the glVar 
         if not self.r and not (self.rsh and self.l and self.w):
-            raise cir.CircuitError(self.nodeName 
+            raise cir.CircuitError(self.instanceName 
                                    + ': Resistance can not be zero')
 
         if self.r:

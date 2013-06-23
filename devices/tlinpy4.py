@@ -121,8 +121,8 @@ class Device(cir.Element):
             self.isFreqDefined = False
             # Need to check that the local reference terminals are the
             # same as this is required by the sectional model.
-            if self.neighbour[1] != self.neighbour[3]:
-                raise cir.CircuitError('{1}: nsect > 0 but sectional model requires port references to be the same node'.format(self.nodeName)) 
+            if self.connection[1] != self.connection[3]:
+                raise cir.CircuitError('{1}: nsect > 0 but sectional model requires port references to be the same node'.format(self.instanceName)) 
 
             # Use discrete approximation.  Find the number of
             # subsections and the RLCG parameters of each.  First get

@@ -115,7 +115,7 @@ def extrinsic_bjt(IBJT):
             else:
                 raise cir.CircuitError( 
                     '{0}: Wrong number of connections. \
-Can only be {1} or {2}, {3} found.'.format(self.nodeName, 
+Can only be {1} or {2}, {3} found.'.format(self.instanceName, 
                                            3 + extraTerms,
                                            4 + extraTerms,
                                            self.numTerms))

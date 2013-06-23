@@ -261,7 +261,7 @@ class BSIM3(cir.Element):
                 self.u0 = 250
         else:
             raise cir.CircuitError(
-                '{0}: unrecognized type: {1}. Valid types are "n" or "p"'.format(self.nodeName, self.type))
+                '{0}: unrecognized type: {1}. Valid types are "n" or "p"'.format(self.instanceName, self.type))
 
         # Nominal abs temperature
         self._Tn = const.T0 + self.tnom

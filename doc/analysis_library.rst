@@ -226,7 +226,7 @@ Parameters
  im           trap                              Integration method                                   
  saveall      0                                 Save all nodal voltages                              
  shell        0                                 Drop to ipython shell after calculation              
- tstep        1.0e-05              s            Time step size                                       
+ tstep        1e-05                s            Time step size                                       
  tstop        0.001                s            Simulation stop time                                 
  verbose      0                                 Show iterations for each point                       
  =========== ==================== ============ ===================================================== 

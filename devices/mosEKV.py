@@ -269,7 +269,7 @@ class IntEKV(cir.Element):
             self._tf = -1.
         else:
             raise cir.CircuitError(
-                '{0}: unrecognized type: {1}. Valid types are "n" or "p"'.format(self.nodeName, self.type))
+                '{0}: unrecognized type: {1}. Valid types are "n" or "p"'.format(self.instanceName, self.type))
         #---------------------------------------------------------------
         # Calculate any missing parameters from user-defined settings
         # COX

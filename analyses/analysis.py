@@ -106,7 +106,7 @@ def process_requests(circuit, reqtype, xaxis, xlabel, attribute,
             if outreq.type == reqtype:
                 flag = True
                 for term in outreq.termlist:
-                    saveDict[term.nodeName] = f1(getattr(term, attribute))
+                    saveDict[term.instanceName] = f1(getattr(term, attribute))
     if flag:
         # Take filename minus '.net' and append request name
         outfile = circuit.filename.split('.net')[0] + '_' + reqtype
