@@ -52,8 +52,9 @@ the device model code.  Another design feature is that electro-thermal
 models (*i.e.*, with an additional thermal port) can be automatically
 generated from temperature-dependent electrical models.
 
-Cardoon is being developed with Python 2.6 on Debian Squeeze, but it
-should work OK with Python 2.7 under other operating systems.
+Cardoon is being developed on Debian GNU/Linux, but it is know to work
+on MS Windows (using WinPython) and should also work on other
+operating systems / distributions.
 
 Comments are welcome!
 
