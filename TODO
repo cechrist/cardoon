@@ -6,8 +6,6 @@ Short-term goals:
 
   #. Add support for convolution of frequency defined elements 
   
-  #. Finish implementation of nodal analysis of independent subcircuits
-
 Longer term goals and other tasks to be done at some time:
 
   * Convert into Python library with easy-to-use setup script and
@@ -35,5 +33,6 @@ Housekeeping and refinement:
     Should the following be allowed or not?::
 
       xamp1 12 12 2 26 myamplifier
+
 
 

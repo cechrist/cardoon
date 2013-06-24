@@ -1,7 +1,7 @@
  =========== ==================== ============ ===================================================== 
  Name         Default              Unit         Description                                          
  =========== ==================== ============ ===================================================== 
- abstol       1e-07                nodal unit   Absolute tolerance for nodal variables               
+ abstol       1.0e-07              nodal unit   Absolute tolerance for nodal variables               
  errfunc      0                    bool         Enable additional test for error function in Newton's method 
  gyr          0.001                S            Default gain in internal gyrators                    
  maxdelta     20.0                 nodal unit   Maximum allowed change in one Newton iteration       

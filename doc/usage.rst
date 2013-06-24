@@ -67,12 +67,11 @@ command line.
 Installation on MS Windows
 --------------------------
 
-There are many possible setups, here only of them that does not
-require building libraries is discussed. If you are not building the
-pycppad library, download and install WinPython-32-bit-2.7.5.1 from
-http://code.google.com/p/winpython/ .  WinPython comes with most of
-the required libraries ready to use. Only two additional libraries are
-needed:
+There are many possible setups, one of them is discussed here. If you
+are not building the pycppad library, download and install
+WinPython-32-bit-2.7.5.1 from http://code.google.com/p/winpython/ .
+WinPython comes with most of the required libraries ready to use. Only
+two additional libraries are needed:
 
 * pycppad: Automatic differentiation
 
@@ -83,7 +82,7 @@ needed:
   - pycppad uses the boost.python library http://www.boost.org/libs/python/
 
   A pre-compiled version to be used with WinPython-32-bit-2.7.5.1 is
-  provided at: 
+  available at: 
   http://vision.lakeheadu.ca/cardoon/pycppad-WinPython-32bit-2.7.5.1.zip
 
   Open the zip file and put all files in the ``python-2.7.5``
@@ -92,7 +91,9 @@ needed:
       cd WinPython-32bit-2.7.5.1\python-2.7.5
       unzip c:\Users\user1\Downloads\pycppad-WinPython-32bit-2.7.5.1.zip
 
-  pycppad should be ready to use after this step.
+  pycppad should be ready to use after this step. If you would rather
+  compile the libraries yourself, some instructions are provided at:
+  http://list.coin-or.org/pipermail/cppad/2013q2/000309.html
 
 * pyparsing:  http://pyparsing.wikispaces.com/ (parser)
 
