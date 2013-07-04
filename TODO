@@ -27,12 +27,6 @@ Longer term goals and other tasks to be done at some time:
 
 Housekeeping and refinement:
 
-  * Consider changing saveOP interface for nonlinear devices: use a
-    dictionary instead of a vector to return parameters and the
-    get_OP() should return a dictionary only (dictionary not saved as
-    an attribute by default). Update documentation and include one
-    example with saveOP and one without.
-  
   * Check for repeated terminals in subcircuit external connections.
     Should the following be allowed or not?::
 

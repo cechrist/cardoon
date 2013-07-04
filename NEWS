@@ -5,7 +5,7 @@ News
 Version 0.5.1
 ^^^^^^^^^^^^^
 
-     * Nothing yet
+     * Changed operating point interface ``get_OP()``
 
 
 Version 0.5.0

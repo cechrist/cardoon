@@ -130,6 +130,12 @@ is needed to calculate operating point variables (transconductance,
 capacitance). We can not evaluate the Jacobian (using AD) from within
 ``eval_cqs()``.
 
+The current interface requires the ``get_OP()`` function to correctly
+work for regular and electrothermal versions of a given model. This is
+necessary if AD tapes are to be used: for electrothermal models AD
+tapes input/output variables include temperature/power.
+
+
 Model, netlist variables and sensitivities considerations
 ---------------------------------------------------------
 
