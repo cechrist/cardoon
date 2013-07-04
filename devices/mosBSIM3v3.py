@@ -399,14 +399,14 @@ class BSIM3(cir.Element):
         self.u0temp = self._u0 * pow(absTemp / self._Tn, self.ute) 
         
 
-    def eval_cqs(self, vPort, saveOP = False):
+    def eval_cqs(self, vPort, getOP = False):
         """
         Calculates currents and charges
 
         Input: vPort = [vdb , vgb , vsb]
         Output: iVec = [ids, idb, isb], qVec = [qd, qg, qs]
 
-        If saveOP = True, return normal output vector plus operating
+        If getOP = True, return normal output vector plus operating
         point variables in tuple: (iVec, qVec, opV)
         """
         # import pdb; pdb.set_trace()
@@ -910,23 +910,9 @@ class BSIM3(cir.Element):
         return (iVec, qVec)
 
 
-#        # ------------------------------------------------------------
-#        if saveOP:
-#            # This is neccesary to keep the AD library happy: all
-#            # variables in vector must be adoubles
-#            vth = 0. * vp + self._vthT
-#            IS = 0. * vp + self._IS
-#            # Create operating point variables vector
-#            opV = np.array([vth, vp, i_f, i_r, IS])
-#            return (iVec, qVec, opV)
-#        else:
-
-
-
     # Use AD for eval and deriv function
     eval_and_deriv = ad.eval_and_deriv
     eval = ad.eval
-    #get_op_vars = ad.get_op_vars
     
     def power(self, vPort, currV):
         """ 
@@ -949,17 +935,16 @@ class BSIM3(cir.Element):
 
         (This needs more work)
         """
-        (outV, jac) = self.eval_and_deriv(vPort)
-        #opV = self.get_op_vars(vPort)
+        outV = self.eval(vPort)
 
-        self.OP = dict(
+        opDict = dict(
             temp = self.temp,
             VD = vPort[0],
             VG = vPort[1],
             VS = vPort[2],
             IDS = outV[0]
             )
-        return self.OP
+        return opDict
 
 
 # Define extrinsic model

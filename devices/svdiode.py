@@ -353,25 +353,28 @@ class Device(cir.Element):
         """
         # First we need the Jacobian
         (outV, jac) = self.eval_and_deriv(vPort)
-        # opV = self.get_op_vars(vPort) not needed for now 
+
+        # Save noise variables
+        self._Sshot = 2. * const.q * outV[0]
+        self._kFliker = self.kf * outV[0]
 
         # Use negative indexing for charge in case power is inserted
         # between current and charge.
         # Note scaling factor in voltage must be considered
-        self.OP = dict(
+        opDict = dict(
             x = vPort[0],
             VD = outV[1] / glVar.gyr,
             ID = outV[0],
             gd = glVar.gyr * jac[0,0] / jac[1,0],
             Sthermal = self._Sthermal,
-            Sshot = 2. * const.q * outV[0],
-            kFliker = self.kf * outV[0]
+            Sshot = self._Sshot,
+            kFliker = self._kFliker
             )
         # Add capacitor
         if self._qd:
-            self.OP['Cd'] = jac[-1,0] / jac[1,0]
+            opDict['Cd'] = jac[-1,0] / jac[1,0]
 
-        return self.OP
+        return opDict
                    
 
     def get_noise(self, f):
@@ -380,9 +383,9 @@ class Device(cir.Element):
         
         Requires a previous call to get_OP() 
         """
-        sj = self.OP['Sshot'] + self.OP['kSflicker'] / pow(f, self.af)
+        sj = self._Sshot + self._kSflicker / pow(f, self.af)
         if self.rs:
-            sV = np.array([sj, self.OP['Sthermal']])
+            sV = np.array([sj, self._Sthermal])
         else:
             sV = np.array([sj])
         return sV

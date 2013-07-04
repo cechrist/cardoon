@@ -292,72 +292,6 @@ this function would modify the conductances and capacitances in
 ``linearVCCS`` and ``linearVCQS`` lists.  This function may be called
 multiple times and is used to auto-generate electrothermal models.
 
-Operating Point
----------------
-
-The following function generates a dictionary with operating point
-variables should be implemented by all devices. For
-frequency-dependent devices, f is assumed to be zero. Variable names
-are arbitrary::
-
-   def get_OP(self, vPort):
-       """
-       Calculates operating point information
-   
-       Input:  vPort = [vdb , vgb , vsb]
-       Output: dictionary with OP variables
-       """
-       # First we need the Jacobian
-       (outV, jac) = self.eval_and_deriv(vPort)
-       # if this is not needed then saveOP flag does not have 
-       # to be implemented
-       opV = self.get_op_vars(vPort) 
-   
-       # Check things that change if the transistor is reversed
-       if opV[11] > 0.:
-           reversed = False
-           gds = jac[0,0]
-       else:
-           reversed = True
-           gds = jac[0,2]
-           
-       self.OP = {'VD': vPort[0],
-                  'VG': vPort[1],
-                  'VS': vPort[2],
-                  'IDS': outV[0]}
-
-If the model noise model is dependent on the operating point, this is
-the place to calculate the corresponding variables. 
-
-
-Noise current spectral density sources
---------------------------------------
-
-Same format as ``csOutPorts`` (for nonlinear devices). Default is an
-empty tuple.
-
-Example::
-
-  noisePorts = [(1, 2), (0, 2)]
-
-The ``get_noise()`` function in general requires a previous call to
-get_OP()::
-
-     def get_noise(self, f):
-         """
-         Return noise spectral density at frequency f
-         
-	 f may be a scalar/vector
-         Requires a previous call to get_OP() 
-         """
-         s1 = self.OP['Sthermal'] + self.OP['kSflicker'] / pow(f, self.af)
-         s2 = something
-         return np.array([s1, s2])
-
-This function should work when given for both scalar and vector
-frequencies. It should take advantage of the vectorization
-facilities in numpy.  This interface is still experimental and may
-change.
 
 Nonlinear models
 ----------------
@@ -406,26 +340,26 @@ Some of these attributes could be empty or can be modified by
 Nonlinear model equations that are dependent on the control port
 voltages are implemented in the following function::
 
-      def eval_cqs(self, vPort, saveOP=False):
+      def eval_cqs(self, vPort, getOP=False):
           """
           vPort is a vector with control voltages
       
           Returns tuple with two numpy vectors: one for currents and
           another for charges.
 
-          If saveOP = True, return tuple with normal vectors and OP 
-          variables 
+          If getOP = True, only return dictionary with OP variables
           """
           # calculation here
           iVec = np.array([i1, i2])
 	  qVec = np.array([q1])
-          if saveOP:
-              # calculate opVars
-              return (iVec, qVec, opVars)
+          if getOP:
+              # calculate and return operating point variables
+              return {'var1': value1,
+	              'var2': value2}
           else:
               return (iVec, qVec)
 
-The ``saveOP`` argument is optional and may be ommitted if it is never
+The ``getOP`` argument is optional and may be ommitted if it is never
 needed. ``vPort`` contains control port voltages (or state variables)
 in the order defined by ``controlPorts``, followed by any voltages
 defined in ``csDelayedContPorts``.
@@ -535,8 +469,141 @@ In addition, the following function must be implemented::
        return pout
  
 This function takes the input vector and the results from
-``eval_cqs()`` and returns the total power dissipated at the
-nonlinear current sources.
+``eval_cqs()`` and returns the total power dissipated at the nonlinear
+current sources. This function is overridden in the electrothermal
+version and thus can be safely used (for example in ``get_OP``) as it
+always returns the correct value.
+
+
+Operating Point Information
+---------------------------
+
+The ``get_OP()`` function generates a dictionary with operating point
+variables and it should be implemented by all devices. For
+frequency-dependent devices, f is assumed to be zero. Variable names
+in the returned dictionary are arbitrary. A simple implementation
+example for the BJT::
+
+    def get_OP(self, vPort):
+        """
+        Calculates operating point information
+
+        Input: same as eval_cqs
+        Output: dictionary with OP variables
+        """
+        # First we need the Jacobian (transconductances, etc.)
+        (outV, jac) = self.eval_and_deriv(vPort)
+	# Dissipated power
+        power = self.power(vPort, outV)
+
+        opDict = dict(
+            VBE = vPort[0],
+            VCE = vPort[0] - vPort[1],
+            IB = outV[0] + outV[1],
+            IC = outV[2] - outV[1],
+            IE = - outV[2] - outV[0],
+            Temp = self.temp,
+            Power = power,
+            gm = jac[2,0] - jac[1,0],
+            rpi = 1./(jac[0,0] + jac[1,0]),
+            )
+        return opDict
+
+In some cases it may be better to calculate some operating point
+parameters directly in the ``eval_cqs()`` function. For example in the
+EKV MOSFET model::
+
+    def get_OP(self, vPort):
+        """
+        Calculates operating point information
+
+        Input:  vPort = [vdb , vgb , vsb]
+        Output: dictionary with OP variables
+        """
+        (outV, jac) = self.eval_and_deriv(vPort)
+	# Note that the initial dictionary is returned by eval_cqs()
+        opDict = self.eval_cqs(vPort, True)
+        power = self.power(vPort, outV)
+
+        # Check things that change if the transistor is reversed
+        if opDict['Reversed']:
+            gds = jac[0,2]
+        else:
+            gds = jac[0,0]
+        
+        # Save noise variables
+        self._Sthermal = opDict['Sthermal']
+        self._kSfliker = self.kf * pow(jac[0,1], 2) / self._Cox
+    
+        # Use negative index for charges as power may be inserted in
+        # between currents and charges by electrothermal model
+        opDict.update(dict(VD = vPort[0],
+                           VG = vPort[1],
+                           VS = vPort[2],
+                           IDS = outV[0],
+                           IDB = outV[1],
+                           ISB = outV[2],
+                           QD = outV[-3],
+                           QG = outV[-2],
+                           QS = outV[-1],
+                           Power = power,
+                           Temp = self.temp,
+                           gm = jac[0,1], 
+                           gmbs = - jac[0,2] - jac[0,1] - jac[0,0],
+                           gds = gds,
+                           kSfliker = self._kSfliker))
+        return opDict
+
+If the model noise model is dependent on the operating point, this is
+the place to calculate the corresponding variables as shown above with
+``self._Sthermal`` and ``self._kSfliker``.
+
+Note for electrothermal models 
+++++++++++++++++++++++++++++++
+
+For models that support an electrothermal version, the ``save_OP()``
+must be aware that the output vector returned by ``eval()`` and
+``eval_and_deriv()`` may have the output power as the last current
+component. For example, for the regular EKV model::
+
+     outV = [IDS IDB ISB QD QG QS]
+
+the format of the vector in the electrothermal version of the same
+model is as follows::
+
+     outV = [IDS IDB ISB POUT QD QG QS]
+
+For that reason it is recommended to use negative indexes to refer to
+charges, as shown in the last example. 
+
+
+Noise current spectral density sources
+--------------------------------------
+
+Same format as ``csOutPorts`` (for nonlinear devices). Default is an
+empty tuple.
+
+Example::
+
+    # Noise sources: one between drain and source
+    noisePorts = [(0, 2)]
+
+The ``get_noise()`` function in general requires a previous call to
+get_OP()::
+
+    def get_noise(self, f):
+        """
+        Return noise spectral density at frequency f
+        
+        Requires a previous call to get_OP() 
+        """
+        s = self._Sthermal + self._kSflicker / pow(f, self.af)
+        return np.array([s])
+
+This function should work when given for both scalar and vector
+frequencies. It should take advantage of the vectorization
+facilities in numpy.  This interface is still experimental and may
+change.
 
 
 Independent Sources

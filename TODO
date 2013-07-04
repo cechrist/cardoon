@@ -11,8 +11,6 @@ Longer term goals and other tasks to be done at some time:
   * Convert into Python library with easy-to-use setup script and
     re-organize executable behaviour
 
-  * Consider changing saveOP interface (return value?) for nonlinear devices
-  
   * Add netlist variable sweep in DC analysis
   
   * Implement time-step control in transient analysis
@@ -23,12 +21,18 @@ Longer term goals and other tasks to be done at some time:
   
   * Implement sparse-matrix-based AC analysis
 
-Housekeeping and refinement:
-
   * Handle RuntimeWarnings more gracefully. Currently all
     RuntimeWarnings are suppressed when the AD tapes are being
     cleated/evaluated as sometimes function arguments are invalid.
 
+Housekeeping and refinement:
+
+  * Consider changing saveOP interface for nonlinear devices: use a
+    dictionary instead of a vector to return parameters and the
+    get_OP() should return a dictionary only (dictionary not saved as
+    an attribute by default). Update documentation and include one
+    example with saveOP and one without.
+  
   * Check for repeated terminals in subcircuit external connections.
     Should the following be allowed or not?::
 

@@ -108,7 +108,7 @@ def delete_tape(dev):
     """
     try:
         del(dev._func)
-        del(dev._opfunc)
+        # del(dev._opfunc)
     except AttributeError:
         # do nothing if tape does not exist
         pass
@@ -132,22 +132,6 @@ def create_tape(dev, vPort):
     dev._func = ad.adfun(a_vPort, a_out)
     # optimize main function tape
     dev._func.optimize()
-
-
-def create_OP_tape(dev, vPort):
-    """
-    Generate operating point CppAD tape
-
-    Normally there is no need to call this function manually as tapes
-    are generated as needed.
-    """
-    assert dev.isNonlinear
-    a_vPort = ad.independent(vPort)
-    (i_out, q_out, a_opvars) = dev.eval_cqs(a_vPort, saveOP=True)
-    # Save operating point variable tape
-    dev._opfunc = ad.adfun(a_vPort, a_opvars)
-    # optimize tape (if needed uncomment)
-    # dev._opfunc.optimize()
 
 
 def eval_and_deriv(dev, vPort):
@@ -176,24 +160,6 @@ def eval_and_deriv(dev, vPort):
     return (fout, jac)
 
 
-def get_op_vars(dev, vPort):
-    """
-    Evaluates OP variables of a nonlinear device.
-
-    vPort is a numpy vector with input voltages
-    
-    Returns OP variables
-    """
-    #import pdb; pdb.set_trace()
-    try:
-        opvars = dev._opfunc.forward(0, vPort)
-    except AttributeError:
-        create_OP_tape(dev, vPort)
-        opvars = dev._opfunc.forward(0, vPort)
-
-    return opvars
-
-
 def eval(dev, vPort):
     """
     Evaluates current and charge sources of a nonlinear device. 
@@ -206,3 +172,38 @@ def eval(dev, vPort):
         create_tape(dev, vPort)
         return dev._func.forward(0, vPort)
 
+
+# The following no longer needed as operating point variables no
+# longer handled by the AD library
+
+# def create_OP_tape(dev, vPort):
+#     """
+#     Generate operating point CppAD tape
+# 
+#     Normally there is no need to call this function manually as tapes
+#     are generated as needed.
+#     """
+#     assert dev.isNonlinear
+#     a_vPort = ad.independent(vPort)
+#     (i_out, q_out, a_opvars) = dev.eval_cqs(a_vPort, saveOP=True)
+#     # Save operating point variable tape
+#     dev._opfunc = ad.adfun(a_vPort, a_opvars)
+#     # optimize tape (if needed uncomment)
+#     # dev._opfunc.optimize()
+
+# def get_op_vars(dev, vPort):
+#     """
+#     Evaluates OP variables of a nonlinear device.
+# 
+#     vPort is a numpy vector with input voltages
+#     
+#     Returns OP variables
+#     """
+#     #import pdb; pdb.set_trace()
+#     try:
+#         opvars = dev._opfunc.forward(0, vPort)
+#     except AttributeError:
+#         create_OP_tape(dev, vPort)
+#         opvars = dev._opfunc.forward(0, vPort)
+# 
+#     return opvars

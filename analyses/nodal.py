@@ -752,9 +752,7 @@ class DCNodal(_NLFunction):
 
           * The nodal voltage in each terminal (term.nD_vOP)
 
-          * The port voltages in each nonlinear device (elem.nD_xOP)
-
-          * The operating point (OP) information in nonlinear devices
+          * The control port voltages in each nonlinear device (elem.nD_xOP)
 
         """
         # Set nodal voltage of reference to zero
@@ -769,7 +767,6 @@ class DCNodal(_NLFunction):
             set_xin(xin, elem.nD_vpos, elem.nD_vneg, xVec)
             # Set OP in element (discard return value)
             elem.nD_xOP = xin
-            elem.get_OP(xin)
 
     
 #----------------------------------------------------------------------

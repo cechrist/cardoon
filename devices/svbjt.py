@@ -457,17 +457,20 @@ class SVBJTi(cir.Element):
         """
         # First we need the Jacobian
         (outV, jac) = self.eval_and_deriv(vPort)
+        power = self.power(vPort, outV)
 
         # calculate gm, etc. in terms od jac for state-variable
         # formulation
-        self.OP = dict(
+        opDict = dict(
             VBE = outV[1] / glVar.gyr,
             VCE = (outV[1] - outV[3]) / glVar.gyr,
             IB = outV[0] + outV[2],
             IC = outV[4] - outV[2],
             IE = - outV[4] - outV[0],
+            Temp = self.temp,
+            Power = power,
             )
-        return self.OP
+        return opDict
 
     def get_noise(self, f):
         """

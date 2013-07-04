@@ -207,13 +207,13 @@ class Device(cir.Element):
         """
         ydc = self.get_dc_ymatrix()
         iout = np.dot(ydc, vPort)
-        self.OP = dict(
+        opDict = dict(
             V1 = vPort[0],
             V2 = vPort[1],
             I1 = iout[0],
             I2 = iout[1]
             )
-        return self.OP
+        return opDict
 
         
 

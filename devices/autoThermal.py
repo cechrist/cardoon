@@ -95,33 +95,74 @@ def thermal_device(nle):
                 # Ignore if vPortGuess not provided
                 pass
 
-        def eval_cqs(self, vPort, saveOP = False):
+        def eval_cqs(self, vPort, getOP = False):
             """
             vPort is a vector with control voltages (last port is thermal)
             """
+            if getOP:
+                # assume that temperature is not passed in vPort: that
+                # is because only nle can call this function with
+                # getOP = True
+                opDict = nle.eval_cqs(self, vPort, True)
+                return opDict
             # set temperature in base class first
-            nle.set_temp_vars(self, vPort[self.__tpn] + glVar.temp)
+            self.temp = vPort[self.__tpn] + glVar.temp
+            nle.set_temp_vars(self, self.temp)
 
             # Remove thermal port from vPort (needed in case
             # time-delayed ports follow regular control ports)
             vPort1 = np.delete(vPort, self.__tpn)
             # now calculate currents and charges
-            if saveOP:
-                (iVec1, qVec, opV) = nle.eval_cqs(self, vPort1, saveOP)
-            else:
-                (iVec1, qVec) = nle.eval_cqs(self, vPort1)
+            (iVec1, qVec) = nle.eval_cqs(self, vPort1)
             # Calculate instantaneous power 
             pout = nle.power(self, vPort1, iVec1)
             # Re-arrange output vector
             iVec = np.append(iVec1, pout)
-            if saveOP:
-                return (iVec, qVec, opV)
-            else:
-                return (iVec, qVec)
+            return (iVec, qVec)
     
         # Create these using the AD facility
         eval_and_deriv = ad.eval_and_deriv
         eval = ad.eval
+ 
+        def power(self, vPort, ioutV):
+            """ 
+            Calculate total instantaneous power 
     
+            Input: control voltages and currents from eval_cqs()
+
+            It works OK even if ioutV includes charges
+            """
+            # Power is already stored in ioutV
+            return ioutV[self.__ton]
+
     # Return template class
     return ThermalDevice
+
+
+# No need to override this: too much overhead and not much advantage
+#
+#        def get_OP(self, vPort):
+#            """
+#            Calculates operating point information
+#    
+#            Input:  vPort (port voltages, including thermal)
+#            Output: dictionary with OP variables
+#            """
+#            # set temperature in base class first
+#            temp = vPort[self.__tpn] + glVar.temp
+#            nle.set_temp_vars(self, temp)
+#
+#            # Remove thermal port from vPort (needed in case
+#            # time-delayed ports follow regular control ports)
+#            vPort1 = np.delete(vPort, self.__tpn)
+#            # now calculate currents and charges
+#            (iVec1, qVec) = nle.eval_cqs(self, vPort1)
+#            # Calculate instantaneous power 
+#            pout = nle.power(self, vPort1, iVec1)
+#
+#            # Get operating point dictionary from base class
+#            opDict = nle.get_OP(self, vPort)
+#            # Add temperature / power
+#            opDict.update({'Temp': temp,
+#                           'Power': pout})
+#            return opDict

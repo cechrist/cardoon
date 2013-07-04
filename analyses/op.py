@@ -120,8 +120,14 @@ class DCOP(ParamSet):
                                 term.instanceName, term.nD_vOP, term.unit))
                 if self.elemop:
                     print('\n    Operating point info:\n')
-                    for line in elem.format_OP().splitlines():
-                        print('    ' + line.replace('|',':'))
+                    try:
+                        # Calculate operating point
+                        opDict = elem.get_OP(elem.nD_xOP)
+                        # Format operating point information
+                        for key in sorted(opDict.iterkeys()):
+                            print('    {0:10} : {1}'.format(key, opDict[key]))
+                    except AttributeError:
+                        print('    (none)')
         print('\n')
 
         def getvar(termname):

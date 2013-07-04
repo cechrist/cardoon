@@ -387,7 +387,7 @@ class IntEKV(cir.Element):
         # self.qox = self._gammaa * sqvpphi / self._Vt 
 
 
-    def eval_cqs(self, vPort, saveOP = False):
+    def eval_cqs(self, vPort, getOP = False):
         """
         Calculates Ids, Idb, Isb currents and D, G, S, charges. 
 
@@ -396,7 +396,7 @@ class IntEKV(cir.Element):
         Output: vector with Ids, Idb, Isb currents and vector with D,
         G, S charges.
         
-        If saveOP = True, return normal output vector plus operating
+        If getOP = True, return normal output vector plus operating
         point variables in tuple: (iVec, qVec, opV)
         """
         # Invert all voltages in case of a P-channel device
@@ -553,7 +553,7 @@ class IntEKV(cir.Element):
         
         #--------------------------------------------------------------
         # Operating point information
-        if saveOP:
+        if getOP:
             # Vth
             Vth = self._vt0a + self._deltavRSCE \
                 + gammaprime * np.sqrt(vsprime) \
@@ -562,10 +562,22 @@ class IntEKV(cir.Element):
             tau0 = .5 * self._Cox / self._Vt / beta
             tmp = (xf**2 + 3. * xf*xr + xr**2) / pow(xf + xr, 3)
             tau = tau0 * 4. / 15. * tmp 
-            # Create operating point variables vector
-            opV = np.array([vp, n, beta, IS, i_f, ir, irprime, 
-                            Vth, tau0, tau, qi, DtoSswap])
-            return (iVec, qVec, opV)
+            # Create operating point variables dictionary
+            return {'Vp': vp,
+                    'n': n,
+                    'Beta': beta,
+                    'IS': IS,
+                    'IF': i_f,
+                    'IR': ir,
+                    'IRprime': irprime,
+                    'tef': 1. / (np.sqrt(.25 + i_f) + .5),
+                    'Vth': Vth,
+                    'Vov': self._tf * n * (vp - vPort[2]),
+                    'Vdsat': self._tf * self._Vt * (2. * np.sqrt(i_f) + 4.),
+                    'tau0': tau0,
+                    'tau': tau,
+                    'Sthermal': self._kSt * beta * np.abs(qi),
+                    'Reversed': DtoSswap < 0.}
         else:
             return (iVec, qVec)
 
@@ -590,51 +602,38 @@ class IntEKV(cir.Element):
         Input:  vPort = [vdb , vgb , vsb]
         Output: dictionary with OP variables
         """
-        # First we need the Jacobian
         (outV, jac) = self.eval_and_deriv(vPort)
-        opV = self.get_op_vars(vPort)
+        opDict = self.eval_cqs(vPort, True)
+        power = self.power(vPort, outV)
 
         # Check things that change if the transistor is reversed
-        if opV[11] > 0.:
-            reversed = False
-            gds = jac[0,0]
-        else:
-            reversed = True
+        if opDict['Reversed']:
             gds = jac[0,2]
-            
+        else:
+            gds = jac[0,0]
+        
+        # Save noise variables
+        self._Sthermal = opDict['Sthermal']
+        self._kSfliker = self.kf * pow(jac[0,1], 2) / self._Cox
+    
         # Use negative index for charges as power may be inserted in
         # between currents and charges by electrothermal model
-        self.OP = dict(
-            VD = vPort[0],
-            VG = vPort[1],
-            VS = vPort[2],
-            IDS = outV[0],
-            IDB = outV[1],
-            ISB = outV[2],
-            QD = outV[-3],
-            QG = outV[-2],
-            QS = outV[-1],
-            Vp = opV[0],
-            n = opV[1],
-            Beta = opV[2],
-            IS = opV[3],
-            IF = opV[4],
-            IR = opV[5],
-            IRprime = opV[6],
-            tef = 1. / (np.sqrt(.25 + opV[4]) + .5),
-            Vth = opV[7],
-            Vov = self._tf * opV[1] * (opV[0] - vPort[2]),
-            Vdsat = self._tf * self._Vt * (2. * np.sqrt(opV[4]) + 4.),
-            gm = jac[0,1], 
-            gmbs = - jac[0,2] - jac[0,1] - jac[0,0],
-            gds = gds,
-            tau0 = opV[8],
-            tau = opV[9],
-            Sthermal = self._kSt * opV[2] * np.abs(opV[10]),
-            kSfliker = self.kf * pow(jac[0,1], 2) / self._Cox,
-            Reversed = reversed
-            )
-        return self.OP
+        opDict.update(dict(VD = vPort[0],
+                           VG = vPort[1],
+                           VS = vPort[2],
+                           IDS = outV[0],
+                           IDB = outV[1],
+                           ISB = outV[2],
+                           QD = outV[-3],
+                           QG = outV[-2],
+                           QS = outV[-1],
+                           Power = power,
+                           Temp = self.temp,
+                           gm = jac[0,1], 
+                           gmbs = - jac[0,2] - jac[0,1] - jac[0,0],
+                           gds = gds,
+                           kSfliker = self._kSfliker))
+        return opDict
 
     def get_noise(self, f):
         """
@@ -642,14 +641,13 @@ class IntEKV(cir.Element):
         
         Requires a previous call to get_OP() 
         """
-        s = self.OP['Sthermal'] + self.OP['kSflicker'] / pow(f, self.af)
+        s = self._Sthermal + self._kSflicker / pow(f, self.af)
         return np.array([s])
 
 
     # Use AD for eval and deriv function
     eval = ad.eval
     eval_and_deriv = ad.eval_and_deriv
-    get_op_vars = ad.get_op_vars
     
 
 # Define extrinsic model

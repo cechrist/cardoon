@@ -175,27 +175,30 @@ class Device(cir.Element):
         self.qsOutPorts = []
 
 
-    def eval_cqs(self, vPort, saveOP = False):
+    def eval_cqs(self, vPort, getOP = False):
         """
         Returns memristor voltage given current. Charge vector is empty
 
         vPort[0] = memristor current / gyr
         vPort[1] = internal cap voltage
         iout[0] = gyr * memristor voltage
+
+        If getOP == True, a dictionary with OP variables is returned
         """
         q = self.c * vPort[1]
         M = eval(self.m)
         iout = np.array([glVar.gyr**2 * M * vPort[0]])
-        if saveOP:
-            opVars = np.array([M])
-            return (iout, np.array([]), opVars)
+        if getOP:
+            return {'v': iout[0] / glVar.gyr,
+                    'i': vPort[0] * glVar.gyr,
+                    'q': q,
+                    'M': M}
         else:
             return (iout, np.array([]))
 
     # Use automatic differentiation for eval and deriv function
     eval_and_deriv = ad.eval_and_deriv
     eval = ad.eval
-    get_op_vars = ad.get_op_vars
 
     def get_OP(self, vPort):
         """
@@ -204,13 +207,7 @@ class Device(cir.Element):
         vPort[0] = memristor current / gyr
         vPort[1] = internal cap voltage
         """
-        (iout, qout) = self.eval_cqs(vPort)
-        opV = self.get_op_vars(vPort)
-        self.OP = {'v': iout[0] / glVar.gyr,
-                   'i': vPort[0] * glVar.gyr,
-                   'q': self.c * vPort[1], 
-                   'M': opV[0]}
-        return self.OP
+        return self.eval_cqs(vPort, True)
 
     def get_DCsource(self):
         return self._i0

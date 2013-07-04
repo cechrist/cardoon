@@ -50,20 +50,15 @@ Internal terminals are not tracked directly by the circuit. One of the
 advantages of this is that a device can process parameters
 independently of the containing circuit (a reference to the circuit is
 no longer needed in ``process_params()``). Another advantage is that
-the terminal name is just the internal connection number and does not
-need to be unique.
+the terminal name does not need to be unique.  The ``Circuit`` class
+has now a function to retrieve all internal terminals, which (as
+explained above) are not present in the ``termDict`` dictionary.
 
-By default the last external terminal in a device is taken as the
-local reference. Internal voltages are always referred to that local
-reference and the corresponding variable unit is taken from the
-internal terminal. 
-
-The ``Circuit`` class has now a function to retrieve all internal
-terminals, which (as explained above) are not present in the
-``termDict`` dictionary.
+By default there is no local reference terminal. A local reference
+terminal can be created calling ``self.add_reference_term()``.
 
 
-Internal Terminal Indexing
+Internal Terminal Indexing 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Internal terminals could be internally indexed by its position in the
@@ -112,9 +107,28 @@ Still, the ``eval()`` and ``eval_and_deriv()`` functions lump currents
 and charges in a single vector because this is a lot more efficient
 when implemented using AD tapes (at least with the current
 interface). However, the analysis code could bypass those completely
-and generate custom AD tapes for greater efficiency (trying this is
-one of the near-term goals).
+and generate custom AD tapes for greater efficiency.
 
+Operating Point Information
++++++++++++++++++++++++++++
+
+When the ``getOP`` flag is set in ``eval_cqs()``, additional
+operating point variables may be calculated. Originally these
+variables were returned in an array so they could be taped by the
+automatic differentiation library. However keeping track of many
+different variables in a vector is prone to mistakes and there is no
+clear advantage in making operating point variables (other than ouput
+currents / charges) available for differentiation.
+
+Due to this operating point variables are now returned in a dictionary
+so they can be accessed by name. Only the dictionary is returned when
+``getOP`` is True. This simplifies implementation as the currents and
+charges can be obtained using the (faster) AD tapes. 
+
+Why ``get_OP()`` is a separated function? Answer: often the Jacobian
+is needed to calculate operating point variables (transconductance,
+capacitance). We can not evaluate the Jacobian (using AD) from within
+``eval_cqs()``.
 
 Model, netlist variables and sensitivities considerations
 ---------------------------------------------------------
@@ -198,7 +212,7 @@ coo_matrix ``data`` array::
  
 It seems that this method is the fastest that can be achieved without
 resorting to compilation.  According to my tests fancy indexing is a
-little faster (very little) than using ``nimpy.put()`` and
+little faster (very little) than using ``numpy.put()`` and
 ``numpy.take()`` to fill the matrix. This does not agree with the
 comments in http://wesmckinney.com/blog/?p=215 . Perhaps this is
 different for other architectures or versions of the program?

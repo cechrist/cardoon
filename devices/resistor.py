@@ -145,19 +145,22 @@ class Device(cir.Element):
         """
         Calculates operating point information
 
-        (Should add calculation of simple capacitive model)
         Input:  vPort = [vr] (may also have temperature)
         Output: dictionary with OP variables
         """
+        # TODO: add calculation of simple capacitive model?
         # Get g at the requested temperature (in case of thermal resistor)
-        self.eval_cqs(vPort)
-        self.OP = {'R': 1./self.g, 'Sthermal': self._St}
-        return self.OP
+        (iVec, qVec) = self.eval_cqs(vPort)
+        pout = self.power(vPort, iVec)
+        return {'R': 1./self.g, 
+                'Sthermal': self._St,
+                'Temp': self.temp,
+                'Power': pout}
 
     def get_noise(self, f):
         """
         Return noise spectral density (constant)
         
-        Requires a previous call to get_OP() 
+        Requires a previous call to set_temp_vars()
         """
-        return np.array([self.OP['Sthermal']])
+        return np.array([self._St])

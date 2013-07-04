@@ -287,24 +287,6 @@ class Element(GraphNode, ParamSet):
         """
         print('Parameter values:\n')
         print(ParamSet.__str__(self))
-        if hasattr(self, 'OP'):
-            print('Operating point information:\n')
-            print(' Variable  |  Value ')
-            print('-------------------------')
-            print(self.format_OP())
-
-    def format_OP(self):
-        """ 
-        Return OP information in a formatted string
-        """
-        try:
-            # Format operating point information
-            s = ''
-            for key in sorted(self.OP.iterkeys()):
-                s += '{0:10} | {1}\n'.format(key, self.OP[key])
-            return s
-        except AttributeError:
-            return ''
 
     # General initialization --------------------------------------------
     def init(self):

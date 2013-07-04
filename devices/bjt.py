@@ -180,7 +180,7 @@ Can only be {1} or {2}, {3} found.'.format(self.instanceName,
                                      self.egapn, self.egap_t)
 
 
-        def eval_cqs(self, vPort, saveOP = False):
+        def eval_cqs(self, vPort, getOP = False):
             """
             vPort is a vector with control voltages 
             """
@@ -631,17 +631,20 @@ class BJTi(cir.Element):
         """
         # First we need the Jacobian
         (outV, jac) = self.eval_and_deriv(vPort)
+        power = self.power(vPort, outV)
 
-        self.OP = dict(
+        opDict = dict(
             VBE = vPort[0],
             VCE = vPort[0] - vPort[1],
             IB = outV[0] + outV[1],
             IC = outV[2] - outV[1],
             IE = - outV[2] - outV[0],
+            Temp = self.temp,
+            Power = power,
             gm = jac[2,0] - jac[1,0],
             rpi = 1./(jac[0,0] + jac[1,0]),
             )
-        return self.OP
+        return opDict
 
     def get_noise(self, f):
         """

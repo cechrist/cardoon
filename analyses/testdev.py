@@ -114,9 +114,6 @@ class TestDev(ParamSet):
             
         # Print some info about what is being tested
         vports  = np.array(self.ports_bias)
-        # Generate operating point info
-        if self.useAD:
-            dev.get_OP(vports)
         print('******************************************************')
         print('Nonlinear device internal source test analysis')
         print('******************************************************')
@@ -133,6 +130,17 @@ class TestDev(ParamSet):
             npsweep = 1
         # Print element variables
         dev.print_vars()
+        # Generate operating point info
+        print('\n    Operating point info:\n')
+        try:
+            # Calculate operating point
+            opDict = dev.get_OP(vports)
+            # Format operating point information
+            for key in sorted(opDict.iterkeys()):
+                print('    {0:10} : {1}'.format(key, opDict[key]))
+        except AttributeError:
+            print('(none)')
+
 
         vsweep = np.linspace(self.start, self.stop, self.sweep_num)
         nsamples = np.shape(vsweep)[0]

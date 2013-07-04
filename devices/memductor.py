@@ -167,7 +167,7 @@ class Device(cir.Element):
         self.qsOutPorts = []
 
 
-    def eval_cqs(self, vPort, saveOP = False):
+    def eval_cqs(self, vPort, getOP = False):
         """
         Returns memductor current given input voltage. Charge vector
         is empty
@@ -175,20 +175,23 @@ class Device(cir.Element):
         vPort[0] = memductor voltage
         vPort[1] = internal cap voltage
         iout[0] = memductor current
+
+        If getOP == True, a dictionary with OP variables is returned
         """
         phi = self.c * vPort[1] / glVar.gyr
         W = eval(self.w)
         iout = np.array([W * vPort[0]])
-        if saveOP:
-            opVars = np.array([W])
-            return (iout, np.array([]), opVars)
+        if getOP:
+            return {'v': vPort[0],
+                    'i': iout[0],
+                    'phi': phi,
+                    'W': W}
         else:
             return (iout, np.array([]))
 
     # Use automatic differentiation for eval and deriv function
     eval_and_deriv = ad.eval_and_deriv
     eval = ad.eval
-    get_op_vars = ad.get_op_vars
 
     def get_OP(self, vPort):
         """
@@ -197,13 +200,7 @@ class Device(cir.Element):
         vPort[0] = memductor voltage
         vPort[1] = internal cap voltage
         """
-        (iout, qout) = self.eval_cqs(vPort)
-        opV = self.get_op_vars(vPort)
-        self.OP = {'v': vPort[0],
-                   'i': iout[0],
-                   'phi': self.c * vPort[1] / glVar.gyr, 
-                   'W': opV[0]}
-        return self.OP
+        return self.eval(vPort, getOP=True)
 
     def get_DCsource(self):
         return self._i0

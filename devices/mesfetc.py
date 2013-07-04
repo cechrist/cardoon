@@ -189,12 +189,12 @@ class Device(cir.Element):
             self._idsFac = 1.
         
 
-    def eval_cqs(self, vPort, saveOP = False):
+    def eval_cqs(self, vPort, getOP = False):
         """
         Calculates gate and drain current. Input is a vector as follows:
         vPort = [vgs(t), vgd(t), vgs(t-tau), vgd(t-tau)]
 
-        saveOP has no effect for now
+        getOP has no effect for now
         """
         # Calculate junction currents
         igs = self.diogs.get_id(vPort[0])
@@ -229,7 +229,6 @@ class Device(cir.Element):
     # Use AD for eval and deriv function
     eval_and_deriv = ad.eval_and_deriv
     eval = ad.eval
-#    get_op_vars = ad.get_op_vars
     
     def power(self, vPort, currV):
         """ 
@@ -251,16 +250,15 @@ class Device(cir.Element):
         """
         # First we need the Jacobian
         (outV, jac) = self.eval_and_deriv(vPort)
-#        opV = self.get_op_vars(vPort)
 
-        self.OP = dict(
+        opDict = dict(
             VGS = vPort[0],
             VDS = vPort[0] - vPort[1],
             IDS = outV[2],
             IGS = outV[0],
             IGD = outV[1]
             )
-        return self.OP
+        return opDict
 
     def get_noise(self, f):
         """

@@ -118,9 +118,9 @@ class Device(cir.Element):
         """
         # Get g at the requested temperature (in case of thermal resistor)
         (iout, qout) = self.eval_cqs(vPort)
-        self.OP = {'vc': vPort[0], 
+        opDict = {'vc': vPort[0], 
                    'i': iout[0]}
-        return self.OP
+        return opDict
 
 
 

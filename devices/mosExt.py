@@ -73,9 +73,12 @@ def extrinsic_mos(IMOS):
                                      o S (2)
     
 
-    Note: electrothermal implementation (if any) does not account for
+    Note 1: electrothermal implementation (if any) does not account for
     the power dissipation in Rd and Rs. Use external thermal resistors
     if that is needed.
+
+    Note 2: operating point information is given for just one
+    intrinsic device even if ``m > 1``.
 
         """ 
         # devtype is the 'model' name: remove the '_i' from intrinsic name
@@ -275,15 +278,18 @@ def extrinsic_mos(IMOS):
                                         self.__egapn, egap_t)
             
 
-        def eval_cqs(self, vPort, saveOP = False):
+        def eval_cqs(self, vPort, getOP = False):
             """
             vPort is a vector with control voltages 
             """
             # calculate currents and charges in base class
-            if saveOP:
-                (iVec, qVec, opVec) = IMOS.eval_cqs(self, vPort, saveOP)
-            else:
-                (iVec, qVec) = IMOS.eval_cqs(self, vPort)
+            if getOP:
+                # More operating point info could be added here: for
+                # now just return intrinsic model info. Note: this
+                # info is just for 1 intrinsic device, even if m>1
+                return IMOS.eval_cqs(self, vPort, True)
+
+            (iVec, qVec) = IMOS.eval_cqs(self, vPort)
             # Add contribution drain diode
             v1 = -vPort[0] * self._tf
             if self.ad:
@@ -315,10 +321,7 @@ def extrinsic_mos(IMOS):
             iVec *= self.m
             qVec *= self.m
 
-            if saveOP:
-                return (iVec, qVec, opVec)
-            else:
-                return (iVec, qVec)
+            return (iVec, qVec)
 
     
         # Create these using the AD facility
@@ -335,9 +338,6 @@ def extrinsic_mos(IMOS):
             returned by eval_cqs()
             """
             pout = IMOS.power(self, vPort, currV)
-            if self.__addCBjtn:
-                # add power from substrate junction and RE, RC
-                pout += vPort[self.__bccn] * currV[self.__bcon]
 
             return pout
 

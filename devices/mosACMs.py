@@ -154,12 +154,12 @@ class Device(cir.Element):
         self._IS = .5 * s * self.n * muT * self.cox * self._Vt**2
 
 
-    def eval_cqs(self, vPort, saveOP = False):
+    def eval_cqs(self, vPort, getOP = False):
         """
         Calculates drain current. Input is a vector as follows:
         vPort = [vdb , vgb , vsb]
 
-        If saveOP = True, return normal output vector plus operating
+        If getOP = True, return normal output vector plus operating
         point variables in tuple: (iVec, qVec, opV)
         """
         # Invert all voltages in case of a P-channel device
@@ -175,14 +175,17 @@ class Device(cir.Element):
 
         iVec, qVec = np.array([idrain]), np.array([])
 
-        if saveOP:
-            # This is neccesary to keep the AD library happy: all
-            # variables in vector must be adoubles
-            vth = 0. * vp + self._vthT
-            IS = 0. * vp + self._IS
-            # Create operating point variables vector
-            opV = np.array([vth, vp, i_f, i_r, IS])
-            return (iVec, qVec, opV)
+        if getOP:
+            # Create operating point variables dictionary
+            return {'VD': vPort[0],
+                    'VG': vPort[1],
+                    'VS': vPort[2],
+                    'IDS': idrain,
+                    'Vth': self._vthT,
+                    'IS': self._IS, 
+                    'vp': vp,
+                    'i_f': i_f,
+                    'i_r': i_r}
         else:
             # Return numpy array with one element per current source.
             return (iVec, qVec)
@@ -191,7 +194,6 @@ class Device(cir.Element):
     # Use AD for eval and deriv function
     eval_and_deriv = ad.eval_and_deriv
     eval = ad.eval
-    get_op_vars = ad.get_op_vars
     
     def power(self, vPort, currV):
         """ 
@@ -213,22 +215,8 @@ class Device(cir.Element):
         Input:  vPort = [vdb , vgb , vsb]
         Output: dictionary with OP variables
         """
-        (outV, jac) = self.eval_and_deriv(vPort)
-        opV = self.get_op_vars(vPort)
-
-        self.OP = dict(
-            temp = self.temp,
-            VD = vPort[0],
-            VG = vPort[1],
-            VS = vPort[2],
-            IDS = outV[0],
-            vth = opV[0],
-            vp = opV[1],
-            i_f = opV[2],
-            i_r = opV[3],
-            IS = opV[4]
-            )
-        return self.OP
+        # In the future add transconductances, etc.
+        return self.eval_cqs(vPort, True)
 
     def get_noise(self, f):
         """
