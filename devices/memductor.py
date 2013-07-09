@@ -200,7 +200,7 @@ class Device(cir.Element):
         vPort[0] = memductor voltage
         vPort[1] = internal cap voltage
         """
-        return self.eval(vPort, getOP=True)
+        return self.eval_cqs(vPort, getOP=True)
 
     def get_DCsource(self):
         return self._i0
