@@ -131,10 +131,10 @@ class DCOP(ParamSet):
         print('\n')
 
         def getvar(termname):
-            return circuit.termDict[termname].nD_vOP
+            return circuit.find_term(termname).nD_vOP
 
         def getterm(termname):
-            return circuit.termDict[termname]
+            return circuit.find_term(termname)
 
         def getdev(elemname):
             return circuit.elemDict[elemname]
