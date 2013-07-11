@@ -71,7 +71,7 @@ class Device(cir.Element):
         cir.Element.tempItem,
         r = ('Resistance', 'Ohms', float, 0.),
         rsh = ('Sheet resistance', 'Ohms', float, 0.),
-        l = ('Lenght', 'm', float, 0.),
+        l = ('Length', 'm', float, 0.),
         w = ('Width', 'm', float, 0.),
         narrow = ('Narrowing due to side etching', 'm', float, 0.),
         tnom = ('Nominal temperature', 'C', float, 27.),
