@@ -330,7 +330,7 @@ class Element(GraphNode, ParamSet):
         # Set overrides first
         if self.dotModel:
             ParamSet.set_attributes(self, useDefaults = False)
-            # Get othe attributes from model
+            # Get other attributes from model
             self.dotModel.set_missing_attributes(self)
         else:
             ParamSet.set_attributes(self, useDefaults = True)

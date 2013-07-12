@@ -159,9 +159,9 @@ Parameters
  =========== ==================== ============ ===================================================== 
  Name         Default              Unit         Description                                          
  =========== ==================== ============ ===================================================== 
- c            1.0e-05              F            Auxiliary capacitance                                
+ c            1e-05                F            Auxiliary capacitance                                
  phi0         0.0                  Vs           Initial flux                                         
- rleak        1.0e+09              Ohms         Leackage resistance                                  
+ rleak        1000000000.0         Ohms         Leackage resistance                                  
  w            abs(1e-3*phi)        Siemens      Memductance function W(phi)                          
  =========== ==================== ============ ===================================================== 
 
@@ -254,10 +254,10 @@ Parameters
  =========== ==================== ============ ===================================================== 
  Name         Default              Unit         Description                                          
  =========== ==================== ============ ===================================================== 
- c            1.0e-05              F            Auxiliary capacitance                                
+ c            1e-05                F            Auxiliary capacitance                                
  m            abs(5e9*q)           Ohms         Memristance function M(q)                            
  q0           0.0                  As           Initial charge                                       
- rleak        1.0e+09              Ohms         Leackage resistance                                  
+ rleak        1000000000.0         Ohms         Leackage resistance                                  
  =========== ==================== ============ ===================================================== 
 
 res: Resistor
@@ -287,7 +287,7 @@ Parameters
  =========== ==================== ============ ===================================================== 
  Name         Default              Unit         Description                                          
  =========== ==================== ============ ===================================================== 
- l            0.0                  m            Lenght                                               
+ l            0.0                  m            Length                                               
  narrow       0.0                  m            Narrowing due to side etching                        
  r            0.0                  Ohms         Resistance                                           
  rsh          0.0                  Ohms         Sheet resistance                                     
@@ -570,7 +570,7 @@ Parameters
  =========== ==================== ============ ===================================================== 
  gamma        0.631                V^(1/2)      Bulk Threshold Parameter                             
  kp           0.0005106            A/V^2        Transconductance Parameter                           
- l            1.0e-05              m            Channel length                                       
+ l            1e-05                m            Channel length                                       
  phi          0.55                 V            Surface Potential                                    
  temp         None                 C            Device temperature (None: use global temp.)          
  theta        0.814                1/V          Mobility Saturation Parameter                        
@@ -579,7 +579,7 @@ Parameters
  type         n                                 N- or P-channel MOS (n or p)                         
  vsat         80000.0              m/s          Saturation Velocity                                  
  vt0          0.532                V            Threshold Voltage                                    
- w            1.0e-05              m            Channel width                                        
+ w            1e-05                m            Channel width                                        
  =========== ==================== ============ ===================================================== 
 
 
@@ -646,15 +646,15 @@ Parameters
  =========== ==================== ============ ===================================================== 
  bex          -1.5                              Mobility temperature exponent                        
  cox          0.0007               F/m^2        Gate oxide capacitance per area                      
- isq          1.0e-07              A/V^2        Sheet normalization current                          
- l            1.0e-05              m            Channel length                                       
+ isq          1e-07                A/V^2        Sheet normalization current                          
+ l            1e-05                m            Channel length                                       
  n            1.3                  F/m^2        Subthreshold slope factor                            
  tcv          0.001                V/K          Threshold voltage temperature coefficient            
  temp         None                 C            Device temperature (None: use global temp.)          
  tnom         27.0                 C            Nominal temperature of model parameters              
  type         n                                 N- or P-channel MOS (n or p)                         
  vth          0.5                  V            Threshold Voltage                                    
- w            1.0e-05              m            Channel width                                        
+ w            1e-05                m            Channel width                                        
  =========== ==================== ============ ===================================================== 
 
 
@@ -804,10 +804,10 @@ Parameters
  ikf          0.0                  A            Forward-beta high current roll-off knee current      
  ikr          0.0                  A            Corner for reverse-beta high current roll off        
  irb          0.0                  A            Current at which rb falls to half of rbm             
- isat         1.0e-16              A            Transport saturation current                         
+ isat         1e-16                A            Transport saturation current                         
  isc          0.0                  A            Base collector leakage saturation current            
  ise          0.0                  A            Base-emitter leakage saturation current              
- iss          1.0e-14              A            Substrate saturation current                         
+ iss          1e-14                A            Substrate saturation current                         
  itf          0.0                  A            Transit time dependency on ic                        
  mjc          0.33                              Base collector p-n grading factor                    
  mje          0.33                              Base emitter p-n grading factor                      
@@ -935,7 +935,7 @@ Parameters
  cdscb        0                    F/V/m^2      Body-bias dependence of cdsc                         
  cdscd        0                    F/V/m^2      Drain-bias dependence of cdsc                        
  cit          0                                 Interface state capacitance                          
- clc          1.0e-07                           Vdsat paramater for C-V model                        
+ clc          1e-07                             Vdsat paramater for C-V model                        
  cle          0.6                               Vdsat paramater for C-V model                        
  delta        0.01                 V            Effective Vds parameter                              
  drout        0.56                              DIBL coefficient of output resistance                
@@ -943,7 +943,7 @@ Parameters
  dvt0         2.2                               Short channel effect coefficient 0                   
  dvt0w        0                    m^{-1}       Narrow width effect coefficient 0                    
  dvt1         0.53                              Short channel effect coefficient 1                   
- dvt1w        5.3e+06              m^{-1}       Narrow width effect coefficient 1                    
+ dvt1w        5300000.0            m^{-1}       Narrow width effect coefficient 1                    
  dvt2         -0.032               V^{-1}       Short channel effect coefficient 2                   
  dvt2w        -0.032               V^{-1}       Narrow width effect coefficient 2                    
  dwb          0                    m/V          Width reduction parameter                            
@@ -960,7 +960,7 @@ Parameters
  kt1          -0.11                V            Temperature coefficient of Vth                       
  kt1l         0                    V m          Temperature coefficient of Vth                       
  kt2          0.022                             Body-coefficient of kt1                              
- l            1.0e-06              m            Length                                               
+ l            1e-06                m            Length                                               
  lint         0                    m            Length reduction parameter                           
  ll           0                                 Length reduction parameter                           
  llc          0                                 Length reduction parameter for CV                    
@@ -976,7 +976,7 @@ Parameters
  ngate        0                    cm^{-3}      Poly-gate doping concentration                       
  nlx          1.74e-07             m            Lateral non-uniform doping effect                    
  noff         1                                 C-V turn-on/off parameter                            
- nsub         6.0e+16              cm^{-3}      Substrate doping concentration                       
+ nsub         6e+16                cm^{-3}      Substrate doping concentration                       
  pclm         1.3                               Channel length modulation coefficient                
  pdibl1       0.39                              Drain-induced barrier lowering oefficient            
  pdibl2       0.0086                            Drain-induced barrier lowering oefficient            
@@ -984,8 +984,8 @@ Parameters
  prt          0                                 Temperature coefficient of parasitic resistance      
  prwb         0                                 Body-effect on parasitic resistance                  
  prwg         0                                 Gate-bias effect on parasitic resistance             
- pscbe1       4.24e+08             V/m          Substrate current body-effect coeffiecient 1         
- pscbe2       1.0e-05              V/m          Substrate current body-effect coeffiecient 2         
+ pscbe1       424000000.0          V/m          Substrate current body-effect coeffiecient 1         
+ pscbe2       1e-05                V/m          Substrate current body-effect coeffiecient 2         
  pvag         0                                 Gate dependence of output resistance parameter       
  rdsw         0                                 Sorce-drain resistance per width                     
  temp         None                 C            Device temperature (None: use global temp.)          
@@ -1007,7 +1007,7 @@ Parameters
  voffcv       0                                 C-V lateral shift parameter                          
  vsat         80000                m/s          Saturationvelocity at tnom                           
  vth0         0.7                  V            Threshold voltage of long channel device at Vbs=0 and small Vds 
- w            1.0e-06              m            Width                                                
+ w            1e-06                m            Width                                                
  w0           2.5e-06              m            Narrow width effect parameter                        
  wint         0                    m            Width reduction parameter                            
  wl           0                                 Width reduction parameter                            
@@ -1085,12 +1085,12 @@ Parameters
  =========== ==================== ============ ===================================================== 
  af           1.0                               Flicker noise exponent                               
  area         1.0                               Area multiplier                                      
- bv           .0inf                V            Breakdown voltage                                    
+ bv           inf                  V            Breakdown voltage                                    
  cj0          0.0                  F            Zero-bias depletion capacitance                      
  eg0          1.11                 eV           Energy bandgap                                       
  fc           0.5                               Coefficient for forward-bias depletion capacitance   
- ibv          1.0e-10              A            Current at reverse breakdown voltage                 
- isat         1.0e-14              A            Saturation current                                   
+ ibv          1e-10                A            Current at reverse breakdown voltage                 
+ isat         1e-14                A            Saturation current                                   
  kf           0.0                               Flicker noise coefficient                            
  m            0.5                               PN junction grading coefficient                      
  n            1.0                               Emission coefficient                                 
@@ -1208,16 +1208,16 @@ Parameters
  cox          0.0007               F/m^2        Gate oxide capacitance per area                      
  dl           0.0                  m            Channel length correction                            
  dw           0.0                  m            Channel width correction                             
- e0           1.0e+12              V/m          Mobility reduction coefficient                       
+ e0           1e+12                V/m          Mobility reduction coefficient                       
  ekvint       0                                 Interpolation function (0: accurate, 1: simple)      
  gamma        1.0                  V^1/2        Body effect parameter                                
  iba          0.0                  1/m          First impact ionization coefficient                  
- ibb          3.0e+08              V/m          Second impact ionization coefficient                 
+ ibb          300000000.0          V/m          Second impact ionization coefficient                 
  ibbt         0.0009               1/K          Temperature coefficient for IBB                      
  ibn          1.0                               Saturation voltage factor for impact ionization      
  kf           0.0                               Flicker noise coefficient                            
- kp           5.0e-05              A/V^2        Transconductance parameter                           
- l            1.0e-06              m            Gate length                                          
+ kp           5e-05                A/V^2        Transconductance parameter                           
+ l            1e-06                m            Gate length                                          
  leta         0.1                               Short-channel effect coefficient                     
  lk           2.9e-07              m            Reverse short channel effect characteristic length   
  np           1.0                               Parallel multiple device number                      
@@ -1234,13 +1234,13 @@ Parameters
  type         n                                 N- or P-channel MOS (n or p)                         
  u0           None                 cm^2/(V.s)   Low-field mobility                                   
  ucex         0.8                               Longitudinal critical field temperature exponent     
- ucrit        2.0e+06              V/m          Longitudinal critical field                          
+ ucrit        2000000.0            V/m          Longitudinal critical field                          
  vfb          None                 V            Flat-band voltage                                    
  vmax         None                 m/s          Saturation velocity                                  
  vt0          0.5                  V            Long_channel threshold voltage                       
- w            1.0e-06              m            Gate width                                           
+ w            1e-06                m            Gate width                                           
  weta         0.25                              Narrow-channel effect coefficient                    
- xj           1.0e-07              m            Junction depth                                       
+ xj           1e-07                m            Junction depth                                       
  =========== ==================== ============ ===================================================== 
 
 
@@ -1326,10 +1326,10 @@ Parameters
  tm           0.0                  1/K          Ids linear temp. coeff.                              
  tme          0.0                  1/K^2        Ids power law temp. coeff.                           
  tnom         27.0                 C            Nominal temperature                                  
- vbd          .0inf                V            Breakdown voltage                                    
+ vbd          inf                  V            Breakdown voltage                                    
  vbi          0.8                  V            Built-in potential of the Schottky junctions         
  vds0         4.0                  V            Vds at which BETA was measured                       
- vt0          -.0inf               V            Voltage at which the channel current is forced to be zero for Vgs<=Vto 
+ vt0          -inf                 V            Voltage at which the channel current is forced to be zero for Vgs<=Vto 
  xti          2.0                               Diode saturation current temperature exponent        
  =========== ==================== ============ ===================================================== 
 
@@ -1370,9 +1370,12 @@ The model adds the following to the intrinsic model (for NMOS)::
                                  o S (2)
 
 
-Note: electrothermal implementation (if any) does not account for
+Note 1: electrothermal implementation (if any) does not account for
 the power dissipation in Rd and Rs. Use external thermal resistors
 if that is needed.
+
+Note 2: operating point information is given for just one
+intrinsic device even if ``m > 1``.
 
     
 
@@ -1422,7 +1425,7 @@ Parameters
  cit          0                                 Interface state capacitance                          
  cj           0.0                  F/m^2        Source drain junction capacitance per unit area      
  cjsw         0.0                  F/m          Source drain junction sidewall capacitance per unit length 
- clc          1.0e-07                           Vdsat paramater for C-V model                        
+ clc          1e-07                             Vdsat paramater for C-V model                        
  cle          0.6                               Vdsat paramater for C-V model                        
  delta        0.01                 V            Effective Vds parameter                              
  drout        0.56                              DIBL coefficient of output resistance                
@@ -1430,7 +1433,7 @@ Parameters
  dvt0         2.2                               Short channel effect coefficient 0                   
  dvt0w        0                    m^{-1}       Narrow width effect coefficient 0                    
  dvt1         0.53                              Short channel effect coefficient 1                   
- dvt1w        5.3e+06              m^{-1}       Narrow width effect coefficient 1                    
+ dvt1w        5300000.0            m^{-1}       Narrow width effect coefficient 1                    
  dvt2         -0.032               V^{-1}       Short channel effect coefficient 2                   
  dvt2w        -0.032               V^{-1}       Narrow width effect coefficient 2                    
  dwb          0                    m/V          Width reduction parameter                            
@@ -1451,7 +1454,7 @@ Parameters
  kt1          -0.11                V            Temperature coefficient of Vth                       
  kt1l         0                    V m          Temperature coefficient of Vth                       
  kt2          0.022                             Body-coefficient of kt1                              
- l            1.0e-06              m            Length                                               
+ l            1e-06                m            Length                                               
  lint         0                    m            Length reduction parameter                           
  ll           0                                 Length reduction parameter                           
  llc          0                                 Length reduction parameter for CV                    
@@ -1472,7 +1475,7 @@ Parameters
  noff         1                                 C-V turn-on/off parameter                            
  nrd          1.0                  squares      Number of squares in drain                           
  nrs          1.0                  squares      Number of squares in source                          
- nsub         6.0e+16              cm^{-3}      Substrate doping concentration                       
+ nsub         6e+16                cm^{-3}      Substrate doping concentration                       
  pb           0.8                  V            Built in potential of source drain junction          
  pbsw         0.8                  V            Built in potential of source, drain junction sidewall 
  pclm         1.3                               Channel length modulation coefficient                
@@ -1484,8 +1487,8 @@ Parameters
  prwb         0                                 Body-effect on parasitic resistance                  
  prwg         0                                 Gate-bias effect on parasitic resistance             
  ps           0.0                  m            Source perimeter                                     
- pscbe1       4.24e+08             V/m          Substrate current body-effect coeffiecient 1         
- pscbe2       1.0e-05              V/m          Substrate current body-effect coeffiecient 2         
+ pscbe1       424000000.0          V/m          Substrate current body-effect coeffiecient 1         
+ pscbe2       1e-05                V/m          Substrate current body-effect coeffiecient 2         
  pvag         0                                 Gate dependence of output resistance parameter       
  rdsw         0                                 Sorce-drain resistance per width                     
  rsh          0.0                  Ohm/square   Drain and source diffusion sheet resistance          
@@ -1508,7 +1511,7 @@ Parameters
  voffcv       0                                 C-V lateral shift parameter                          
  vsat         80000                m/s          Saturationvelocity at tnom                           
  vth0         0.7                  V            Threshold voltage of long channel device at Vbs=0 and small Vds 
- w            1.0e-06              m            Width                                                
+ w            1e-06                m            Width                                                
  w0           2.5e-06              m            Narrow width effect parameter                        
  wint         0                    m            Width reduction parameter                            
  wl           0                                 Width reduction parameter                            
@@ -1556,9 +1559,12 @@ The model adds the following to the intrinsic model (for NMOS)::
                                  o S (2)
 
 
-Note: electrothermal implementation (if any) does not account for
+Note 1: electrothermal implementation (if any) does not account for
 the power dissipation in Rd and Rs. Use external thermal resistors
 if that is needed.
+
+Note 2: operating point information is given for just one
+intrinsic device even if ``m > 1``.
 
     
 
@@ -1602,20 +1608,20 @@ Parameters
  cox          0.0007               F/m^2        Gate oxide capacitance per area                      
  dl           0.0                  m            Channel length correction                            
  dw           0.0                  m            Channel width correction                             
- e0           1.0e+12              V/m          Mobility reduction coefficient                       
+ e0           1e+12                V/m          Mobility reduction coefficient                       
  eg0          1.11                 eV           Energy bandgap                                       
  ekvint       0                                 Interpolation function (0: accurate, 1: simple)      
  fc           0.5                               Coefficient for forward-bias depletion capacitances  
  gamma        1.0                  V^1/2        Body effect parameter                                
  iba          0.0                  1/m          First impact ionization coefficient                  
- ibb          3.0e+08              V/m          Second impact ionization coefficient                 
+ ibb          300000000.0          V/m          Second impact ionization coefficient                 
  ibbt         0.0009               1/K          Temperature coefficient for IBB                      
  ibn          1.0                               Saturation voltage factor for impact ionization      
  js           0.0                  A/m^2        Source drain junction current density                
  jssw         0.0                  A/m          Source drain sidewall junction current density       
  kf           0.0                               Flicker noise coefficient                            
- kp           5.0e-05              A/V^2        Transconductance parameter                           
- l            1.0e-06              m            Gate length                                          
+ kp           5e-05                A/V^2        Transconductance parameter                           
+ l            1e-06                m            Gate length                                          
  leta         0.1                               Short-channel effect coefficient                     
  lk           2.9e-07              m            Reverse short channel effect characteristic length   
  m            1.0                               Parallel multiplier                                  
@@ -1642,13 +1648,13 @@ Parameters
  type         n                                 N- or P-channel MOS (n or p)                         
  u0           None                 cm^2/(V.s)   Low-field mobility                                   
  ucex         0.8                               Longitudinal critical field temperature exponent     
- ucrit        2.0e+06              V/m          Longitudinal critical field                          
+ ucrit        2000000.0            V/m          Longitudinal critical field                          
  vfb          None                 V            Flat-band voltage                                    
  vmax         None                 m/s          Saturation velocity                                  
  vt0          0.5                  V            Long_channel threshold voltage                       
- w            1.0e-06              m            Gate width                                           
+ w            1e-06                m            Gate width                                           
  weta         0.25                              Narrow-channel effect coefficient                    
- xj           1.0e-07              m            Junction depth                                       
+ xj           1e-07                m            Junction depth                                       
  xti          3.0                               Junction saturation current temperature exponent     
  =========== ==================== ============ ===================================================== 
 
@@ -1823,10 +1829,10 @@ Parameters
  ikf          0.0                  A            Forward-beta high current roll-off knee current      
  ikr          0.0                  A            Corner for reverse-beta high current roll off        
  irb          0.0                  A            Current at which rb falls to half of rbm             
- isat         1.0e-16              A            Transport saturation current                         
+ isat         1e-16                A            Transport saturation current                         
  isc          0.0                  A            Base collector leakage saturation current            
  ise          0.0                  A            Base-emitter leakage saturation current              
- iss          1.0e-14              A            Substrate saturation current                         
+ iss          1e-14                A            Substrate saturation current                         
  itf          0.0                  A            Transit time dependency on ic                        
  mjc          0.33                              Base collector p-n grading factor                    
  mje          0.33                              Base emitter p-n grading factor                      
@@ -1931,12 +1937,12 @@ Parameters
  =========== ==================== ============ ===================================================== 
  af           1.0                               Flicker noise exponent                               
  area         1.0                               Area multiplier                                      
- bv           .0inf                V            Breakdown voltage                                    
+ bv           inf                  V            Breakdown voltage                                    
  cj0          0.0                  F            Zero-bias depletion capacitance                      
  eg0          1.11                 eV           Energy bandgap                                       
  fc           0.5                               Coefficient for forward-bias depletion capacitance   
- ibv          1.0e-10              A            Current at reverse breakdown voltage                 
- isat         1.0e-14              A            Saturation current                                   
+ ibv          1e-10                A            Current at reverse breakdown voltage                 
+ isat         1e-14                A            Saturation current                                   
  kf           0.0                               Flicker noise coefficient                            
  m            0.5                               PN junction grading coefficient                      
  n            1.0                               Emission coefficient                                 
@@ -2022,8 +2028,8 @@ Parameters
  =========== ==================== ============ ===================================================== 
  i1           0.0                  A            Initial value                                        
  i2           0.0                  A            Pulsed value                                         
- per          .0inf                s            Period                                               
- pw           .0inf                s            Pulse width                                          
+ per          inf                  s            Period                                               
+ pw           inf                  s            Pulse width                                          
  td           0.0                  s            Delay time                                           
  tf           0.0                  s            Fall time                                            
  tr           0.0                  s            Rise time                                            
@@ -2153,8 +2159,8 @@ Parameters
  =========== ==================== ============ ===================================================== 
  Name         Default              Unit         Description                                          
  =========== ==================== ============ ===================================================== 
- per          .0inf                s            Period                                               
- pw           .0inf                s            Pulse width                                          
+ per          inf                  s            Period                                               
+ pw           inf                  s            Pulse width                                          
  rint         0.0                  Ohms         Internal resistance                                  
  td           0.0                  s            Delay time                                           
  tf           0.0                  s            Fall time                                            

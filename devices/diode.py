@@ -59,7 +59,7 @@ class Junction:
         self._t_is = self.isat * pow(tnratio, self._k1) \
             * np.exp(self._k2 - self._k3 / Tabs) 
         self._kexp = vt * self.n
-        if self.cj0:
+        if self.cj0 != 0.:
             self._t_vj = self.vj * tnratio \
                 - 3. * vt * np.log(tnratio) \
                 - tnratio * egapn + egap_t
@@ -86,7 +86,7 @@ class Junction:
 
         vd: diode voltage
         """
-        if self.cj0:
+        if self.cj0 != 0.:
             b = self.fc * self._t_vj - vd
             c = self._k5 * (1. - pow(1. - vd / self._t_vj, self._k4))
             d = self._k6 * ((1. - self.fc * (1. + self.m)) 
@@ -220,7 +220,7 @@ class Device(cir.Element):
         self.__addThermalPorts = True
 
         # Define topology first
-        if self.rs:
+        if self.rs != 0.:
             # Need 1 internal terminal
             t2 = self.add_internal_term('t2', 'V')
             g = self.area / self.rs
@@ -237,7 +237,7 @@ class Device(cir.Element):
 
         self.qsOutPorts = [ ]
         self._qd = False
-        if self.tt or self.cj0:
+        if self.tt + self.cj0 != 0.:
             # Add charge source (otherwise the charge calculation is ignored)
             self.qsOutPorts = self.csOutPorts
             self._qd = True
@@ -284,12 +284,12 @@ class Device(cir.Element):
         # Calculate regular PN junction current and charge
         iD = self.jtn.get_id(vPort[0])
 
-        if self.cj0:
+        if self.cj0 != 0.:
             qD = self.jtn.get_qd(vPort[0])
         else:
             qD = 0.
 
-        if self.tt:
+        if self.tt != 0.:
             qD += self.tt * iD
 
         # add breakdown current
@@ -354,7 +354,7 @@ class Device(cir.Element):
         Requires a previous call to get_OP() 
         """
         sj = self._Sshot + self._kSflicker / pow(f, self.af)
-        if self.rs:
+        if self.rs != 0.:
             sV = np.array([sj, self._Sthermal])
         else:
             sV = np.array([sj])

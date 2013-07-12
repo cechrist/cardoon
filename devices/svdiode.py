@@ -65,7 +65,7 @@ class SVJunction:
         self._svth = np.log(max_exp_arg / self._alpha) / self._alpha
         self._kexp = self.n * vt * max_exp_arg
         # Capacitance
-        if self.cj0:
+        if self.cj0 != 0.:
             self._t_vj = self.vj * tnratio \
                 - 3. * vt * np.log(tnratio) \
                 - tnratio * egapn + egap_t
@@ -246,7 +246,7 @@ class Device(cir.Element):
         self.noisePorts = [(0, 1)]
         self.controlPorts = [(tx, tref)]
 
-        if self.rs:
+        if self.rs != 0.:
             # Needs one more terminal
             t2 = self.add_internal_term('t2', 'V')
             g = self.area / self.rs
@@ -259,7 +259,7 @@ class Device(cir.Element):
         # Nonlinear device attributes (defined in process_params())
         self.qsOutPorts = [ ]
         self._qd = False
-        if self.tt or self.cj0:
+        if self.tt + self.cj0 != 0.:
             # Add charge source (otherwise the charge calculation is ignored)
             self.qsOutPorts.append(self.csOutPorts[0])
             self._qd = True
@@ -308,9 +308,9 @@ class Device(cir.Element):
         """
         # Calculate state-variable PN junction current, voltage and charge
         (iD, vD) = self.jtn.get_idvd(vPort[0])
-        if self.cj0:
+        if self.cj0 != 0.:
             qD = self.jtn.get_qd(vD)
-        if self.tt:
+        if self.tt != 0.:
             qD += self.tt * iD
 
         # add breakdown current
@@ -384,7 +384,7 @@ class Device(cir.Element):
         Requires a previous call to get_OP() 
         """
         sj = self._Sshot + self._kSflicker / pow(f, self.af)
-        if self.rs:
+        if self.rs != 0.:
             sV = np.array([sj, self._Sthermal])
         else:
             sV = np.array([sj])

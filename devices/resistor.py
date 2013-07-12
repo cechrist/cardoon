@@ -100,7 +100,7 @@ class Device(cir.Element):
             raise cir.CircuitError(self.instanceName 
                                    + ': Resistance can not be zero')
 
-        if self.r:
+        if self.r != 0.:
             # if R is given it overrides rsh et ale
             self.g = 1. / self.r
         else:

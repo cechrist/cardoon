@@ -165,28 +165,28 @@ def extrinsic_mos(IMOS):
 
             # Resistances
             extraVCCS = list()
-            if self.rsh:
-                if self.nrd:
+            if self.rsh != 0.:
+                if self.nrd != 0.:
                     # Drain resistor
                     self.__di = self.add_internal_term('di', 'V')
                     extraVCCS += [((0, self.__di), (0, self.__di), 
                                    1. / self.rsh / self.nrd)]
-                if self.nrs:
+                if self.nrs != 0.:
                     # Source resistor
                     self.__si = self.add_internal_term('si', 'V')
                     extraVCCS += [((2, self.__si), (2, self.__si), 
                                    1. / self.rsh / self.nrs)]
             # Linear capacitances
             extraVCQS = list()
-            if self.cgdo:
+            if self.cgdo != 0.:
                 # Gate-drain ovelrlap cap
                 extraVCQS += [((1, self.__di), (1, self.__di),
                                self.cgdo * self.w)]
-            if self.cgso:
+            if self.cgso != 0.:
                 # Gate-source ovelrlap cap
                 extraVCQS += [((1, self.__si), (1, self.__si),
                                self.cgso * self.w)]
-            if self.cgbo:
+            if self.cgbo != 0.:
                 # Gate-bulk ovelrlap cap
                 extraVCQS += [((1, 3), (1, 3),
                                self.cgbo * self.l)]
@@ -211,7 +211,7 @@ def extrinsic_mos(IMOS):
             self.__egapn = self.eg0 - .000702 * (self.__Tnabs**2) \
                 / (self.__Tnabs + 1108.)
             # Initialize variables in junctions
-            if self.ad:
+            if self.ad != 0.:
                 self.dj = Junction()
                 self.dj.process_params(isat = self.js * self.ad, 
                                        cj0 = self.cj * self.ad, 
@@ -219,7 +219,7 @@ def extrinsic_mos(IMOS):
                                        n = 1., fc = self.fc, 
                                        xti = self.xti, eg0 = self.eg0, 
                                        Tnomabs = self.__Tnabs)
-            if self.asrc:
+            if self.asrc != 0.:
                 self.sj = Junction()
                 self.sj.process_params(isat = self.js * self.asrc, 
                                        cj0 = self.cj * self.asrc, 
@@ -227,7 +227,7 @@ def extrinsic_mos(IMOS):
                                        n = 1., fc = self.fc, 
                                        xti = self.xti, eg0 = self.eg0, 
                                        Tnomabs = self.__Tnabs)
-            if self.pd:
+            if self.pd != 0.:
                 self.djsw = Junction()
                 self.djsw.process_params(isat = self.jssw * self.pd, 
                                          cj0 = self.cjsw * self.pd, 
@@ -235,7 +235,7 @@ def extrinsic_mos(IMOS):
                                          n = 1., fc = self.fc, 
                                          xti = self.xti, eg0 = self.eg0, 
                                          Tnomabs = self.__Tnabs)
-            if self.ps:
+            if self.ps != 0.:
                 self.sjsw = Junction()
                 self.sjsw.process_params(isat = self.jssw * self.ps, 
                                          cj0 = self.cjsw * self.ps, 
@@ -264,16 +264,16 @@ def extrinsic_mos(IMOS):
             # Thermal voltage
             Vt = const.k * Tabs / const.q
             # Adjust junction temperatures
-            if self.ad:
+            if self.ad != 0.:
                 self.dj.set_temp_vars(Tabs, self.__Tnabs, Vt, 
                                       self.__egapn, egap_t)
-            if self.pd:
+            if self.pd != 0.:
                 self.djsw.set_temp_vars(Tabs, self.__Tnabs, Vt, 
                                         self.__egapn, egap_t)
-            if self.asrc:
+            if self.asrc != 0.:
                 self.sj.set_temp_vars(Tabs, self.__Tnabs, Vt, 
                                       self.__egapn, egap_t)
-            if self.ps:
+            if self.ps != 0.:
                 self.sjsw.set_temp_vars(Tabs, self.__Tnabs, Vt, 
                                         self.__egapn, egap_t)
             
@@ -292,26 +292,26 @@ def extrinsic_mos(IMOS):
             (iVec, qVec) = IMOS.eval_cqs(self, vPort)
             # Add contribution drain diode
             v1 = -vPort[0] * self._tf
-            if self.ad:
+            if self.ad != 0.:
                 # substract to idb
                 iVec[1] -= self.dj.get_id(v1) * self._tf
-                if self.cj:
+                if self.cj != 0.:
                     # substract to qd
                     qVec[0] -= self.dj.get_qd(v1) * self._tf
-            if self.pd:
+            if self.pd != 0.:
                 # substract to idb
                 iVec[1] -= self.djsw.get_id(v1) * self._tf
-                if self.cjsw:
+                if self.cjsw != 0.:
                     qVec[0] -= self.djsw.get_qd(v1) * self._tf
             # Add contribution source diode
             v1 = -vPort[2] * self._tf
-            if self.asrc:
+            if self.asrc != 0.:
                 # substract to isb
                 iVec[2] -= self.sj.get_id(v1) * self._tf
-                if self.cj:
+                if self.cj != 0.:
                     # substract to qs
                     qVec[2] -= self.sj.get_qd(v1) * self._tf
-            if self.ps:
+            if self.ps != 0.:
                 # substract to isb
                 iVec[2] -= self.sjsw.get_id(v1) * self._tf
                 if self.cjsw:

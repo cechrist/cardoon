@@ -321,7 +321,8 @@ class BSIM3(cir.Element):
                            / (const.q * self.nch * 1e6)) / 3.
         
         #import pdb; pdb.set_trace()
-        if self.k1enable and not (self.is_set('k1') or self.is_set('k2')):
+        if (self.k1enable != 0.) and \
+                not (self.is_set('k1') or self.is_set('k2')):
             vbx = self.phi - 7.7348e-4  * self.nch * self.xt**2
             # From ngspice
             vbx = -abs(vbx)
@@ -671,7 +672,7 @@ class BSIM3(cir.Element):
         Va = Vasat + T0 * T1
         
         #Calculate VASCBE
-        if self.pscbe1:
+        if self.pscbe1 != 0.:
             rcpVASCBE = ad.condassign(
                 abs(diffVds),
                 self.pscbe2 * ad.safe_exp(-self.pscbe1 * self.litl/diffVds) \

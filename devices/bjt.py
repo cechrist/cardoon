@@ -83,8 +83,8 @@ def extrinsic_bjt(IBJT):
         
         paramDict = dict(
             IBJT.paramDict.items(),
-            re = ('Emitter ohmic resistance', 'W', float, 0.),
-            rc = ('Collector ohmic resistance', 'W', float, 0.),
+            re = ('Emitter ohmic resistance', 'Ohm', float, None),
+            rc = ('Collector ohmic resistance', 'Ohm', float, None),
             cjs = ('Collector substrate capacitance', 'F', float, 0.),
             mjs = ('substrate junction exponential factor', '', float, 0.),
             vjs = ('substrate junction built in potential', 'V', float, 0.75),
@@ -126,12 +126,12 @@ Can only be {1} or {2}, {3} found.'.format(self.instanceName,
             self.__addThermalPorts = True
 
             extraVCCS = list()
-            if self.re:
+            if self.re != None:
                 # Add et node and translate port descriptions
                 self._et = self.add_internal_term('et', 'V')
                 extraVCCS += [((2, self._et), (2, self._et), 
                                self.area / self.re)]
-            if self.rc:
+            if self.rc != None:
                 # Add ct node and translate port descriptions
                 self._ct = self.add_internal_term('ct', 'V')
                 extraVCCS += [((0, self._ct), (0, self._ct), 
@@ -152,7 +152,7 @@ Can only be {1} or {2}, {3} found.'.format(self.instanceName,
                 self.__bcon = len(self.csOutPorts) 
                 self.controlPorts.append((3, self._ct))
                 self.csOutPorts.append((3, self._ct))
-                if self.cjs:
+                if self.cjs != 0.:
                     self.qsOutPorts.append((3, self._ct))
 
                 # Initial guess for input ports: 
@@ -192,7 +192,7 @@ Can only be {1} or {2}, {3} found.'.format(self.instanceName,
                 v1 = vPort[self.__bccn] * self._typef
                 isub = self.cbjtn.get_id(v1) * self.area * self._typef
                 iVec = np.concatenate((iVec1, [isub]), axis = 0)
-                if self.cjs:
+                if self.cjs != 0.:
                     qsub = self.cbjtn.get_qd(v1) * self.area * self._typef
                     qVec = np.concatenate((qVec1, [qsub]), axis = 0)
                 else:
@@ -323,8 +323,8 @@ class BJTi(cir.Element):
         ikr = ('Corner for reverse-beta high current roll off', 'A', float, 0.),
         isc = ('Base collector leakage saturation current', 'A', float, 0.),
         nc = ('Base-collector leakage emission coefficient', '', float, 2.),
-        rb = ('Zero bias base resistance', 'W', float, 0.),
-        rbm = ('Minimum base resistance', 'W', float, 0.),
+        rb = ('Zero bias base resistance', 'Ohm', float, 0.),
+        rbm = ('Minimum base resistance', 'Ohm', float, 0.),
         irb = ('Current at which rb falls to half of rbm', 'A', float, 0.),
         eg = ('Badgap voltage', 'eV', float, 1.11),
         cje = ('Base emitter zero bias p-n capacitance', 'F', float, 0.),
@@ -335,11 +335,11 @@ class BJTi(cir.Element):
         mjc = ('Base collector p-n grading factor', '', float, 0.33),
         xcjc = ('Fraction of cbc connected internal to rb', '', float, 1.),
         fc = ('Forward bias depletion capacitor coefficient', '', float, 0.5),
-        tf = ('Ideal forward transit time', 'S', float, 0.),
+        tf = ('Ideal forward transit time', 's', float, 0.),
         xtf = ('Transit time bias dependence coefficient', '', float, 0.),
         vtf = ('Transit time dependency on vbc', 'V', float, 0.),
         itf = ('Transit time dependency on ic', 'A', float, 0.),
-        tr = ('Ideal reverse transit time', 'S', float, 0.),
+        tr = ('Ideal reverse transit time', 's', float, 0.),
         xtb = ('Forward and reverse beta temperature coefficient', '', 
                float, 0.),
         xti = ('IS temperature effect exponent', '', float, 3.),
@@ -377,7 +377,8 @@ class BJTi(cir.Element):
         # Define topology first
         # Flag to signal if the extra charge Qbx is needed or not
         self._qbx = False
-        if self.rb:
+        self.linearVCCS = []
+        if self.rb != 0.:
             # rb is not zero: add internal terminals
             tBi = self.add_internal_term('Bi', 'V')
             tib = self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) 
@@ -395,16 +396,16 @@ class BJTi(cir.Element):
             # qbie, qbic
             self.qsOutPorts = [(tBi, self._et), (tBi, self._ct)]
             # Now check if Cjbc must be splitted (since rb != 0)
-            if self.cjc and (self.xcjc < 1.):
+            if (self.cjc != 0.) and (self.xcjc < 1.):
                 self.qsOutPorts.append((1, self._ct))
                 self._qbx = True
             
         # In principle we may not need any charge
         keepPorts = [ ]
-        if self.cje + self.tf:
+        if self.cje + self.tf != 0.:
             # keep qbe
             keepPorts.append(self.qsOutPorts[0])
-        if self.cjc + self.tr:
+        if self.cjc + self.tr != 0.:
             # keep qbc, qbx (if any)
             if self._qbx:
                 keepPorts += self.qsOutPorts[-2:]
@@ -435,16 +436,16 @@ class BJTi(cir.Element):
         self.jir.process_params(self.isat, self.nr, self.fc, self.cjc, 
                                 self.vjc, self.mjc, self.xti, self.eg, 
                                 self.Tnomabs)
-        if self.ise:
+        if self.ise != 0.:
             # jile produces ile
             self.jile.process_params(self.ise, self.ne, 0, 0, 0, 0, 
                                      self.xti, self.eg, self.Tnomabs)
-        if self.isc:
+        if self.isc != 0.:
             # jilc produces ilc
             self.jilc.process_params(self.isc, self.nc, 0, 0, 0, 0, 
                                      self.xti, self.eg, self.Tnomabs)
         # Constants needed for rb(ib) calculation
-        if self.irb:
+        if self.irb != 0.:
             self._ck1 = 144. / self.irb / self.area /np.pi/np.pi
             self._ck2 = np.pi*np.pi * np.sqrt(self.irb * self.area) / 24.
 
@@ -468,11 +469,11 @@ class BJTi(cir.Element):
         self.jir.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
                                self.egapn, self.egap_t)
         # Adjust ise and isc (which have different temperature variation)
-        if self.ise:
+        if self.ise != 0.:
             self.jile.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
                                     self.egapn, self.egap_t)
             self.jile._t_is /= tnXTB
-        if self.isc:
+        if self.isc != 0.:
             self.jilc.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
                                     self.egapn, self.egap_t)
             self.jilc._t_is /= tnXTB
@@ -507,27 +508,33 @@ class BJTi(cir.Element):
         # Calculate regular PN junctions currents and charges
         ibf = self.jif.get_id(vPort1[0])
         ibr = self.jif.get_id(vPort1[1])
-        if self.ise:
+        if self.ise != 0.:
             ile = self.jile.get_id(vPort1[0])
         else:
             ile = 0.
-        if self.isc:
+        if self.isc != 0.:
             ilc = self.jilc.get_id(vPort1[1])
         else:
             ilc = 0.
         # Kqb
         q1m1 = 1.
-        if self.var:
+        if self.var != 0.:
             q1m1 -= vPort1[0] / self.var
-        if self.vaf:
+        if self.vaf != 0.:
             q1m1 -= vPort1[1] / self.vaf
         kqb = 1. / q1m1
-        q2 = 0.
-        if self.ikf:
-            q2 += ibf / self.ikf 
-        if self.ikr:
-            q2 += ibr / self.ikr
-        if q2:
+        # We need extra checking to consider the following
+        # possibilities to create the AD tape:
+        # 
+        # 1. both ikf and ikr are zero -> no tape generated
+        # 2. One of them is nonzero but both ibf and ibr are zero -> want tape
+        #    but only for the nonzero parameter
+        if self.ikf + self.ikr != 0.:
+            q2 = 0.
+            if self.ikf != 0.:
+                q2 += ibf / self.ikf 
+            if self.ikr != 0.:
+                q2 += ibr / self.ikr
             kqb *= .5 * (1. + np.sqrt(1. + 4. * q2))
 
         # Create output vector [ibe, ibc, ice, ...]
@@ -541,12 +548,12 @@ class BJTi(cir.Element):
         iVec[2] = (ibf - ibr) / kqb
 
         # RB
-        if self.rb:
+        if self.rb != 0.:
             # Using gyrator
             # vPort1[2] not defined if rb == 0
             # ib has area effect included (removed by _ck1 and _ck2)
             ib = vPort1[2] * glVar.gyr
-            if self.irb:
+            if self.irb != 0.:
                 ib1 = np.abs(ib)
                 x = np.sqrt(1. + self._ck1 * ib1) - 1.
                 x *= self._ck2 / np.sqrt(ib1)
@@ -568,29 +575,29 @@ class BJTi(cir.Element):
         # nothing is assigned to the output vector.
 
         # qbe is the first charge (0)
-        if self.tf:
+        if self.tf != 0.:
             # Effective tf
             tfeff = self.tf
-            if self.vtf:
+            if self.vtf != 0.:
                 x = ibf / (ibf + self.itf)
                 tfeff *= (1. + self.xtf * x*x * 
                           ad.safe_exp(vPort1[1] /1.44 /self.vtf))
             qVec[0] = tfeff * ibf
-        if self.cje:
+        if self.cje != 0.:
             qVec[0] += self.jif.get_qd(vPort1[0]) 
 
         # qbc 
         if self._qbx:
-            if self.tr:
+            if self.tr != 0.:
                 qVec[-2] = self.tr * ibr
-            if self.cjc:
+            if self.cjc != 0.:
                 qVec[-2] += self.jir.get_qd(vPort1[1]) * self.xcjc 
                 # qbx
                 qVec[-1] = self.jir.get_qd(vbcx) * (1. - self.xcjc)
         else:
-            if self.tr:
+            if self.tr != 0.:
                 qVec[-1] = self.tr * ibr
-            if self.cjc:
+            if self.cjc != 0.:
                 qVec[-1] += self.jir.get_qd(vPort1[1]) 
 
         # Consider area effect and invert currents if needed
@@ -608,7 +615,7 @@ class BJTi(cir.Element):
         by eval_cqs()
         """
         vce = vPort[0] - vPort[1]
-        if self.rb:
+        if self.rb != 0.:
             # currV[3] = ib * Rb * gyr
             # vPort[2] = ib / gyr
             pRb = currV[3] * vPort[2]

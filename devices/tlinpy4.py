@@ -129,13 +129,13 @@ class Device(cir.Element):
             # the length of each subsection.
             delta_x = self.length / self.nsect
             # Scale attenuation if fscale and fopt given
-            if self.fscale and self.fopt:
+            if self.fscale * self.fopt != 0.:
                 alphaf = self.alpha_nepers * np.sqrt(self.fopt / self.fscale)
             else:
                 alphaf = self.alpha_nepers
             # Now get the R, L, G and C of each subsection.
             R = 2.0 * alphaf * self.z0mag * delta_x
-            if self.fopt and self.tand:
+            if self.fopt * self.tand != 0.:
                 G = self.tand * 2. * np.pi * self.fopt * self.c * delta_x
             else:
                 G = 0.
@@ -243,7 +243,7 @@ class Device(cir.Element):
         # The following calculation is vectorized
         omega = 2. * np.pi * freq
 
-        if self.fscale:
+        if self.fscale != 0.:
             alphaf = self.alpha_nepers * np.sqrt(freq / self.fscale)
         else:
             alphaf = self.alpha_nepers

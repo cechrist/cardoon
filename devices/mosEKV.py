@@ -273,19 +273,19 @@ class IntEKV(cir.Element):
         #---------------------------------------------------------------
         # Calculate any missing parameters from user-defined settings
         # COX
-        if (not self.is_set('tox')) and self.tox:
+        if (not self.is_set('cox')) and self.tox != None:
             self.cox = const.epOx / self.tox
         # GAMMA
-        if (not self.is_set('gamma')) and self.nsub:
+        if (not self.is_set('gamma')) and self.nsub != None:
             self.gamma = np.sqrt(2. * const.q * const.epSi 
                                  * self.nsub * 1.e6) / self.cox
         # PHI
-        if (not self.is_set('phi')) and self.nsub:
+        if (not self.is_set('phi')) and self.nsub != None:
             self.phi = 2. * vtTnom * np.log(self.nsub / niTnom)
         # VT0: if specified, must be with the correct sign, otherwise
         # we have to adjust for P-channel
         if (not self.is_set('vt0')):
-            if self.vfb:
+            if self.vfb != None:
                 self.vt0 = self._tf * (self.vfb + self.phi 
                                        + self.gamma * np.sqrt(self.phi))
             else:
@@ -293,10 +293,11 @@ class IntEKV(cir.Element):
         # Make sure vt0 is positive for calculations
         self._vt0 = abs(self.vt0)
         # KP
-        if (not self.is_set('kp')) and self.u0:
+        if (not self.is_set('kp')) and self.u0 != None:
             self.kp = self.u0 * 1.e-4 * self.cox    # /*(m^2/cm^2)*/
         # UCRIT
-        if (not self.is_set('ucrit')) and (self.vmax > 0.) and (self.u0 > 0.):
+        if (not self.is_set('ucrit')) and (self.vmax != None) and \
+                (self.u0 != None):
             self.ucrit = self.vmax / (self.u0 * 1.e-4)
         # E0: no need for anything since theta != 0 triggers simple
         # mobility model
@@ -509,7 +510,7 @@ class IntEKV(cir.Element):
         
         # Transconductance factor and mobility reduction due to vertical field
         betao = self.kpa * self.np * self._weff / leq 
-        if self.theta:
+        if self.theta != 0.:
             # Simple mobility reduction model
             vpprime = 0.5 * (vp + np.sqrt(vp * vp + 2. * self._Vt * self._Vt))
             beta = betao / (1. + theta * vpprime)

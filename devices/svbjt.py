@@ -196,7 +196,7 @@ class SVBJTi(cir.Element):
         # Default state-variable VCCSs
         self.linearVCCS = [((1, self._et), (x1, tref), glVar.gyr),
                            ((1, self._ct), (x2, tref), glVar.gyr)]
-        if self.rb:
+        if self.rb != 0.:
             # rb is not zero: add internal terminals
             tBi = self.add_internal_term('Bi', 'V') 
             tib = self.add_internal_term('ib', '{0} A'.format(glVar.gyr)) 
@@ -213,7 +213,7 @@ class SVBJTi(cir.Element):
             # qbie, qbic
             self.qsOutPorts = [(tBi, self._et), (tBi, self._ct)]
             # Now check if Cjbc must be splitted (since rb != 0)
-            if self.cjc and (self.xcjc < 1.):
+            if (self.cjc != 0.) and (self.xcjc < 1.):
                 # add extra charge source
                 self.qsOutPorts.append((1, self._ct))
                 self._qbx = True
@@ -222,10 +222,10 @@ class SVBJTi(cir.Element):
         self.vPortGuess = np.zeros(len(self.controlPorts))
         # In principle we may not need any charge
         keepPorts = [ ]
-        if self.cje + self.tf:
+        if self.cje + self.tf != 0.:
             # keep qbe
             keepPorts.append(self.qsOutPorts[0])
-        if self.cjc + self.tr:
+        if self.cjc + self.tr != 0.:
             # keep qbc, qbx (if any)
             if self._qbx:
                 keepPorts += self.qsOutPorts[-2:]
@@ -256,16 +256,16 @@ class SVBJTi(cir.Element):
         self.jir.process_params(self.isat, self.nr, self.fc, self.cjc, 
                                 self.vjc, self.mjc, self.xti, self.eg, 
                                 self.Tnomabs)
-        if self.ise:
+        if self.ise != 0.:
             # jile produces ile
             self.jile.process_params(self.ise, self.ne, 0, 0, 0, 0, 
                                      self.xti, self.eg, self.Tnomabs)
-        if self.isc:
+        if self.isc != 0.:
             # jilc produces ilc
             self.jilc.process_params(self.isc, self.nc, 0, 0, 0, 0, 
                                      self.xti, self.eg, self.Tnomabs)
         # Constants needed for rb(ib) calculation
-        if self.irb:
+        if self.irb != 0.:
             self._ck1 = 144. / self.irb / self.area /np.pi/np.pi
             self._ck2 = np.pi*np.pi * np.sqrt(self.irb * self.area) / 24.
 
@@ -288,11 +288,11 @@ class SVBJTi(cir.Element):
         self.jir.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
                                self.egapn, self.egap_t)
         # Adjust ise and isc (which have different temperature variation)
-        if self.ise:
+        if self.ise != 0.:
             self.jile.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
                                     self.egapn, self.egap_t)
             self.jile._t_is /= tnXTB
-        if self.isc:
+        if self.isc != 0.:
             self.jilc.set_temp_vars(self.Tabs, self.Tnomabs, self.vt, 
                                     self.egapn, self.egap_t)
             self.jilc._t_is /= tnXTB
@@ -328,27 +328,33 @@ class SVBJTi(cir.Element):
         # Calculate junctions currents and voltages
         (ibf, vbe) = self.jif.get_idvd(vPort1[0])
         (ibr, vbc) = self.jir.get_idvd(vPort1[1])
-        if self.ise:
+        if self.ise != 0.:
             ile = self.jile.get_id(vbe)
         else:
             ile = 0.
-        if self.isc:
+        if self.isc != 0.:
             ilc = self.jilc.get_id(vbc)
         else:
             ilc = 0.
         # Kqb
         q1m1 = 1.
-        if self.var:
+        if self.var != 0.:
             q1m1 -= vbe / self.var
-        if self.vaf:
+        if self.vaf != 0.:
             q1m1 -= vbc / self.vaf
         kqb = 1. / q1m1
-        q2 = 0.
-        if self.ikf:
-            q2 += ibf / self.ikf 
-        if self.ikr:
-            q2 += ibr / self.ikr
-        if q2:
+        # We need extra checking to consider the following
+        # possibilities to create the AD tape:
+        # 
+        # 1. both ikf and ikr are zero -> no tape generated
+        # 2. One of them is nonzero but both ibf and ibr are zero -> want tape
+        #    but only for the nonzero parameter
+        if self.ikf + self.ikr != 0.:
+            q2 = 0.
+            if self.ikf != 0.:
+                q2 += ibf / self.ikf 
+            if self.ikr != 0.:
+                q2 += ibr / self.ikr
             kqb *= .5 * (1. + np.sqrt(1. + 4. * q2))
 
         # Create output vector [ibe, ibc, ice, ...]
@@ -364,12 +370,12 @@ class SVBJTi(cir.Element):
         iVec[4] = (ibf - ibr) / kqb
 
         # RB
-        if self.rb:
+        if self.rb != 0.:
             # Using gyrator
             # vPort1[2] not defined if rb == 0
             # ib has area effect included (removed by _ck1 and _ck2)
             ib = vPort1[2] * glVar.gyr
-            if self.irb:
+            if self.irb != 0.:
                 ib1 = np.abs(ib)
                 x = np.sqrt(1. + self._ck1 * ib1) - 1.
                 x *= self._ck2 / np.sqrt(ib1)
@@ -391,31 +397,31 @@ class SVBJTi(cir.Element):
         # nothing is assigned to the output vector.
 
         # qbe is the first charge (0)
-        if self.tf:
+        if self.tf != 0.:
             # Effective tf
             tfeff = self.tf
-            if self.vtf:
+            if self.vtf != 0.:
                 x = ibf / (ibf + self.itf)
                 # safe_exp() not needed since positive vbc grows
                 # logarithmically
                 tfeff *= (1. + self.xtf * x*x * 
                           np.exp(vbc /1.44 /self.vtf))
             qVec[0] = tfeff * ibf
-        if self.cje:
+        if self.cje != 0.:
             qVec[0] += self.jif.get_qd(vbe) 
 
         # qbc 
         if self._qbx:
-            if self.tr:
+            if self.tr != 0.:
                 qVec[-2] = self.tr * ibr
-            if self.cjc:
+            if self.cjc != 0.:
                 qVec[-2] += self.jir.get_qd(vbc) * self.xcjc 
                 # qbx
                 qVec[-1] = self.jir.get_qd(vbcx) * (1. - self.xcjc)
         else:
-            if self.tr:
+            if self.tr != 0.:
                 qVec[-1] = self.tr * ibr
-            if self.cjc:
+            if self.cjc != 0.:
                 qVec[-1] += self.jir.get_qd(vbc) 
 
         # Consider area effect and invert currents if needed
@@ -434,7 +440,7 @@ class SVBJTi(cir.Element):
         """
         # vce = vbe - vbc
         gyrvce = currV[1] - currV[3]
-        if self.rb:
+        if self.rb != 0.:
             # currV[5] = ib * Rb * gyr
             # vPort[2] = ib / gyr
             pRb = currV[5] * vPort[2]

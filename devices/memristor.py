@@ -157,7 +157,7 @@ class Device(cir.Element):
         tvc = self.add_internal_term('vc', 'V') 
         tref = self.add_reference_term() 
         # Set up source if q0 is given
-        if self.q0:
+        if self.q0 != 0.:
             self.isDCSource = True
             self.sourceOutput = (tref, tvc)
             self._i0 = self.q0 / self.c / self.rleak

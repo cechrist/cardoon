@@ -94,7 +94,7 @@ class Device(cir.Element):
         self._omega = 2. * np.pi * self.freq
         self._phase = self.phase * np.pi / 180.
 
-        if self.rint:
+        if self.rint != 0.:
             # Independent source attribute: output port 
             self.sourceOutput = (1, 0)
             # Can use Norton equivalent, no need for internal terminals

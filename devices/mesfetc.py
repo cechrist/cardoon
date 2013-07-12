@@ -183,7 +183,7 @@ class Device(cir.Element):
         else:
             self._Beta = self.beta
 
-        if self.tme and self.tm:
+        if self.tme * self.tm != 0.:
             self._idsFac = pow((1. + delta_T * self.tm), self.tme)
         else:
             self._idsFac = 1.

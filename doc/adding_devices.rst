@@ -194,6 +194,22 @@ values. Inductors are represented by a combination of VCCS and VCQS
   sanity checks here. Internal terminals/devices must also be
   connected here (see next section).
 
+* To prevent problems in the calculation of sensitivities using an
+  automatic differentiation (AD) library, avoid the following style of
+  writing conditional statements for ``float`` parameters::
+
+    if self.p1:
+        # some code
+
+  where ``p1`` is a ``float``-type parameter. Use instead::
+
+    if self.p1 != 0:
+        # some code
+ 
+  The reason for this is that when ``p1`` is set to an AD type, the
+  condition in the first example may be evaluated as ``True`` even
+  when is should be ``False``.
+
 
 Internal Terminals, Local References and Terminal Units
 -------------------------------------------------------

@@ -178,7 +178,7 @@ class Device(cir.Element):
         # The following calculation is vectorized
         omega = 2. * np.pi * freq
 
-        if self.fscale:
+        if self.fscale !=0.:
             alphaf = self.alpha_nepers * np.sqrt(freq / self.fscale)
         else:
             alphaf = self.alpha_nepers
@@ -224,7 +224,7 @@ class Device(cir.Element):
         """
         Returns a matrix with the DC G parameters
         """
-        if self.fscale:
+        if self.fscale != 0.:
             s12 = 1.
         else:
             s12 = np.exp(-self.alpha_nepers * self.length)
