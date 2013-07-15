@@ -14,6 +14,7 @@ independently.
 from __future__ import print_function
 #import copy
 import numpy as np
+import scipy.linalg as linalg
 from fsolve import fsolve_Newton, NoConvergenceError
 from integration import BEuler
 
@@ -367,7 +368,7 @@ def run_AC(ckt, fvec):
             set_Jac(Y, elem.nD_fpos, elem.nD_fneg, 
                     elem.nD_fpos, elem.nD_fneg, elem.get_Y_matrix(fvec[k]))
 
-        xVec[:,k] = np.linalg.solve(Y, sVec)
+        xVec[:,k] = linalg.solve(Y, sVec)
 
         
     # Save results in circuit
@@ -407,13 +408,26 @@ class _NLFunction(object):
         is what fsolve() is expecting (-deltax)
         """
         try:
-            deltax = np.linalg.solve(Jac, errFunc)
-        except np.linalg.LinAlgError:
+            self._LUpiv = linalg.lu_factor(Jac)
+            deltax = linalg.lu_solve(self._LUpiv, errFunc)
+            #deltax = linalg.solve(Jac, errFunc)
+        except linalg.LinAlgError:
             print('Singular Jacobian')
             #import pdb; pdb.set_trace()
             # Use pseudo-inverse
-            deltax = np.dot(np.linalg.pinv(Jac), errFunc)
+            deltax = np.dot(linalg.pinv(Jac), errFunc)
         return deltax
+
+    def get_chord_deltax(self, sV, iVec=None):
+        """
+        Get deltax for sV, iVec using existing factored Jacobian
+
+        Useful for the first iteration of transient analysis. If iVec
+        not given the stored value is used.
+        """
+        if iVec == None:
+            iVec = self.iVec
+        return linalg.lu_solve(self._LUpiv, iVec - sV)
 
     def _set_gmin(self, _lambda):
         """
@@ -568,6 +582,17 @@ class _NLFunction(object):
             return (x, res, iterations)
         else:
             raise NoConvergenceError('Source stepping did not converge')
+
+    def get_adjoint_voltages(self, d):
+        """
+        Return adjoint voltages for sensitivity calculations
+    
+        d: rhs vector
+        """
+        # solve transposed linear system
+        return linalg.lu_solve(self._LUpiv, d, trans = 1)
+
+
 
 #---------------------------------------------------------------------------
 

@@ -170,7 +170,7 @@ class Transient(ParamSet):
             sV = tran.get_rhs(timeVec[i])
             # solve equations: use previous time-step solution as an
             # initial guess
-            if i > 1 and glVar.sparse:
+            if i > 1:
                 # Re-use factorized Jacobian: This saves the time to
                 # evaluate the function and Jacobian plus the time for
                 # factorization. Only sparse implementation stores

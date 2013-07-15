@@ -276,6 +276,17 @@ class _NLFunctionSP(_NLFunction):
             raise NoConvergenceError('gmin stepping did not converge')
 
 
+    def get_adjoint_voltages(self, d):
+        """
+        Return adjoint voltages for sensitivity calculations
+    
+        d: rhs vector
+
+        Matrix must be factorized before calling this function
+        """
+        # Matrix already factorized, solve transposed system
+        return self._factorized(d, trans='T')
+
 
 #---------------------------------------------------------------------------
 
