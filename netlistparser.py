@@ -179,15 +179,26 @@ def convert_type(par, ptype):
             assert False, par[0] + ': Parameter has unknown type'
     else:
         if ptype == list:
-            # Assume the list contains all numeric values (otherwise
-            # it should have type==string in parameter definition)
-            try:
-                v = [string_to_number(val) for val in par[1]]
-                par[1] = v
-            except (ValueError, pp.ParseException):
-                raise ParseError('"', par[0] + 
-                                 '" must be a list of numeric values: ' 
-                                 + par[1])
+            # Convert to numeric values if possible
+            v = []
+            for item in par[1]:
+                try:
+                    val = string_to_number(item)   
+                except (ValueError, pp.ParseException):
+                    val = item
+                v.append(val)
+            par[1] = v
+#            Old approach: force numeric values
+#
+#            # Assume the list contains all numeric values (otherwise
+#            # it should have type==string in parameter definition)
+#            try:
+#                v = [string_to_number(val) for val in par[1]]
+#                par[1] = v
+#            except (ValueError, pp.ParseException):
+#                raise ParseError('"', par[0] + 
+#                                 '" must be a list of numeric values: ' 
+#                                 + par[1])
         else:
             raise ParseError('Can not convert "' + par[0] + '" value: '
                              + type(par[1]))

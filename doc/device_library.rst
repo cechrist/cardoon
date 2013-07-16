@@ -817,14 +817,14 @@ Parameters
  nf           1.0                               Forward current emission coefficient                 
  nr           1.0                               Reverse current emission coefficient                 
  ns           1.0                               substrate p-n coefficient                            
- rb           0.0                  W            Zero bias base resistance                            
- rbm          0.0                  W            Minimum base resistance                              
- rc           0.0                  W            Collector ohmic resistance                           
- re           0.0                  W            Emitter ohmic resistance                             
+ rb           0.0                  Ohm          Zero bias base resistance                            
+ rbm          0.0                  Ohm          Minimum base resistance                              
+ rc           None                 Ohm          Collector ohmic resistance                           
+ re           None                 Ohm          Emitter ohmic resistance                             
  temp         None                 C            Device temperature (None: use global temp.)          
- tf           0.0                  S            Ideal forward transit time                           
+ tf           0.0                  s            Ideal forward transit time                           
  tnom         27.0                 C            Nominal temperature                                  
- tr           0.0                  S            Ideal reverse transit time                           
+ tr           0.0                  s            Ideal reverse transit time                           
  type         npn                               Type (npn or pnp)                                    
  vaf          0.0                  V            Forward early voltage                                
  var          0.0                  V            Reverse early voltage                                
@@ -1842,14 +1842,14 @@ Parameters
  nf           1.0                               Forward current emission coefficient                 
  nr           1.0                               Reverse current emission coefficient                 
  ns           1.0                               substrate p-n coefficient                            
- rb           0.0                  W            Zero bias base resistance                            
- rbm          0.0                  W            Minimum base resistance                              
- rc           0.0                  W            Collector ohmic resistance                           
- re           0.0                  W            Emitter ohmic resistance                             
+ rb           0.0                  Ohm          Zero bias base resistance                            
+ rbm          0.0                  Ohm          Minimum base resistance                              
+ rc           None                 Ohm          Collector ohmic resistance                           
+ re           None                 Ohm          Emitter ohmic resistance                             
  temp         None                 C            Device temperature (None: use global temp.)          
- tf           0.0                  S            Ideal forward transit time                           
+ tf           0.0                  s            Ideal forward transit time                           
  tnom         27.0                 C            Nominal temperature                                  
- tr           0.0                  S            Ideal reverse transit time                           
+ tr           0.0                  s            Ideal reverse transit time                           
  type         npn                               Type (npn or pnp)                                    
  vaf          0.0                  V            Forward early voltage                                
  var          0.0                  V            Reverse early voltage                                

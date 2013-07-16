@@ -86,6 +86,11 @@ class TestDev(ParamSet):
 
         nports = len(self.ports_bias)
         # Check that parameters make some sense
+        try:
+            vports  = np.array(self.ports_bias, dtype=float)
+        except ValueError:
+            raise AnalysisError('ports_bias for ' + self.device 
+                                + ': some fields are not numeric?')
         if not dev.isNonlinear:
             raise AnalysisError(self.device + ' is linear')
         if nports != len(dev.controlPorts) + dev.nDelays:
@@ -113,7 +118,6 @@ class TestDev(ParamSet):
                 param = True
             
         # Print some info about what is being tested
-        vports  = np.array(self.ports_bias)
         print('******************************************************')
         print('Nonlinear device internal source test analysis')
         print('******************************************************')
