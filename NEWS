@@ -2,8 +2,14 @@
 News
 ----
 
-Version 0.5.1
+Version 0.6.0
 ^^^^^^^^^^^^^
+
+     * Converted into Python library. Now the simulator can be used
+       from a Python session (as well as an application)
+
+     * Added sensitivity functions using automatic differentiation
+       (only DC for now)
 
      * Changed operating point interface ``get_OP()``
 

@@ -15,10 +15,14 @@ main repository, but they can be downloaded from:
 
 To test an individual netlist::
 
-   ../cardoon.py -x run_tests.py <netlist name>
+   ./run_tests.py <netlist name>
 
 To perform all automated tests, run the following::
 
-   ../cardoon.py -x run_tests.py *.net
+   ./run_tests.py *.net
 
+A simple profiling script is also provided. PYTHONPATH should be
+correctly set before running that script::
+
+   PYTHONPATH="..":$PYTHONPATH ./profile_netlist.py ring_osc_ahkab.net
 

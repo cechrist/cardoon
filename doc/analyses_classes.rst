@@ -5,14 +5,17 @@ Analyses Utility Classes and Functions
 
 Utility classes from the analyses package are documented here.
 
-.. automodule:: analyses.nodal
+.. automodule:: cardoon.analyses.nodal
        :members:
 
-.. automodule:: analyses.nodalSP
+.. automodule:: cardoon.analyses.nodalSP
        :members:
 
-.. automodule:: analyses.fsolve
+.. automodule:: cardoon.analyses.fsolve
        :members:
 
-.. automodule:: analyses.integration
+.. automodule:: cardoon.analyses.integration
+       :members:
+
+.. automodule:: cardoon.analyses.sensitivity
        :members:

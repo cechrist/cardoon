@@ -1,18 +1,24 @@
 #!/usr/bin/python
 #
-# This script should be run within cardoon environment
-
+# Use the script after program modifications to check for regressions
 
 import sys
 import os
 import numpy as np
+
+# Make sure we import the right code 
+pwd = os.getcwd()
+cardoonPath = pwd[:pwd.rfind('test')]
+sys.path.insert(0, cardoonPath)
+import cardoon.simulator as cs
+import cardoon.circuit as cir
 
 flag = False
 # Check arguments
 if len(sys.argv) >= 2:
     if sys.argv[1] == '-g':
         if len(sys.argv) == 2:
-            print('\nUsage: cardoon -x run_tests.py [-g] <netlists>')
+            print('\nUsage: run_tests.py [-g] <netlists>')
         else:
             # Re-generate output data
             netlists = sys.argv[2:]
@@ -22,15 +28,20 @@ if len(sys.argv) >= 2:
             print(' *Existing results are being erased*')
             print('\n=======================================================')
     else:
-        netlists = sys.argv[1:]
+        if sys.argv[1] == '*.net':
+            # argument was not expanded (we are probably on Windows)
+            files = os.listdir(os.curdir)
+            netlists = [f for f in files if f[-4:]=='.net']
+        else:
+            netlists = sys.argv[1:]
 else:
     print('\nNo netlist specified, exiting ...')
     exit(-1)
 
 for net in netlists:
     circuit = cir.get_mainckt()
-    analysisQueue = parse_net(net, circuit)
-    run_analyses(analysisQueue)
+    analysisQueue = cs.parse_net(net, circuit)
+    cs.run_analyses(analysisQueue)
     basename = net.split('.net')[0]
     if flag:
         # Move output data to reference file names
@@ -79,8 +90,9 @@ for net in netlists:
                     exit(-1)
                 res = np.average(abs(delta))
                 residual += res
-                if not np.all(abs(delta) < (abs(glVar.reltol * refResult[var])
-                                            + glVar.abstol)):
+                if not np.all(abs(delta) < (abs(cs.glVar.reltol * 
+                                                refResult[var])
+                                            + cs.glVar.abstol)):
                     message = """
 Reference file: {0}
 Variable: {1}
@@ -100,7 +112,7 @@ Residual: {2}""".format(reffile, var, res)
         print('=======================================================\n')
 
     # Reset everything
-    reset_all()
+    cs.reset_all()
 
 if not flag:
     if warningflag:

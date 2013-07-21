@@ -743,7 +743,7 @@ needed.
 Devices Package Documentation
 -----------------------------
     
-.. automodule:: devices
+.. automodule:: cardoon.devices
        :members:
 
 

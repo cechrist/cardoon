@@ -32,19 +32,21 @@ help:
 	@echo "  linkcheck to check all external links for integrity"
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
 
-device_library.rst:
-	../cardoon.py -c 
+.PHONY: catalogs
+
+catalogs: 
+	python -m cardoon -c 
 
 # Optional: Requires pyreverse
-circuit_uml.png: ../circuit.py ../paramset.py
-	pyreverse -o png circuit paramset
+circuit_uml.png: ../cardoon/circuit.py ../cardoon/paramset.py 
+	pyreverse -o png cardoon.circuit cardoon.paramset
 	mv classes_No_Name.png circuit_uml.png
 	rm packages_No_Name.png
 
 clean:
 	-rm -rf $(BUILDDIR)/*
 
-html: device_library.rst # circuit_uml.png
+html: catalogs
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

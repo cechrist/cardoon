@@ -2,19 +2,41 @@
 Introduction
 ------------
 
-Cardoon is a circuit simulator program being developed using
-Python. The design was originally inspired from several ideas in
-fREEDA (http://www.freeda.org/) and carrot
+Cardoon is an electronic circuit simulator library/program written in
+Python. The initial design was inspired from several ideas in fREEDA
+(http://www.freeda.org/) and carrot
 (http://vision.lakeheadu.ca/research.html), plus some improvements
 that take advantage of the flexibility in Python.
 
-One of the main goals of this project is to obtain a program which is
-easy to modify and test to experiment new simulation
-algorithms/models. Following good software engineering practices, the
-program and the documentation are being developed at the same
-time. Thus all implemented features are documented. Complete
-documentation for this project is included with the source and can
-also be found at:
+One of the main goals of this project is to obtain a library to
+experiment new simulation algorithms/models in interactive mode or in
+other python applications. The possibilities for expansion are
+endless. Sample session (using ipyhton)::
+
+    In [1]: import cardoon.simulator as cs
+    
+    In [2]: cs.run_netlist('bias_npn.net')
+    ******************************************************
+                 Operating point analysis
+    ******************************************************
+    
+     # Test of a transistor device 
+    
+    Using dense matrices
+    
+    Number of iterations =  17
+    Residual =  5.72923228467e-06
+    
+     Node      |  Value               | Unit 
+    ----------------------------------------
+    1          |        3.49950994522 | V
+    10         |        11.9158367321 | V
+    ...
+
+Following good software engineering practices, the program and the
+documentation are being developed at the same time. Thus all
+implemented features are documented. Complete documentation for this
+project is included with the source and can also be found at:
 
   http://vision.lakeheadu.ca/cardoon/
 
@@ -52,8 +74,8 @@ the device model code.  Another design feature is that electro-thermal
 models (*i.e.*, with an additional thermal port) can be automatically
 generated from temperature-dependent electrical models.
 
-Cardoon is being developed on Debian GNU/Linux, but it is know to work
-on MS Windows (using WinPython) and should also work on other
+Cardoon is being developed on Debian GNU/Linux, but it is known to
+work on MS Windows (using WinPython) and should also work on other
 operating systems / distributions.
 
 Comments are welcome!

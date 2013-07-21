@@ -20,16 +20,16 @@ All device model classes are derived from the ``Element`` class.
 Modules and classes
 -------------------
 
-.. automodule:: circuit
+.. automodule:: cardoon.circuit
        :members:
 
-.. automodule:: paramset
+.. automodule:: cardoon.paramset
        :members:
 
-.. automodule:: globalVars
+.. automodule:: cardoon.globalVars
        :members:
 
-.. automodule:: devices
+.. automodule:: cardoon.devices
        :members:
 
 UML diagrams generated using pyreverse (http://www.logilab.org/2560)

@@ -1,125 +1,10 @@
 
 
-Installation and Usage
-======================
-
-Installation on GNU/Linux
--------------------------
-
-Cardoon is being developed in Debian GNU/Linux
-<http://www.debian.org>, but it should work in other environments if
-the Python interpreter and the libraries are available.  In addition
-to a Python interpreter (version 2.6 or possibly 2.7), several
-free libraries are required to run cardoon. In Debian Linux or
-Debian-based distributions (Ubuntu, Linux Mint and others) all of
-these libraries except pycppad can be installed as packages::
-
-  apt-get install libsuperlu3 python-numpy python-scipy python-matplotlib \
-  python-pyparsing ipython python-sphinx pylint libboost-python-dev
-
-To install pycppad install cppad first by following the instructions
-on their websites. The corresponding websites for each library are
-listed below:
-
-* pycppad: Automatic differentiation
-
-  - cppad:  http://www.coin-or.org/CppAD/Doc/cppad.xml
-
-  - pycppad:  http://www.seanet.com/~bradbell/pycppad/pycppad.xml 
-
-  - pycppad uses the boost.python library http://www.boost.org/libs/python/
-
-* numpy:  http://numpy.scipy.org/ (matrix and vector support)
-
-* scipy:  http://www.scipy.org/ (sparse matrix support, FFT, etc.)
-
-* matplotlib:  http://matplotlib.sourceforge.net/ (plotting)
-
-* pyparsing:  http://pyparsing.wikispaces.com/ (parser, cardoon tested
-  with up to version 1.5.2)
-
-* ipython:  http://ipython.org/ (iterative shells)
-
-* Sphinx: http://sphinx.pocoo.org/ (documentation)
-
-* pyreverse from the pylint package: http://www.logilab.org/2560 (to
-  generate UML diagrams)
-
-Most of these libraries in turn depend on other libraries They should
-be automatically installed. Some must be installed manually such as
-libsuperlu3 (http://crd-legacy.lbl.gov/~xiaoye/SuperLU/) because it is
-not in the python-scipy dependencies.
-
-You may also install *git* to fetch the source code from the github
-repository::
-
-    git clone git://github.com/cechrist/cardoon.git
-
-Alternatively the source code can be downloaded as a zip file from:
-
-https://github.com/cechrist/cardoon
-
-Unpack the zip file in some directory and run the simulator from the
-command line.
-
-
-
-Installation on MS Windows
---------------------------
-
-There are many possible setups, one of them is discussed here. If you
-are not building the pycppad library, download and install
-WinPython-32-bit-2.7.5.1 from http://code.google.com/p/winpython/ .
-WinPython comes with most of the required libraries ready to use. Only
-two additional libraries are needed:
-
-* pycppad: Automatic differentiation
-
-  - cppad:  http://www.coin-or.org/CppAD/Doc/cppad.xml
-
-  - pycppad:  http://www.seanet.com/~bradbell/pycppad/pycppad.xml 
-
-  - pycppad uses the boost.python library http://www.boost.org/libs/python/
-
-  A pre-compiled version to be used with WinPython-32-bit-2.7.5.1 is
-  available at: 
-  http://vision.lakeheadu.ca/cardoon/pycppad-WinPython-32bit-2.7.5.1.zip
-
-  Open the zip file and put all files in the ``python-2.7.5``
-  subdirectory of the WinPython installation::
-
-      cd WinPython-32bit-2.7.5.1\python-2.7.5
-      unzip c:\Users\user1\Downloads\pycppad-WinPython-32bit-2.7.5.1.zip
-
-  pycppad should be ready to use after this step. If you would rather
-  compile the libraries yourself, some instructions are provided at:
-  http://list.coin-or.org/pipermail/cppad/2013q2/000309.html
-
-* pyparsing:  http://pyparsing.wikispaces.com/ (parser)
-
-  Download the source from the official site (tested up to version
-  1.5.2), open in some directory and run the following in a "WinPython
-  Command Prompt" window::
-
-    python setup.py install
-
-  pyparsing should be ready to use after this step.
-
-The source code for the cardoon simulator can be downloaded as a zip
-file from:
-
-https://github.com/cechrist/cardoon
-
-Unpack the zip file in some directory and (for now) run all commands
-from a "WinPython Command Prompt" window as follows::
-
-    c:\src\cardoon\examples> python ..\cardoon.py memductor.net
-
-(A ``.bat`` file could be created to invoke the siumulator)
-
-
 Usage
------
+=====
+
+From the command line
+---------------------
 
 In the most common usage mode, the main program reads a netlist file,
 builds the circuit described there and runs any specified
@@ -133,14 +18,13 @@ Sample session
 After the source is installed, change into the cardoon directory and
 run the program with no arguments for a brief help message::
 
-    cechrist@phobos:~/src/cardoon$ python cardoon.py
+    cechrist@venus:~$ python -m cardoon
     
-    Cardoon Circuit Simulator 0.4 release 0.4.2.dev
+    Cardoon Circuit Simulator 0.6 release 0.6.0.dev
     Usage:
             cardoon <netlistname>        : Process netlist file
             cardoon -c                   : Generate catalogs
             cardoon -x <script> <args>   : execute Python script
-            cardoon -i                   : drop to Ipython shell
 
 In this document the first form of execution listed above is
 described. The last two forms allow execution of arbitrary Python code
@@ -150,9 +34,9 @@ here (for now).
 To run one netlist, change into the ``cardoon/workspace`` directory
 and execute the program as follows::
 
-    cechrist@phobos:~/src/cardoon/workspace$ cardoon bias_npn.net 
-
-    Cardoon Circuit Simulator 0.4 release 0.4.2.dev
+    cechrist@venus:~/src/cardoon/workspace$ python -m cardoon bias_npn.net 
+    
+    Cardoon Circuit Simulator 0.6 release 0.6.0.dev
     ******************************************************
                  Operating point analysis
     ******************************************************
@@ -162,13 +46,13 @@ and execute the program as follows::
     Using dense matrices
     
     Number of iterations =  17
-    Residual =  5.72923232187e-06
+    Residual =  5.72923228467e-06
     
      Node      |  Value               | Unit 
     ----------------------------------------
-    1          |              3.49951 | V
-    10         |              11.9158 | V
-    2          |              0.80018 | V
+    1          |        3.49950994522 | V
+    10         |        11.9158367321 | V
+    2          |       0.800179840214 | V
     3          |                 10.0 | V
     gnd        |                  0.0 | V
     
@@ -176,12 +60,69 @@ and execute the program as follows::
     
         Internal nodal variables:
     
-        et         :           0.00425608 V
-        ct         :              3.47695 V
-        x2         :             -2.69946 s.v.
-        x1         :              290.954 s.v.
-        Bi         :              0.80005 V
-        ib         :            0.0958315 0.001 A
+        et         :     0.00425607912346 V
+        ct         :        3.47695418943 V
+        x2         :       -2.69945983799 s.v.
+        x1         :        290.954259747 s.v.
+        Bi         :       0.800050107221 V
+        ib         :      0.0958314599978 0.001 A
+    
+        Operating point info:
+    
+        IB         : 9.58314599978e-05
+        IC         : 0.00841632678691
+        IE         : -0.00851215824691
+        Power      : 0.0294934732763
+        Temp       : 29.1439
+        VBE        : 0.795794028098
+        VCE        : 3.49525386609
+    
+    
+    op analysis time: 0.01 s
+    
+    Press [Enter] to exit ...
+
+
+Interactive Session
+-------------------
+
+Interactive use is in experimental mode and likely to change. The main
+functions are provided in the ``simulator`` module. For example the
+``ring_osc_ahkab.net`` from the ``/examples`` directory is run as
+follows::
+
+    In [1]: import cardoon.simulator as cs
+    
+    In [2]: cs.run
+    cs.run_analyses  cs.run_netlist   
+    
+    In [2]: cs.run_netlist('ring_osc_ahkab.net')
+    ******************************************************
+                     Transient analysis
+    ******************************************************
+    
+     ### RING OSCILLATOR with 3 inverters ### 
+    
+    Using dense matrices
+    
+    Calculating DC operating point ... Succeded.
+    
+    System dimension: 7
+    Number of samples: 200
+    Integration method: trap
+    Printing one dot every 50 samples:
+    ...
+    Average iterations: 2.345
+    Average residual: 1.31511609988e-06
+    
+    tran analysis time: 1.24 s
+
+    In [3]: 
+
+(a plot should pop-up).
+
+.. automodule:: cardoon.simulator
+       :members:
 
 
 Netlist Format

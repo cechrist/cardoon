@@ -4,12 +4,9 @@ Development Plan (TODO file)
 
 Short-term goals:
 
-  #. Add support for convolution of frequency defined elements 
+  #. Add support for convolution of frequency-defined elements 
   
 Longer term goals and other tasks to be done at some time:
-
-  * Convert into Python library with easy-to-use setup script and
-    re-organize executable behaviour
 
   * Add netlist variable sweep in DC analysis
   

@@ -17,6 +17,7 @@ User's Manual
    :maxdepth: 2
 
    intro
+   install
    usage
    catalogs
    examples/examples
