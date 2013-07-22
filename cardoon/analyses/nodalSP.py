@@ -21,6 +21,7 @@ performance.
 """
 
 from __future__ import print_function
+from warnings import warn
 import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg 
@@ -28,6 +29,7 @@ from fsolve import fsolve_Newton, NoConvergenceError
 from integration import BEuler
 import nodal
 from nodal import set_xin, set_i, restore_RCnumbers, delay_interp, _NLFunction
+from cardoon.globalVars import glVar
 
 # ****************** Stand-alone functions to be optimized ****************
 
@@ -215,12 +217,14 @@ class _NLFunctionSP(_NLFunction):
         # Decompose matrix
         try:
             self._factorized = sp.linalg.factorized(M)
+            # Solve linear system
+            self.deltaxVec[:] = self._factorized(errFunc)
         except RuntimeError as re:
             # In the future we could try a least-squares solution here
-            print('\nProblem factoring matrix: ', re)
-            exit()
-        # Solve linear system
-        self.deltaxVec[:] = self._factorized(errFunc)
+            warn('\nProblem factoring matrix: {0}'.format(re))
+            # Try moving solution a little
+            self.deltaxVec[:] = 10. * glVar.abstol \
+                * np.random.random(self.deltaxVec.shape)
         return self.deltaxVec
 
     def get_chord_deltax(self, sV, iVec=None):

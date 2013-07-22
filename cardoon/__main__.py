@@ -6,12 +6,19 @@ For now this is quite rudimentary.
 """
 from __future__ import print_function
 import sys
+import warnings
 import simulator
 import catalogs
 from netlistparser import ParseError
 from circuit import CircuitError
 from paramset import ParamError
 from simulator import version, release
+
+# Comment this out to see all warnings 
+warnings.filterwarnings('ignore', category=RuntimeWarning)
+# Show user warnings
+warnings.filterwarnings('always', category=UserWarning)
+
 
 print('\nCardoon Circuit Simulator {0} release {1}'.format(version, release))
 if len(sys.argv) < 2:

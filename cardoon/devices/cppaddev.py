@@ -53,9 +53,6 @@ import numpy as np
 import pycppad as ad
 import warnings
 
-# Comment this out to see all warnings 
-warnings.filterwarnings('ignore', category=RuntimeWarning)
-
 def safe_exp(x):
     """
     Same as exp() except when x is greater than threshold. It has

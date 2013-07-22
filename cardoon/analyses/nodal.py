@@ -17,6 +17,7 @@ import numpy as np
 import scipy.linalg as linalg
 from fsolve import fsolve_Newton, NoConvergenceError
 from integration import BEuler
+from cardoon.globalVars import glVar
 
 # ****************** Stand-alone functions to be optimized ****************
 
@@ -412,10 +413,15 @@ class _NLFunction(object):
             deltax = linalg.lu_solve(self._LUpiv, errFunc)
             #deltax = linalg.solve(Jac, errFunc)
         except linalg.LinAlgError:
-            print('Singular Jacobian')
-            #import pdb; pdb.set_trace()
-            # Use pseudo-inverse
-            deltax = np.dot(linalg.pinv(Jac), errFunc)
+            warn('\nProblem factoring matrix')
+            # Use least-squares
+            deltax = linalg.lstsq(Jac, errFunc)
+        # Since scipy.linalg in WinPython is not throwing exceptions,
+        # try again:
+        if np.isnan(np.sum(deltax)):
+            # Try moving solution a little: 
+            deltax = 10. * glVar.abstol * np.random.random(errFunc.shape)
+        #import pdb; pdb.set_trace()
         return deltax
 
     def get_chord_deltax(self, sV, iVec=None):
