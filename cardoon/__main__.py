@@ -12,7 +12,7 @@ import catalogs
 from netlistparser import ParseError
 from circuit import CircuitError
 from paramset import ParamError
-from simulator import version, release
+from simulator import version, release, license
 
 # Comment this out to see all warnings 
 warnings.filterwarnings('ignore', category=RuntimeWarning)
@@ -21,20 +21,18 @@ warnings.filterwarnings('always', category=UserWarning)
 
 
 print('\nCardoon Circuit Simulator {0} release {1}'.format(version, release))
-if len(sys.argv) < 2:
+if (len(sys.argv)) < 2 or (sys.argv[1] == '-h'):
     print('Usage:')
     print('        cardoon <netlistname>        : Process netlist file')
     print('        cardoon -c                   : Generate catalogs')
-    print('        cardoon -x <script> <args>   : execute Python script')
+    print('        cardoon -h                   : Print this message')
+    print('        cardoon -l                   : Print license\n')
     exit(1)
 
 if sys.argv[1] == '-c':
     catalogs.make_catalogs()
-elif sys.argv[1] == '-x':
-    # Execute python script
-    with open(sys.argv[2], 'r') as f:
-        sys.argv = sys.argv[2:]
-        exec(f)
+elif sys.argv[1] == '-l':
+    print(license)
 else:
     # Use 'main' circuit
     try:

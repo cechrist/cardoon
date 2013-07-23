@@ -19,7 +19,7 @@ The following modules and packages are available:
 
 """
 
-from simulator import version, release, copyright, run_netlist
+from simulator import version, release, copyright, license, run_netlist
 
 __all__ = ['simulator', 'circuit', 'analyses', 'devices']
 

@@ -211,7 +211,7 @@ class Device(cir.Element):
         """
         # Invert all voltages in case of a P-channel device
         vPort1 = self._tf * vPort
-        # The following formula (11.2.10) seems to work better
+        # The following formula (11.3.1) seems to work better
         # but it is just an approximation
         vp = pow(np.sqrt(vPort1[1]-self.vt0 \
                              + pow(np.sqrt(2.*self.phi)+\

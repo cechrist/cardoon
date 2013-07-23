@@ -21,7 +21,7 @@ from netlistparser import parse_file
 import analyses
 import devices
 
-copyright = u'2011, 2012, 2013, Carlos Christoffersen'
+copyright = u'2011, 2012, 2013, Carlos Christoffersen and others'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -31,6 +31,14 @@ copyright = u'2011, 2012, 2013, Carlos Christoffersen'
 version = '0.6'
 # The full version, including alpha/beta/rc tags.
 release = '0.6.0.dev'
+
+license = """
+Copyright (C) {0}
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+""".format(copyright)
+
 
 def reset_all():
     """

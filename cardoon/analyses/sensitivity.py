@@ -162,6 +162,7 @@ def create_sensitivity_tape(device, parList, inVec):
 
     # tape stored in f
     f = ad.adfun(a_inVec, a_outVec)
+    f.optimize()
     # Restore element to original state
     device.clean_attributes()
     device.set_attributes()
