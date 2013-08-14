@@ -622,13 +622,17 @@ class Circuit(object):
 
     def copy(self, newName):
         """ 
-        Make a copy of an uninitialized circuit
+        Returns a copy of an uninitialized circuit
 
         newName is the circuit name for the copy
 
         The elements in the copy point to the ParamSet of the original
         element (models are not cloned). Elements are shallow-copied,
         but terminal connections are re-generated.
+
+        Example::
+
+          ckt2 = ckt1.copy('ckt1copy')
 
         If the circuit has been flattened, the copy does not include
         subcircuit instances, otherwise a shallow copy of subcircuit
@@ -648,7 +652,7 @@ class Circuit(object):
             cktCopy.add_elem(elemCopy)
             # Create connection list
             termList = [term.instanceName for term in elem.connection]
-            self.connect(elemCopy, termList)
+            cktCopy.connect(elemCopy, termList)
         if not self._flattened:
             for xsubckt in self.subcktDict.itervalues():
                 xsubcktCopy = copy.copy(xsubckt)
@@ -658,7 +662,7 @@ class Circuit(object):
                 cktCopy.add_subckt(xsubcktCopy)
                 # Create connection list
                 termList = [term.instanceName for term in xsubckt.connection]
-                self.connect(xsubcktCopy, termList)
+                cktCopy.connect(xsubcktCopy, termList)
         return cktCopy
 
     def init(self):
@@ -1050,7 +1054,7 @@ not be included in the external terminal list in subckt""")
 
     def copy(self, newName):
         """ 
-        Make a copy of an uninitialized circuit
+        Returns a copy of an uninitialized circuit
 
         newName is the circuit name for the copy
 
@@ -1071,7 +1075,7 @@ not be included in the external terminal list in subckt""")
             cktCopy.add_elem(elemCopy)
             # Create connection list
             termList = [term.instanceName for term in elem.connection]
-            self.connect(elemCopy, termList)
+            cktCopy.connect(elemCopy, termList)
         if not self._flattened:
             for xsubckt in self.subcktDict.itervalues():
                 xsubcktCopy = copy.copy(xsubckt)
@@ -1081,7 +1085,7 @@ not be included in the external terminal list in subckt""")
                 cktCopy.add_subckt(xsubcktCopy)
                 # Create connection list
                 termList = [term.instanceName for term in xsubckt.connection]
-                self.connect(xsubcktCopy, termList)
+                cktCopy.connect(xsubcktCopy, termList)
 
 
         return cktCopy
