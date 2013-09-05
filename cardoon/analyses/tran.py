@@ -175,7 +175,7 @@ class Transient(ParamSet):
                 # evaluate the function and Jacobian plus the time for
                 # factorization. Only sparse implementation stores
                 # factorized Jacobian
-                xOld -= tran.get_chord_deltax(sV)
+                xOld += tran.get_chord_deltax(sV)
             try: 
                 (x, res, iterations) = solve(xOld, sV, 
                                              tran.convergence_helpers)

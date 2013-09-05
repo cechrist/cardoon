@@ -203,7 +203,7 @@ class _NLFunctionSP(_NLFunction):
         sp.linalg.use_solver(useUmfpack = False, assumeSortedIndices = True)
         self._factorized = None
 
-    def _get_deltax(self, errFunc, Jac):
+    def factor_and_solve(self, errFunc, Jac):
         """
         Solves linear system: Jac deltax = errFunc
 
@@ -227,6 +227,49 @@ class _NLFunctionSP(_NLFunction):
                 * np.random.random(self.deltaxVec.shape)
         return self.deltaxVec
 
+
+    def solve_linear_system(self, b):
+        """
+        Solve linear system using the last Jacobian matrix
+        
+        Requires matrix previously decomposed with factor_and_solve()
+
+        Jac x = b
+    
+        b: rhs vector/matrix
+
+        Returns x
+        """
+        #import pdb; pdb.set_trace()
+        # Matrix already factorized, solve linear system
+        if len(b.shape) > 1:
+            # Must solve column by colunm
+            x = np.empty_like(b)
+            for i in range(b.shape[1]):
+                if np.any(b[:,i] != 0.):
+                    # Solve system
+                    x[:,i] = self._factorized(b[:,i])
+                else:
+                    # Skip solving systems with zero rhs
+                    x[:,i] = np.zeros(b.shape[0])
+        else:
+            x= self._factorized(b)
+
+        return x
+
+
+    def get_adjoint_voltages(self, d):
+        """
+        Return adjoint voltages for sensitivity calculations
+    
+        d: rhs vector
+
+        Matrix must be factorized before calling this function
+        """
+        # Matrix already factorized, solve transposed system
+        return self._factorized(d, trans='T')
+
+
     def get_chord_deltax(self, sV, iVec=None):
         """
         Get deltax for sV, iVec using existing factored Jacobian
@@ -236,7 +279,7 @@ class _NLFunctionSP(_NLFunction):
         """
         if iVec == None:
             iVec = self.iVec
-        return self._factorized(iVec - sV)
+        return self._factorized(sV - iVec)
 
     def solve_homotopy_gmin2(self, x0, sV):
         """Newton's method with gmin stepping (nonlinear ports)"""
@@ -262,7 +305,7 @@ class _NLFunctionSP(_NLFunction):
             iVec += self.gmin * tmpVec
             Jac1 = Jac.tocsc() + self.gmin * Gones
             assert Jac1.format == 'csc'
-            return self._get_deltax(iVec - sV, Jac1)
+            return self.factor_and_solve(sV - iVec, Jac1)
 
         def f_eval(xVec):
             iVec = self.get_i(xVec)
@@ -279,17 +322,6 @@ class _NLFunctionSP(_NLFunction):
         else:
             raise NoConvergenceError('gmin stepping did not converge')
 
-
-    def get_adjoint_voltages(self, d):
-        """
-        Return adjoint voltages for sensitivity calculations
-    
-        d: rhs vector
-
-        Matrix must be factorized before calling this function
-        """
-        # Matrix already factorized, solve transposed system
-        return self._factorized(d, trans='T')
 
 
 #---------------------------------------------------------------------------

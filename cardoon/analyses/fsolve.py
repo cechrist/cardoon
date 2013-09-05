@@ -69,7 +69,7 @@ def fsolve_Newton(x0, get_deltax, f_eval):
 
       ``x0``: initial guess vector
 
-      ``get_deltax(x)``: function that returns the :math:`J(x_n)^{-1}
+      ``get_deltax(x)``: function that returns the :math:`-J(x_n)^{-1}
       F(x_n)` vector
 
       ``f_eval(x)``: function that returns error function vector
@@ -105,7 +105,7 @@ def fsolve_Newton(x0, get_deltax, f_eval):
         maxDelta = max(abs(deltax))
         if maxDelta > glVar.maxdelta:
             deltax *= glVar.maxdelta/maxDelta
-        xnew = x - deltax
+        xnew = x + deltax
 
         # Check if deltax is small
         n1 = np.all(abs(deltax) < (glVar.reltol * np.maximum(abs(x), abs(xnew))

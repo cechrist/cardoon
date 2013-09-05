@@ -381,6 +381,26 @@ def run_AC(ckt, fvec):
     return xVec
 
 
+
+def condition_array(x):
+    """
+    Removes "inf"s and "nan"s from input array (x)
+    """
+    if not np.all(np.isfinite(x)):
+        mask = np.isnan(x)
+        if np.any(mask):
+            # Move a little away from trouble (no clue where to go with nan)
+            x[mask] = 10. * glVar.abstol
+        mask = np.isposinf(x)
+        if np.any(mask):
+            # Move in the right general direction
+            x[mask] = glVar.maxdelta
+        mask = np.isneginf(x)
+        if np.any(mask):
+            # Move in the right general direction
+            x[mask] = -glVar.maxdelta
+    return x
+
 #-------------------------------------------------------------------------
 # ****************************** Classes *********************************
 #-------------------------------------------------------------------------
@@ -401,39 +421,73 @@ class _NLFunction(object):
                                     self.solve_homotopy_gmin, 
                                     None]
 
-    def _get_deltax(self, errFunc, Jac):
+    def factor_and_solve(self, errFunc, Jac):
         """
         Solves linear system: Jac deltax = errFunc
-
-        So it returns the opposite of the Newton correction, but that
-        is what fsolve() is expecting (-deltax)
+        
+        Matrix is decomposed and internally stored
         """
         try:
+            # import pdb; pdb.set_trace()
             self._LUpiv = linalg.lu_factor(Jac)
             deltax = linalg.lu_solve(self._LUpiv, errFunc)
             #deltax = linalg.solve(Jac, errFunc)
         except linalg.LinAlgError:
             warn('\nProblem factoring matrix')
+            # Erase factored matrix: this prevents succesful calls
+            # with wrong matrix to solve_linear_system(), etc.
+            del self._LUpiv
             # Use least-squares
             deltax = linalg.lstsq(Jac, errFunc)
-        # Since scipy.linalg in WinPython is not throwing exceptions,
-        # try again:
-        if np.isnan(np.sum(deltax)):
-            # Try moving solution a little: 
-            deltax = 10. * glVar.abstol * np.random.random(errFunc.shape)
-        #import pdb; pdb.set_trace()
+        # Since scipy.linalg sometimes is not throwing exceptions,
+        # make sure everything is OK:
+        condition_array(deltax)
         return deltax
+
+    def solve_linear_system(self, b):
+        """
+        Solve linear system using the last Jacobian matrix
+        
+        Requires matrix previously decomposed with factor_and_solve()
+
+        Jac x = b
+    
+        b: rhs vector/matrix
+
+        Returns x
+        """
+        # solve linear system
+        x = linalg.lu_solve(self._LUpiv, b)
+        # Since scipy.linalg sometimes is not throwing exceptions,
+        # make sure everything is OK:
+        condition_array(x)
+        return x
+
+
+    def get_adjoint_voltages(self, d):
+        """
+        Return adjoint voltages for sensitivity calculations
+    
+        Requires matrix previously decomposed with factor_and_solve()
+
+        d: rhs vector
+        """
+        # solve transposed linear system
+        return linalg.lu_solve(self._LUpiv, d, trans = 1)
+
 
     def get_chord_deltax(self, sV, iVec=None):
         """
         Get deltax for sV, iVec using existing factored Jacobian
+
+        Requires matrix previously decomposed with factor_and_solve()
 
         Useful for the first iteration of transient analysis. If iVec
         not given the stored value is used.
         """
         if iVec == None:
             iVec = self.iVec
-        return linalg.lu_solve(self._LUpiv, iVec - sV)
+        return linalg.lu_solve(self._LUpiv, sV - iVec)
 
     def _set_gmin(self, _lambda):
         """
@@ -513,7 +567,7 @@ class _NLFunction(object):
         # Docstring removed to avoid printing this all the time
         def get_deltax(x):
             (iVec, Jac) = self.get_i_Jac(x) 
-            return self._get_deltax(iVec - sV, Jac)
+            return self.factor_and_solve(sV - iVec, Jac)
         def f_eval(x):
             iVec = self.get_i(x) 
             return iVec - sV
@@ -535,7 +589,7 @@ class _NLFunction(object):
             (iVec, Jac) = self.get_i_Jac(xVec) 
             iVec[idx] += self.gmin * xVec[idx]
             Jac[idx, idx] += self.gmin
-            return self._get_deltax(iVec - sV, Jac)
+            return self.factor_and_solve(sV - iVec, Jac)
         def f_eval(xVec):
             iVec = self.get_i(xVec)
             iVec[idx] += self.gmin * xVec[idx]
@@ -561,7 +615,7 @@ class _NLFunction(object):
             (iVec, Jac) = self.get_i_Jac(xVec) 
             iVec += self.gmin * np.dot(Gones, xVec)
             Jac += self.gmin * Gones
-            return self._get_deltax(iVec - sV, Jac)
+            return self.factor_and_solve(sV - iVec, Jac)
         def f_eval(xVec):
             iVec = self.get_i(xVec)
             iVec += self.gmin * np.dot(Gones, xVec)
@@ -579,7 +633,7 @@ class _NLFunction(object):
             self._lambda = _lambda
         def get_deltax(x):
             (iVec, Jac) = self.get_i_Jac(x) 
-            return self._get_deltax(iVec - self._lambda * sV, Jac)
+            return self.factor_and_solve(self._lambda * sV - iVec, Jac)
         def f_eval(x):
             return self.get_i(x) - self._lambda * sV
         (x, res, iterations, success) = \
@@ -588,15 +642,6 @@ class _NLFunction(object):
             return (x, res, iterations)
         else:
             raise NoConvergenceError('Source stepping did not converge')
-
-    def get_adjoint_voltages(self, d):
-        """
-        Return adjoint voltages for sensitivity calculations
-    
-        d: rhs vector
-        """
-        # solve transposed linear system
-        return linalg.lu_solve(self._LUpiv, d, trans = 1)
 
 
 

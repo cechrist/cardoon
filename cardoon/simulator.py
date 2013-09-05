@@ -2,7 +2,7 @@
 Simulator High-Level Functions
 ------------------------------
 
-.. module:: util
+.. module:: simulator
 .. moduleauthor:: Carlos Christoffersen
 
 High-level functions for interactive use. Example::
