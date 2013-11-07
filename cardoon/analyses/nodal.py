@@ -394,12 +394,37 @@ def condition_array(x):
         mask = np.isposinf(x)
         if np.any(mask):
             # Move in the right general direction
-            x[mask] = glVar.maxdelta
+            x[mask] = .1 * glVar.maxdelta
         mask = np.isneginf(x)
         if np.any(mask):
             # Move in the right general direction
-            x[mask] = -glVar.maxdelta
+            x[mask] = -.1 * glVar.maxdelta
     return x
+
+# Functions to manipulate nodal admittance matrices --------------------
+def add_to_diagonal(M, vec):
+    """
+    Adds vec to matrix diagonal
+
+    M is dense and vec is a single-dimensional list or array with
+    length less than matrix size
+
+    returns the same matrix with the sum
+    """
+    n = len(vec)
+    M[0:n, 0:n] += np.diag(vec)
+    return M
+
+def get_submatrix(M, n):
+    """
+    Returns n x n top left corner dense matrix
+
+    M is a dense matrix, n must be less or equal to matrix dimension
+    """
+    # Create a copy just in case the block is overwritten
+    block = M[0:n, 0:n].copy()
+    return block
+# --------------------------------------------------------------------
 
 #-------------------------------------------------------------------------
 # ****************************** Classes *********************************
@@ -674,9 +699,6 @@ class DCNodal(_NLFunction):
         self.Jac = np.empty((self.ckt.nD_dimension, self.ckt.nD_dimension))
         self.sVec = np.empty(self.ckt.nD_dimension)
         self.iVec = np.empty(self.ckt.nD_dimension)
-        if hasattr(self.ckt, 'nD_extRClist'):
-            # Allocate external currents vector
-            self.extSVec = np.empty(self.ckt.nD_dimension)
         self.refresh()
 
     def refresh(self):
@@ -696,23 +718,6 @@ class DCNodal(_NLFunction):
             set_Jac(self.G, elem.nD_fpos, elem.nD_fneg, 
                     elem.nD_fpos, elem.nD_fneg, elem.get_G_matrix())
             
-    def set_ext_currents(self, extIvec):
-        """
-        Set external currents applied to subcircuit
-
-        extIvec: vector of external currents. Length of this vector
-        should be equal to the number of external connections. The sum
-        of all currents must be equal to zero (KCL)
-
-        This will fail if not a subcircuit
-        """
-        # This idea still needs some testing
-        assert sum(extIvec[:ncurrents]) == 0
-        ncurrents = len(self.ckt.nD_extRClist)
-        # Must do the loop in case there are repeated connections
-        for val,rcnum in zip(extIvec, self.ckt.nD_extRClist):
-            self.extSVec[rcnum] = val
-
     def get_guess(self):
         """
         Retrieve guesses from vPortGuess in each nonlinear device
@@ -737,12 +742,7 @@ class DCNodal(_NLFunction):
         Get the source vector considering only the DC source components
         """
         # Erase vector first. 
-        try:
-            # If subcircuit add external currents
-            self.sVec[:] = self.extSVec
-        except AttributeError:
-            # Not a subcircuit
-            self.sVec.fill(0.)
+        self.sVec.fill(0.)
         for elem in self.ckt.nD_sourceDCElem:
             # first get the destination row/columns 
             outTerm = elem.nD_sourceOut
@@ -898,9 +898,6 @@ class TransientNodal(_NLFunction):
         # sharing of one circuit amongst several TransientNodal
         # objects, to use in hierarchical simulation.
         self.tdVecList = []
-#        if hasattr(self.ckt, 'nD_extRClist'):
-#            # Allocate external currents vector
-#            self.extSVec = np.empty(self.ckt.nD_dimension)
         self.refresh()
 
     def refresh(self):
@@ -1009,12 +1006,7 @@ class TransientNodal(_NLFunction):
         ctime: current time.
         """
         # Erase vector first. 
-        try:
-            # If subcircuit add external currents
-            self.sVec[:] = self.extSVec
-        except AttributeError:
-            # Not a subcircuit
-            self.sVec.fill(0.)
+        self.sVec.fill(0.)
         for elem in self.ckt.nD_sourceDCElem:
             # first get the destination row/columns 
             outTerm = elem.nD_sourceOut

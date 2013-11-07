@@ -1,0 +1,156 @@
+*** Two LMA 411 in cascade ***
+
+* Adapted for parallel_op.py
+
+.options sparse = 1
+*.analysis ac start=5GHz stop=16GHz num= 50 log=False
+*.analysis tran tstep= .5ps tstop=1ns shell=0 im=trap shell = 0
+.analysis eop 
+*.analysis op
+
+.plot ac_dB 2 26 100
+.plot tran 2 26 100
+
+* Input: 2, Out1: 26, Out2: 100
+
+* Main circuit
+xamp1 12 2 26 gndLMA411
+xamp2 12 26 100 gndLMA411
+xmain 12 2 26 100 mainckt
+
+**************************************************************************
+
+.subckt gndLMA411 vdd in out 
+xamp1 vdd gnd in out lma411
+res:rin in gnd r=100k
+res:rout out gnd r=100k
+.ends
+
+.subckt mainckt 12 2 26 100
+# Need this resistor to prevent floating node due to capacitive coupling
+res:rload1 26 0 r=10k
+res:rload 100 0 r=50
+vdc:v1 12 0 vdc=6
+vsin:vin 2 0 freq=10e9 mag=.05 phase=-90 rint=50.
+.ends
+
+###############################################################
+# LM411 Xband MMIC LNA  (LMA 411)
+###############################################################
+**  
+**  Low noise phemt lna using 0.25um technology
+**  First PHEMT is 300um (6x50um) wide and second is 400 um wide
+**  DC supply of 6 volts
+**  GaAs substrate thickness 100 um, silicon nitride passivation:
+**  Standard thickness 1,000 ang
+**  Litton process 
+**  spiral inductor modeled as regular inductor
+**
+**  Connections: <vdd> <vss> <input> <output>
+.subckt lma411 12 100 2 26
+
+.model m_line1 tlinpy4 (z0mag = 73.3 k=7.27 fscale=10e9 alpha=81.5 nsect=10 fopt=10e9 tand=0.006)
+.model m_line2 tlinpy4 (z0mag= 86.4  k=6.89 fscale=10e9 alpha=122 nsect=10 fopt=10e9 tand=0.006)
+.model m_line3 tlinpy4 (z0mag = 76.2 k=7.18 fscale=10e9 alpha= 87 nsect=10 fopt=10e9 tand=0.006)
+
+cap:c1 2 3 c=6e-12
+tlinpy4:t1 3 100 100 100 model=m_line2 length = 1108u
+tlinpy4:t2 3 100 4 100 model=m_line3 length = 197u
+
+xm1 5 4 6 mesfet1
+
+tlinpy4:t3 6 100 8 100 model=m_line3 length=313u
+tlinpy4:t4 6 100 7 100 model=m_line3 length=320u
+
+cap:c_via4 7 100 c=17p
+res:r_via4 7 100 r=10.15
+cap:c_via3 8 100 c=17p
+
+tlinpy4:t5 5 100 9 100 model=m_line3 length=102u
+tlinpy4:t6 9 100 10 100 model=m_line2 length=380u
+
+res:r1 10 11 r=10.53
+res:r2 11 12 r = 66.53
+cap:c_s6 11 100 c=17p
+
+tlinpy4:t7 9 100 13 100 model=m_line3 length=33u
+cap:c2 13 14 c=2p
+
+tlinpy4:t8 14 100 15 100 model=m_line2 length=705u
+tlinpy4:t9 14 100 100 100 model=m_line2 length=419u
+tlinpy4:t10 14 100 17 100 model=m_line3 length=69.6u 
+
+xm2 19 17 18 mesfet2
+
+cap:c_via8 18 100 c=17p
+res:r_via8 18 100 r=5.12
+tlinpy4:t11 19 100 20 100 model=m_line2 length=138u
+cap:cfb 20 21 c=4.8p
+res:rfb 21 22 r=237.4
+
+*NPortFoster1:f1 22 100 15 0
+*+ filename = filtronicsind.yp ports = 2 poles1 = 2 poles2 = 4
+
+ind:lfb 22 1500 l=1.268n 
+res:rlfb 1500 15 r=9.55
+tlinpy4:t12 19 100 23 100 model=m_line2 length=313.8u
+
+*NPortFoster1:f2 23 100 24 0
+*+ filename = filtronicsind.yp ports = 2 poles1 = 2 poles2 = 4
+
+ind:lp 23 2400 l=1.268n 
+res:rlp 2400 24 r=1.55
+
+res:rpad 24 12 r=26.6
+cap:c_via12 24 100 c=17p
+tlinpy4:t13 19 100 25 100 model=m_line1 length=229.4u
+cap:cout 25 26 c=6p
+.ends
+
+###############################################################
+# Subcircuits for MESFET extrinsic models
+###############################################################
+.subckt mesfet1 5 4 6
+
+mesfetc:m1 51 42 62  a0=0.09910 a1=0.08541  a2=-0.02030 a3=-0.01543 beta=0.01865 gama=0.8293 vds0=6.494 vt0=-1.2 vbi=0.8 cgd0=3f cgs0=528.2f isat=3e-12 nr=1.2 tau=1ps vbd=12 area=1
+
+res:rg 41 42 r=0.83
+res:rd 5 51 r=0.83
+res:rs 61 62 r=0.33
+
+ind:lg 4 41 l=7e-12
+ind:ls 6 61 l=11e-12
+
+cap:cds 51 62 c=60f
+cap:cdsd 51 8 c=.01u
+res:rdsd 8 62 r=666
+cap:cge 41 61 c=12f
+cap:cde 5 61 c=15f
+cap:cgde 41 51 c=30f
+
+.ends
+
+###############################################################
+.subckt mesfet2 5 4 6
+
+mesfetc:m1 51 42 62 a0=0.1321 a1=0.1085 a2=-0.04804 a3=-0.03821 beta=0.03141 gama=0.7946 vds0=5.892 vt0=-1.2 vbi=0.8 cgd0=4e-15 cgs0=695.2f isat=4e-12 n=1.2 tau=1ps vbd=12 area=1
+
+res:rg 41 42 r=0.63
+res:rd 52 51 r=0.63
+res:rs 61 62 r=0.25
+
+ind:lg 4 41 l=16p
+ind:ld 5 52 l=11p
+ind:ls 6 61 l=11p
+
+cap:cds 51 62 c=80f
+cap:cdsd 51 8 c=.01u
+res:rdsd 8 62 r=500
+cap:cge 41 61 c=16f
+cap:cde 5 61 c=20f
+cap:cgde 41 51 c=40f
+
+.ends
+
+
+.end

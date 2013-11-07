@@ -86,7 +86,7 @@ class SVBJTi(cir.Element):
                     -      |                |
                            +----------------+--o 2 (E)
 
-    2. If RB != 0 and IRB != 0::
+    2. If RB != 0::
 
                                      +----------------+--o 0 (C)
                                 -    |                |
@@ -187,7 +187,6 @@ class SVBJTi(cir.Element):
                            (tref, x2), (self._ct, self._et)]
         # Controling voltages are x1, x2
         self.controlPorts = [(x1, tref), (x2, tref)]
-        self.vPortGuess = np.array([0., 0.])
         # qbe, qbc
         self.qsOutPorts = [(1, self._et), (1, self._ct)]
 
@@ -220,6 +219,11 @@ class SVBJTi(cir.Element):
         
         # Make sure the guess is consistent
         self.vPortGuess = np.zeros(len(self.controlPorts))
+#        # Try guess in active region
+#        self.vPortGuess[0] = 100. # x1
+#        self.vPortGuess[1] = -1.  # x2
+#        if self.rb != 0.:
+#            self.vPortGuess[2] = 1e-6 / glVar.gyr  # ib 
         # In principle we may not need any charge
         keepPorts = [ ]
         if self.cje + self.tf != 0.:

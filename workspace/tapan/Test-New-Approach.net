@@ -1,0 +1,37 @@
+*** Test netlist from Tapan's diagram ***
+
+.options maxdelta=1000.
+
+*.analysis op
+.analysis eop
+
+
+x1 2 subcircuit1
+x2 2 3 subcircuit2
+x3 3 subcircuit3
+
+
+.subckt subcircuit1 2 
+res:r1  1 gnd   r=10
+res:r2 1 2 r=10
+vdc:vdd 1 0 vdc=2
+res:r3 2 0 r=10
+.ends
+
+.subckt subcircuit2 2 3
+res:r12 2 3 r=10
+res:r4 3 4 r=10
+res:r7 4 0 r=10
+res:r6 5 0 r=10
+res:r5 3 5 r=10
+.ends
+
+.subckt subcircuit3 3
+res:r8 3 6 r=10
+res:r9 6 0 r=10
+res:r10 6 7 r=10
+res:r11 7 0 r=10
+.ends
+
+.end
+

@@ -180,6 +180,38 @@ def _set_Jac(self, M, Jac, mpidx, mnidx, jacpidx, jacnidx):
     self._mbase += len(mnidx)
 
 
+# Functions to manipulate nodal admittance matrices --------------------
+def add_to_diagonal(M, vec):
+    """
+    Adds vec to matrix diagonal
+
+    M assumed to be given in coo format and vec is a
+    single-dimensional list or array with any length (the resulting
+    matrix is expanded if necessary).
+
+    returns new matrix with the sum
+    """
+    data = np.concatenate((M.data, vec), 0)
+    idxvec = range(len(vec))
+    row = M.row.tolist() + idxvec
+    col = M.col.tolist() + idxvec
+    return sp.coo_matrix((data, (row, col)))
+
+def get_submatrix(M, n):
+    """
+    Returns n x n top left corner dense matrix
+
+    M is a coo matrix, n must be less or equal to matrix dimension
+    """
+    block = np.zeros((n,n), dtype=float)
+    for i in range(n):
+        row = M.getrow(i).todense()[0]
+        block[i,:] = row[0:n]
+    return block
+# --------------------------------------------------------------------
+
+
+
 #-------------------------------------------------------------------------
 # ****************************** Classes *********************************
 #-------------------------------------------------------------------------
@@ -202,6 +234,7 @@ class _NLFunctionSP(_NLFunction):
                                     None]
         sp.linalg.use_solver(useUmfpack = False, assumeSortedIndices = True)
         self._factorized = None
+
 
     def factor_and_solve(self, errFunc, Jac):
         """
@@ -350,9 +383,6 @@ class DCNodal(_NLFunctionSP):
         self.sVec = np.empty(self.ckt.nD_dimension)
         self.iVec = np.empty(self.ckt.nD_dimension)
         self.deltaxVec = np.empty(self.ckt.nD_dimension)
-        if hasattr(self.ckt, 'nD_namRClist'):
-            # Allocate external currents vector
-            self.extSVec = np.empty(self.ckt.nD_dimension)
         self.refresh()
 
     # Use custom function defined in this module
@@ -400,23 +430,6 @@ class DCNodal(_NLFunctionSP):
                                      self.ckt.nD_dimension), 
                                     dtype = float)
 
-            
-    def set_ext_currents(self, extIvec):
-        """
-        Set external currents applied to subcircuit
-
-        extIvec: vector of external currents. Length of this vector
-        should be equal to the number of external connections. The sum
-        of all currents must be equal to zero (KCL)
-
-        This will fail if not a subcircuit
-        """
-        # This idea still needs some testing
-        assert sum(extIvec[:ncurrents]) == 0
-        ncurrents = len(self.ckt.nD_namRClist)
-        # Must do the loop in case there are repeated connections
-        for val,rcnum in zip(extIvec, self.ckt.nD_namRClist):
-            self.extSVec[rcnum] = val
 
     def get_guess(self):
         """
@@ -442,12 +455,7 @@ class DCNodal(_NLFunctionSP):
         Get the source vector considering only the DC source components
         """
         # Erase vector first. 
-        try:
-            # If subcircuit add external currents
-            self.sVec[:] = self.extSVec
-        except AttributeError:
-            # Not a subcircuit
-            self.sVec.fill(0.)
+        self.sVec.fill(0.)
         for elem in self.ckt.nD_sourceDCElem:
             # first get the destination row/columns 
             outTerm = elem.nD_sourceOut
@@ -599,9 +607,6 @@ class TransientNodal(_NLFunctionSP):
         # sharing of one circuit amongst several TransientNodal
         # objects, to use in hierarchical simulation.
         self.tdVecList = []
-#        if hasattr(self.ckt, 'nD_namRClist'):
-#            # Allocate external currents vector
-#            self.extSVec = np.empty(self.ckt.nD_dimension)
         self.refresh()
 
     # Use custom function defined in this module
@@ -761,12 +766,7 @@ class TransientNodal(_NLFunctionSP):
         ctime: current time.
         """
         # Erase vector first. 
-        try:
-            # If subcircuit add external currents
-            self.sVec[:] = self.extSVec
-        except AttributeError:
-            # Not a subcircuit
-            self.sVec.fill(0.)
+        self.sVec.fill(0.)
         for elem in self.ckt.nD_sourceDCElem:
             # first get the destination row/columns 
             outTerm = elem.nD_sourceOut
