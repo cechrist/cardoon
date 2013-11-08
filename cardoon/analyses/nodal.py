@@ -446,147 +446,9 @@ class _NLFunction(object):
                                     self.solve_homotopy_gmin, 
                                     None]
 
-    def factor_and_solve(self, errFunc, Jac):
-        """
-        Solves linear system: Jac deltax = errFunc
-        
-        Matrix is decomposed and internally stored
-        """
-        try:
-            # import pdb; pdb.set_trace()
-            self._LUpiv = linalg.lu_factor(Jac)
-            deltax = linalg.lu_solve(self._LUpiv, errFunc)
-            #deltax = linalg.solve(Jac, errFunc)
-        except linalg.LinAlgError:
-            warn('\nProblem factoring matrix')
-            # Erase factored matrix: this prevents succesful calls
-            # with wrong matrix to solve_linear_system(), etc.
-            del self._LUpiv
-            # Use least-squares
-            deltax = linalg.lstsq(Jac, errFunc)
-        # Since scipy.linalg sometimes is not throwing exceptions,
-        # make sure everything is OK:
-        condition_array(deltax)
-        return deltax
-
-    def solve_linear_system(self, b):
-        """
-        Solve linear system using the last Jacobian matrix
-        
-        Requires matrix previously decomposed with factor_and_solve()
-
-        Jac x = b
-    
-        b: rhs vector/matrix
-
-        Returns x
-        """
-        # solve linear system
-        x = linalg.lu_solve(self._LUpiv, b)
-        # Since scipy.linalg sometimes is not throwing exceptions,
-        # make sure everything is OK:
-        condition_array(x)
-        return x
-
-
-    def get_adjoint_voltages(self, d):
-        """
-        Return adjoint voltages for sensitivity calculations
-    
-        Requires matrix previously decomposed with factor_and_solve()
-
-        d: rhs vector
-        """
-        # solve transposed linear system
-        return linalg.lu_solve(self._LUpiv, d, trans = 1)
-
-
-    def get_chord_deltax(self, sV, iVec=None):
-        """
-        Get deltax for sV, iVec using existing factored Jacobian
-
-        Requires matrix previously decomposed with factor_and_solve()
-
-        Useful for the first iteration of transient analysis. If iVec
-        not given the stored value is used.
-        """
-        if iVec == None:
-            iVec = self.iVec
-        return linalg.lu_solve(self._LUpiv, sV - iVec)
-
-    def _set_gmin(self, _lambda):
-        """
-        Sets gmin value given lambda (used for homotopy)
-
-        Range of lambda: [1e-4, 1]
-        Range of gmin: [10, 0]
-        """
-        gbase = 1e-3
-        self.gmin = gbase / _lambda - gbase
-
-    def _homotopy(self, _lambda, f, x0, get_deltax, f_eval):
-        """
-        Controls _lambda and the homotopy flow
-        
-        The lambda parameter is varied from 0 to 1. 0 corresponds to a
-        problem easy to solve and 1 correstponds to the original problem.
-        Uses bisection to find lambda step step size to reach 1.
-
-        Inputs:
-
-            _lambda: Initial value for lambda
-            f: f(lambda) (for example gmin(lambda))        
-            x0: initial guess (modified on output to best approximation)
-            get_deltax and f_eval: functions passed to Newton's solver
-
-        Output:
-
-          (x, res, iterations, success)
-
-        """
-        stack = [0., 1.]
-        step = _lambda
-        small = 1e-4
-        x = np.copy(x0)
-        success = True
-        totIter = 0
-        sepline = '===================================================='
-        print('    lambda      |   Iterations    |   Residual')
-        print(sepline)
-        while stack:
-            # Update parameter in nonlinear functions
-            f(_lambda)
-            (x, res, iterations, success1) = \
-                fsolve_Newton(x, get_deltax, f_eval)
-            print('{0:15} | {1:15} | {2:15}'.format(
-                    _lambda, iterations, res), end='')
-            totIter += iterations
-            if success1:
-                print('')
-                # Save result
-                x0[:] = x
-                # Recover value of lambda_ from stack
-                step = stack[-1] - _lambda
-                _lambda = stack.pop()
-            else:
-                print('  <--- Backtracking')
-                # Check if residual was big
-                #if res > 1e-3: (not reliable)
-                # Restore previous better guess
-                x[:] = x0
-                # push _lambda into stack
-                stack.append(_lambda)
-                step *= .5
-                _lambda -= step
-                if (_lambda < small) or (step < small):
-                    success = False
-                    break
-        print(sepline)
-        print('Total iterations: ', totIter)
-        return (x, res, totIter, success)
-
-    # The following functions used to solve equations, originally from
-    # pycircuit but since they have evolved quite a bit
+    # The following convergence helper functions used to solve
+    # equations are originally from pycircuit but they have evolved
+    # quite a bit since then
     def solve_simple(self, x0, sV):
         #"""Simple Newton's method"""
         # Docstring removed to avoid printing this all the time
@@ -667,6 +529,146 @@ class _NLFunction(object):
             return (x, res, iterations)
         else:
             raise NoConvergenceError('Source stepping did not converge')
+
+    # Other methods defined below ------------------------------------
+    
+    def _set_gmin(self, _lambda):
+        """
+        Sets gmin value given lambda (used for homotopy)
+
+        Range of lambda: [1e-4, 1]
+        Range of gmin: [10, 0]
+        """
+        gbase = 1e-3
+        self.gmin = gbase / _lambda - gbase
+
+    def _homotopy(self, _lambda, f, x0, get_deltax, f_eval):
+        """
+        Controls _lambda and the homotopy flow
+        
+        The lambda parameter is varied from 0 to 1. 0 corresponds to a
+        problem easy to solve and 1 correstponds to the original problem.
+        Uses bisection to find lambda step step size to reach 1.
+
+        Inputs:
+
+            _lambda: Initial value for lambda
+            f: f(lambda) (for example gmin(lambda))        
+            x0: initial guess (modified on output to best approximation)
+            get_deltax and f_eval: functions passed to Newton's solver
+
+        Output:
+
+          (x, res, iterations, success)
+
+        """
+        stack = [0., 1.]
+        step = _lambda
+        small = 1e-4
+        x = np.copy(x0)
+        success = True
+        totIter = 0
+        sepline = '===================================================='
+        print('    lambda      |   Iterations    |   Residual')
+        print(sepline)
+        while stack:
+            # Update parameter in nonlinear functions
+            f(_lambda)
+            (x, res, iterations, success1) = \
+                fsolve_Newton(x, get_deltax, f_eval)
+            print('{0:15} | {1:15} | {2:15}'.format(
+                    _lambda, iterations, res), end='')
+            totIter += iterations
+            if success1:
+                print('')
+                # Save result
+                x0[:] = x
+                # Recover value of lambda_ from stack
+                step = stack[-1] - _lambda
+                _lambda = stack.pop()
+            else:
+                print('  <--- Backtracking')
+                # Check if residual was big
+                #if res > 1e-3: (not reliable)
+                # Restore previous better guess
+                x[:] = x0
+                # push _lambda into stack
+                stack.append(_lambda)
+                step *= .5
+                _lambda -= step
+                if (_lambda < small) or (step < small):
+                    success = False
+                    break
+        print(sepline)
+        print('Total iterations: ', totIter)
+        return (x, res, totIter, success)
+
+    def factor_and_solve(self, errFunc, Jac):
+        """
+        Solves linear system: Jac deltax = errFunc
+        
+        Matrix is decomposed and internally stored
+        """
+        try:
+            # import pdb; pdb.set_trace()
+            self._LUpiv = linalg.lu_factor(Jac)
+            deltax = linalg.lu_solve(self._LUpiv, errFunc)
+            #deltax = linalg.solve(Jac, errFunc)
+        except linalg.LinAlgError:
+            warn('\nProblem factoring matrix')
+            # Erase factored matrix: this prevents succesful calls
+            # with wrong matrix to solve_linear_system(), etc.
+            del self._LUpiv
+            # Use least-squares
+            deltax = linalg.lstsq(Jac, errFunc)
+        # Since scipy.linalg sometimes is not throwing exceptions,
+        # make sure everything is OK:
+        condition_array(deltax)
+        return deltax
+
+    def solve_linear_system(self, b):
+        """
+        Solve linear system using the last Jacobian matrix
+        
+        Requires matrix previously decomposed with factor_and_solve()
+
+        Jac x = b
+    
+        b: rhs vector/matrix
+
+        Returns x
+        """
+        # solve linear system
+        x = linalg.lu_solve(self._LUpiv, b)
+        # Since scipy.linalg sometimes is not throwing exceptions,
+        # make sure everything is OK:
+        condition_array(x)
+        return x
+
+    def get_chord_deltax(self, sV, iVec=None):
+        """
+        Get deltax for sV, iVec using existing factored Jacobian
+
+        Requires matrix previously decomposed with factor_and_solve()
+
+        Useful for the first iteration of transient analysis. If iVec
+        not given the stored value is used.
+        """
+        if iVec == None:
+            iVec = self.iVec
+        return linalg.lu_solve(self._LUpiv, sV - iVec)
+
+    def get_adjoint_voltages(self, d):
+        """
+        Return adjoint voltages for sensitivity calculations
+    
+        Requires matrix previously decomposed with factor_and_solve()
+
+        d: rhs vector
+        """
+        # solve transposed linear system
+        return linalg.lu_solve(self._LUpiv, d, trans = 1)
+
 
 
 

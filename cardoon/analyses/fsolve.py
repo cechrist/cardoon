@@ -98,9 +98,7 @@ def fsolve_Newton(x0, get_deltax, f_eval):
     x = x0
     for i in xrange(glVar.maxiter):
 
-        # Actually this is -deltax as it must be substracted from x
         deltax = get_deltax(x)
-        
         # Do not allow updates greater than glVar.maxdelta
         maxDelta = max(abs(deltax))
         if maxDelta > glVar.maxdelta:

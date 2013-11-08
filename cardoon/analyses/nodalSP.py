@@ -235,85 +235,7 @@ class _NLFunctionSP(_NLFunction):
         sp.linalg.use_solver(useUmfpack = False, assumeSortedIndices = True)
         self._factorized = None
 
-
-    def factor_and_solve(self, errFunc, Jac):
-        """
-        Solves linear system: Jac deltax = errFunc
-
-        So it returns the opposite of the Newton correction, but that
-        is what fsolve() is expecting (-deltax)
-        """
-        # import pdb; pdb.set_trace()
-        M = Jac.tocsc()
-        #print(M.todense())
-        #print('------------------------------------------------')
-        # Decompose matrix
-        try:
-            self._factorized = sp.linalg.factorized(M)
-            # Solve linear system
-            self.deltaxVec[:] = self._factorized(errFunc)
-        except RuntimeError as re:
-            # In the future we could try a least-squares solution here
-            warn('\nProblem factoring matrix: {0}'.format(re))
-            # Try moving solution a little
-            self.deltaxVec[:] = 10. * glVar.abstol \
-                * np.random.random(self.deltaxVec.shape)
-        return self.deltaxVec
-
-
-    def solve_linear_system(self, b):
-        """
-        Solve linear system using the last Jacobian matrix
-        
-        Requires matrix previously decomposed with factor_and_solve()
-
-        Jac x = b
-    
-        b: rhs vector/matrix
-
-        Returns x
-        """
-        #import pdb; pdb.set_trace()
-        # Matrix already factorized, solve linear system
-        if len(b.shape) > 1:
-            # Must solve column by colunm
-            x = np.empty_like(b)
-            for i in range(b.shape[1]):
-                if np.any(b[:,i] != 0.):
-                    # Solve system
-                    x[:,i] = self._factorized(b[:,i])
-                else:
-                    # Skip solving systems with zero rhs
-                    x[:,i] = np.zeros(b.shape[0])
-        else:
-            x= self._factorized(b)
-
-        return x
-
-
-    def get_adjoint_voltages(self, d):
-        """
-        Return adjoint voltages for sensitivity calculations
-    
-        d: rhs vector
-
-        Matrix must be factorized before calling this function
-        """
-        # Matrix already factorized, solve transposed system
-        return self._factorized(d, trans='T')
-
-
-    def get_chord_deltax(self, sV, iVec=None):
-        """
-        Get deltax for sV, iVec using existing factored Jacobian
-
-        Useful for the first iteration of transient analysis. If iVec
-        not given the stored value is used.
-        """
-        if iVec == None:
-            iVec = self.iVec
-        return self._factorized(sV - iVec)
-
+    # Convergence helpers: most of them reuse the definitions in nodal.py
     def solve_homotopy_gmin2(self, x0, sV):
         """Newton's method with gmin stepping (nonlinear ports)"""
         # Adds gmin in parallel with nonlinear element (external) ports
@@ -354,6 +276,81 @@ class _NLFunctionSP(_NLFunction):
             return (x, res, iterations)
         else:
             raise NoConvergenceError('gmin stepping did not converge')
+
+    def factor_and_solve(self, errFunc, Jac):
+        """
+        Solves linear system: Jac deltax = errFunc
+
+        So it returns the opposite of the Newton correction, but that
+        is what fsolve() is expecting (-deltax)
+        """
+        # import pdb; pdb.set_trace()
+        M = Jac.tocsc()
+        #print(M.todense())
+        #print('------------------------------------------------')
+        # Decompose matrix
+        try:
+            self._factorized = sp.linalg.factorized(M)
+            # Solve linear system
+            self.deltaxVec[:] = self._factorized(errFunc)
+        except RuntimeError as re:
+            # In the future we could try a least-squares solution here
+            warn('\nProblem factoring matrix: {0}'.format(re))
+            # Try moving solution a little
+            self.deltaxVec[:] = 10. * glVar.abstol \
+                * np.random.random(self.deltaxVec.shape)
+        return self.deltaxVec
+
+    def solve_linear_system(self, b):
+        """
+        Solve linear system using the last Jacobian matrix
+        
+        Requires matrix previously decomposed with factor_and_solve()
+
+        Jac x = b
+    
+        b: rhs vector/matrix
+
+        Returns x
+        """
+        #import pdb; pdb.set_trace()
+        # Matrix already factorized, solve linear system
+        if len(b.shape) > 1:
+            # Must solve column by colunm
+            x = np.empty_like(b)
+            for i in range(b.shape[1]):
+                if np.any(b[:,i] != 0.):
+                    # Solve system
+                    x[:,i] = self._factorized(b[:,i])
+                else:
+                    # Skip solving systems with zero rhs
+                    x[:,i] = np.zeros(b.shape[0])
+        else:
+            x= self._factorized(b)
+
+        return x
+
+    def get_adjoint_voltages(self, d):
+        """
+        Return adjoint voltages for sensitivity calculations
+    
+        d: rhs vector
+
+        Matrix must be factorized before calling this function
+        """
+        # Matrix already factorized, solve transposed system
+        return self._factorized(d, trans='T')
+
+    def get_chord_deltax(self, sV, iVec=None):
+        """
+        Get deltax for sV, iVec using existing factored Jacobian
+
+        Useful for the first iteration of transient analysis. If iVec
+        not given the stored value is used.
+        """
+        if iVec == None:
+            iVec = self.iVec
+        return self._factorized(sV - iVec)
 
 
 

@@ -48,7 +48,7 @@ class DCOP(ParamSet):
 
     Example::
 
-        .analysis eop intvars=1 shell=1
+        .analysis eop 
 
     """
 
