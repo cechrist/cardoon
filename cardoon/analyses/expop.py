@@ -5,6 +5,17 @@
 .. module:: expOP
 .. moduleauthor:: Tapan Savalia, Carlos Christoffersen
 
+TODO: 
+
+ * Make an analysis-independent block-creation and Newton solving
+   module to be used for DC or transient analysis
+ 
+ * Return results in a a proper format (easy to check results)
+
+ * Implement parallel code
+
+ * Add an automatic circuit partitioning algorithm
+
 """
 
 

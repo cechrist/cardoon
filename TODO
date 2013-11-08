@@ -4,9 +4,14 @@ Development Plan (TODO file)
 
 Short-term goals:
 
+  #. Improve library API: make analyses to return result arrays, nodal
+   objects, etc.
+
   #. Add support for convolution of frequency-defined elements 
   
 Longer term goals and other tasks to be done at some time:
+
+  * Migrate to python 3
 
   * Add netlist variable sweep in DC analysis
   
