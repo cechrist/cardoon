@@ -10,7 +10,7 @@
 
 .options sparse=1
 #.analysis tran tstop=0.05ns tstep=.1ps verbose=0 im=trap
-.analysis eop 
+.analysis waveop z0=30
 #.analysis op
 
 *.save tran 202 147 48

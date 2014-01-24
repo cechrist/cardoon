@@ -3,6 +3,7 @@
 .options maxdelta=1000.
 
 *.analysis op
+*.analysis waveop
 .analysis eop
 
 

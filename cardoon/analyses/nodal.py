@@ -417,12 +417,12 @@ def add_to_diagonal(M, vec):
 
 def get_submatrix(M, n):
     """
-    Returns n x n top left corner dense matrix
+    Returns n first columns of M
 
     M is a dense matrix, n must be less or equal to matrix dimension
     """
     # Create a copy just in case the block is overwritten
-    block = M[0:n, 0:n].copy()
+    block = M[:, 0:n].copy()
     return block
 # --------------------------------------------------------------------
 

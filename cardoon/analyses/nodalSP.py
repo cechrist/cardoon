@@ -199,14 +199,15 @@ def add_to_diagonal(M, vec):
 
 def get_submatrix(M, n):
     """
-    Returns n x n top left corner dense matrix
+    Returns n fisrt columns of M in dense form
 
     M is a coo matrix, n must be less or equal to matrix dimension
     """
-    block = np.zeros((n,n), dtype=float)
+    m = M.shape[0]
+    block = np.zeros((m,n), dtype=float)
     for i in range(n):
-        row = M.getrow(i).todense()[0]
-        block[i,:] = row[0:n]
+        row = M.getcol(i).todense().getA1()
+        block[:,i] = row
     return block
 # --------------------------------------------------------------------
 

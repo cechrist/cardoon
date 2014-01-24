@@ -1,8 +1,8 @@
 """
-:mod:`expOP` -- Experimental Operating Point Analysis
+:mod:`waveOP` -- Experimental Operating Point Analysis Based on Waves
 -----------------------------------------------------
 
-.. module:: expOP
+.. module:: waveOP
 .. moduleauthor:: Tapan Savalia, Carlos Christoffersen
 
 TODO: 
@@ -32,8 +32,8 @@ from fsolve import solve, NoConvergenceError
 
 class DCOP(ParamSet):            
     """
-    Experimental DC Operating Point
-    -------------------------------
+    Experimental DC Operating Point Based on Waves
+    ----------------------------------------------
 
     This analysis is *experimental* and not yet ready for
     demonstration.  Circuit equations are formulated for parallel
@@ -47,11 +47,11 @@ class DCOP(ParamSet):
 
       * Main circuit only contains subcircuit instances (no elements)
 
-    Calculates the DC operating point of all subcircuits using the
-    nodal approach. After the analysis is complete, nodal voltages are
-    saved in subcircuit block and terminals with the ``eND_``
-    prefix. After this the analysis drops to an interactive shell if
-    the ``shell`` global variable is set to ``True``.
+    Calculates the DC operating point of all subcircuits using a
+    modification of nodal approach that uses wave variables at the
+    subcircuit interfaces. After the analysis is complete, nodal
+    voltages are saved in subcircuit block and terminals with the
+    ``wND_`` prefix. 
 
     By default the voltage at all external voltages is printed after
     the analysis is complete. Optionally the operating points of
@@ -59,22 +59,20 @@ class DCOP(ParamSet):
 
     Example::
 
-        .analysis eop 
+        .analysis waveop 
 
     """
-
     # antype is the netlist name of the analysis: .analysis tran tstart=0 ...
-    anType = "eop"
+    anType = "waveop"
 
     # Define parameters as follows
     paramDict = dict(
 #        intvars = ('Print internal element nodal variables', '', bool, False),
 #        elemop = ('Print element operating points', '', bool, False),
-#        shell = ('Drop to ipython shell after calculation', '', bool, False)
         maxiter = ('Maximum number of Newton iterations', '', int, 100),
         maxdelta = ('Maximum change in deltax for Newton iterations', '', 
                     float, 50.),
-        gcomp = ('Compensation conductance', 'S', float, 1.27e-6),
+        z0 = ('Reference Impedance', 'Ohms', float, 50.),
 #        rs = ('Series resistor between subcircuits', 'Ohms', float, 0.),
         nss = ('Number of source steps', '', int, 1)
         )
@@ -83,19 +81,18 @@ class DCOP(ParamSet):
         # Just init the base class
         ParamSet.__init__(self, self.paramDict)
         
-    
 
     def run(self, circuit):
         """
-        Calculates the operating point by solving nodal equations
+        Calculates the operating point by solving wave/nodal equations
 
-        The state of all devices is determined by the values of the
-        voltages at the controlling ports.
+        The state of the entire circuit is determined by the values of
+        waves incident to subcircuit ports.
         """
         # for now just print some fixed stuff
-        print('******************************************************')
-        print('          Experimental Operating point analysis')
-        print('******************************************************')
+        print('************************************************************')
+        print('       Experimental Wave-Based Operating Point Analysis')
+        print('************************************************************')
         if hasattr(circuit, 'title'):
             print('\n', circuit.title, '\n')
 
@@ -163,11 +160,24 @@ class DCOP(ParamSet):
         else:
             print('No convergence')
         print('iterations = ', nIter+1)
+
+        # Must convert back to voltages to check results!
+        # Currents are *not* converted
+        aVec = xnVec[-self.nCurrents:] # incident waves
+        rowAcc1 = 0
+        for subckt, y0V, Nj in zip(self.subcktList,
+                                   self.refCondList, self.NList):
+            #import pdb; pdb.set_trace()
+            dim = subckt.nD_dimension
+            nports = len(y0V)
+            xnVec[rowAcc1 : rowAcc1+nports] += np.dot(abs(Nj), aVec)[:nports]
+            rowAcc1 += dim
+
         if xnVec.size < 20:
             print('xnewVec = ', xnVec)
         else:
             print('first part of xnewVec = ', xnVec[0:10])
-    
+              
 
     def init_blocks(self, circuit):
         """ 
@@ -179,9 +189,10 @@ class DCOP(ParamSet):
         systemSize: full system dimension
         NList: list of Nj matrices
         dcList: list of dc objects for each subcircuit
-        gcompList: list of compensation conductances
+        refCondList: list of reference conductance vectors (in S)
         nCurrents: number of extra interconnect current variables 
                    (from voltage sources)
+        auxColList: list of columns to be extracted from Aj
         
         """
         # We want subcircuits arranged in alphabetical order
@@ -195,7 +206,6 @@ class DCOP(ParamSet):
         # subcircuits (alhpabetical order).
         self.subcktList = []
         nCurrents = 0
-        #import pdb; pdb.set_trace()
         for j, name in enumerate(nameList):
 	    # j: subcircuit number
             # get subcircuit definition
@@ -222,7 +232,6 @@ class DCOP(ParamSet):
                     # No one is using this terminal so far
                     term.pop_owner = j
                     term.pop_NjList = []
-
         # Initialize main circuit 
         circuit.init() 
         # systemSize: total dimension including subcircuit variables,
@@ -234,35 +243,39 @@ class DCOP(ParamSet):
         # Create list of nodal object for subcircuits
         self.dcList = []
         # shape interconnect blocks Nj
-        self.NList = []
-        # Compensation conductances list
-        self.gcompList = []
+        self.NList=[]
+        # List of Aj columns to be extracted and copied in Nj (all)
+        self.auxColList=[]
+        # Reference conductance vectors list
+        self.refCondList = []
         # Total number of interconnects in circuit
         self.nInterconnect = 0
+        self.y0 = 1. / self.z0 # Conductance in S
         # Second pass: create DC objects and Nj
         for j, subckt in enumerate(self.subcktList):
 	    # j: subcircuit number
             self.nd.make_nodal_circuit(subckt, subckt.get_connections())
             self.dcList.append(self.nd.DCNodal(subckt))
-            gcompv = self.gcomp * np.ones_like(subckt.nD_extRClist)
-            self.gcompList.append(gcompv)
+            y0V = self.y0 * np.ones_like(subckt.nD_extRClist)
+            self.refCondList.append(y0V)
             # Create Nj
             Nj = np.zeros((subckt.nD_dimension, nCurrents), dtype=float)
+            auxCol1 = []
+            self.auxColList.append(auxCol1)
             for row, term in enumerate(
                 circuit.subcktDict[subckt.name].connection):
                 if term.pop_owner == j:
                     # Our terminal: assign ones
                     for col, subcktNum in term.pop_NjList:
-                        Nj[row, col] = glVar.gyr
-                    # put n conductances in parallel
-                    gcompv[row] *= len(term.pop_NjList)
+                        Nj[row, col] = 1.
+                        auxCol1.append(col)
                 else:
                     # Not ours, assign -1 only in one element of Nj
                     for col, subcktNum in term.pop_NjList:
                         if subcktNum == j:
-                            Nj[row, col] = -glVar.gyr
-                    # Add negative conductance to compensate 
-                    gcompv[row] *= -1.
+                            Nj[row, col] = -1.
+                            auxCol1.append(col)
+                    y0V[row] *= -1.
 	    self.NList.append(Nj)
             self.systemSize += subckt.nD_dimension
 
@@ -285,7 +298,8 @@ class DCOP(ParamSet):
 	Nj: incidence matrix for voltage sources connecting subcircuit
 	Mj = Nj^T
 	delta_xj: update for nodal variables
-	delta_iic: update for interconnect currents (through voltage sources connecting subcircuits)
+	delta_iic: update for interconnect currents
+                   (through voltage sources connecting subcircuits)
 	bj = sj - iVecj (Newton's Method rhs vector)
 	bC = -sum Mj xj
 
@@ -305,31 +319,38 @@ class DCOP(ParamSet):
         AccC = np.zeros((self.nCurrents, self.nCurrents), dtype=float)
         # Add resistors between subcircuits (in Ohms): doesn't work?
         # AccC = np.diag(self.rs * np.ones(self.nCurrents, dtype=float))
-
+        
         AList = []  # AList = [A1, A2,.....Aj] : Subcircuit List
+        AnList=[]
         bList = []  # BList = [b1, b2......bj] : Source vector of
-                    #                            subcircuit blocks
         rowAcc = 0 
-        #import pdb; pdb.set_trace()
-        for dcno, Nj, gcVec in zip(self.dcList, self.NList, self.gcompList):
+        NewNList = []
+	for dcno, Nj, y0V, auxCol1 in zip(self.dcList, 
+                                          self.NList, 
+                                          self.refCondList, 
+                                          self.auxColList):
+            #import pdb; pdb.set_trace()
             # Equation__(14)
             dim = dcno.ckt.nD_dimension
             # xjVec : subcircuit source vectors as shown in Eq.(11) : x1 to xj
             xjVec = xnVec[rowAcc : rowAcc + dim] 
             (iVec, Aj) = dcno.get_i_Jac(xjVec)
-            bj = self.ssf * dcno.get_source() - iVec - np.dot(Nj, iicVec)
+            NewNj = np.zeros_like(Nj)
+            AjBlock = self.nd.get_submatrix(Aj, len(y0V))
+	    NewNj[:, auxCol1] = AjBlock
+            NewNj -= self.y0 * Nj
+            NewNList.append(NewNj)
+            Aj = self.nd.add_to_diagonal(Aj, y0V)
+            AList.append(Aj)
+            bj = self.ssf * dcno.get_source() - iVec - np.dot(NewNj, iicVec)
             bList.append(bj)             
-            # Add compensation conductance (if requested)
-            if (abs(self.gcomp) > 0.):
-                Aj = self.nd.add_to_diagonal(Aj, gcVec)
             # Build AccC and bC without the inverting Aj
             deltaXjStar = dcno.factor_and_solve(bj, Aj)
             # Added 1e-3 factor: currents in mA
-            AccC -= np.dot(Nj.T, dcno.solve_linear_system(Nj))
-            #print(AccC)
+            AccC -= np.dot(Nj.T, dcno.solve_linear_system(NewNj))
             bC -= np.dot(Nj.T, xjVec + deltaXjStar) 
-            rowAcc += dim                        
-            
+            rowAcc += dim    
+
         deltaX = np.empty(self.systemSize, dtype=float)
         # Solve Eq. (14) to get nodal voltages at interconnect and
         # subcircuit external currents
@@ -339,7 +360,6 @@ class DCOP(ParamSet):
             # Try solving least squares problem
             deltaIicVec = linalg.lstsq(AccC, bC)[0]
         except ValueError:
-            #import pdb; pdb.set_trace()
             print(AccC)
             print(bC)
             exit()
@@ -347,13 +367,12 @@ class DCOP(ParamSet):
         deltaX[-self.nCurrents:] = deltaIicVec
         rowAcc = 0
         # Fill contributions from subcircuits
-        for dcno, bj, Nj in zip(self.dcList, bList, self.NList):
-            bj = bj - np.dot(Nj, deltaIicVec)   
+        for dcno, bj, NewNj in zip(self.dcList, bList, NewNList):
+            bj = bj - np.dot(NewNj, deltaIicVec)   
             deltaXjVec = dcno.solve_linear_system(bj)
             dim = bj.size 				#|  Equation_____(12)
             deltaX[rowAcc:rowAcc + dim] = deltaXjVec
             rowAcc += dim
-
         return deltaX                                
         
 aClass = DCOP
