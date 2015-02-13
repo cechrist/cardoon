@@ -1,0 +1,17 @@
+# Simple linear network
+
+.options sparse=1 maxdelta=200. maxiter=50
+
+.analysis fdtd T=1ms nsamples=20
+
+vsin:vin 1 gnd mag=6V freq=1kHz 
+res:r1 1 2 r=1kOhm
+
+res:r2 2 gnd r=1kOhm
+cap:c1 2 gnd c=.05uF
+
+.plot fdtd 1 2
+
+.end
+
+

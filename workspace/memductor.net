@@ -4,12 +4,17 @@ vsin:vin 1 0  mag=4.5 freq=10Hz phase=-90
 
 memd:w1 1 0 w = '3 * phi*phi + .1 * abs(phi) + 3e-3' 
 
-.analysis tran tstep=1ms tstop=95ms shell=1
+.analysis tran tstep=1ms tstop=1s shell=0
+.analysis fdtd T=0.1s nsamples=200 dcguess=false 
 #.analysis op intvars=1 elemop=1
 
 .plot tran 1 
 .plot tran memd:w1:vc
 .plot tran vsin:vin:i
+
+.plot fdtd 1 
+.plot fdtd memd:w1:vc
+.plot fdtd vsin:vin:i
 
 .end
 

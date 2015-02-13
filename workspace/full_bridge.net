@@ -1,0 +1,20 @@
+# Rectifier circuit 
+
+.options sparse=1 maxdelta=200. maxiter=40
+
+# Full Wave Rectifier
+.analysis fdtd T=3ms nsamples=100 dcguess=false shell=true
+
+vsin:vin 1 gnd vdc = 0 mag=5V freq=1kHz 
+diode:da1 1 2 isat=10fA cj0=20fF
+diode:da2 3 gnd isat=10fA cj0=20fF
+diode:db1 gnd 2 isat=10fA cj0=20fF
+diode:db2 3 1 isat=10fA cj0=20fF
+
+res:r1 2 3 r=1kOhm
+cap:c1 2 gnd c=10uF
+cap:c2 3 gnd c=10uF
+
+.plot fdtd 1 2 3
+
+.end
