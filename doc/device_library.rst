@@ -1781,7 +1781,7 @@ internal base current and calculate Rb(ib).
                 -      |                |
                        +----------------+--o 2 (E)
 
-2. If RB != 0 and IRB != 0::
+2. If RB != 0::
 
                                  +----------------+--o 0 (C)
                             -    |                |

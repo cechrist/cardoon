@@ -1,4 +1,18 @@
 
 This directory contains analysis-related files that not used in the
-main program.  At this moment these consist of alternative
-implementations of the nodal routines.
+main program.  
+
+Alternative implementations of the nodal routines:
+
+* nodalSP.py
+* nodalUMFPack.py  
+* nodalAD.py  
+* nodalTrilinos.py
+
+Hierarchical operating point analyses (based on sub-circuits):
+
+* expop.py
+* waveop.py
+
+
+
