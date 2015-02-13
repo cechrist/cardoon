@@ -16,6 +16,7 @@ from cardoon.globalVars import glVar
 import numpy as np
 import matplotlib.pyplot as plt
 
+#---------------------------------------------------------------------
 class AnalysisError(Exception):
     """
     Exception class to be used for analyses. 
@@ -23,6 +24,7 @@ class AnalysisError(Exception):
     pass
 
 
+#---------------------------------------------------------------------
 def ipython_drop(msg, glo, loc):
     """
     Add this function in your code to drop to an ipython shell

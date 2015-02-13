@@ -2,6 +2,13 @@
 News
 ----
 
+Next Version
+^^^^^^^^^^^^
+
+     * Moved request type definitions from Circuit to the analysis
+       library. 
+
+
 Version 0.6.0
 ^^^^^^^^^^^^^
 

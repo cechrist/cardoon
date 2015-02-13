@@ -23,9 +23,14 @@ import circuit as cir
 from cardoon.globalVars import glVar
 from analysis import AnalysisError
 
-class Analysis:
+# Optional valid request types: list any request you want to accept
+# for '.plot', etc.  
+#
+# reqTypes = ['mydc']
+
+class MyAnalysis:
     """
-    Class name must be "Analysis"
+    Class name can be anything
 
     Document here what the analysis does and explain parameters, if
     needed.
@@ -52,7 +57,8 @@ class Analysis:
         # Parameters are available in self.pset.attribute
         pass
 
-
+# This is mandatory: point aClass to the main class you have defined
+aClass = MyAnalysis
 
 
 # Here you can add additional functions and classes that only are

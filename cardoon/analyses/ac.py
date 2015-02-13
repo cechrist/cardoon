@@ -16,6 +16,9 @@ import nodal as nd
 from fsolve import solve, NoConvergenceError
 import sys
 
+# Valid request types
+reqTypes = ['ac', 'ac_mag', 'ac_phase', 'ac_dB']
+
 class ACSweep(ParamSet):
     r"""
     AC Sweep

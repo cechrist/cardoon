@@ -475,33 +475,6 @@ class Xsubckt(GraphNode):
 
 
 #---------------------------------------------------------------------
-class OutRequest:
-    """
-    Holds a set of output variables requests
-
-    Output request consist in: 
-
-      1. Type of of request (``type``): dc, ac_*, tran, etc.
-
-      2. List of variables (``varlist``): for external terminals,
-         these are strings with terminal name. For internal terminals,
-         a list with device and terminal names.
-
-    After initialization the circuit adds a list of terminals in the
-    ``termlist`` attribute.
-    """
-    validTypes = ['dc', 'ac', 'ac_mag', 'ac_phase', 'ac_dB', 'tran', 'hb']
-
-    def __init__(self, reqtype, varlist):
-        if reqtype not in self.validTypes:
-            raise CircuitError(
-                'Not a valid output request type: {0}'.format(reqtype)
-                + '\nValid types: {0}'.format(self.validTypes))
-        self.type = reqtype
-        self.varlist = varlist
-
-
-#---------------------------------------------------------------------
 class Circuit(object):
     """
     Holds a circuit. 

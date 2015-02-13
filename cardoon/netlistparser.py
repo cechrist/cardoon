@@ -24,7 +24,7 @@ from paramset import ParamSet, ParamError
 import circuit as cir
 from globalVars import glVar
 from devices import devClass
-from analyses import anClass
+from analyses import anClass, OutRequest
 
 
 class ParseError(Exception):
@@ -343,13 +343,13 @@ def parse_analysis(tok):
 
 def parse_plot(tok):
     # Create output request and add to circuit
-    outreq = cir.OutRequest(tok.Type, tok.Vars)
+    outreq = OutRequest(tok.Type, tok.Vars)
     # Add requests always to main circuit
     cktStack[0].add_plot_request(outreq)
 
 def parse_save(tok):
     # Create output request and add to circuit
-    outreq = cir.OutRequest(tok.Type, tok.Vars)
+    outreq = OutRequest(tok.Type, tok.Vars)
     # Add requests always to main circuit
     cktStack[0].add_save_request(outreq)
         

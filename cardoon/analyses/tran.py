@@ -19,6 +19,9 @@ from fsolve import solve, NoConvergenceError
 import nodal
 import nodalSP
 
+# Valid request types
+reqTypes = ['tran']
+
 class Transient(ParamSet):
     """
     Transient Analysis

@@ -25,12 +25,46 @@ __all__ = analysisList
 
 from analysis import AnalysisError
 
+# Dictionary with existing analysis types. Key is netlist name.
 anClass = {}
+# This is a list of valid request types. Each analysis module must
+# define a list with allowed types (reqTypes).
+validReqTypes = list()
 
 for modname in analysisList:
     module = __import__(modname, globals(), locals())
     anClass[module.aClass.anType] = module.aClass
+    try: 
+        validReqTypes += module.reqTypes
+    except AttributeError:
+        # do nothing if attribute does not exist
+        pass
 
+#---------------------------------------------------------------------
+class OutRequest:
+    """
+    Holds a set of output variables requests
+
+    Output request consist in: 
+
+      1. Type of of request (``type``): dc, ac_*, tran, etc. These are
+         defined by each analysis.
+
+      2. List of variables (``varlist``): for external terminals,
+         these are strings with terminal name. For internal terminals,
+         a list with device and terminal names.
+
+    After initialization the circuit adds a list of terminals in the
+    ``termlist`` attribute.
+    """
+
+    def __init__(self, reqtype, varlist):
+        if reqtype not in validReqTypes:
+            raise CircuitError(
+                'Not a valid output request type: {0}'.format(reqtype)
+                + '\nValid types: {0}'.format(validReqTypes))
+        self.type = reqtype
+        self.varlist = varlist
 
 
 
