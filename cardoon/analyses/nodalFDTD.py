@@ -11,6 +11,7 @@ analysis.
 """
 
 from __future__ import print_function
+import os.path
 from warnings import warn
 import numpy as np
 import scipy.sparse as sp
@@ -132,6 +133,7 @@ class FDTDNodal(nd._NLFunctionSP):
         # sharing of one circuit amongst several TransientNodal
         # objects, to use in hierarchical simulation.
         #self.tdVecList = []
+        self.xMatrix = self.sVec
         self.refresh()
 
     def refresh(self):
@@ -358,8 +360,10 @@ class FDTDNodal(nd._NLFunctionSP):
         # iVec = [G x + i(x)] + bigD [C x + q(x)] 
         self.iVec += self.BD * self.qVec
         return self.iVec
-
-
+        
+    def storedata(self, xVec):
+        self.xMatrix = np.vstack((self.xMatrix,xVec))
+        
     def get_i_Jac(self, xVec):
         """
         Calculate total current and Jacobian
@@ -375,7 +379,8 @@ class FDTDNodal(nd._NLFunctionSP):
         self.BGcoo._base_idx = self.baseG
         self.BCcoo._base_idx = self.baseC
         # print(max(abs(xVec)))
-        # print(xVec)
+        self.storedata(xVec)
+
         for j in range(self.nsamples):
 
             base = self.ckt.nD_dimension * j

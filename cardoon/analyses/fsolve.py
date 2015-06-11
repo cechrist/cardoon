@@ -92,23 +92,29 @@ def fsolve_Newton(x0, get_deltax, f_eval):
     This function originally adapted from pycircuit
     (https://github.com/henjo/pycircuit)
     """
-    
     success = False
     # This overwrites input vector (could use copy(x0))
     x = x0
+    resold = 0
     for i in xrange(glVar.maxiter):
-
         deltax = get_deltax(x)
+        
         # Do not allow updates greater than glVar.maxdelta
+        print("This iteration: "+str(i+1))
+        
         maxDelta = max(abs(deltax))
         if maxDelta > glVar.maxdelta:
             deltax *= glVar.maxdelta/maxDelta
+            
         xnew = x + deltax
-
         # Check if deltax is small
         n1 = np.all(abs(deltax) < (glVar.reltol * np.maximum(abs(x), abs(xnew))
                                    + glVar.abstol))
         res = max(abs(deltax))
+        print("Deltax: " + str(res))        
+        res=max(abs((abs(x)-abs(xnew))))
+        print("xnew-x: " + str(abs(res)))
+        
         if n1:
             if glVar.errfunc:
                 # Optional: check if error function is small. Only
@@ -119,12 +125,109 @@ def fsolve_Newton(x0, get_deltax, f_eval):
             else:
                 # Do not check error function to save time
                 n2 = True
+       
         x = xnew
+
         if n1 and n2:
             success = True
             break
 
-
     return (x, res, i+1, success)
 
 
+def csfsolve_Newton(x0, get_deltax, speed, decomp_matrix, f_eval):
+    r"""
+    Solves a multidimensional non-linear equation with
+    Newton-Raphson's method.  In each iteration the linear system:
+    
+    .. math::
+
+            J(x_n)(x_{n+1}-x_n) + F(x_n) = 0 \; ,
+
+    is solved and a new value for :math:`x_{n+1}` is obtained. Arguments:
+
+      ``x0``: initial guess vector
+
+      ``get_deltax(x)``: function that returns the :math:`-J(x_n)^{-1}
+      F(x_n)` vector
+
+      ``f_eval(x)``: function that returns error function vector
+
+    Convergence parameters are taken from the global options
+    (:doc:`global_vars`). Relative and absolute tolerances are checked
+    independently for each variable. 
+
+    Returns the following tuple: ``(x, res, niter, success)``
+
+      ``x``: estimated solution vector at the last iteration
+      
+      ``res``: maximum residual from all variables
+
+      ``niter``: number of iterations 
+
+      ``success``: True if method converged to specified tolerance,
+      False otherwise
+
+    This function originally adapted from pycircuit
+    (https://github.com/henjo/pycircuit)
+    """
+    success = False
+    # This overwrites input vector (could use copy(x0))
+    x = x0
+    speedup = speed
+    resold = 0
+    for i in xrange(glVar.maxiter):
+        deltax = get_deltax(x)
+        
+        # Do not allow updates greater than glVar.maxdelta
+        print("This iteration: "+str(i+1))
+        
+        maxDelta = max(abs(deltax))
+
+        maxdelt = max(abs(deltax))
+        print("Deltax: " + str(maxdelt))        
+
+        if maxDelta > glVar.maxdelta:
+            deltax *= glVar.maxdelta/maxDelta
+
+        deltax = decomp_matrix*deltax        
+        
+        if ((maxdelt<glVar.maxdelta*speedup) and (speedup > 1)):
+            speedup /= 2
+        if speedup < 1:
+            speedup = 1
+
+        if ((maxdelt > glVar.maxdelta)):
+            print("Speedup: "+str(speedup))
+            deltax *= speedup
+            
+        xnew = x + deltax
+
+
+            
+        # Check if deltax is small
+        n1 = np.all(abs(deltax) < (glVar.reltol * np.maximum(abs(x), abs(xnew))
+                                   + glVar.abstol))
+
+
+        res=max(abs((abs(x)-abs(xnew))))
+        print("xnew-x: " + str(abs(res)))
+        
+        if n1:
+            if glVar.errfunc:
+                # Optional: check if error function is small. Only
+                # check for absolute error since nominal value is zero
+                errFunc = max(abs(f_eval(xnew)))
+                n2 = errFunc < glVar.abstol
+                res = max(errFunc, res)
+            else:
+                # Do not check error function to save time
+                n2 = True
+        
+        x = xnew
+
+        if n1 and n2:
+            success = True
+            break
+
+    return (x, res, i+1, success)

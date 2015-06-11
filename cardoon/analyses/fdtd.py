@@ -8,6 +8,7 @@
 """
 
 from __future__ import print_function
+import os.path
 import numpy as np
 import scipy.sparse as sp
 import sys
@@ -134,9 +135,14 @@ class FDTD(ParamSet):
 
         # re-order circuit variables (samples for one variable in one
         # block)
+
         p, pt = nodalFDTD.calculate_P_PT(circuit.nD_dimension, self.nsamples)
         # Re-shape so that xHat[1] returns all samples for nodal variable 1
         xHat = np.reshape(x[p], (circuit.nD_dimension, self.nsamples))
+
+        xMatrix = xHat*0
+        for i in range(fdtd.xMatrix.shape[0]):
+            xMatrix = np.vstack((xMatrix,np.reshape(fdtd.xMatrix[i,:][p], (circuit.nD_dimension, self.nsamples))[1,:]))
 
         # fdtd.timeVec contains the time vector
         timeVec = fdtd.timeVec
@@ -163,6 +169,14 @@ class FDTD(ParamSet):
 
         print('Number of iterations = ', iterations)
         print('Residual = ', res)
+
+        import matplotlib.pylab as plt
+        plt.ion()
+        plt.figure(3)
+        for i in range(xMatrix.shape[0]):
+            plt.plot(timeVec, xMatrix[i,:])
+        #import pdb; pdb.set_trace()
+        np.savetxt('fdtdoutputs.txt', xMatrix, delimiter=',')
 
         # Process output requests.  
         analysis.process_requests(circuit, 'fdtd', 

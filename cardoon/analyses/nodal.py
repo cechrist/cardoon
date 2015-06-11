@@ -15,9 +15,10 @@ from __future__ import print_function
 #import copy
 import numpy as np
 import scipy.linalg as linalg
-from fsolve import fsolve_Newton, NoConvergenceError
+from fsolve import fsolve_Newton, csfsolve_Newton, NoConvergenceError
 from integration import BEuler
 from cardoon.globalVars import glVar
+import CSFunctions as csf
 
 # ****************** Stand-alone functions to be optimized ****************
 
@@ -441,6 +442,7 @@ class _NLFunction(object):
     def __init__(self):
         # List here the functions that can be used to solve equations
         self.convergence_helpers = [self.solve_simple, 
+                                    self.CSsolve_simple, 
                                     self.solve_homotopy_gmin2, 
                                     self.solve_homotopy_source, 
                                     self.solve_homotopy_gmin, 
@@ -466,6 +468,23 @@ class _NLFunction(object):
             raise NoConvergenceError(
                 'No convergence. iter = {0} res = {1}'.format(iterations, res))
         
+    def CSsolve_simple(self, x0, sV):
+        #"""Simple Newton's method"""
+        # Docstring removed to avoid printing this all the time
+        def get_deltax(x):
+            (iVec, Jac) = self.get_i_Jac(x) 
+            return self.factor_and_solve(sV - iVec, Jac)
+        def f_eval(x):
+            iVec = self.get_i(x) 
+            return iVec - sV
+        (x, res, iterations, success) = \
+            csfsolve_Newton(x0, get_deltax, self.speed, self.IkPSIWMinv, f_eval)
+        if success:
+            return (x, res, iterations)
+        else:
+            raise NoConvergenceError(
+                'No convergence. iter = {0} res = {1}'.format(iterations, res))
+
     def solve_homotopy_gmin(self, x0, sV):
         """Newton's method with gmin stepping"""
         idx = np.arange(self.ckt.nD_nterms)
