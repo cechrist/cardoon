@@ -1,0 +1,38 @@
+# Hartley Oscillator (Not Working, Looks like a transistor issue)
+
+.options sparse=1 maxdelta=200 maxiter=2000
+
+
+# Analysis
+
+.analysis tran tstep=100ps tstop=1us shell=1
+#.analysis fdtd T=1ms nsamples=512
+#.analysis wd T=1ms nsamples=512 m = 0.3
+#.analysis cs T=1ms nsamples=512 m = 0.3 speed = 10
+
+# Circuit
+
+vdc:vdd 7 gnd vdc=15V
+ind:LC 7 1 l=2mH
+
+ind:LT 1 5 l=20uH
+
+
+cap:cL 1 8 c=0.1uF
+cap:cE 3 gnd c=0.1uF
+cap:cC 2 9 c=0.1uF
+cap:cT 5 9 c=100nF
+cap:c1 1 gnd c=0.001uF
+cap:c2 gnd 9 c=0.01uF
+
+res:R1 1 2 r=68kOhm
+res:R2 2 gnd r=8.2kOhm
+res:RE 3 gnd r=820Ohm
+
+svbjt:q10 1 2 3 model=mynpn area=1
+
+.model mynpn svbjt(type=npn isat=5e-15 rb=200 bf=200 \
+br=2 vaf=130 tf=0.35e-9 cje=1e-12 cjc=0.3e-12 \
+ne=0.33 nc=0.5 tr=400e-9 vje=0.7 vjc=0.55 rc=200 re=2)
+
+.plot tran 8

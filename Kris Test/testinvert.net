@@ -1,0 +1,21 @@
+# CMOS inverter DC Sweep
+
+.options sparse=1 maxdelta=2. maxiter=20
+
+.analysis fdtd T=1ms nsamples=50
+
+vdc:vdd 1 gnd vdc=3V 
+vdc:vin in gnd vdc=1 
+
+x1 in out 1 gnd inverter
+
+.subckt inverter in out vdd vss
+mosekv:m1 out in vdd vdd type = p
+mosekv:m2 out in vss vss type = n
+.ends
+
+#.plot dc out
+#.save dc out
+
+.end
+

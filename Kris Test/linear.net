@@ -1,0 +1,55 @@
+# Simplest linear network
+
+.options sparse=1 maxdelta=1 maxiter=2000
+
+#.analysis dc device=vdc:vin param=vdc start=0 stop=3.V num=200
+#.analysis fdtd T=1ms nsamples=400
+
+#vsin:vin 1 gnd vdc = 0 mag=1V freq=1kHz 
+#diode:d1 1 2 isat=10fA cj0=20fF
+#res:r1 1 gnd r=1kOhm
+#res:r2 2 gnd r=1kOhm
+
+# Half Wave Rectifier
+#.analysis fdtd T=3ms nsamples=400
+
+#vsin:vin 1 gnd vdc = 0 mag=5V freq=1kHz 
+#res:r1 1 gnd r=1kOhm
+
+#diode:d1 1 2 isat=10fA cj0=20fF
+#res:r2 2 gnd r=1kOhm
+#cap:c1 2 gnd c=10uF 
+
+
+# Full Wave Rectifier
+#.analysis fdtd T=3ms nsamples=400
+
+#vsin:vin 1 gnd vdc = 0 mag=5V freq=1kHz 
+#diode:da1 1 2 isat=10fA cj0=20fF
+#diode:da2 3 gnd isat=10fA cj0=20fF
+#diode:db1 gnd 2 isat=10fA cj0=20fF
+#diode:db2 3 1 isat=10fA cj0=20fF
+
+#res:r1 2 3 r=1kOhm
+#cap:c1 2 gnd c=10uF
+#cap:c2 3 gnd c=10uF
+
+#.plot dc out
+#.save dc out
+
+# Half Wave Rectifier
+.analysis fdtd T=1ms nsamples=512
+.analysis wd T=1ms nsamples=512 m = 0.3
+.analysis cs T=1ms nsamples=512 m = 0.3 speed = 10
+vsin:vin 1 gnd vdc = 0 mag=5V freq=1kHz phase = -90
+res:r1 1 gnd r=1kOhm
+diode:d1 1 2 isat=10fA cj0=20fF
+res:r2 2 gnd r=1kOhm
+cap:c1 2 gnd c=500nF
+
+
+.plot cs 1 2
+.plot fdtd 1 2
+.plot wd 1 2
+
+.end

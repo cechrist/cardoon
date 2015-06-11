@@ -1,0 +1,29 @@
+# AM Modulator/Demodulator
+
+
+.options sparse=1 maxdelta=200000 maxiter=2000
+
+
+# Analysis
+
+.analysis tran tstep=100ns tstop=1ms
+.analysis fdtd T=1ms nsamples=1024
+.analysis wd T=1ms nsamples=1024 m = 0.3
+.analysis cs T=1ms nsamples=1024 m = 0.3 speed = 100
+
+# Circuit
+
+vsin:vin1 1 2 vdc = 0 mag=5V freq=100kHz 
+vsin:vin2 2 3 vdc = 0 mag=2.5V freq=99kHz phase=-90
+vsin:vin3 gnd 3 vdc = 0 mag=2.5V freq=101kHz  phase=-90
+#res:R1 1 gnd r=1k
+
+diode:d1 1 4 isat=10fA cj0=20fF
+res:RF 4 gnd r=100
+cap:CF 4 gnd c=1.6uF
+
+
+.plot tran 1 4
+.plot fdtd 1 4
+.plot wd 1 4
+.plot cs 1 4
