@@ -92,23 +92,36 @@ def fsolve_Newton(x0, get_deltax, f_eval):
     This function originally adapted from pycircuit
     (https://github.com/henjo/pycircuit)
     """
-    
     success = False
     # This overwrites input vector (could use copy(x0))
     x = x0
+    maxDelta = 1e9
     for i in xrange(glVar.maxiter):
-
         deltax = get_deltax(x)
+        
         # Do not allow updates greater than glVar.maxdelta
+        maxDeltaO = maxDelta
         maxDelta = max(abs(deltax))
+        if glVar.verbose:
+            print('Iteration:', i, 'maxDelta=', maxDelta)
         if maxDelta > glVar.maxdelta:
-            deltax *= glVar.maxdelta/maxDelta
+            if (i > glVar.softiter) \
+               and (.1*maxDelta > glVar.maxdelta) \
+               and (maxDeltaO - maxDelta < .1 * glVar.maxdelta):
+                # Bail out. Conditions are: (1) number of iterations,
+                # (2) maxDelta is still quite large and (3) maxDelta
+                # not reducing much.
+                res = max(abs(deltax))
+                break
+            else:
+                deltax *= glVar.maxdelta/maxDelta
+            
+        res = max(abs(deltax))
         xnew = x + deltax
-
         # Check if deltax is small
         n1 = np.all(abs(deltax) < (glVar.reltol * np.maximum(abs(x), abs(xnew))
                                    + glVar.abstol))
-        res = max(abs(deltax))
+        
         if n1:
             if glVar.errfunc:
                 # Optional: check if error function is small. Only
@@ -119,11 +132,11 @@ def fsolve_Newton(x0, get_deltax, f_eval):
             else:
                 # Do not check error function to save time
                 n2 = True
+       
         x = xnew
         if n1 and n2:
             success = True
             break
-
 
     return (x, res, i+1, success)
 

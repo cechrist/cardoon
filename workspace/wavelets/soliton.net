@@ -1,0 +1,192 @@
+#### Classic soliton line netlist ####### (takes forever)
+
+* NLTL with 24.00 GHz initial Bragg frequency,
+* 225.00 GHz final Bragg frequency and 0.952097 tapering rule,
+* and 120.00 ps total compression.
+
+.vars f0=9.GHz 
+
+.options sparse=1 maxdelta=40. maxiter=200 softiter=20 verbose=True
+
+.analysis ssw f=f0 nsamples=128 deriv=Fourier multilevel=1 step=1 ssfactor=.02
+#.analysis tran tstop=0.5ns tstep=.1ps verbose=0 im=trap
+
+.plot tran 202 147 48
+.plot ssw 202 147 48
+
+*
+* For 27dBm input use vac = 14V
+*
+vsin:1 202 0 mag=14.V vdc=-6.V freq=f0 phase=90 rint=50
+
+*
+* Diode parameters
+*
+* From thesis: js=2.24e-12, alfa=21.13
+*
+* From Libra netlist: js=51e-15, alfa=default
+*
+.model carlos diode ( isat=2.24e-12 n=1.8307 cj0=1.32767e-15 rs=171.9 vj=1.27517 m=0.810205 ibv=1.e-5 bv=16. )
+
+*
+* Transmission line parameters
+*
+.model tline1 tlinpy4 ( z0mag=75.00 k=7 fscale=10.e9 alpha = 59.9 fopt=10e9)
+
+*
+* Diodes
+*
+diode:d1 101 0 model = carlos area=271.64
+diode:d2 102 0 model = carlos area=258.63
+diode:d3 103 0  model = carlos area=246.24
+diode:d4 104 0  model = carlos area=234.45
+diode:d5 105 0  model = carlos area=223.21
+diode:d6 106 0  model = carlos area=212.52
+diode:d7 107 0  model = carlos area=202.34
+diode:d8 108 0  model = carlos area=192.65
+diode:d9 109 0  model = carlos area=183.42
+diode:d10 110 0  model = carlos area=174.63
+diode:d11 111 0  model = carlos area=166.27
+diode:d12 112 0  model = carlos area=158.3
+diode:d13 113 0  model = carlos area=150.72
+diode:d14 114 0  model = carlos area=143.5
+diode:d15 115 0  model = carlos area=136.63
+diode:d16 116 0  model = carlos area=130.08
+diode:d17 117 0  model = carlos area=123.85
+diode:d18 118 0  model = carlos area=117.92
+diode:d19 119 0  model = carlos area=112.27
+diode:d20 120 0  model = carlos area=106.89
+diode:d21 121 0  model = carlos area=101.77
+diode:d22 122 0  model = carlos area=96.89
+diode:d23 123 0  model = carlos area=92.25
+diode:d24 124 0  model = carlos area=87.83
+diode:d25 125 0  model = carlos area=83.63
+diode:d26 126 0  model = carlos area=79.62
+diode:d27 127 0  model = carlos area=75.81
+diode:d28 128 0  model = carlos area=72.18
+diode:d29 129 0  model = carlos area=68.72
+diode:d30 130 0  model = carlos area=65.43
+diode:d31 131 0  model = carlos area=62.29
+diode:d32 132 0  model = carlos area=59.31
+diode:d33 133 0  model = carlos area=56.47
+diode:d34 134 0  model = carlos area=53.76
+diode:d35 135 0  model = carlos area=51.19
+diode:d36 136 0  model = carlos area=48.73
+diode:d37 137 0  model = carlos area=46.4
+diode:d38 138 0  model = carlos area=44.18
+diode:d39 139 0  model = carlos area=42.06
+diode:d40 140 0  model = carlos area=40.05
+diode:d41 141 0  model = carlos area=38.13
+diode:d42 142 0  model = carlos area=36.3
+diode:d43 143 0  model = carlos area=34.56
+diode:d44 144 0  model = carlos area=32.91
+diode:d45 145 0  model = carlos area=31.33
+diode:d46 146 0  model = carlos area=29.83
+diode:d47 147 0  model = carlos area=28.4
+
+*
+* Parasitic inductors
+*
+ind:i1  1 101 l=21.8pH
+ind:i2  2 102 l=21.8pH
+ind:i3  3 103 l=21.8pH
+ind:i4  4 104 l=21.8pH
+ind:i5  5 105 l=21.8pH
+ind:i6  6 106 l=21.8pH
+ind:i7  7 107 l=21.8pH
+ind:i8  8 108 l=21.8pH
+ind:i9  9 109 l=21.8pH
+ind:i10 10 110 l=21.8pH
+ind:i11 11 111 l=21.8pH
+ind:i12 12 112 l=21.8pH
+ind:i13 13 113 l=21.8pH
+ind:i14 14 114 l=21.8pH
+ind:i15 15 115 l=21.8pH
+ind:i16 16 116 l=21.8pH
+ind:i17 17 117 l=21.8pH
+ind:i18 18 118 l=21.8pH
+ind:i19 19 119 l=21.8pH
+ind:i20 20 120 l=21.8pH
+ind:i21 21 121 l=21.8pH
+ind:i22 22 122 l=21.8pH
+ind:i23 23 123 l=21.8pH
+ind:i24 24 124 l=21.8pH
+ind:i25 25 125 l=21.8pH
+ind:i26 26 126 l=21.8pH
+ind:i27 27 127 l=21.8pH
+ind:i28 28 128 l=21.8pH
+ind:i29 29 129 l=21.8pH
+ind:i30 30 130 l=21.8pH
+ind:i31 31 131 l=21.8pH
+ind:i32 32 132 l=21.8pH
+ind:i33 33 133 l=21.8pH
+ind:i34 34 134 l=21.8pH
+ind:i35 35 135 l=21.8pH
+ind:i36 36 136 l=21.8pH
+ind:i37 37 137 l=21.8pH
+ind:i38 38 138 l=21.8pH
+ind:i39 39 139 l=21.8pH
+ind:i40 40 140 l=21.8pH
+ind:i41 41 141 l=21.8pH
+ind:i42 42 142 l=21.8pH
+ind:i43 43 143 l=21.8pH
+ind:i44 44 144 l=21.8pH
+ind:i45 45 145 l=21.8pH
+ind:i46 46 146 l=21.8pH
+ind:i47 47 147 l=21.8pH
+
+*
+* Transmission lines
+*
+tlinpy4:t0 202 0 1 0 model = tline1 length=501.29u
+tlinpy4:t1  1 0 2 0  model = tline1 length=978.57u
+tlinpy4:t2  2 0 3 0 model = tline1 length=931.69u
+tlinpy4:t3  3 0 4 0 model = tline1 length=887.06u
+tlinpy4:t4  4 0 5 0  model = tline1 length=844.57u
+tlinpy4:t5  5 0 6 0  model = tline1 length=804.11u
+tlinpy4:t6  6 0 7 0  model = tline1 length=765.59u
+tlinpy4:t7  7 0 8 0  model = tline1 length=728.92u
+tlinpy4:t8  8 0 9 0  model = tline1 length=694.00u
+tlinpy4:t9  9 0 10 0 model = tline1 length=660.75u
+tlinpy4:t10  10 0 11 0 model = tline1 length=629.10u
+tlinpy4:t11  11 0 12 0 model = tline1 length=598.97u
+tlinpy4:t12  12 0 13 0 model = tline1 length=570.27u
+tlinpy4:t13  13 0 14 0 model = tline1 length=542.96u
+tlinpy4:t14  14 0 15 0 model = tline1 length=516.95u
+tlinpy4:t15  15 0 16 0 model = tline1 length=492.18u
+tlinpy4:t16  16 0 17 0 model = tline1 length=468.61u
+tlinpy4:t17  17 0 18 0 model = tline1 length=446.16u
+tlinpy4:t18  18 0 19 0 model = tline1 length=424.79u
+tlinpy4:t19  19 0 20 0 model = tline1 length=404.44u
+tlinpy4:t20  20 0 21 0 model = tline1 length=385.06u
+tlinpy4:t21  21 0 22 0 model = tline1 length=366.62u
+tlinpy4:t22  22 0 23 0 model = tline1 length=349.05u
+tlinpy4:t23  23 0 24 0 model = tline1 length=332.33u
+tlinpy4:t24  24 0 25 0 model = tline1 length=316.41u
+tlinpy4:t25  25 0 26 0 model = tline1 length=301.26u
+tlinpy4:t26  26 0 27 0 model = tline1 length=286.83u
+tlinpy4:t27  27 0 28 0 model = tline1 length=273.09u
+tlinpy4:t28  28 0 29 0 model = tline1 length=260.00u
+tlinpy4:t29  29 0 30 0 model = tline1 length=247.55u
+tlinpy4:t30  30 0 31 0 model = tline1 length=235.69u
+tlinpy4:t31  31 0 32 0 model = tline1 length=224.40u
+tlinpy4:t32  32 0 33 0 model = tline1 length=213.65u
+tlinpy4:t33  33 0 34 0 model = tline1 length=203.42u
+tlinpy4:t34  34 0 35 0 model = tline1 length=193.67u
+tlinpy4:t35  35 0 36 0 model = tline1 length=184.39u
+tlinpy4:t36  36 0 37 0 model = tline1 length=175.56u
+tlinpy4:t37  37 0 38 0 model = tline1 length=167.15u
+tlinpy4:t38  38 0 39 0 model = tline1 length=159.14u
+tlinpy4:t39  39 0 40 0 model = tline1 length=151.52u
+tlinpy4:t40  40 0 41 0 model = tline1 length=144.26u
+tlinpy4:t41  41 0 42 0 model = tline1 length=137.35u
+tlinpy4:t42  42 0 43 0 model = tline1 length=130.77u
+tlinpy4:t43  43 0 44 0 model = tline1 length=124.51u
+tlinpy4:t44  44 0 45 0 model = tline1 length=118.54u
+tlinpy4:t45  45 0 46 0 model = tline1 length=112.86u
+tlinpy4:t46  46 0 47 0 model = tline1 length=107.46u
+tlinpy4:t47  47 0 48 0 model = tline1 length=52.41u
+*
+res:rl   48  0  r=50.
+
+.end

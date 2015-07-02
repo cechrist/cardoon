@@ -18,7 +18,7 @@ http://www.gnu.org/licenses/gpl.html
 """
 
 # Regular 'analysis' modules listed here
-analysisList = ['testdev', 'op', 'dc', 'ac', 'tran']
+analysisList = ['testdev', 'op', 'dc', 'ac', 'tran', 'fdtd', 'ssw']
 
 # Add here any modules to be imported in addition to analysisList
 __all__ = analysisList 
@@ -60,7 +60,7 @@ class OutRequest:
 
     def __init__(self, reqtype, varlist):
         if reqtype not in validReqTypes:
-            raise CircuitError(
+            raise AnalysisError(
                 'Not a valid output request type: {0}'.format(reqtype)
                 + '\nValid types: {0}'.format(validReqTypes))
         self.type = reqtype

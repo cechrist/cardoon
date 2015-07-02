@@ -46,13 +46,15 @@ globDict = dict(
     abstol = ('Absolute tolerance for nodal variables', 'nodal unit', 
               float, 1e-7),
     reltol = ('Relative tolerance for nodal variables', '', float, 1e-4),
-    maxiter = ('Maximum number of Newton iterations', '', int, 20),
+    maxiter = ('Maximum number of Newton iterations', '', int, 40),
+    softiter = ('Number of Newton iterations if no progress', '', int, 20),
     maxdelta = ('Maximum allowed change in one Newton iteration', 
                 'nodal unit', float, 20.),
     errfunc = ("Enable additional test for error function in Newton's method", 
                'bool', bool, False),
     sparse = ("Use sparse matrices in analyses if possible", 'bool', 
               bool, True),
+    verbose = ('Verbose output', '', bool, False),
     gyr = ('Default gain in internal gyrators', 'S', float, 1e-3)
 )
 

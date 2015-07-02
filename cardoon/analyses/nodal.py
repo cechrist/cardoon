@@ -524,12 +524,41 @@ class _NLFunction(object):
         def f_eval(x):
             return self.get_i(x) - self._lambda * sV
         (x, res, iterations, success) = \
-            self._homotopy(0.5, f, x0, get_deltax, f_eval)
+            self._homotopy(self._sstep, f, x0, get_deltax, f_eval)
         if success:
             return (x, res, iterations)
         else:
             raise NoConvergenceError('Source stepping did not converge')
 
+    def solve_homotopy_source2(self, x0, sV):
+        """Newton's method with linear source stepping"""
+        def get_deltax(x):
+            (iVec, Jac) = self.get_i_Jac(x) 
+            return self.factor_and_solve(self._lambda * sV - iVec, Jac)
+        def f_eval(x):
+            return self.get_i(x) - self._lambda * sV
+
+        x = np.copy(x0)
+        totIter = 0
+        sepline = '===================================================='
+        print('    lambda      |   Iterations    |   Residual')
+        print(sepline)
+        self._lambda = 0.
+        while self._lambda != 1.:
+            self._lambda += self._sstep
+            if (self._lambda > 1) or (abs(1.-self._lambda) < 1e-10):
+                self._lambda = 1.
+            (x, res, iterations, success) = \
+                fsolve_Newton(x, get_deltax, f_eval)
+            print('{0:15} | {1:15} | {2:15}'.format(
+                    self._lambda, iterations, res))
+            totIter += iterations
+            if not success:
+                raise NoConvergenceError('Source stepping did not converge')
+        print(sepline)
+        return (x, res, iterations)
+
+        
     # Other methods defined below ------------------------------------
     
     def _set_gmin(self, _lambda):
