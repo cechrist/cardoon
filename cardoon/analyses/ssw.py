@@ -157,9 +157,10 @@ class SSW(ParamSet):
             print(ce)
             return
 
-        if glVar.verbose:
-            print('Final Jacobian density: ',
-                  100. * nodalwav.Jac.nnz / nodalwav.dim**2,'%')
+        print('\nFinal coefficients density:',
+              100. * np.sum(np.abs(x)>1e-2)/len(x), '%')
+        print('Final Jacobian density: ',
+              100. * nodalwav.Jac.nnz / nodalwav.dim**2,'%')
         
         # re-shape circuit variables and convert to time domain for display
         xHat = Wi.dot(x.reshape((circuit.nD_dimension, self.nsamples)).T)
