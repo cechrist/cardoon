@@ -313,8 +313,8 @@ class WaveletNodal(nd._NLFunctionSP):
         if wavelet == 'none':
             # Use identity matrices for wavelet transform: not the
             # most efficient way for FDTD but useful for testing
-            self.W = sp.eye(self.nsamples, format='csr')
-            self.Wi = sp.eye(self.nsamples, format='csr')
+            self.W = sp.eye(self.nsamples, self.nsamples, format='csr')
+            self.Wi = sp.eye(self.nsamples, self.nsamples, format='csr')
         else:
             if multilevel:
                 # Use multilevel transforms
@@ -325,6 +325,10 @@ class WaveletNodal(nd._NLFunctionSP):
                 self.W = wavelet_fs(self.nsamples, wavelet)
                 self.Wi = wavelet_is(self.nsamples, wavelet)
         self.WD = self.W.dot(D)
+
+        # The following used in get_Jac_i only
+        self.WiT = self.Wi.todense().getA().T
+        self.mtmp = np.empty(self.WiT.shape)        
 
         self.refresh()
 
@@ -348,7 +352,7 @@ class WaveletNodal(nd._NLFunctionSP):
                                (self.ckt.nD_dimension, self.ckt.nD_dimension), 
                                dtype = float).tocsr()
         # Create matrix for linear part of circuit
-        eyeNsamples = sp.eye(self.nsamples, format='csr')
+        eyeNsamples = sp.eye(self.nsamples, self.nsamples, format='csr')
         GHat = sp.kron(self.G, np.eye(self.nsamples), 'bsr')
 
         # CTriplet stores Jacobian matrix for a single time sample
@@ -600,7 +604,7 @@ class WaveletNodal(nd._NLFunctionSP):
         Jac: system Jacobian
         """
         if glVar.verbose:
-            print('\nx_hat density=',
+            print('x_hat density=',
                   100. * np.sum(np.abs(xVec)>1e-2)/len(xVec), '%')
         # Convert to time domain
         xArray = self.Wi.dot(xVec.reshape((self.ckt.nD_dimension,
@@ -637,11 +641,15 @@ class WaveletNodal(nd._NLFunctionSP):
         self.iVecA += self.W.dot(self.inlArray).T
         self.iVecA += self.WD.dot(self.qArray).T
         # Form system Jacobian
-        WiT = self.Wi.T
+#        WiT = self.Wi.T
+        #import pdb; pdb.set_trace()
         for i in range(self.Ji.nnz):
             # Use element-wise multiplication for diagonal matrix
-            self.Ji.nw_dataBlock[i] = self.W.dot(
-                (WiT.multiply(self.Ji.nw_dataDiag[i])).T )
+            np.multiply(self.WiT, self.Ji.nw_dataDiag[i], out = self.mtmp)
+            self.Ji.nw_dataBlock[i] = self.W.dot(self.mtmp.T)
+            # Optional (but desn't work with scipy 0.10.1, OK later)
+#            self.Ji.nw_dataBlock[i] = self.W.dot(
+#                (WiT.multiply(self.Ji.nw_dataDiag[i])).T )
             # Optional: threshold matrix to eliminate near-zero entries
             # pywt.thresholding.hard(self.Ji.nw_dataBlock[i], 1e-13)
         JiHat = sp.bsr_matrix((self.Ji.nw_dataBlock,
@@ -649,12 +657,14 @@ class WaveletNodal(nd._NLFunctionSP):
                               shape=self.MHat.shape)
         for i in range(self.Jq.nnz):
             # Use element-wise multiplication for diagonal matrix
-            self.Jq.nw_dataBlock[i] = self.WD.dot(
-                (WiT.multiply(self.Jq.nw_dataDiag[i])).T )
+            np.multiply(self.WiT, self.Jq.nw_dataDiag[i], out = self.mtmp)
+            self.Jq.nw_dataBlock[i] = self.WD.dot(self.mtmp.T)
+            # Optional (but desn't work with scipy 0.10.1, OK later)
+#            self.Jq.nw_dataBlock[i] = self.WD.dot(
+#                (WiT.multiply(self.Jq.nw_dataDiag[i])).T )
         JqHat = sp.bsr_matrix((self.Jq.nw_dataBlock,
                                 self.Jq.indices, self.Jq.indptr),
                               shape=self.MHat.shape)
-        #import pdb; pdb.set_trace()
         # Jac: system matrix. In the future we can allocate memory
         # just once and operate directly on blocks.
         self.Jac = self.MHat + JiHat + JqHat

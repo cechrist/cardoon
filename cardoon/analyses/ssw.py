@@ -147,7 +147,7 @@ class SSW(ParamSet):
                 # Skip direct solution and try conservative
                 # convergence helpers directly
                 (x, res, iterations) = solve(x, sV,
-                                             nodalwav.convergence_helpers[2:])
+                                             nodalwav.convergence_helpers[1:])
             else:
                 (x, res, iterations) = solve(x, sV,
                                              nodalwav.convergence_helpers)

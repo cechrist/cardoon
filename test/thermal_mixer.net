@@ -3,7 +3,7 @@
 
 # Needs more relaxed tolerance due to thermal ports. 
 # (This has to be addresed in the future)
-.options reltol=1e-3 abstol=1e-5 maxiter=140 maxdelta=5. sparse=1 temp=20
+.options reltol=1e-3 abstol=1e-5 maxiter=300 maxdelta=5. softiter=200 sparse=1 temp=20 verbose=0
 .analysis tran tstop=5ms tstep=5us shell=0 saveall=0
 
 .save tran 39 41 1001 1003 12 21

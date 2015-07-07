@@ -93,35 +93,45 @@ def fsolve_Newton(x0, get_deltax, f_eval):
     (https://github.com/henjo/pycircuit)
     """
     success = False
-    # This overwrites input vector (could use copy(x0))
-    x = x0
-    maxDelta = 1e9
+    # Do not overwrite input vector
+    x = x0.copy()
+    xnew = np.zeros_like(x0)
+    deltax = np.zeros_like(x0)
     for i in xrange(glVar.maxiter):
-        deltax = get_deltax(x)
-        
-        # Do not allow updates greater than glVar.maxdelta
-        maxDeltaO = maxDelta
-        maxDelta = max(abs(deltax))
         if glVar.verbose:
-            print('Iteration:', i, 'maxDelta=', maxDelta)
-        if maxDelta > glVar.maxdelta:
-            if (i > glVar.softiter) \
-               and (.1*maxDelta > glVar.maxdelta) \
-               and (maxDeltaO - maxDelta < .1 * glVar.maxdelta):
-                # Bail out. Conditions are: (1) number of iterations,
-                # (2) maxDelta is still quite large and (3) maxDelta
-                # not reducing much.
-                res = max(abs(deltax))
-                break
-            else:
-                deltax *= glVar.maxdelta/maxDelta
-            
+            print('\nIteration:', i)
+        deltax[:] = get_deltax(x)
+        # Do not allow updates greater than glVar.maxdelta unless they
+        # are really good
         res = max(abs(deltax))
-        xnew = x + deltax
+        if res > glVar.maxdelta:
+            if res > 10. * glVar.maxdelta:
+                # import pdb; pdb.set_trace()
+                if i < glVar.softiter:
+                    # Use a simple line search algorithm to find alpha
+                    alphavec =  np.logspace(np.log10(glVar.maxdelta/res), 
+                                            np.log10(.01*glVar.maxdelta/res), 
+                                            3)
+                    errvec = np.zeros_like(alphavec)
+                    for j in range(3):
+                        xnew[:] = x + alphavec[j] * deltax 
+                        errvec[j] = max(abs(f_eval(xnew)))
+                    alpha = alphavec[np.argmin(errvec)]
+                    if glVar.verbose:
+                        print('Line search alpha =', alpha)
+                    xnew[:] = x + alpha * deltax 
+                else:
+                    # Give up
+                    break
+            else:
+                xnew[:] = x + .5*glVar.maxdelta/res * deltax
+        else:
+            xnew[:] = x + deltax 
+        if glVar.verbose:
+            print('max(|delta_x|) =', res,'\n')
         # Check if deltax is small
         n1 = np.all(abs(deltax) < (glVar.reltol * np.maximum(abs(x), abs(xnew))
                                    + glVar.abstol))
-        
         if n1:
             if glVar.errfunc:
                 # Optional: check if error function is small. Only
@@ -133,7 +143,7 @@ def fsolve_Newton(x0, get_deltax, f_eval):
                 # Do not check error function to save time
                 n2 = True
        
-        x = xnew
+        x[:] = xnew
         if n1 and n2:
             success = True
             break

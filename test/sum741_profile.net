@@ -101,7 +101,7 @@ ne=0.5 nc=0.5 tr=3000e-9 vje=0.55 vjc=0.55 rc=100  re=10)
 .analysis dc device=vsin:v1 param=vdc start=-.5. stop=.5 num=30
 .analysis ac start=100. stop=1MEG num=100 log=True
 .analysis tran tstep=10us tstop=1ms
-.options maxiter=300 gyr=1e-5 maxdelta=3. sparse=1
+.options maxiter=300 softiter=200 gyr=1e-5 maxdelta=10. sparse=1 
 
 .save dc 153 151 23
 .save ac 153 151 23

@@ -445,6 +445,8 @@ class _NLFunction(object):
                                     self.solve_homotopy_source, 
                                     self.solve_homotopy_gmin, 
                                     None]
+        # Used in source stepping helpers
+        self._sstep = 0.5
 
     # The following convergence helper functions used to solve
     # equations are originally from pycircuit but they have evolved

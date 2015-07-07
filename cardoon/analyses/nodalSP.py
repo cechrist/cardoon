@@ -235,6 +235,8 @@ class _NLFunctionSP(_NLFunction):
                                     None]
         sp.linalg.use_solver(useUmfpack = False, assumeSortedIndices = True)
         self._factorized = None
+        # Used in source stepping helpers
+        self._sstep = 0.5
 
     # Convergence helpers: most of them reuse the definitions in nodal.py
     def solve_homotopy_gmin2(self, x0, sV):
@@ -298,7 +300,7 @@ class _NLFunctionSP(_NLFunction):
             # In the future we could try a least-squares solution here
             warn('\nProblem factoring matrix: {0}'.format(re))
             # Try moving solution a little
-            self.deltaxVec[:] = 10. * glVar.abstol \
+            self.deltaxVec[:] = 1.e3 * glVar.abstol \
                 * np.random.random(self.deltaxVec.shape)
         return self.deltaxVec
 

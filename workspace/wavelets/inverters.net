@@ -1,9 +1,9 @@
 # CMOS inverters in cascade
 
-.options sparse=1 maxdelta=2. softiter=50 maxiter=200
+.options sparse=1 maxdelta=30. softiter=50 maxiter=200 verbose=0 errfunc=0
 
-#.analysis ssw T=.10us nsamples=64 shell=0 deriv=d4 multilevel=true wavelet='db4'
-.analysis fdtd T=.10us nsamples=64
+.analysis ssw T=.10us nsamples=64 shell=0 deriv=d4 multilevel=false wavelet='db4'
+#.analysis fdtd T=.10us nsamples=64
 #.analysis tran tstep=1ns tstop=200ns
 
 vdc:vdd 1 gnd vdc=3V 
