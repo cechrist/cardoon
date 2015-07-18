@@ -1,0 +1,23 @@
+# Half Wave Rectifier
+.options sparse=1 maxdelta=20 maxiter=200 softiter=50 verbose=1
+
+#.analysis fdtd T=1us nsamples=100
+.analysis sscw T=10ns nsamples=128 ncoeff=32 deriv=d2 wavelet=db4 shell=1
+#.analysis ssw T=10ns nsamples=64 multilevel=1 deriv=d2 wavelet=db4
+#.analysis tran tstep=.1ns tstop=60ns
+vsin:vin 1 gnd vdc = 0 mag=5V freq=100MegHz phase = -90
+res:r1 1 gnd r=1kOhm
+diode:d1 1 2 isat=10fA cj0=20fF
+#res:rdiode 1 2 r=40
+res:r2 2 gnd r=1kOhm
+cap:c1 2 gnd c=5pF
+tlinps4:tline1 2 gnd 3 gnd length=.1 tand=1e-3 z0mag=50
+#res:rline 2 3 r=100Ohm
+res:rload 3 gnd r=300ohm
+
+.plot fdtd 1 2 3
+.plot sscw 1 2 3
+.plot ssw 1 2 3
+.plot tran 1 2 3
+
+.end

@@ -1,242 +1,31 @@
 """
-:mod:`nodalWavelet` -- Steady-state Nodal Analysis Using Wavelets
------------------------------------------------------------------
+:mod:`nodalCompressed` -- Steady-state Nodal Analysis Using Compressed Sensing
+------------------------------------------------------------------------------
 
-.. module:: nodalSS
+.. module:: nodalCompressed
 .. moduleauthor:: Carlos Christoffersen, Kris Fedick
 
 This module contains specific classes/functions for steady state nodal
 analysis using wavelet coefficients.
-
-Adds attributes to elements starting with "nw_"
 
 """
 
 from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
-import pywt
+import scipy.linalg as linalg
 from nodal import set_xin, set_i, _NLFunction
+import nodalWavelet as nw
 import nodalSP as nd
 from analysis import AnalysisError
 from cardoon.globalVars import glVar
-
-
-#----------------------------------------------------------------------
-# Jacobian handling
-
-def get_Jac_idx(M, elem, posRows, negRows, posCols, negCols):
-    """
-    Set index matrix in elem for quick Jacobian filling
-
-    M: sparse big Jacobian matrix (with dictionary list: .nw_dl)
-    elem: element instance
-    """
-    # Lists with element Jacobian indices
-    posContrib = np.empty((2, len(posRows)*len(posCols)
-                           + len(negRows)*len(negCols)), dtype=int)
-    negContrib = np.empty((2, len(posRows)*len(negCols)
-                           + len(negRows)*len(posCols)), dtype=int)
-    ncols = elem.nD_nxin
-    posCount = 0
-    negCount = 0
-    # i,j large Jacobian indices
-    # i1, j1 element Jacobian indices
-    for i1, i in posRows:
-        for j1, j in posCols:
-            posContrib[:, posCount] = [i1*ncols+j1, M.nw_dl[i][j]]
-            posCount += 1
-        for j1, j in negCols:
-            negContrib[:, negCount] = [i1*ncols+j1, M.nw_dl[i][j]]
-            negCount += 1
-    for i1, i in negRows:
-        for j1, j in negCols:
-            posContrib[:, posCount] = [i1*ncols+j1, M.nw_dl[i][j]]
-            posCount += 1
-        for j1, j in posCols:
-            negContrib[:, negCount] = [i1*ncols+j1, M.nw_dl[i][j]]
-            negCount += 1
-    # Return arrays to be saved
-    return posContrib, negContrib
-
-def set_Jac(dataVec, posContrib, negContrib, Jac, j):
-    """
-    Sets big Jacobian elements from Jac into dataVec
-
-    posContrib is one of the .nw_posJ? attributes in element 
-    (same for negContrib) 
-
-    Jac is element Jacobian
-    
-    j is sample number
-    """
-    # I have no choice but to go element by element as numpy has
-    # trouble assigning 2 values to the same destination.
-    for k,l in posContrib.T:
-        dataVec[l, j] += Jac.flat[k]
-    for k,l in negContrib.T:
-        dataVec[l, j] -= Jac.flat[k]
-
-    # This stuff below does not work:
-    #    dataVec[posContrib[1], j] += Jac.flat[posContrib[0]]
-    #    dataVec[negContrib[1], j] -= Jac.flat[negContrib[0]]
-
-#----------------------------------------------------------------------
-# Derivatives
-
-def deriv_2(nsamples, T):
-    """
-    Returns D matrix using second order derivatives (2-point formula)
-    
-    nsamples: number of samples
-    T: period
-    """
-    data = np.ones((4, nsamples))
-    data *= 0.5 * nsamples / T
-    data[[1,3],:] *= -1.
-    offsets = np.array([-nsamples+1, -1, 1, nsamples-1])
-    return sp.dia_matrix((data,offsets), shape=(nsamples, nsamples))
-
-def deriv_4(nsamples, T):
-    """
-    Returns D matrix using 4th order derivatives (5-point formula)
-    
-    nsamples: number of samples
-    T: period
-    """
-    # Create a dense matrix first (easier)
-    row = np.zeros(nsamples)
-    row[1:3] = [8.,-1.]
-    row[-2:] = [1.,-8.]
-    row *= nsamples / T / 12.
-    Dd = np.zeros((nsamples, nsamples))
-    for i in range(0, nsamples):
-        Dd[i] = np.roll(row, i)
-    # create diagonal sparse matrix
-    return Dd
-
-
-def deriv_fourier(nsamples, T):
-    """
-    Returns D matrix using Fourier derivatives (*jw in freq. domain)
-    
-    (this matrix is dense)
-    nsamples: number of samples
-    T: period
-    """
-    # Assume number of samples is even
-    nfreq = nsamples // 2 + 2
-    w0 = 2. * np.pi / T
-    Y = 1j * w0 * np.arange(0,nfreq)
-    # Inverse-transform Y: for now use numpy. Later switch to pyfftw
-    y = np.fft.irfft(Y, nsamples)
-    # Reverse order of elements in y
-    yi = y[::-1]
-    # Create convolution matrix
-    D = np.zeros((nsamples, nsamples))
-    for i in range(0, nsamples):
-        D[i] = np.roll(yi, i+1)
-    return D
-
-#----------------------------------------------------------------------
-# Wavelet functions
-
-def wavelet_levels(nsamples, wtype='db4'):
-    """
-    Wrapper for the pywt function
-    """
-    w = pywt.Wavelet(wtype)
-    maxlev = pywt.dwt_max_level(nsamples, w)
-    return maxlev
-
-# Multilevel transforms: require nsamples = 2^n
-def wavelet_f(nsamples, wtype='db4'):
-    """
-    Returns wavelet transform matrix in dense format
-
-    nsamples must be a power of two
-    """
-    w = pywt.Wavelet(wtype)
-    levels = pywt.dwt_max_level(nsamples, w)
-    row = np.zeros(nsamples)
-    W = np.empty((nsamples, nsamples))
-    for i in range(nsamples):
-        row[i] = 1.
-        coeffs = pywt.wavedec(row, wtype, level=levels, mode='per')
-        row[i] = 0.
-        W[:,i] = np.concatenate(coeffs)
-    # Return sparse matrix as most entries should be zero
-    return W
-
-def wavelet_i(nsamples, wtype='db4'):
-    """
-    Returns inverse wavelet transform matrix in dense format
-
-    nsamples must be a power of two
-    """
-    w = pywt.Wavelet(wtype)
-    levels = pywt.dwt_max_level(nsamples, w)
-    row = np.zeros(nsamples)
-    factor = 2
-    n2 = nsamples
-    coeffs = []
-    for i in range(levels,0,-1):
-        n1 = nsamples/factor
-        v = row[n1:n2]
-        coeffs.append(v)
-        n2 = n1
-        factor *= 2
-    coeffs.append(row[0:n1])
-    coeffs.reverse()
-    Wi = np.empty((nsamples, nsamples))
-    for i in range(nsamples):
-        # Assume coefficients arranged for banded-diagonal
-        # structure. This will change if we use multi-resolution.
-        row[i] = 1.
-        Wi[:,i] = pywt.waverec(coeffs, wtype, 'per')
-        row[i] = 0.
-    # Return sparse matrix as most entries should be zero
-    return Wi
-
-# Soveiko-style transforms
-def wavelet_fs(nsamples, wtype='db4'):
-    """
-    Returns wavelet transform matrix in dense format
-    """
-    row = np.zeros(nsamples)
-    W = np.empty((nsamples, nsamples))
-    for i in range(nsamples):
-        row[i] = 1.
-        (cA, cD) = pywt.dwt(row, wtype, 'per')
-        row[i] = 0.
-        # Arrange coefficients for banded-diagonal structure. This
-        # will change if we use multi-resolution.
-        W[::2,i] = cA
-        W[1::2,i] = cD
-    # Return sparse matrix as most entries should be zero
-    return W
-
-def wavelet_is(nsamples, wtype='db4'):
-    """
-    Returns inverse wavelet transform matrix in dense format
-    """
-    row = np.zeros(nsamples)
-    Wi = np.empty((nsamples, nsamples))
-    for i in range(nsamples):
-        # Assume coefficients arranged for banded-diagonal
-        # structure. This will change if we use multi-resolution.
-        row[i] = 1.
-        Wi[:,i] = pywt.idwt(row[::2],row[1::2], wtype, 'per')
-        row[i] = 0.
-    # Return sparse matrix as most entries should be zero
-    return Wi
-
+import spams
 
 #----------------------------------------------------------------------
 
-class WaveletNodal(nd._NLFunctionSP):
+class CompressedNodal(nd._NLFunctionSP):
     """
-    Builds steady-state system of equations using Wavelets
+    Steady-state equations using Compressed Wavelet Coefficients
 
     This class only sets up equations. Equations are solved elsewhere.
 
@@ -245,23 +34,25 @@ class WaveletNodal(nd._NLFunctionSP):
 
     Requires a nodal-ready Circuit instance (ckt) instance (see
     make_nodal_circuit()) and number of samples. 
+
+    Depends on NodalWavelet
     """
 
-    def __init__(self, ckt, nsamples, T, wavelet, multilevel, deriv, sstep):
+    def __init__(self, ckt, nsamples, ncc, T, wavelet, deriv, sstep):
         """
         Arguments:
 
         ckt: circuit instance
         nsamples: number of samples in period
+        ncc: number of compressed coefficients
         T: period
         wavelet: wavelet type, string
-        multilevel: it True, use multilevel Wavelet transform
         deriv: derivative type, string
         sstep: source stepping factor
 
         """
         # Init base class
-        super(WaveletNodal, self).__init__()
+        super(CompressedNodal, self).__init__()
         # Source stepping factor
         self._sstep = sstep
         # Override convergence helpers (generic gmin does not work with this)
@@ -275,7 +66,8 @@ class WaveletNodal(nd._NLFunctionSP):
         # Save circuit
         self.ckt = ckt
         self.nsamples = nsamples
-        self.dim = self.ckt.nD_dimension*self.nsamples
+        self.ncc = ncc
+        self.dim = self.ckt.nD_dimension*self.ncc
         # T is the period
         self.T = T
         # Allocate matrices/vectors
@@ -285,62 +77,85 @@ class WaveletNodal(nd._NLFunctionSP):
         # samples for one variable. Example: iVec[2] is the set of
         # samples for the second current in iVec.
 
-        # iVec: total current
-        self.iVecA = np.zeros((self.ckt.nD_dimension, self.nsamples))
+        # iVec: total compressed current
+        self.iVecA = np.zeros((self.ckt.nD_dimension, self.ncc))
         self.iVec = self.iVecA.ravel()
-        
         # nonlinear current only
         self.inlArray = np.zeros((self.nsamples, self.ckt.nD_dimension))
         # Nonlinear charge only
         self.qArray = np.zeros((self.nsamples, self.ckt.nD_dimension))
-        # Source vector 
+        # Decompressed Source vector 
         self.sVecA = np.zeros((self.ckt.nD_dimension, self.nsamples))
 
         # Delta_x is required as workspace by the nonlinear solver
-        self.deltaxVec = np.zeros(self.ckt.nD_dimension * self.nsamples)
+        self.deltaxVec = np.zeros(self.ckt.nD_dimension * self.ncc)
 
         # Create time vector
         self.timeVec = np.linspace(0., T, self.nsamples, endpoint=False)
 
         # TODO: include time delays
-        # List of time-delay vectors: they are stored here to allow
-        # sharing of one circuit amongst several TransientNodal
-        # objects, to use in hierarchical simulation.
         #self.tdVecList = []
 
-        # Create derivative matrix
+        # Create derivative matrix (need in dense format)
         if deriv=='d2':
-            D = deriv_2(self.nsamples, self.T)
+            D = nw.deriv_2(self.nsamples, self.T).toarray()
         elif deriv=='d4':
-            D = sp.dia_matrix(deriv_4(self.nsamples, self.T))
+            D = nw.deriv_4(self.nsamples, self.T)
         elif deriv=='Fourier':
-            D = deriv_fourier(self.nsamples, self.T)
+            D = nw.deriv_fourier(self.nsamples, self.T)
         else:
             raise AnalysisError(
                 'Invalid deriv value: {0}'.format(deriv))
             
+        # Create compression matrix
+        Dc = np.asfortranarray(np.random.normal(scale=1.,
+                                                size=(self.ncc, self.nsamples)))
+        # Norm of columns of Dc must be 1
+        self.Dc = np.asfortranarray(Dc / np.tile(np.sqrt((Dc*Dc).sum(axis=0)),
+                                                 (Dc.shape[0],1)))
+        # for testing purposes ...
+        #self.Dc /= self.ncc
+        #self.Dc += np.asfortranarray(np.eye(self.ncc, self.nsamples))
+        
         # Wavelet matrices. It may be possible to avoid its creation
         # (using the fast wavelet transform) but for the moment is it
         # not clear that we would save much with that.
         if wavelet == 'none':
-            # Use identity matrices for wavelet transform: not the
-            # most efficient way for FDTD but useful for testing
-            self.W = sp.eye(self.nsamples, self.nsamples, format='csr')
-            self.Wi = sp.eye(self.nsamples, self.nsamples, format='csr')
+            raise AnalysisError(
+                'Compressed analysis requires a Wavelet transform')
         else:
-            if multilevel:
-                # Use multilevel transforms
-                self.W = sp.csr_matrix(wavelet_f(self.nsamples, wavelet))
-                self.Wi = sp.csr_matrix(wavelet_i(self.nsamples, wavelet))
-            else:
-                # Use Soveiko-style matrices (single level, banded diagonal)
-                self.W = sp.csr_matrix(wavelet_fs(self.nsamples, wavelet))
-                self.Wi = sp.csr_matrix(wavelet_is(self.nsamples, wavelet))
-        self.WD = self.W.dot(D)
+            # Use multilevel transforms (W dense, Wi sparse)
+            W = nw.wavelet_f(self.nsamples, wavelet)
+            self.Wi = sp.csr_matrix(nw.wavelet_i(self.nsamples, wavelet))
+
+        self.DcW = np.dot(self.Dc, W)
+        self.DcWD = np.dot(self.Dc, np.dot(W, D))
 
         # The following used in get_Jac_i only
-        self.WiT = self.Wi.todense().getA().T
-        self.mtmp = np.empty(self.WiT.shape)        
+        self.mtmp = np.empty((self.nsamples, self.ncc))
+                             
+        # Signal reconstruction parameters
+        # w: wavelet weight coefficients
+        maxlev = nw.wavelet_levels(self.nsamples, wavelet)
+        wv = np.zeros(self.nsamples)
+        end = self.nsamples/2**maxlev
+        base = 2.
+        wv[0:end] = base**(-maxlev+1)
+        for j in range(maxlev):
+            beg = end
+            end = 2*beg
+            wv[beg:end] = base**(-maxlev+j+1)
+        nsig = self.ckt.nD_dimension
+        wArray = np.asfortranarray(np.repeat(wv,nsig).reshape((self.nsamples,
+                                                               nsig)))
+        self.lassoParam = {
+            # This is a waste, but lassoWeighted expects it
+            'W' : wArray,
+            'lambda1' : 1e-10,
+            # -1 means use as many cores as possible
+            'numThreads' : -1,
+            'mode' : 1
+            }
 
         self.refresh()
 
@@ -350,7 +165,14 @@ class WaveletNodal(nd._NLFunctionSP):
 
         Used for parametric sweeps
         """
-        # Big matrices named *Hat
+        # set this flag to request adaptive recovery matrix 
+        self.adaptiveDcRec = False
+        # Create decompression matrix list (all pointing to same matrix)
+        self.WiDcRec = self.Wi.dot(linalg.pinv2(self.Dc))
+        self.WiDcRecList = self.ckt.nD_dimension * [self.WiDcRec]
+
+        # Big matrices with rectangular blocks (current compression
+        # only) named *Hat. Full compression: *HatC
 
         # GTriplet stores Jacobian matrix for a single time sample
         # Format is (data, row, col)
@@ -365,7 +187,10 @@ class WaveletNodal(nd._NLFunctionSP):
                                dtype = float).tocsr()
         # Create matrix for linear part of circuit
         eyeNsamples = sp.eye(self.nsamples, self.nsamples, format='csr')
-        GHat = sp.kron(self.G, np.eye(self.nsamples), 'bsr')
+        # Note if the pseudo-inverse is used for recovery, blocks are
+        # diagonal, but for flexibility, let's assume decompression
+        # matrix is different
+        GHat = sp.kron(self.G, self.DcW, 'bsr')
 
         # CTriplet stores Jacobian matrix for a single time sample
         CTriplet = ([], [], [])
@@ -376,14 +201,8 @@ class WaveletNodal(nd._NLFunctionSP):
         self.C = sp.coo_matrix((CTriplet[0], CTriplet[1:]),
                                (self.ckt.nD_dimension, self.ckt.nD_dimension), 
                                dtype = float).tocsr()
-        # If we use Fourier derivatives, WD is dense and needs special
-        # treatment
-        WDWi = self.Wi.T.dot(self.WD.T).T
-#        try:
-#            WDWi = self.WD.dot(self.Wi)
-#        except ValueError:
-#            WDWi = np.dot(self.WD, self.Wi.todense())
-        CHat = sp.kron(self.C, WDWi, 'bsr')
+        # Rectangular dense matrix
+        CHat = sp.kron(self.C, self.DcWD, 'bsr')
         
         # Frequency-defined elements: not the optimum way to create
         # the matrix but should do for now. The underlying assumption
@@ -423,9 +242,8 @@ class WaveletNodal(nd._NLFunctionSP):
             # import pdb; pdb.set_trace()
             # Create convolution matrices
             # Inverse-transform Y: for now use numpy. Later switch to pyfftw
-            Yblocks = np.empty((Y0.nnz, self.nsamples, self.nsamples))
+            Yblocks = np.empty((Y0.nnz, self.ncc, self.nsamples))
             Ytmp1 = np.empty((self.nsamples, self.nsamples))
-            Ytmp2 = np.empty((self.nsamples, self.nsamples))
             for Yv, Yb in zip(ydata, Yblocks):
                 yv = np.fft.irfft(Yv, self.nsamples)
                 # Reverse order of elements in yv
@@ -434,18 +252,22 @@ class WaveletNodal(nd._NLFunctionSP):
                 Ytmp1.fill(0.)
                 for i in range(0, self.nsamples):
                     Ytmp1[i] = np.roll(yi, i+1)
-                # Add Wavelet Transform
-                Ytmp2 = self.Wi.T.dot(Ytmp1.T).T
-                Yb[:,:] = self.W.dot(Ytmp2)
+                # Add Compression and Wavelet Transform
+                np.dot(self.DcW, Ytmp1, out=Yb)
 
             YHat = sp.bsr_matrix((Yblocks, Y0.indices, Y0.indptr),
-                                 shape=(self.dim, self.dim))
+                                 shape=(self.dim,
+                                        self.ckt.nD_dimension * self.nsamples))
 
         # Linear response matrix
         if ycontrib:
             self.MHat = GHat + CHat + YHat
         else:
             self.MHat = GHat + CHat
+        # Compressed linear matrix (default recovery)
+        self.MHatC = self.MHat.dot(sp.block_diag(self.WiDcRecList)).tobsr(
+            blocksize=(self.ncc, self.ncc))
+
             
         # Create nonlinear structure for one block
         JiTriplet = ([], [], []) 
@@ -487,9 +309,8 @@ class WaveletNodal(nd._NLFunctionSP):
             self.Ji.nw_dl.append(d)
         # Reserve space for entries in time domain (diagonal matrices)
         self.Ji.nw_dataDiag = np.zeros((self.Ji.nnz, self.nsamples))
-        # Use dense matrices just as a proof of concept. 
-        self.Ji.nw_dataBlock = np.empty((self.Ji.nnz,
-                                         self.nsamples, self.nsamples))
+        # Use dense matrices for compressed blocks
+        self.Ji.nw_dataBlock = np.empty((self.Ji.nnz, self.ncc, self.ncc))
         
         # Same for Jq
         self.Jq.nw_dl = []
@@ -502,25 +323,22 @@ class WaveletNodal(nd._NLFunctionSP):
             self.Jq.nw_dl.append(d)
         # Reserve space for entries in time domain (diagonal matrices)
         self.Jq.nw_dataDiag = np.zeros((self.Jq.nnz, self.nsamples))
-        # Use dense matrices just as a proof of concept. 
-        self.Jq.nw_dataBlock = np.empty((self.Jq.nnz,
-                                         self.nsamples, self.nsamples))
+        # Use dense matrices for compressed blocks
+        self.Jq.nw_dataBlock = np.empty((self.Jq.nnz, self.ncc, self.ncc))
 
         # Create help arrays in elements
         for elem in self.ckt.nD_nlinElem:
-            pos, neg = get_Jac_idx(self.Ji, elem,
-                                   elem.nD_cpos, elem.nD_cneg, 
-                                   elem.nD_vpos, elem.nD_vneg)
+            pos, neg = nw.get_Jac_idx(self.Ji, elem,
+                                      elem.nD_cpos, elem.nD_cneg, 
+                                      elem.nD_vpos, elem.nD_vneg)
             elem.nw_posJi = pos
             elem.nw_negJi = neg
-            pos, neg = get_Jac_idx(self.Jq, elem,
-                                   elem.nD_qpos, elem.nD_qneg, 
-                                   elem.nD_vpos, elem.nD_vneg)
+            pos, neg = nw.get_Jac_idx(self.Jq, elem,
+                                      elem.nD_qpos, elem.nD_qneg, 
+                                      elem.nD_vpos, elem.nD_vneg)
             elem.nw_posJq = pos
             elem.nw_negJq = neg
 
-
-        
 
     def get_source(self):
         """
@@ -553,9 +371,10 @@ class WaveletNodal(nd._NLFunctionSP):
                 if outTerm[1] >= 0:
                     self.sVecA[outTerm[1], j] += current
         # Convert to Wavelet Domain
-        s = self.W.dot(self.sVecA.T)
+        s = np.dot(self.DcW, self.sVecA.T)
         return s.T.flatten()
         
+
     def get_rhs(self):
         """
         Returns system rhs vector: s' 
@@ -572,15 +391,16 @@ class WaveletNodal(nd._NLFunctionSP):
 
         returns currents generated by non-sources
 
-        xVec: input vector of nodal voltages (for all samples). 
+        xVec: input vector of nodal voltages (compressed). 
 
-        iVec: output vector of currents (for all samples)
+        iVec: output vector of currents (compressed)
         """
-        # Convert to time domain
-        xArray = self.Wi.dot(xVec.reshape((self.ckt.nD_dimension,
-                                           self.nsamples)).T)
+        #import pdb; pdb.set_trace()
+        # Reconstruct signals
+        xHat = self.recover(xVec, updateMHatC = False)
         # Linear contribution
-        self.iVec[:] = self.MHat.dot(xVec)
+        self.iVec[:] = self.MHat.dot(xHat.T.ravel())
+        
         # Nonlinear contribution
         # Erase arrays
         self.inlArray.fill(0.)
@@ -589,7 +409,7 @@ class WaveletNodal(nd._NLFunctionSP):
             for j in range(self.nsamples):
                 # first have to retrieve port voltages from xVec
                 xin = np.zeros(elem.nD_nxin)
-                set_xin(xin, elem.nD_vpos, elem.nD_vneg, xArray[j,:])
+                set_xin(xin, elem.nD_vpos, elem.nD_vneg, xHat[j,:])
                 # We can not yet treat delays
                 assert elem.nDelays == 0
                 outV = elem.eval(xin)
@@ -597,9 +417,9 @@ class WaveletNodal(nd._NLFunctionSP):
                 set_i(self.inlArray[j], elem.nD_cpos, elem.nD_cneg, outV)
                 set_i(self.qArray[j], elem.nD_qpos, elem.nD_qneg, 
                       outV[len(elem.csOutPorts):])
-        # iVec = M x + W i(x) + W D q(x)
-        self.iVecA += self.W.dot(self.inlArray).T
-        self.iVecA += self.WD.dot(self.qArray).T
+        # iVec = M x + DcW i(x) + DcW D q(x)
+        self.iVecA += np.dot(self.DcW, self.inlArray).T
+        self.iVecA += np.dot(self.DcWD, self.qArray).T
         return self.iVec
 
         
@@ -609,21 +429,19 @@ class WaveletNodal(nd._NLFunctionSP):
 
         Returns (iVec, Jac)
 
-        xVec: input vector of nodal voltages. 
+        xVec: input vector of compressed nodal voltages. 
 
-        iVec: output vector of currents
+        iVec: output vector of compressed currents
 
         Jac: system Jacobian
         """
-        if glVar.verbose:
-            print('x_hat density=',
-                  100. * np.sum(np.abs(xVec)>1e-2)/len(xVec), '%')
-        # Convert to time domain
-        xArray = self.Wi.dot(xVec.reshape((self.ckt.nD_dimension,
-                                           self.nsamples)).T)
-        #import pdb; pdb.set_trace()
+        # Recover signals and matrix
+        xHat = self.recover(xVec, updateMHatC = True)
         # Linear contribution
-        self.iVec[:] = self.MHat.dot(xVec)
+        self.iVec[:] = self.MHat.dot(xHat.T.ravel())
+        # Alternative Linear contribution (not sure if better):
+        # self.iVec[:] = self.MHatC.dot(xVec)
+
         # Nonlinear contribution
         # Erase arrays
         self.inlArray.fill(0.)
@@ -635,7 +453,7 @@ class WaveletNodal(nd._NLFunctionSP):
             for j in range(self.nsamples):
                 # first have to retrieve port voltages from xVec
                 xin.fill(0.)
-                set_xin(xin, elem.nD_vpos, elem.nD_vneg, xArray[j,:])
+                set_xin(xin, elem.nD_vpos, elem.nD_vneg, xHat[j,:])
                 # We can not yet treat delays
                 assert elem.nDelays == 0
                 (outV, outJac) = elem.eval_and_deriv(xin)
@@ -645,44 +463,95 @@ class WaveletNodal(nd._NLFunctionSP):
                       outV[len(elem.csOutPorts):])
                 qJac = outJac[len(elem.csOutPorts):,:]
                 # Set Jacobian entries for all samples at once
-                set_Jac(self.Ji.nw_dataDiag,
-                        elem.nw_posJi, elem.nw_negJi, outJac, j)
-                set_Jac(self.Jq.nw_dataDiag,
-                        elem.nw_posJq, elem.nw_negJq, qJac, j)
-        # iVec = M x + W i(x) + W D q(x)
-        self.iVecA += self.W.dot(self.inlArray).T
-        self.iVecA += self.WD.dot(self.qArray).T
+                nw.set_Jac(self.Ji.nw_dataDiag,
+                           elem.nw_posJi, elem.nw_negJi, outJac, j)
+                nw.set_Jac(self.Jq.nw_dataDiag,
+                           elem.nw_posJq, elem.nw_negJq, qJac, j)
+        # iVec = M x + DcW i(x) + DcW D q(x)
+        self.iVecA += np.dot(self.DcW, self.inlArray).T
+        self.iVecA += np.dot(self.DcWD, self.qArray).T
         # Form system Jacobian
-#        WiT = self.Wi.T
         #import pdb; pdb.set_trace()
         for i in range(self.Ji.nnz):
+            # Retrieve recovery matrix (different for each variable)
+            WiDcRec = self.WiDcRecList[self.Ji.indices[i]]
             # Use element-wise multiplication for diagonal matrix
-            np.multiply(self.WiT, self.Ji.nw_dataDiag[i], out = self.mtmp)
-            self.Ji.nw_dataBlock[i] = self.W.dot(self.mtmp.T)
-            # Optional (but desn't work with scipy 0.10.1, OK later)
-#            self.Ji.nw_dataBlock[i] = self.W.dot(
-#                (WiT.multiply(self.Ji.nw_dataDiag[i])).T )
-            # Optional: threshold matrix to eliminate near-zero entries
-            # pywt.thresholding.hard(self.Ji.nw_dataBlock[i], 1e-13)
-        JiHat = sp.bsr_matrix((self.Ji.nw_dataBlock,
+            np.multiply(WiDcRec.T, self.Ji.nw_dataDiag[i], out = self.mtmp.T)
+            np.dot(self.DcW, self.mtmp, out=self.Ji.nw_dataBlock[i])
+        JiHatC = sp.bsr_matrix((self.Ji.nw_dataBlock,
                                 self.Ji.indices, self.Ji.indptr),
-                              shape=self.MHat.shape)
+                               shape=(self.dim, self.dim))
         for i in range(self.Jq.nnz):
+            # Retrieve recovery matrix (different for each variable)
+            WiDcRec = self.WiDcRecList[self.Jq.indices[i]]
             # Use element-wise multiplication for diagonal matrix
-            np.multiply(self.WiT, self.Jq.nw_dataDiag[i], out = self.mtmp)
-            self.Jq.nw_dataBlock[i] = self.WD.dot(self.mtmp.T)
-            # Optional (but desn't work with scipy 0.10.1, OK later)
-#            self.Jq.nw_dataBlock[i] = self.WD.dot(
-#                (WiT.multiply(self.Jq.nw_dataDiag[i])).T )
-        JqHat = sp.bsr_matrix((self.Jq.nw_dataBlock,
+            np.multiply(WiDcRec.T, self.Jq.nw_dataDiag[i], out = self.mtmp.T)
+            np.dot(self.DcWD, self.mtmp, out=self.Jq.nw_dataBlock[i])
+        JqHatC = sp.bsr_matrix((self.Jq.nw_dataBlock,
                                 self.Jq.indices, self.Jq.indptr),
-                              shape=self.MHat.shape)
+                               shape=(self.dim, self.dim))
         # Jac: system matrix. In the future we can allocate memory
         # just once and operate directly on blocks.
-        self.Jac = self.MHat + JiHat + JqHat
+        self.Jac = self.MHatC + JiHatC + JqHatC
         if glVar.verbose:
             print('Jacobian density= ',
                   100. * self.Jac.nnz / self.dim**2,'%')
         return (self.iVec, self.Jac)
 
 
+    def recover(self, xVec, updateMHatC = False):
+        """
+        Recover samples from compressed coefficients
+
+        Returns signal samples
+
+        xVec: input vector of compressed nodal voltages. 
+
+        if updateMHatC is True, update self.MHatC according to reconstruction
+
+        """
+        # Reconstruct signals
+        xArray = xVec.reshape((self.ckt.nD_dimension, self.ncc)).T
+
+        # At this point we have to decide what kind of
+        # recovery matrix to use. Initially could use fixed PI, but at
+        # some poing we have to switch. For now use a flag to indicate
+        # to update the compressive matrices or not. Alternative Idea:
+        # use an internal flag controlled by the nonlinear solver to
+        # set the policy: 1. general PI; 2. adaptive custom PI;
+        # 3. fixed custom PI.
+        if self.adaptiveDcRec:
+            xTilde = spams.lassoWeighted(xArray, D=self.Dc, **self.lassoParam)
+            # Calculate samples of nodal voltages
+            xHat = self.Wi.dot(xTilde).toarray()
+            if glVar.verbose:
+                print('x_Tilde density=', 100. * xTilde.nnz/self.dim, '%')
+            if updateMHatC:
+                D1 = np.empty((self.ncc, self.nsamples))
+                # Update decompression matrices
+                # Use nonzero structure from each column of xTilde 
+                indptr = xTilde.indptr
+                colidx = xTilde.indices
+                for j in range(xTilde.shape[1]):
+                    D1.fill(0.)
+                    nzidx = colidx[indptr[j]:indptr[j+1]]
+                    # Check if any elements are considered at all
+                    if len(nzidx) > 0:
+                        D1[:, nzidx] = self.Dc[:, nzidx]
+                        # Try pinv and pinv2. Here we have to point the
+                        # elements of the list to new matrices since
+                        # originally we only allocate one
+                        self.WiDcRecList[j] = self.Wi.dot(linalg.pinv2(D1))
+                    else:
+                        # Use default 
+                        self.WiDcRecList[j] = self.WiDcRec
+                self.MHatC = self.MHat.dot(sp.block_diag(
+                    self.WiDcRecList)).tobsr(blocksize=(self.ncc, self.ncc))
+        else:
+            xHatv = sp.block_diag(self.WiDcRecList, format='bsr').dot(xVec)
+            # Calculate samples of nodal voltages
+            xHat = xHatv.reshape((self.ckt.nD_dimension, self.nsamples)).T
+                    
+        return xHat
+
+        
