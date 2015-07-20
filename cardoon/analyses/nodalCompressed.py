@@ -115,7 +115,7 @@ class CompressedNodal(nd._NLFunctionSP):
                                                  (Dc.shape[0],1)))
         # for testing purposes ...
         #self.Dc /= self.ncc
-        #self.Dc += np.asfortranarray(np.eye(self.ncc, self.nsamples))
+        self.Dc = np.asfortranarray(np.eye(self.ncc, self.nsamples))
         
         # Wavelet matrices. It may be possible to avoid its creation
         # (using the fast wavelet transform) but for the moment is it
@@ -125,11 +125,11 @@ class CompressedNodal(nd._NLFunctionSP):
                 'Compressed analysis requires a Wavelet transform')
         else:
             # Use multilevel transforms (W dense, Wi sparse)
-            W = nw.wavelet_f(self.nsamples, wavelet)
+            self.W = nw.wavelet_f(self.nsamples, wavelet)
             self.Wi = sp.csr_matrix(nw.wavelet_i(self.nsamples, wavelet))
 
-        self.DcW = np.dot(self.Dc, W)
-        self.DcWD = np.dot(self.Dc, np.dot(W, D))
+        self.DcW = np.dot(self.Dc, self.W)
+        self.DcWD = np.dot(self.Dc, np.dot(self.W, D))
 
         # The following used in get_Jac_i only
         self.mtmp = np.empty((self.nsamples, self.ncc))
@@ -169,7 +169,6 @@ class CompressedNodal(nd._NLFunctionSP):
         self.adaptiveDcRec = False
         # Create decompression matrix list (all pointing to same matrix)
         self.WiDcRec = self.Wi.dot(linalg.pinv2(self.Dc))
-        self.WiDcRecList = self.ckt.nD_dimension * [self.WiDcRec]
 
         # Big matrices with rectangular blocks (current compression
         # only) named *Hat. Full compression: *HatC
@@ -186,7 +185,6 @@ class CompressedNodal(nd._NLFunctionSP):
                                (self.ckt.nD_dimension, self.ckt.nD_dimension), 
                                dtype = float).tocsr()
         # Create matrix for linear part of circuit
-        eyeNsamples = sp.eye(self.nsamples, self.nsamples, format='csr')
         # Note if the pseudo-inverse is used for recovery, blocks are
         # diagonal, but for flexibility, let's assume decompression
         # matrix is different
@@ -264,9 +262,15 @@ class CompressedNodal(nd._NLFunctionSP):
             self.MHat = GHat + CHat + YHat
         else:
             self.MHat = GHat + CHat
-        # Compressed linear matrix (default recovery)
-        self.MHatC = self.MHat.dot(sp.block_diag(self.WiDcRecList)).tobsr(
-            blocksize=(self.ncc, self.ncc))
+        # Compressed linear matrix (default recovery). Note: need the
+        # tobsr() conversion to ensure the blocks are right
+        self.WiRec = sp.kron(sp.eye(self.ckt.nD_dimension, 
+                                     self.ckt.nD_dimension), 
+                              self.WiDcRec).tobsr((self.nsamples, self.ncc))
+        self.MHatC = self.MHat.dot(self.WiRec)
+        #self.MHatC = self.MHat.dot(sp.block_diag(self.WiDcRecList)).tobsr(
+        #    blocksize=(self.ncc, self.ncc))
+
 
             
         # Create nonlinear structure for one block
@@ -471,10 +475,10 @@ class CompressedNodal(nd._NLFunctionSP):
         self.iVecA += np.dot(self.DcW, self.inlArray).T
         self.iVecA += np.dot(self.DcWD, self.qArray).T
         # Form system Jacobian
-        #import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         for i in range(self.Ji.nnz):
             # Retrieve recovery matrix (different for each variable)
-            WiDcRec = self.WiDcRecList[self.Ji.indices[i]]
+            WiDcRec = self.WiRec.data[self.Ji.indices[i]]
             # Use element-wise multiplication for diagonal matrix
             np.multiply(WiDcRec.T, self.Ji.nw_dataDiag[i], out = self.mtmp.T)
             np.dot(self.DcW, self.mtmp, out=self.Ji.nw_dataBlock[i])
@@ -483,7 +487,7 @@ class CompressedNodal(nd._NLFunctionSP):
                                shape=(self.dim, self.dim))
         for i in range(self.Jq.nnz):
             # Retrieve recovery matrix (different for each variable)
-            WiDcRec = self.WiDcRecList[self.Jq.indices[i]]
+            WiDcRec = self.WiRec.data[self.Jq.indices[i]]
             # Use element-wise multiplication for diagonal matrix
             np.multiply(WiDcRec.T, self.Jq.nw_dataDiag[i], out = self.mtmp.T)
             np.dot(self.DcWD, self.mtmp, out=self.Jq.nw_dataBlock[i])
@@ -525,7 +529,7 @@ class CompressedNodal(nd._NLFunctionSP):
             # Calculate samples of nodal voltages
             xHat = self.Wi.dot(xTilde).toarray()
             if glVar.verbose:
-                print('x_Tilde density=', 100. * xTilde.nnz/self.dim, '%')
+                print('xTilde density=', 100. * xTilde.nnz/self.dim, '%')
             if updateMHatC:
                 D1 = np.empty((self.ncc, self.nsamples))
                 # Update decompression matrices
@@ -538,17 +542,15 @@ class CompressedNodal(nd._NLFunctionSP):
                     # Check if any elements are considered at all
                     if len(nzidx) > 0:
                         D1[:, nzidx] = self.Dc[:, nzidx]
-                        # Try pinv and pinv2. Here we have to point the
-                        # elements of the list to new matrices since
-                        # originally we only allocate one
-                        self.WiDcRecList[j] = self.Wi.dot(linalg.pinv2(D1))
+                        # Try pinv and pinv2. Copy new block on top
+                        # of sparse data structure
+                        self.WiRec.data[j] = self.Wi.dot(linalg.pinv(D1))
                     else:
                         # Use default 
-                        self.WiDcRecList[j] = self.WiDcRec
-                self.MHatC = self.MHat.dot(sp.block_diag(
-                    self.WiDcRecList)).tobsr(blocksize=(self.ncc, self.ncc))
+                        self.WiRec.data[j] = self.WiDcRec
+                self.MHatC = self.MHat.dot(self.WiRec)
         else:
-            xHatv = sp.block_diag(self.WiDcRecList, format='bsr').dot(xVec)
+            xHatv = self.WiRec.dot(xVec)
             # Calculate samples of nodal voltages
             xHat = xHatv.reshape((self.ckt.nD_dimension, self.nsamples)).T
                     

@@ -9,10 +9,12 @@
 .options sparse=1 maxdelta=40. maxiter=200 softiter=50 verbose=True
 
 #.analysis tran tstop=0.5ns tstep=.1ps verbose=0 im=trap
-.analysis ssw f=f0 nsamples=256 deriv=d2 wavelet=db5 multilevel=1 step=1 ssfactor=.2 shell=1
+#.analysis ssw f=f0 nsamples=256 deriv=d2 wavelet=db5 multilevel=1 step=1 ssfactor=.2 shell=1
+.analysis sscw f=f0 ncoeff=64 nsamples=512 deriv=d2 wavelet=db4 step=1 ssfactor=.2 shell=1
 
 .plot tran 202 147 48
 .plot ssw 202 147 48
+.plot sscw 202 147 48
 
 *
 * For 27dBm input use vac = 14V

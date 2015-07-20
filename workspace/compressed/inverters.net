@@ -1,8 +1,9 @@
 # CMOS inverters in cascade
 
-.options sparse=1 maxdelta=30. softiter=50 maxiter=200 verbose=0 errfunc=0
+.options sparse=1 maxdelta=30. softiter=30 maxiter=200 verbose=1 
 
-.analysis ssw T=.10us nsamples=64 shell=0 deriv=d4 multilevel=false wavelet='db4'
+.analysis sscw T=.10us ncoeff=32 nsamples=64 shell=0 deriv=d4 wavelet='db4'
+#.analysis ssw T=.10us nsamples=64 shell=0 deriv=d4 multilevel=false wavelet='db4'
 #.analysis fdtd T=.10us nsamples=64
 #.analysis tran tstep=1ns tstop=200ns
 
@@ -27,6 +28,8 @@ mosekv:m2 out in vss vss model=nmos05 l=.5u w=1u ad=1e-12 asrc=1e-12 pd=4u ps=4u
 .model pmos05 mosekv (type=p cox = 3.45e-3 xj = 0.15e-6 vt0 = -0.55 gamma = 0.69 phi = 0.87 kp = 35.0e-6 e0 = 51.0e6 ucrit = 18.0e6 dl = -0.05e-6 dw = -0.03e-6 Lambda = 1.1 leta = 0.45 weta = 0.0 q0 = 200e-6 lk = 0.6e-6 ibn = 1.0 iba = 0.0 ibb = 300e6 tnom = 25.0 tcv = -1.4e-3 bex = -1.4 ucex = 2.0 ibbt = 0.0 kf = 1.0e-28 af = 1 rsh = 990 js = 4.0e-5 jssw = 7.0e-10 xti = 0 cj = 8.0e-4 cjsw = 4.0e-10 mj = 0.5 mjsw = 0.35 pb = 0.9 pbsw = 0.8 fc = 0.5 cgso = 1.5e-10 cgdo = 1.5e-10 cgbo = 4.0e-10)
 
 .plot ssw in out out2
+.plot sscw in out out2
+.plot sscw vsin:vin:i
 .plot fdtd in out out2
 .plot tran in out out2
 
