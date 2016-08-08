@@ -1,0 +1,36 @@
+# CMOS inverters in cascade
+
+.options sparse=1 maxdelta=30. softiter=50 maxiter=200 verbose=0 errfunc=0
+
+#.analysis ssw T=.10us nsamples=64 shell=0 deriv=d4 multilevel=false wavelet='db4'
+.analysis sstd T=.10us nsamples=64 shell=0 deriv=d4
+.analysis fdtd T=.10us nsamples=64
+#.analysis tran tstep=1ns tstop=200ns
+
+vdc:vdd 1 gnd vdc=3V 
+#vdc:vin in gnd vdc=1 
+vsin:vin in gnd vdc = 1.5 mag=1.5V freq=10MegHz phase = -90
+
+x1 in out 1 gnd inverter
+x2 out out2 1 gnd inverter
+cap:cload out2 gnd c=500fF
+
+.subckt inverter in out vdd vss
+mosekv:m1 out in vdd vdd model=pmos05 l=.5u w=1u ad=1e-12 asrc=1e-12 pd=4u ps=4u
+mosekv:m2 out in vss vss model=nmos05 l=.5u w=1u ad=1e-12 asrc=1e-12 pd=4u ps=4u
+.ends
+
+**** Typical CMOS 0.5 um parameters from EPFL EKV site (with few changes)
+**** http://ekv.epfl.ch/0_5um_CMOS_Par
+
+.model nmos05 mosekv (type=n cox = 3.45e-3 xj = 0.15e-6 vt0 = 0.6 gamma = 0.71 phi = 0.97 kp = 150e-6 e0 = 88.0e6 ucrit = 4.5e6 dl = -0.05e-6 dw = -0.02e-6 Lambda = 0.23 leta = 0.28 weta = 0.05 q0 = 280e-6 lk = 0.5e-6 ibn = 1.0 iba = 200e6 ibb = 350e6 tnom = 25.0 tcv = 1.5e-3 bex = -1.5 ucex = 1.7 ibbt = 0.0 kf = 1e-27 af = 1 rsh = 510 js = 8.0e-6 jssw = 1.5e-10 xti = 0 cj = 8.0e-4 cjsw = 3.0e-10 mj = 0.5 mjsw = 0.3 pb = 0.9 pbsw = 0.5 fc = 0.5 cgso = 1.5e-10 cgdo = 1.5e-10 cgbo = 4.0e-10)
+
+.model pmos05 mosekv (type=p cox = 3.45e-3 xj = 0.15e-6 vt0 = -0.55 gamma = 0.69 phi = 0.87 kp = 35.0e-6 e0 = 51.0e6 ucrit = 18.0e6 dl = -0.05e-6 dw = -0.03e-6 Lambda = 1.1 leta = 0.45 weta = 0.0 q0 = 200e-6 lk = 0.6e-6 ibn = 1.0 iba = 0.0 ibb = 300e6 tnom = 25.0 tcv = -1.4e-3 bex = -1.4 ucex = 2.0 ibbt = 0.0 kf = 1.0e-28 af = 1 rsh = 990 js = 4.0e-5 jssw = 7.0e-10 xti = 0 cj = 8.0e-4 cjsw = 4.0e-10 mj = 0.5 mjsw = 0.35 pb = 0.9 pbsw = 0.8 fc = 0.5 cgso = 1.5e-10 cgdo = 1.5e-10 cgbo = 4.0e-10)
+
+.plot ssw in out out2
+.plot sstd in out out2
+.plot fdtd in out out2
+.plot tran in out out2
+
+.end
+

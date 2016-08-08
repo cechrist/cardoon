@@ -103,6 +103,39 @@ Parameters
  verbose      0                                 Show iterations for each point                       
  =========== ==================== ============ ===================================================== 
 
+fdtd: FDTD Steady-State Analysis
+--------------------------------
+
+This is an experimental analysis. It solves the steady-state
+problem using a finite-diference time-domain approach (FDTD).
+
+Convergence parameters for the Newton method are controlled using
+the global variables in ``.options``. The type of matrix used in
+this analysis is controlled by the ``sparse`` option. Global
+options are documented in :doc:`global_vars`. 
+
+Example::
+
+    .analysis fdtd T = 1us nsamples = 100  
+
+    .plot fdtd in out
+
+
+
+Parameters
+++++++++++
+
+ =========== ==================== ============ ===================================================== 
+ Name         Default              Unit         Description                                          
+ =========== ==================== ============ ===================================================== 
+ T            0.0                  s            Fundamental period (overrides frequency)             
+ dcguess      0                                 Use DC operating point as initial guess              
+ f            0.0                  Hz           Fundamental frequency                                
+ nsamples     100                               Number of samples in period (must be > 5)            
+ saveall      0                                 Save all nodal voltages                              
+ shell        0                                 Drop to ipython shell after calculation              
+ =========== ==================== ============ ===================================================== 
+
 op: DC Operating Point
 ----------------------
 
@@ -140,6 +173,82 @@ Parameters
  elemop       0                                 Print element operating points                       
  intvars      0                                 Print internal element nodal variables               
  shell        0                                 Drop to ipython shell after calculation              
+ =========== ==================== ============ ===================================================== 
+
+sscw: SSCW Steady-State Analysis using Compressed Wavelet Coefficients
+----------------------------------------------------------------------
+
+Solve the steady-state problem in compressed wavelet domain using
+compressed sampling theory. This analysis is experimental and
+expected to change. Frequency-defined elements are supported.
+
+Convergence parameters for the Newton method are controlled using
+the global variables in ``.options``. The ``sparse`` option is
+ignored in this analysis (sparse matrices always used). Global
+options are documented in :doc:`global_vars`.
+
+Example::
+
+    .analysis sscw T = 1us nsamples = 128 ncoeff = 32
+
+    .plot sscw in out
+
+
+
+Parameters
+++++++++++
+
+ =========== ==================== ============ ===================================================== 
+ Name         Default              Unit         Description                                          
+ =========== ==================== ============ ===================================================== 
+ T            0.0                  s            Fundamental period (overrides frequency)             
+ deriv        d2                                Derivative type: d2, d4, Fourier                     
+ f            0.0                  Hz           Fundamental frequency                                
+ ncoeff       32                                Number of compressed coefficients                    
+ nsamples     128                               Number of samples in period (power of 2)             
+ saveall      0                                 Save all nodal voltages                              
+ shell        0                                 Drop to ipython shell after calculation              
+ ssfactor     0.5                               Initial source stepping factor                       
+ step         0                                 Directly try conservative convergence helpers        
+ wavelet      db4                               Wavelet family                                       
+ =========== ==================== ============ ===================================================== 
+
+ssw: SSW Steady-State Analysis using Wavelets
+---------------------------------------------
+
+Solve the steady-state problem in wavelet domain. This analysis
+not implemented for efficiency but just as a proof of
+concept. Frequency-defined elements are supported.
+
+Convergence parameters for the Newton method are controlled using
+the global variables in ``.options``. The ``sparse`` option is
+ignored in this analysis (sparse matrices always used). Global
+options are documented in :doc:`global_vars`.
+
+Example::
+
+    .analysis ssw T = 1us nsamples = 100  
+
+    .plot ssw in out
+
+
+
+Parameters
+++++++++++
+
+ =========== ==================== ============ ===================================================== 
+ Name         Default              Unit         Description                                          
+ =========== ==================== ============ ===================================================== 
+ T            0.0                  s            Fundamental period (overrides frequency)             
+ deriv        d2                                Derivative type: d2, d4, Fourier                     
+ f            0.0                  Hz           Fundamental frequency                                
+ multilevel   0                                 Use multilevel transform                             
+ nsamples     64                                Number of samples in period (always even, power of 2 for multilevel) 
+ saveall      0                                 Save all nodal voltages                              
+ shell        0                                 Drop to ipython shell after calculation              
+ ssfactor     0.5                               Initial source stepping factor                       
+ step         0                                 Directly try conservative convergence helpers        
+ wavelet      db4                               Wavelet family (none=FDTD)                           
  =========== ==================== ============ ===================================================== 
 
 testdev: Test Equations Of a Nonlinear Device

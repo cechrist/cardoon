@@ -2,14 +2,14 @@
 
 isin:iin 0 1 mag=4.5mA freq=10Hz phase=-90
 
-memr:m1 1 0 m = '1e3 * (3e6 * q*q + .1e3 * abs(q) + 3e-3)' c=10e-6 q0=-7.164e-5
+memr:m1 1 0 m = '1e3 * (3e6 * q*q + .1e3 * abs(q) + 3e-3)' c=10e-6 
 
-.analysis tran tstep=1ms tstop=95ms shell=0
-.analysis op elemop=1
+#.analysis tran tstep=1ms tstop=95ms shell=1
+.analysis ssw T=.1s nsamples=128 deriv=d2 multilevel=true wavelet=db4
 
-.plot tran 1 
-.plot tran memr:m1:im
-.plot tran memr:m1:vc
+.plot ssw 1 
+.plot ssw memr:m1:im
+.plot ssw memr:m1:vc
 
 .end
 
