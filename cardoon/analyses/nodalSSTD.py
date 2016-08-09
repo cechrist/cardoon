@@ -171,9 +171,11 @@ class _NLFunctionIter(_NLFunction):
         is what fsolve() is expecting (-deltax)
         """
         # import pdb; pdb.set_trace()
-        result = scipy.sparse.linalg.lsqr(Jac, errFunc,
-                                          atol=1e-4, btol=1e-4)
-        print('code:',result[1],'iter:',result[2])
+#        result = scipy.sparse.linalg.lsmr(Jac, errFunc,
+#                                          atol=1e-6, btol=1e-6)#, iter_lim=30)
+#        print('code:',result[1],'iter:',result[2])
+        result = scipy.sparse.linalg.gmres(Jac, errFunc, maxiter=20)
+        print('code:',result[1])
         self.deltaxVec[:] = result[0]
 
         return self.deltaxVec
@@ -207,6 +209,11 @@ class SSTDNodal(nd._NLFunctionSP):
         """
         # Init base class
         super(SSTDNodal, self).__init__()
+        # Override convergence helpers (generic gmin does not work with this)
+        self.convergence_helpers = [self.solve_simple, 
+                                    self.solve_homotopy_source,
+                                    self.solve_homotopy_source2, 
+                                    None]
         # Source stepping factor
         self._sstep = sstep
 
@@ -396,8 +403,9 @@ class SSTDNodal(nd._NLFunctionSP):
         # Reserve space for entries in time domain (diagonal matrices)
         self.Ji.nsstd_dataDiag = np.zeros((self.Ji.nnz, self.nsamples))
         # Use dense matrices for now
-        self.Ji.nsstd_dataBlock = np.empty((self.Ji.nnz,
-                                         self.nsamples, self.nsamples))
+        self.Ji.nsstd_dataBlock = np.zeros((self.Ji.nnz,
+                                            self.nsamples, self.nsamples))
+        self.Ji.nsstd_diagIdx = np.diag_indices(self.nsamples)
         
         # Similar thing for Jq
         self.Jq.nsstd_dl = []
@@ -533,6 +541,7 @@ class SSTDNodal(nd._NLFunctionSP):
         self.qArray.fill(0.)
         self.Ji.nsstd_dataDiag.fill(0.)
         self.Jq.nsstd_dataDiag.fill(0.)
+        self.Jq.nsstd_dataBlock[:] = self.D
         for elem in self.ckt.nD_nlinElem:
             xin = np.zeros(elem.nD_nxin)
             for j in range(self.nsamples):
@@ -557,22 +566,25 @@ class SSTDNodal(nd._NLFunctionSP):
         self.iVecA += self.D.dot(self.qArray).T
         # Form system Jacobian
         #import pdb; pdb.set_trace()
-        for i in range(self.Ji.nnz):
-            # Convert diagonal into dense matrix 
-            self.Ji.nsstd_dataBlock[i,:,:] = np.diag(self.Ji.nsstd_dataDiag[i])
+        # Copy diagonal into dense matrix block
+        self.Ji.nsstd_dataBlock[:,
+                                self.Ji.nsstd_diagIdx[0],
+                                self.Ji.nsstd_diagIdx[1]] = \
+                                                self.Ji.nsstd_dataDiag
         JiHat = sp.bsr_matrix((self.Ji.nsstd_dataBlock,
                                self.Ji.indices, self.Ji.indptr),
                               shape=self.MHat.shape).tocsr()
         
         for i in range(self.Jq.nnz):
-            np.dot(self.D, np.diag(self.Jq.nsstd_dataDiag[i]),
-                   out = self.Jq.nsstd_dataBlock[i])
+            self.Jq.nsstd_dataBlock[i] *= self.Jq.nsstd_dataDiag[i]
+                   
         JqHat = sp.bsr_matrix((self.Jq.nsstd_dataBlock,
                                self.Jq.indices, self.Jq.indptr),
                               shape=self.MHat.shape).tocsr()
         # Jac: system matrix. In the future we can allocate memory
         # just once and operate directly on blocks.
         self.Jac = self.MHat + JiHat + JqHat
+        #self.Jac.prune()
         if glVar.verbose:
             print('Jacobian density= ',
                   100. * self.Jac.nnz / self.dim**2,'%')
