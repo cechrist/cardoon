@@ -107,12 +107,12 @@ class CompressedNodal(nd._NLFunctionSP):
             raise AnalysisError(
                 'Invalid deriv value: {0}'.format(deriv))
             
-        # Create compression matrix
-        Dc = np.asfortranarray(np.random.normal(scale=1.,
-                                                size=(self.ncc, self.nsamples)))
-        # Norm of columns of Dc must be 1
-        self.Dc = np.asfortranarray(Dc / np.tile(np.sqrt((Dc*Dc).sum(axis=0)),
-                                                 (Dc.shape[0],1)))
+#        # Create compression matrix
+#        Dc = np.asfortranarray(np.random.normal(scale=1.,
+#                                                size=(self.ncc, self.nsamples)))
+#        # Norm of columns of Dc must be 1
+#        self.Dc = np.asfortranarray(Dc / np.tile(np.sqrt((Dc*Dc).sum(axis=0)),
+#                                                 (Dc.shape[0],1)))
         # for testing purposes ...
         #self.Dc /= self.ncc
         self.Dc = np.asfortranarray(np.eye(self.ncc, self.nsamples))

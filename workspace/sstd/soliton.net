@@ -6,11 +6,11 @@
 
 .vars f0=9.GHz 
 
-.options sparse=1 maxdelta=40. maxiter=200 softiter=50 verbose=True
+.options sparse=1 maxdelta=40. maxiter=200 softiter=100 verbose=True
 
 #.analysis tran tstop=0.5ns tstep=.1ps verbose=0 im=trap
 #.analysis ssw f=f0 nsamples=256 deriv=d2 wavelet=db5 multilevel=1 step=1 ssfactor=.2 shell=1
-.analysis sstd f=f0 nsamples=256 deriv=d2 step=1 ssfactor=.2 
+.analysis sstd f=f0 nsamples=256 deriv=d4 step=1 ssfactor=.01
 
 .plot tran 202 147 48
 .plot ssw 202 147 48

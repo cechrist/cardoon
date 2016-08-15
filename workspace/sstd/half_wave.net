@@ -2,8 +2,8 @@
 .options sparse=1 maxdelta=10 maxiter=200 softiter=50
 
 #.analysis fdtd T=1us nsamples=100
-.analysis sstd T=10ns nsamples=128 deriv=d2 
-.analysis ssw T=10ns nsamples=128 deriv=d2 multilevel=true wavelet=db4
+.analysis sstd T=10ns nsamples=64 deriv=d2 
+.analysis ssw T=10ns nsamples=64 deriv=d2 multilevel=false wavelet=none
 #.analysis tran tstep=.1ns tstop=60ns
 vsin:vin 1 gnd vdc = 0 mag=5V freq=100MegHz phase = -90
 res:r1 1 gnd r=1kOhm
