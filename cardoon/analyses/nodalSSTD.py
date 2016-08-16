@@ -354,7 +354,7 @@ class SSTDNodal(nd._NLFunctionSP):
                 Yb[:,:] = Ytmp1
 
             YHat = sp.bsr_matrix((Yblocks, Y0.indices, Y0.indptr),
-                                 shape=(self.dim, self.dim)).tocsr()
+                                 shape=(self.dim, self.dim))
 
         # Linear response matrix
         if ycontrib:
@@ -405,6 +405,9 @@ class SSTDNodal(nd._NLFunctionSP):
         # Use dense matrices for now
         self.Ji.nsstd_dataBlock = np.zeros((self.Ji.nnz,
                                             self.nsamples, self.nsamples))
+        self.JiHat = sp.bsr_matrix((self.Ji.nsstd_dataBlock,
+                                    self.Ji.indices, self.Ji.indptr),
+                                   shape=self.MHat.shape)
         self.Ji.nsstd_diagIdx = np.diag_indices(self.nsamples)
         
         # Similar thing for Jq
@@ -421,6 +424,9 @@ class SSTDNodal(nd._NLFunctionSP):
         # Use dense matrices just as a proof of concept. 
         self.Jq.nsstd_dataBlock = np.empty((self.Jq.nnz,
                                          self.nsamples, self.nsamples))
+        self.JqHat = sp.bsr_matrix((self.Jq.nsstd_dataBlock,
+                                    self.Jq.indices, self.Jq.indptr),
+                                   shape=self.MHat.shape)
 
         # Create help arrays in elements
         for elem in self.ckt.nD_nlinElem:
@@ -571,19 +577,13 @@ class SSTDNodal(nd._NLFunctionSP):
                                 self.Ji.nsstd_diagIdx[0],
                                 self.Ji.nsstd_diagIdx[1]] = \
                                                 self.Ji.nsstd_dataDiag
-        JiHat = sp.bsr_matrix((self.Ji.nsstd_dataBlock,
-                               self.Ji.indices, self.Ji.indptr),
-                              shape=self.MHat.shape).tocsr()
         
         for i in range(self.Jq.nnz):
             self.Jq.nsstd_dataBlock[i] *= self.Jq.nsstd_dataDiag[i]
                    
-        JqHat = sp.bsr_matrix((self.Jq.nsstd_dataBlock,
-                               self.Jq.indices, self.Jq.indptr),
-                              shape=self.MHat.shape).tocsr()
         # Jac: system matrix. In the future we can allocate memory
         # just once and operate directly on blocks.
-        self.Jac = self.MHat + JiHat + JqHat
+        self.Jac = self.MHat + self.JiHat + self.JqHat
         #self.Jac.prune()
         if glVar.verbose:
             print('Jacobian density= ',

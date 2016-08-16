@@ -202,7 +202,8 @@ class WaveletNodal(nd._NLFunctionSP):
     make_nodal_circuit()) and number of samples. 
     """
 
-    def __init__(self, ckt, nsamples, T, wavelet, multilevel, deriv, sstep):
+    def __init__(self, ckt, nsamples, T, wavelet, multilevel, deriv, sstep,
+                 matformat='csr'):
         """
         Arguments:
 
@@ -213,6 +214,7 @@ class WaveletNodal(nd._NLFunctionSP):
         multilevel: it True, use multilevel Wavelet transform
         deriv: derivative type, string
         sstep: source stepping factor
+        matformat: Jacobian matrix format ('bsr' for compressed analysis)
 
         """
         # Init base class
@@ -233,6 +235,8 @@ class WaveletNodal(nd._NLFunctionSP):
         self.dim = self.ckt.nD_dimension*self.nsamples
         # T is the period
         self.T = T
+        # Sparse matrix format for Jacobian
+        self.matformat = matformat
         # Allocate matrices/vectors
         # G and C (done in refresh())
 
@@ -319,7 +323,7 @@ class WaveletNodal(nd._NLFunctionSP):
                                dtype = float).tocsr()
         # Create matrix for linear part of circuit
         eyeNsamples = sp.eye(self.nsamples, self.nsamples, format='csr')
-        GHat = sp.kron(self.G, np.eye(self.nsamples), 'csr')
+        GHat = sp.kron(self.G, np.eye(self.nsamples), self.matformat)
 
         # CTriplet stores Jacobian matrix for a single time sample
         CTriplet = ([], [], [])
@@ -333,7 +337,7 @@ class WaveletNodal(nd._NLFunctionSP):
         # If we use Fourier derivatives, WD is dense and needs special
         # treatment
         WDWi = self.W.dot(self.WD.T).T
-        CHat = sp.kron(self.C, WDWi, 'csr')
+        CHat = sp.kron(self.C, WDWi, self.matformat)
         
         # Frequency-defined elements: not the optimum way to create
         # the matrix but should do for now. The underlying assumption
@@ -389,14 +393,14 @@ class WaveletNodal(nd._NLFunctionSP):
                 Yb[:,:] = self.W.dot(Ytmp2)
 
             YHat = sp.bsr_matrix((Yblocks, Y0.indices, Y0.indptr),
-                                 shape=(self.dim, self.dim)).tocsr()
+                                 shape=(self.dim, self.dim))
 
         # Linear response matrix
         if ycontrib:
             self.MHat = GHat + CHat + YHat
         else:
             self.MHat = GHat + CHat
-            
+
         # Create nonlinear structure for one block
         JiTriplet = ([], [], []) 
         JqTriplet = ([], [], []) 
@@ -440,7 +444,9 @@ class WaveletNodal(nd._NLFunctionSP):
         # Use dense matrices just as a proof of concept. 
         self.Ji.nw_dataBlock = np.empty((self.Ji.nnz,
                                          self.nsamples, self.nsamples))
-        
+        self.JiHat = sp.bsr_matrix((self.Ji.nw_dataBlock,
+                                    self.Ji.indices, self.Ji.indptr),
+                                   shape=self.MHat.shape)
         # Same for Jq
         self.Jq.nw_dl = []
         for i in range(0, self.Jq.shape[0]):
@@ -455,6 +461,9 @@ class WaveletNodal(nd._NLFunctionSP):
         # Use dense matrices just as a proof of concept. 
         self.Jq.nw_dataBlock = np.empty((self.Jq.nnz,
                                          self.nsamples, self.nsamples))
+        self.JqHat = sp.bsr_matrix((self.Jq.nw_dataBlock,
+                                    self.Jq.indices, self.Jq.indptr),
+                                   shape=self.MHat.shape)
 
         # Create help arrays in elements
         for elem in self.ckt.nD_nlinElem:
@@ -615,19 +624,13 @@ class WaveletNodal(nd._NLFunctionSP):
             self.Ji.nw_dataBlock[i] = self.W.dot(self.mtmp.T)
             # Optional: threshold matrix to eliminate near-zero entries
             # pywt.thresholding.hard(self.Ji.nw_dataBlock[i], 1e-13)
-        JiHat = sp.bsr_matrix((self.Ji.nw_dataBlock,
-                                self.Ji.indices, self.Ji.indptr),
-                              shape=self.MHat.shape).tocsr()
         for i in range(self.Jq.nnz):
             # Use element-wise multiplication for diagonal matrix
             np.multiply(self.WiT, self.Jq.nw_dataDiag[i], out = self.mtmp)
             self.Jq.nw_dataBlock[i] = self.WD.dot(self.mtmp.T)
-        JqHat = sp.bsr_matrix((self.Jq.nw_dataBlock,
-                                self.Jq.indices, self.Jq.indptr),
-                              shape=self.MHat.shape).tocsr()
         # Jac: system matrix. In the future we can allocate memory
         # just once and operate directly on blocks.
-        self.Jac = self.MHat + JiHat + JqHat
+        self.Jac = self.MHat + self.JiHat + self.JqHat
         if glVar.verbose:
             print('Jacobian density= ',
                   100. * self.Jac.nnz / self.dim**2,'%')
