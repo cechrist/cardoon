@@ -51,11 +51,11 @@ class SSCW(ParamSet):
         T = ('Fundamental period (overrides frequency)', 's', float, 0.),
         f = ('Fundamental frequency', 'Hz', float, 0.),
         nsamples = ('Number of samples in period (power of 2)', '', int, 128),
-        ncoeff = ('Number of compressed coefficients', '', int, 32),
         wavelet = ('Wavelet family', '', str, 'db4'),
         deriv = ('Derivative type: d2, d4, Fourier', '', str, 'd2'),
-#        dcguess = ('Use DC operating point as initial guess', '', bool, False),
-        step = ('Directly try conservative convergence helpers', '', bool, False),
+        ncoeff = ('Number of compressed coefficients', '', int, None),        
+        step = ('Directly try conservative convergence helpers', '', bool,
+                False),
         ssfactor = ('Initial source stepping factor', '', float, 0.5),
 	saveall = ('Save all nodal voltages', '', bool, False),
         shell = ('Drop to ipython shell after calculation', '', bool, False)
@@ -90,11 +90,12 @@ class SSCW(ParamSet):
         if 2**int(np.log2(self.nsamples)) != self.nsamples:
             raise analysis.AnalysisError(
                 'nsamples not a power of two: {0}'.format(self.nsamples))
-        if self.nsamples < self.ncoeff:
-            raise analysis.AnalysisError(
-                'nsamples must be greater than ncoeff: {0} < {1}'.format(
-                    self.nsamples, self.ncoeff))
-
+        if not self.ncoeff:
+            self.ncoeff = self.nsamples / 2
+        elif self.ncoeff > self.nsamples / 2:
+             raise analysis.AnalysisError(
+                'ncoeff too large for given nsamples: {0}'.format(self.ncoeff))
+        
         if not glVar.sparse:
             print('Warning: dense matrices not supported, using sparse matrices.\n')
 
@@ -106,9 +107,9 @@ class SSCW(ParamSet):
         # Create nodalwav object
         nd.make_nodal_circuit(circuit)
 	nodalcomp = nodalCompressed.CompressedNodal(circuit, self.nsamples,
-                                                    self.ncoeff, self.T,
-                                                    self.wavelet,
-                                                    self.deriv, self.ssfactor)
+                                                    self.T, self.wavelet,
+                                                    self.deriv, self.ncoeff,
+                                                    self.ssfactor)
 
         # Start from zero 
         x = np.zeros(nodalcomp.dim)
@@ -139,8 +140,9 @@ class SSCW(ParamSet):
         print('Final Jacobian density: ',
               100. * nodalcomp.Jac.nnz / nodalcomp.dim**2,'%')
         
+        Wi = nodalcomp.Wi
         # re-shape circuit variables and convert to time domain for display
-        xHat = nodalcomp.recover(x)
+        xHat = Wi.dot(x.reshape((circuit.nD_dimension, self.nsamples)).T)
 
         # nodalcomp.timeVec contains the time vector
         timeVec = nodalcomp.timeVec

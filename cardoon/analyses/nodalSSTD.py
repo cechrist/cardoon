@@ -283,12 +283,12 @@ class SSTDNodal(nd._NLFunctionSP):
             # All elements have nD_linVCCS (perhaps empty)
             for vccs in elem.nD_linVCCS:
                 nd.set_quad(GTriplet, *vccs)
-        self.G = sp.coo_matrix((GTriplet[0], GTriplet[1:]),
-                               (self.ckt.nD_dimension, self.ckt.nD_dimension), 
-                               dtype = float).tocsr()
+        G = sp.coo_matrix((GTriplet[0], GTriplet[1:]),
+                          (self.ckt.nD_dimension, self.ckt.nD_dimension), 
+                          dtype = float)
         # Create matrix for linear part of circuit
         eyeNsamples = sp.eye(self.nsamples, self.nsamples, format='csr')
-        GHat = sp.kron(self.G, np.eye(self.nsamples), 'csr')
+        GHat = sp.kron(G, np.eye(self.nsamples), 'csr')
 
         # CTriplet stores Jacobian matrix for a single time sample
         CTriplet = ([], [], [])
@@ -296,11 +296,11 @@ class SSTDNodal(nd._NLFunctionSP):
         for elem in self.ckt.nD_elemList:
             for vcqs in elem.nD_linVCQS:
                 nd.set_quad(CTriplet, *vcqs)
-        self.C = sp.coo_matrix((CTriplet[0], CTriplet[1:]),
-                               (self.ckt.nD_dimension, self.ckt.nD_dimension), 
-                               dtype = float).tocsr()
+        C = sp.coo_matrix((CTriplet[0], CTriplet[1:]),
+                          (self.ckt.nD_dimension, self.ckt.nD_dimension), 
+                          dtype = float)
 
-        CHat = sp.kron(self.C, self.D, 'csr')
+        CHat = sp.kron(C, self.D, 'csr')
         
         # Frequency-defined elements: not the optimum way to create
         # the matrix but should do for now. The underlying assumption

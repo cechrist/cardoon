@@ -320,10 +320,10 @@ class WaveletNodal(nd._NLFunctionSP):
                 nd.set_quad(GTriplet, *vccs)
         self.G = sp.coo_matrix((GTriplet[0], GTriplet[1:]),
                                (self.ckt.nD_dimension, self.ckt.nD_dimension), 
-                               dtype = float).tocsr()
+                               dtype = float)
         # Create matrix for linear part of circuit
         eyeNsamples = sp.eye(self.nsamples, self.nsamples, format='csr')
-        GHat = sp.kron(self.G, np.eye(self.nsamples), self.matformat)
+        GHat = sp.kron(self.G, np.eye(self.nsamples))
 
         # CTriplet stores Jacobian matrix for a single time sample
         CTriplet = ([], [], [])
@@ -333,11 +333,11 @@ class WaveletNodal(nd._NLFunctionSP):
                 nd.set_quad(CTriplet, *vcqs)
         self.C = sp.coo_matrix((CTriplet[0], CTriplet[1:]),
                                (self.ckt.nD_dimension, self.ckt.nD_dimension), 
-                               dtype = float).tocsr()
+                               dtype = float)
         # If we use Fourier derivatives, WD is dense and needs special
         # treatment
         WDWi = self.W.dot(self.WD.T).T
-        CHat = sp.kron(self.C, WDWi, self.matformat)
+        CHat = sp.kron(self.C, WDWi)
         
         # Frequency-defined elements: not the optimum way to create
         # the matrix but should do for now. The underlying assumption
@@ -397,10 +397,19 @@ class WaveletNodal(nd._NLFunctionSP):
 
         # Linear response matrix
         if ycontrib:
-            self.MHat = GHat + CHat + YHat
+            MHat = GHat + CHat + YHat
         else:
-            self.MHat = GHat + CHat
+            MHat = GHat + CHat
 
+        if self.matformat == 'bsr':
+            self.MHat = sp.bsr_matrix(MHat, blocksize=(self.nsamples,
+                                                       self.nsamples))
+        elif self.matformat == 'csr':
+            self.MHat = MHat
+        else:
+            raise AnalysisError(
+                'Unsupported format: {0}'.format(self.matformat))
+            
         # Create nonlinear structure for one block
         JiTriplet = ([], [], []) 
         JqTriplet = ([], [], []) 

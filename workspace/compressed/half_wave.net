@@ -1,10 +1,10 @@
 # Half Wave Rectifier
-.options sparse=1 maxdelta=10. maxiter=200 softiter=50 verbose=1
+.options sparse=1 maxdelta=10. maxiter=200 softiter=50 verbose=0
 # abstol=1e-5 reltol=1e-3
 
 #.analysis fdtd T=1us nsamples=100
-.analysis sscw T=10ns nsamples=128 ncoeff=32 deriv=d4 wavelet=db4 shell=0 
-#.analysis ssw T=10ns nsamples=64 multilevel=1 deriv=d2 wavelet=db4
+.analysis sscw T=10ns nsamples=64 deriv=d4 wavelet=db4 ncoeff=10 shell=0 
+#.analysis ssw T=10ns nsamples=64 multilevel=1 deriv=d4 wavelet=db4
 #.analysis tran tstep=.1ns tstop=60ns
 vsin:vin 1 gnd vdc = 0 mag=5V freq=100MegHz phase = -90
 res:r1 1 gnd r=1kOhm
@@ -20,6 +20,7 @@ res:rload 3 gnd r=300ohm
 .plot sscw 1 2 3
 .plot sscw vsin:vin:i
 .plot ssw 1 2 3
+.plot ssw vsin:vin:i
 .plot tran 1 2 3
 
 .end
