@@ -14,6 +14,7 @@ from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
 import scipy.linalg as la
+import scipy.sparse.linalg 
 from analysis import AnalysisError
 from cardoon.globalVars import glVar
 from nodalWavelet import WaveletNodal
@@ -86,7 +87,6 @@ class CompressedNodal(WaveletNodal):
         # 1. Solve reduced system (preconditioner), substract result
         # to main system.
 
-        #import pdb; pdb.set_trace()
         # Create reduced system
         # No need to allocate memory, just use a view of existing Jac
         data = Jac.data[:, :self.nwcoeff, :self.nwcoeff]
@@ -103,38 +103,42 @@ class CompressedNodal(WaveletNodal):
         x = factorized(reducedRhs)
 
         self.deltaxVec.fill(0.)
-        deltaxview = self.deltaxVec.reshape((self.ckt.nD_dimension,
+        deltaxA = self.deltaxVec.reshape((self.ckt.nD_dimension,
                                              self.nsamples))
-        deltaxview[:, 0:self.nwcoeff] = x.reshape((self.ckt.nD_dimension,
+        deltaxA[:, 0:self.nwcoeff] = x.reshape((self.ckt.nD_dimension,
                                                    self.nwcoeff))
 
         # Calculate residual for high subspace levels
         b1 = Jac.dot(self.deltaxVec) - errFunc
 
-        blocksize = self.nwcoeff + self.m
-        # Allocate memory for compressed Jacobians only if needed
-        if not self.data:
-            # Allocate and save for next iteration
-            self.data = np.empty((Jac.data.shape[0], blocksize, blocksize))
+        if max(abs(b1)) > 1e-3:
+            blocksize = self.nwcoeff + self.m
+            xc = np.zeros(self.ckt.nD_dimension * blocksize)
+            # Array view (row-oriented)
+            xcA = xc.reshape(self.ckt.nD_dimension, blocksize)
+            # Copy initial guess
+            xcA[:, :self.nwcoeff] = deltaxA[:, 0:self.nwcoeff] 
+            # Compressed-coefficient-only view
+            xcC = xcA[:,self.nwcoeff:]
+            #import pdb; pdb.set_trace()
+            # Use fixed number of iterations for now
+            for i in range(10):
+                delta_xc = self.solve_compressed(Jac, b1, xcC, blocksize)
+                xc -= 0.5 * delta_xc
+                # Decompress coefficients
+                xHigh = csUtil.recover(self.Fi, xcC.T)
+                # Copy into deltax
+                deltaxA[:, 0:self.nwcoeff] = xcA[:, :self.nwcoeff]
+                deltaxA[:, self.nwcoeff:] = xHigh.T
+                # Calculate error
+                b1 = Jac.dot(self.deltaxVec) - errFunc
+                err1 = la.norm(b1)
+                err2 = la.norm(delta_xc)
+                print(err1, err2)
+                if err1 < 1. or err2 < 1e-3:
+                    break
 
-        xc = np.zeros(self.ckt.nD_dimension * blocksize)
-        # Array view (row-oriented)
-        xcA = xc.reshape(self.ckt.nD_dimension, blocksize)
-        # Compressed-coefficient-only view
-        xcC = xcA[:,self.nwcoeff:]
-        # Use fixed number of iterations for now
-        for i in range(3):
-            delta_xc = self.solve_compressed(Jac, b1, xcC, blocksize)
-            xc -= delta_xc
-            # Decompress coefficients
-            xHigh = csUtil.recover(self.Fi, xcC.T)
-            # Copy into deltax
-            deltaxview[:, 0:self.nwcoeff] = xcA[:, :self.nwcoeff]
-            deltaxview[:, self.nwcoeff:] = xHigh.T
-            # Calculate error
-            b1 = Jac.dot(self.deltaxVec) - errFunc
-
-        print(la.norm(b1))
+        print('-------------------------')
         return self.deltaxVec
 
 
@@ -145,6 +149,12 @@ class CompressedNodal(WaveletNodal):
         b1: rhs vector
         xcC: array view of current compressed coefficients (one per row)
         """
+        # Allocate memory for compressed Jacobians only if needed
+        if self.data == None:
+            # Allocate and save for next iteration
+            #self.data = np.empty((Jac.data.shape[0], blocksize, blocksize))
+            self.data = np.empty((Jac.data.shape[0], self.nsamples, blocksize))
+    
         # 2. Find decompression Jacobian for each variable
         nvars = self.ckt.nD_dimension
         # Number of samples to be compressed
@@ -188,22 +198,31 @@ class CompressedNodal(WaveletNodal):
             # Decompression Jacobian
             block[:,self.nwcoeff:] = np.dot(Jac.data[i,:,self.nwcoeff:],
                                             Jc[k])
-            # Now pre-mult by compression matrix
-            self.data[i,:self.nwcoeff,:] = block[:self.nwcoeff,:]
-            self.data[i,self.nwcoeff:,:] = np.dot(Fij, block[self.nwcoeff:,:])
+            self.data[i,:,:] = block
+#            # Now pre-mult by compression matrix
+#            self.data[i,:self.nwcoeff,:] = block[:self.nwcoeff,:]
+#            self.data[i,self.nwcoeff:,:] = np.dot(self.Fi,
+#                                                  block[self.nwcoeff:,:])
             
-        sysShape = (nvars*blocksize, nvars*blocksize)
+        sysShape = (nvars*self.nsamples, nvars*blocksize)
         reducedJac = sp.bsr_matrix((self.data,
                                     Jac.indices, Jac.indptr),
                                    shape = sysShape).tocsc()
 
-        factorized = sp.linalg.factorized(reducedJac)
-        x = factorized(reducedb1)
-
-        return x
+        result = scipy.sparse.linalg.lsmr(reducedJac, b1,
+                                          atol=1e-6, btol=1e-6)#, iter_lim=30)
+        print('code:',result[1],'iter:',result[2])
+        return result[0]
+#        factorized = sp.linalg.factorized(reducedJac)
+#        x = factorized(reducedb1)
+#        return x
 
 
 
 
         
 
+#        fullSupport = np.zeros(ncsamples, dtype=bool)
+#        for sup in varSupport:
+#            fullSupport += sup
+#        Fij[:,fullSupport] = self.Fi[:,fullSupport]
