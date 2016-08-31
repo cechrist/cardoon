@@ -232,13 +232,24 @@ class WaveletNodal(nd._NLFunctionSP):
         # Save circuit
         self.ckt = ckt
         self.nsamples = nsamples
-        self.dim = self.ckt.nD_dimension*self.nsamples
         # T is the period
         self.T = T
         # Sparse matrix format for Jacobian
         self.matformat = matformat
-        # Allocate matrices/vectors
-        # G and C (done in refresh())
+        # Save input parameters for refresh()
+        self._deriv = deriv
+        self._wavelet = wavelet
+        self._multilevel = multilevel
+        # Allocate matrices/vectors (done in refresh())
+        self.refresh()
+
+    def refresh(self):
+        """
+        Re-generate linear matrices
+
+        Used for parametric sweeps
+        """
+        self.dim = self.ckt.nD_dimension*self.nsamples
 
         # Vectors are allocated as matrices, each row is the set of
         # samples for one variable. Example: iVec[2] is the set of
@@ -259,11 +270,12 @@ class WaveletNodal(nd._NLFunctionSP):
         self.deltaxVec = np.zeros(self.ckt.nD_dimension * self.nsamples)
 
         # Create time vector
-        self.timeVec = np.linspace(0., T, self.nsamples, endpoint=False)
+        self.timeVec = np.linspace(0., self.T, self.nsamples, endpoint=False)
 
         # TODO: include time delays
         #self.tdVecList = []
 
+        deriv = self._deriv
         # Create derivative matrix
         if deriv=='d2':
             D = deriv_2(self.nsamples, self.T)
@@ -278,13 +290,14 @@ class WaveletNodal(nd._NLFunctionSP):
         # Wavelet matrices. It may be possible to avoid its creation
         # (using the fast wavelet transform) but for the moment is it
         # not clear that we would save much with that.
+        wavelet = self._wavelet
         if wavelet == 'none':
             # Use identity matrices for wavelet transform: not the
             # most efficient way for FDTD but useful for testing
             self.W = sp.eye(self.nsamples, self.nsamples, format='csr')
             self.Wi = self.W
         else:
-            if multilevel:
+            if self._multilevel:
                 # Use multilevel transforms
                 self.W = sp.csr_matrix(wavelet_f(self.nsamples, wavelet))
                 # Inverse transform is just the transpose
@@ -300,14 +313,6 @@ class WaveletNodal(nd._NLFunctionSP):
         self.WiT = self.Wi.todense().getA().T
         self.mtmp = np.empty(self.WiT.shape)        
 
-        self.refresh()
-
-    def refresh(self):
-        """
-        Re-generate linear matrices
-
-        Used for parametric sweeps
-        """
         # Big matrices named *Hat
 
         # GTriplet stores Jacobian matrix for a single time sample

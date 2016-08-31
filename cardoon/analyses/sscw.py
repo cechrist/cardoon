@@ -19,7 +19,7 @@ import nodalCompressed
 import analysis 
 
 # Valid request types
-reqTypes = ['sscw']
+reqTypes = ['sscw', 'sscwcoeff']
 
 class SSCW(ParamSet):
     r"""
@@ -142,7 +142,8 @@ class SSCW(ParamSet):
         
         Wi = nodalcomp.Wi
         # re-shape circuit variables and convert to time domain for display
-        xHat = Wi.dot(x.reshape((circuit.nD_dimension, self.nsamples)).T)
+        xTilde = x.reshape((circuit.nD_dimension, self.nsamples)).T
+        xHat = Wi.dot(xTilde)
 
         # nodalcomp.timeVec contains the time vector
         timeVec = nodalcomp.timeVec
@@ -150,27 +151,38 @@ class SSCW(ParamSet):
         # Save results from analysis ********************************
 
         # Get terminals to plot/save from circuit. 
+        termSetw = circuit.get_requested_terms('sscwcoeff')
         termSet = circuit.get_requested_terms('sscw')
 
+        #import pdb; pdb.set_trace()
         # Special treatment for ground terminal
-        termSet1 = set(termSet)
-        if circuit.nD_ref in termSet1:
-            termSet1.remove(circuit.nD_ref)
+        if circuit.nD_ref in termSetw:
+            termSetw.remove(circuit.nD_ref)
+            circuit.nD_ref.sscwcoeff_v = np.zeros(self.nsamples)
+        if circuit.nD_ref in termSet:
+            termSet.remove(circuit.nD_ref)
             circuit.nD_ref.sscw_v = np.zeros(self.nsamples)
 
         # Allocate vectors for results
         if self.saveall:
             for term in circuit.nD_termList:
+                term.sscwcoeff_v = xTilde[:,term.nD_namRC]
                 term.sscw_v = xHat[:,term.nD_namRC]
         else:
             # Only save requested nodes
-            for term in termSet1:
+            for term in termSetw:
+                term.sscwcoeff_v = xTilde[:,term.nD_namRC]
+            for term in termSet:
                 term.sscw_v = xHat[:,term.nD_namRC]
 
         print('Number of iterations = ', iterations)
         print('Residual = ', res)
 
         # Process output requests.  
+        cnVec = np.arange(0, self.nsamples)
+        analysis.process_requests(circuit, 'sscwcoeff', 
+                                  cnVec, 'Coefficient number', 'sscwcoeff_v',
+                                  style = '-o')
         analysis.process_requests(circuit, 'sscw', 
                                   timeVec, 'Time [s]', 'sscw_v')
 

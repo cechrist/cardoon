@@ -19,7 +19,7 @@ import nodalWavelet
 import analysis 
 
 # Valid request types
-reqTypes = ['ssw']
+reqTypes = ['ssw', 'sswcoeff']
 
 class SSW(ParamSet):
     r"""
@@ -112,27 +112,6 @@ class SSW(ParamSet):
         # Retrieve wavelet transform matrix
         W = nodalwav.W
         Wi = nodalwav.Wi
-        # The code below disabled because it may not work well
-#        if (self.dcguess):
-#            dc = nd.DCNodal(circuit)
-#            xDC = dc.get_guess()
-#            sVDC = dc.get_source()
-#            # solve DC equations
-#            try: 
-#                print('Calculating DC operating point ... ', end='')
-#                sys.stdout.flush()
-#                (xDC, res, iterations) = solve(xDC, sVDC, 
-#                                               dc.convergence_helpers)
-#                print('Succeded.\n')
-#            except NoConvergenceError as ce:
-#                print('Failed.\n')
-#                print(ce)
-#                return
-#            dc.save_OP(xDC)
-#	    # Use DC solution as initial guess
-#            u = np.atleast_2d(W.dot(np.ones(self.nsamples))).T
-#            x = np.dot(u, np.atleast_2d(xDC)).ravel()
-#        else:
         # Start from zero instead (should be an option)
         x = np.zeros(nodalwav.dim)
 
@@ -163,7 +142,8 @@ class SSW(ParamSet):
               100. * nodalwav.Jac.nnz / nodalwav.dim**2,'%')
         
         # re-shape circuit variables and convert to time domain for display
-        xHat = Wi.dot(x.reshape((circuit.nD_dimension, self.nsamples)).T)
+        xTilde = x.reshape((circuit.nD_dimension, self.nsamples)).T
+        xHat = Wi.dot(xTilde)
 
         # nodalwav.timeVec contains the time vector
         timeVec = nodalwav.timeVec
@@ -171,9 +151,14 @@ class SSW(ParamSet):
         # Save results from analysis ********************************
 
         # Get terminals to plot/save from circuit. 
+        termSetw = circuit.get_requested_terms('sswcoeff')
         termSet = circuit.get_requested_terms('ssw')
 
         # Special treatment for ground terminal
+        termSet1w = set(termSetw)
+        if circuit.nD_ref in termSet1w:
+            termSet1w.remove(circuit.nD_ref)
+            circuit.nD_ref.sswcoeff_v = np.zeros(self.nsamples)
         termSet1 = set(termSet)
         if circuit.nD_ref in termSet1:
             termSet1.remove(circuit.nD_ref)
@@ -182,9 +167,12 @@ class SSW(ParamSet):
         # Allocate vectors for results
         if self.saveall:
             for term in circuit.nD_termList:
+                term.sswcoeff_v = xTilde[:,term.nD_namRC]
                 term.ssw_v = xHat[:,term.nD_namRC]
         else:
             # Only save requested nodes
+            for term in termSet1w:
+                term.sswcoeff_v = xTilde[:,term.nD_namRC]
             for term in termSet1:
                 term.ssw_v = xHat[:,term.nD_namRC]
 
@@ -192,6 +180,11 @@ class SSW(ParamSet):
         print('Residual = ', res)
 
         # Process output requests.  
+        cnVec = np.arange(0, self.nsamples)
+        analysis.process_requests(circuit, 'sswcoeff', 
+                                  cnVec, 'Coefficient number', 'sswcoeff_v',
+                                  style = '-o')
+
         analysis.process_requests(circuit, 'ssw', 
                                   timeVec, 'Time [s]', 'ssw_v')
 

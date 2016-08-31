@@ -2,9 +2,11 @@
 .options sparse=1 maxdelta=10 maxiter=200 softiter=50
 
 #.analysis fdtd T=1us nsamples=100
-.analysis ssw T=10ns nsamples=32 deriv=d2 multilevel=false wavelet=none
+.analysis ssw T=10ns nsamples=128 deriv=Fourier multilevel=true wavelet=db4
+#.analysis sstd T=10ns nsamples=128 deriv=Fourier 
 #.analysis tran tstep=.1ns tstop=60ns
-vsin:vin 1 gnd vdc = 0 mag=5V freq=100MegHz phase = -90
+vpulse:vin 1 gnd v1=-5V v2=5V tf=.3ns tr=.3ns pw=4.5ns per=10ns
+#vsin:vin 1 gnd vdc = 0 mag=5V freq=100MegHz phase = -90
 res:r1 1 gnd r=1kOhm
 diode:d1 1 2 isat=10fA cj0=20fF
 res:r2 2 gnd r=1kOhm
@@ -13,7 +15,10 @@ tlinps4:tline1 2 gnd 3 gnd length=.1 tand=1e-3 z0mag=50
 res:rload 3 gnd r=300ohm
 
 .plot fdtd 1 2 3
+.plot sswcoeff 1 2 3
+.plot sswcoeff vpulse:vin:i
 .plot ssw 1 2 3
+.plot sstd 1 2 3
 .plot tran 1 2 3
 
 .end

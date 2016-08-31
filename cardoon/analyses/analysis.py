@@ -57,7 +57,8 @@ def ipython_drop(msg, glo, loc):
 
 
 def process_requests(circuit, reqtype, xaxis, xlabel, attribute, 
-                     f1 = lambda x:x, unitOverride = '', log = False):
+                     f1 = lambda x:x, unitOverride = '', log = False,
+                     style='-'):
     """
     Process plot and save output requests
 
@@ -71,6 +72,7 @@ def process_requests(circuit, reqtype, xaxis, xlabel, attribute,
     f1: function to apply to attribute
     unitOverride: override terminal units
     log: use logarithmic scale
+    style: line style to use (to add markers, etc.)
     """
     if log:
         pltfunc = plt.semilogx
@@ -91,7 +93,7 @@ def process_requests(circuit, reqtype, xaxis, xlabel, attribute,
                     unit = unitOverride
                 else:
                     unit = term.unit
-                pltfunc(xaxis, f1(getattr(term, attribute)), 
+                pltfunc(xaxis, f1(getattr(term, attribute)), style,
                         label = '{0} [{1}]'.format(term.get_label(), unit)) 
             if len(outreq.varlist) == 1:
                 plt.ylabel(
