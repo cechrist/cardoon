@@ -190,7 +190,7 @@ class CompressedNodal(WaveletNodal):
         looseFactor = 1.
         #glVar.abstol = .005
         #glVar.reltol = 1e-3
-        #glVar.maxiter = 200
+        #glVar.maxiter = 10
 
         blocksize = self.nwcoeff + self.m
         def get_deltax(x):
@@ -224,10 +224,10 @@ class CompressedNodal(WaveletNodal):
             xARef[:, 0:self.nwcoeff] = deltaxA[:, 0:self.nwcoeff]
             xcCRef[:,:] = np.dot(self.Fi, deltaxA[:, self.nwcoeff:].T).T
 
-            #b2 = Jac.dot(self.deltaxVec)
+            b2 = Jac.dot(self.deltaxVec)
             b3 = b1
             x1[:] = 0.
-            for i in range(0):
+            for i in range(2):
                 delta_xc[:] = self.factor_and_solve_compressed(Jac, b3,
                                                                xcC + xcCo,
                                                                blocksize)
@@ -245,9 +245,9 @@ class CompressedNodal(WaveletNodal):
                 if nb3 < .01:
                     break;
 
-#            x1[:] = self.factor_and_solve_compressed(Jac, b1, xcC, blocksize)
-            print(max(abs(x1 - xRef)))
-            return xRef
+            #x1[:] = self.factor_and_solve_compressed(Jac, b1, xcC, blocksize)
+            print(max(abs(xRef)) , max(abs(x1 - xRef)))
+            return x1
 
         def f_eval(x):
             # Array view of input vector
@@ -354,12 +354,15 @@ class CompressedNodal(WaveletNodal):
         reducedJac = sp.bsr_matrix((self.data,
                                     Jac.indices, Jac.indptr),
                                    shape = sysShape).tocsc()
+        #reducedb1 = reducedJac.T.dot(b1)
+        #reducedJac = reducedJac.T.dot(reducedJac).tocsc()
 
         result = scipy.sparse.linalg.lsmr(reducedJac, b1,
                                           atol=1e-8, btol=1e-8, maxiter=2000)
-        print('code:',result[1],'iter:',result[2])
-        #result = la.lstsq(Jac.todense(), b1)
+#        print('code:',result[1],'iter:',result[2])
+#        #result = la.lstsq(Jac.todense(), b1)
         return result[0]
+
 ####        return np.dot(la.pinv(reducedJac.todense()), b1)
 #        try:
 #            factorized = sp.linalg.factorized(reducedJac)

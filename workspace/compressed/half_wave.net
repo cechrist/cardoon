@@ -1,9 +1,9 @@
 # Half Wave Rectifier
-.options sparse=1 maxdelta=10. maxiter=200 softiter=340 verbose=0
+.options sparse=1 maxdelta=10. maxiter=60 softiter=340 verbose=0
 #abstol=1e-5 reltol=1e-3
 
 #.analysis fdtd T=1us nsamples=100
-.analysis sscw T=10ns nsamples=128 deriv=Fourier wavelet=db4 ncoeff=32 shell=0 
+.analysis sscw T=10ns nsamples=128 deriv=Fourier wavelet=db4 ncoeff=50 shell=0 
 .analysis ssw T=10ns nsamples=128 multilevel=1 deriv=Fourier wavelet=db4
 #.analysis tran tstep=.1ns tstop=60ns
 vpulse:vin 1 gnd v1=-5V v2=5V tf=1ns tr=1ns pw=4ns per=10ns

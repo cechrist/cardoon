@@ -507,7 +507,7 @@ class BJTi(cir.Element):
 
         # Calculate regular PN junctions currents and charges
         ibf = self.jif.get_id(vPort1[0])
-        ibr = self.jif.get_id(vPort1[1])
+        ibr = self.jir.get_id(vPort1[1])
         if self.ise != 0.:
             ile = self.jile.get_id(vPort1[0])
         else:

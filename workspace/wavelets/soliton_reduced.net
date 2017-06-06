@@ -1,0 +1,81 @@
+#### Classic soliton line netlist #######
+
+* NLTL with 24.00 GHz initial Bragg frequency,
+* 225.00 GHz final Bragg frequency and 0.952097 tapering rule,
+* and 120.00 ps total compression.
+
+.vars f0=9.GHz 
+
+.options sparse=1 maxiter=160 softiter=80
+.analysis ssw f=f0 nsamples=32 deriv=d2 multilevel=true wavelet=db4
+#.analysis tran tstop=0.05ns tstep=.1ps verbose=0 im=trap
+
+#.save tran 202 147 48
+.plot ssw 1 5 11
+.plot sswcoeff 1 5 11
+
+*
+* For 27dBm input use vac = 14V
+*
+vsin:1 202 0 mag=14.V vdc=-6.V freq=f0 phase=90 rint=50
+
+*
+* Diode parameters
+*
+* From thesis: js=2.24e-12, alfa=21.13
+*
+* From Libra netlist: js=51e-15, alfa=default
+*
+.model carlos diode ( isat=2.24e-12 n=1.8307 cj0=1.32767e-15 rs=171.9 vj=1.27517 m=0.810205 ibv=1.e-5 bv=16. )
+
+*
+* Transmission line parameters
+*
+.model tline1 tlinpy4 (z0mag=75.00 k=7 fscale=10.e9 alpha = 59.9)
+
+*
+* Diodes
+*
+diode:d1 101 0 model = carlos area=271.64
+diode:d2 102 0 model = carlos area=258.63
+diode:d3 103 0  model = carlos area=246.24
+diode:d4 104 0  model = carlos area=234.45
+diode:d5 105 0  model = carlos area=223.21
+diode:d6 106 0  model = carlos area=212.52
+diode:d7 107 0  model = carlos area=202.34
+diode:d8 108 0  model = carlos area=192.65
+diode:d9 109 0  model = carlos area=183.42
+diode:d10 110 0  model = carlos area=174.63
+
+*
+* Parasitic inductors
+*
+ind:i1  1 101 l=21.8pH
+ind:i2  2 102 l=21.8pH
+ind:i3  3 103 l=21.8pH
+ind:i4  4 104 l=21.8pH
+ind:i5  5 105 l=21.8pH
+ind:i6  6 106 l=21.8pH
+ind:i7  7 107 l=21.8pH
+ind:i8  8 108 l=21.8pH
+ind:i9  9 109 l=21.8pH
+ind:i10 10 110 l=21.8pH
+
+*
+* Transmission lines
+*
+tlinpy4:t0 202 0 1 0 model = tline1 length=501.29u
+tlinpy4:t1  1 0 2 0  model = tline1 length=978.57u
+tlinpy4:t2  2 0 3 0 model = tline1 length=931.69u
+tlinpy4:t3  3 0 4 0 model = tline1 length=887.06u
+tlinpy4:t4  4 0 5 0  model = tline1 length=844.57u
+tlinpy4:t5  5 0 6 0  model = tline1 length=804.11u
+tlinpy4:t6  6 0 7 0  model = tline1 length=765.59u
+tlinpy4:t7  7 0 8 0  model = tline1 length=728.92u
+tlinpy4:t8  8 0 9 0  model = tline1 length=694.00u
+tlinpy4:t9  9 0 10 0 model = tline1 length=660.75u
+tlinpy4:t10  10 0 11 0 model = tline1 length=629.10u
+*
+res:rl   11  0  r=50.
+
+.end

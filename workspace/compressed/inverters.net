@@ -2,7 +2,7 @@
 
 .options sparse=1 maxdelta=3. softiter=50 maxiter=100 verbose=0 
 
-.analysis sscw T=.10us ncoeff=32 nsamples=128 shell=0 deriv=d2 wavelet=db4
+.analysis sscw T=.10us ncoeff=60 nsamples=128 shell=0 deriv=d2 wavelet=db4
 .analysis ssw T=.10us nsamples=128 shell=0 deriv=d2 multilevel=1 wavelet=db4
 #.analysis fdtd T=.10us nsamples=64
 #.analysis tran tstep=1ns tstop=200ns
