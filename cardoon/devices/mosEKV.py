@@ -22,15 +22,18 @@ def f_simple(v):
 
     Not accurate for moderate inversion
     """
-    # Have to treat the function for large negative v specially
-    # otherwise exp(.5*v) << 1 and we get log(1) = 0
-    b = v + 20.
     d = np.exp(.5 * v)
     c = np.log(1. + d)
-    # f = (b > -20) ? c : d
-    f = ad.condassign(b, c, d)
+    # Needs special treatment for large negative v 
+    # otherwise exp(.5*v) << 1 and we get log(1) = 0
+    b1 = v + 20.
+    # f = (v > -20) ? c : d
+    f = ad.condassign(b1, c, d)
+    # Also needs special treatment for large v to prevent overflow
+    b2 = v - 35.
+    # f = (v > 35) ? .5*v : f
+    f = ad.condassign(b2, .5*v, f)
     return f**2
-
 
 def f_accurate(v):
     """

@@ -74,8 +74,8 @@ class Device(cir.Element):
         w = ('Channel width', 'm', float, 10e-6),
         l = ('Channel length', 'm', float, 10e-6),
         vth = ('Threshold Voltage', 'V', float, 0.5),
-        isq = ('Sheet normalization current', 'A/V^2', float, 100e-9),
-        n = ('Subthreshold slope factor', 'F/m^2', float, 1.3),
+        isq = ('Sheet normalization current', 'A', float, 100e-9),
+        n = ('Subthreshold slope factor', '', float, 1.3),
         cox = ('Gate oxide capacitance per area', 'F/m^2', float, 0.7e-3),
         tcv = ('Threshold voltage temperature coefficient', 'V/K', 
                float, 0.001),
@@ -171,7 +171,7 @@ class Device(cir.Element):
         i_f = inv_f((vp - vPort1[2]) / self._Vt)
         i_r = inv_f((vp - vPort1[0]) / self._Vt)
         
-        idrain = self._IS * (i_f - i_r) 
+        idrain = self._tf * self._IS * (i_f - i_r) 
 
         iVec, qVec = np.array([idrain]), np.array([])
 
