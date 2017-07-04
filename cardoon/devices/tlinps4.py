@@ -2,7 +2,7 @@
 :mod:`tlinps4` -- Physical 4-terminal transmission line (S-matrix based)
 ------------------------------------------------------------------------
 
-.. module:: diode
+.. module:: tlinps4
 .. moduleauthor:: Carlos Christoffersen
 
 """

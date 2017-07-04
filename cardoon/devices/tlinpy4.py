@@ -2,7 +2,7 @@
 :mod:`tlinpy4` -- Physical 4-terminal transmission line (Y-matrix based)
 ------------------------------------------------------------------------
 
-.. module:: diode
+.. module:: tlinpy4
 .. moduleauthor:: Carlos Christoffersen
 
 """

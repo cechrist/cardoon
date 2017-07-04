@@ -1,0 +1,38 @@
+# Class DE amplifier with measured transducer load
+
+.options sparse=1 maxdelta=20. softiter=80 maxiter=200 verbose=0 gyr=1e-3
+
+.analysis ssw T=938ns nsamples=128 shell=0 deriv=Fourier multilevel=true wavelet=db2 shell=0
+#.analysis fdtd T=938ns nsamples=256
+#.analysis tran tstep=1ns tstop=10us
+
+# Supply
+vdc:vdd 1 gnd vdc=20V rint=2
+vdc:vss 2 gnd vdc=-20V rint=2
+
+# Switch
+vpulse:vp 1 3 v1=0 v2=5V rint=50 td=0 tf=2ns tf=2ns pw=223ns per=938ns
+acms_i:mp out1 3 1 1 w=50e-6 l=1e-6 type=p isq=40nA vth=-1V
+
+vpulse:vn 4 2 v1=0 v2=5V rint=50 td=469ns tf=2ns tf=2ns pw=223ns per=938ns
+acms_i:mn out1 4 2 2 w=50e-6 l=1e-6 type=n isq=40nA vth=1V
+
+# Load
+vdc:amp out1 out vdc=0
+cap:c0 out gnd c=26pF
+1port:transducer2 out gnd s1p=trans2_wide.s1p cap=115pF
+
+# Added for numerical stability
+res:r1 out gnd r=10k
+
+.plot ssw 3 4 out
+.plot sswcoeff out
+.plot sswcoeff vdc:amp:i 
+#.plot ssw vdc:vdd:i vdc:vss:i
+.plot ssw vdc:amp:i 
+.plot fdtd out
+.plot tran 3 4 out
+.plot tran vdc:amp:i 
+
+.end
+

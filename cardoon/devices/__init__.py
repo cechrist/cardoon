@@ -43,7 +43,7 @@ netElemList = ['resistor', 'capacitor', 'inductor',
                'diode', 'svdiode', 'bjt', 'svbjt', 
                'mosEKV', 'mosACM', 'mosACMs', 'mosBSIM3v3',
                'mesfetc',
-               'tlinpy4', 'tlinps4']
+               'tlinpy4', 'tlinps4', '1port']
 
 # Add here any modules to be imported in addition to netElemList
 __all__ = netElemList + ['cppaddev']
