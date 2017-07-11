@@ -6,10 +6,15 @@ memr:m1 1 0 m = '1e3 * (3e6 * q*q + .1e3 * abs(q) + 3e-3)' c=10e-6
 
 #.analysis tran tstep=1ms tstop=95ms shell=1
 .analysis ssw T=.1s nsamples=128 deriv=d2 multilevel=true wavelet=db4
+.analysis sssw T=.1s nsamples=128 deriv=d2 multilevel=true wavelet=db4
 
 .plot ssw 1 
 .plot ssw memr:m1:im
 .plot ssw memr:m1:vc
+
+.plot sssw 1 
+.plot sssw memr:m1:im
+.plot sssw memr:m1:vc
 
 .end
 

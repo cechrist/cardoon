@@ -1,0 +1,42 @@
+# BJT mixer
+
+
+#.options sparse=1 maxdelta=1000000 softiter=10 maxiter=500 verbose=0 errfunc=0 reltol = 2e-4  abstol = 2e-7
+#.analysis ssw T=2us nsamples=100 shell=0 deriv=Fourier multilevel=false wavelet='db6' method='SenseRect'
+
+.options sparse=1 maxdelta=100000 softiter=10 maxiter=500 verbose=0 errfunc=0 reltol = 200e-4  abstol = 200e-7
+.analysis sssw T=2us nsamples=128 shell=0 deriv=Fourier multilevel=false wavelet='db6' method='SenseRect'
+.analysis ssw T=2us nsamples=128 shell=0 deriv=Fourier multilevel=false wavelet='db6'
+#.analysis sstd T=2us nsamples=16 shell=0 deriv=Fourier
+
+# step=True
+
+vdc:vcc 5 gnd vdc=9V 
+vsin:vin1 in1 gnd mag=.5V freq=1MegHz phase = -90
+vsin:vin2 in2 gnd mag=.5V freq=2MegHz phase = 90
+
+res:r1 in1 gnd r=500k
+res:r2 in2 gnd r=500k
+res:r3 in1 3 r=47k
+res:r4 in1 in2 r=1M
+res:r5 in2 3 r=47k
+res:r6 5 4 r=100k
+res:r7 4 gnd r=15k
+res:r8 5 6 r=2k
+res:r9 7 gnd r=1k
+res:rout out gnd r=10k
+
+cap:c1 3 4 c=47uF
+cap:c4 6 out c=100uF
+cap:c3 7 gnd c=100uF
+
+
+bjt:2N3563 6 4 7 7 type=npn
+
+.plot sssw in1 in2 out
+.plot ssw in1 in2 out
+.plot sstd in1 in2 out
+
+
+
+

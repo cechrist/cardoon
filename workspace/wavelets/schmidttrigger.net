@@ -1,0 +1,27 @@
+# Schmitt Trigger
+
+.options sparse=1 maxdelta=10 softiter=10 maxiter=50 verbose=0 errfunc=0 reltol = 1e-4  abstol = 1e-7
+#.analysis tran tstep=1ns tstop=1000ns
+#.analysis ssw T=500ns nsamples=256 shell=0 deriv=Fourier
+.analysis sssw T=500ns nsamples=64 shell=0 deriv=Fourier multilevel=false wavelet='haar' method='SenseRect'  
+#step=True
+#.analysis sstd T=500ns nsamples=256 shell=0 deriv=Fourier
+
+vdc:vcc 5 gnd vdc=5V
+
+vsin:vin1 1 gnd mag=4V freq=2MegHz phase = -90
+
+res:r4 1 6 r=1k
+res:r1 5 3 r=4k
+res:r2 5 4 r=2.5k
+res:rb 2 gnd r=1k
+
+
+
+bjt:Q1 3 6 2 gnd type=npn bf=20
+bjt:Q2 4 3 2 gnd type=npn bf=20
+
+.plot tran 1 4
+.plot ssw 1 4
+.plot sssw 1 4
+.plot sstd 1 4

@@ -1,0 +1,108 @@
+# Boost Converter
+
+.options sparse=1 maxdelta=10 softiter=100 maxiter=200 verbose=0 errfunc=0 reltol = 1e-4  abstol = 1e-7
+#.analysis tran tstep=1us tstop=50000us
+#32.2581ms
+#.analysis ssw T=16.6667us nsamples=128 shell=0 deriv=Fourier multilevel=false wavelet='db4' method='Classical'
+#.analysis ssw T=5000us nsamples=256 shell=0 deriv=Fourier multilevel=false wavelet='haar' method='SenseRect'
+#step=True
+.analysis ssw T=20us nsamples=100 shell=0 deriv=Fourier multilevel=false wavelet='db8' 
+#.analysis sssw T=20us nsamples=100 shell=0 deriv=Fourier multilevel=false wavelet='db8' #method='Classical' 
+#step=True
+#.analysis sstd T=16.6667us nsamples=256 shell=0 deriv=Fourier
+vdc:vin 1 gnd vdc=12V 
+
+#vpulse:gate 4 gnd v1=0V v2=20V td=0ms pw=2ms per=32.2581ms
+#vpulse:gate 4 gnd v1=0V v2=20V td=0ms pw=200us per=400us
+vpulse:gate 4 gnd v1=0V v2=12V td=0ms tf=20ns tr=20ns pw=10us per=20us
+
+res:rl 3 gnd r=24
+res:pot 3 gnd r=10k
+
+cap:c1 3 gnd c=140uF
+
+ind:l1 1 2 l=54.81uH
+
+diode:MUR1520 2 3 isat=3.22361e-06 rs=0.0101677 n=2 eg0=1.21579 xti=3.00528 bv=200 ibv=0.00001 cj0=5.43127e-10 vj=0.4 m=0.373455 fc=0.5 tt=3.24606e-08 kf=0 af=1
+
+xamp1 2 4 gnd IRF540
+.subckt IRF540 1 2 3
+
+* Node 1 -> Drain
+* Node 2 -> Gate
+* Node 3 -> Source
+ekv_i:M1 9 7 8 8 model=MM l=100u w=100u
+
+.model MM ekv_i(vt0=3.56362 Lambda=0.00291031 kp=25.0081 \
+ type=n )
+
+res:RS 8 3 r=0.0317085
+
+
+diode:D1 3 1 model=MD
+
+res:RDS 3 1 r=4e+06
+res:RD 9 1 r=0.0135649
+res:RG 2 7 r=5.11362
+
+
+diode:D2 4 5 model=MD1
+
+.model MD diode(isat=1.02194e-10 rs=0.00968022 n=1.21527 bv=100 \
+ibv=0.00025 eg0=1.2 xti=3.03885 tt=1e-07 cj0=1.81859e-9 vj=1.1279 m=0.449161 \
+fc=0.5)
+
+.model MD1 diode(isat=1e-32 n=50 cj0=2.49697e-9 vj=0.5 m=0.9 fc=1e-08)
+
+diode:D3 0 5 model=MD2
+
+.model MD2 diode(isat=1e-10 n=0.4 rs=3e-06)
+
+res:RL 5 10 r=1
+#FI2 7 9 VFI2 -1
+
+vdc:VFI2 4 0 vdc=0
+
+#EV16 10 0 9 7 1
+
+cap:CAP 11 10 c=2.49697e-09
+#FI1 7 9 VFI1 -1
+
+
+vdc:VFI1 11 6 vdc=0V
+res:RCAP 6 10 r=1
+
+diode:D4 0 6 model=MD3
+
+.model MD3 diode(isat=1e-10 n=0.4)
+
+#FI2 4 0 7 9 CCVS
+#EV16 10 0 9 7 VCVS
+#FI1 11 6 7 9 CCVS
+
+.subckt FI2 4 7 9
+gyr:gin 7 9 vc0 vc1 g=1
+vccs:g1 vc0 vc1 vc2 vc3 g=-1S
+gyr:gout vc2 vc3 4 gnd g=1
+.ends
+
+
+.subckt FI1 11 6 7 9
+gyr:gin 7 9 vc0 vc1 g=1
+vccs:g1 vc0 vc1 vc2 vc3 g=-1S
+gyr:gout vc2 vc3 11 6 g=1
+.ends
+
+.subckt EV16 10 9 7
+vccs:g1 9 7 vc2 vc3 g=1S
+gyr:gout vc2 vc3 10 gnd g=1
+.ends
+
+.ends
+
+
+
+.plot ssw 1 2 3 4
+.plot sssw 1 2 3 4
+.plot sstd 1 2 3 4
+.plot tran 1 2 3 4

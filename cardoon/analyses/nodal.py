@@ -18,6 +18,7 @@ import scipy.linalg as linalg
 from fsolve import fsolve_Newton, NoConvergenceError
 from integration import BEuler
 from cardoon.globalVars import glVar
+import pywt
 
 # ****************** Stand-alone functions to be optimized ****************
 
@@ -699,6 +700,184 @@ class _NLFunction(object):
         """
         # solve transposed linear system
         return linalg.lu_solve(self._LUpiv, d, trans = 1)
+        
+    def solve_simple_sparse(self, x0, sV):
+        #"""Simple Newton's method for sparse wavelet analysis"""
+        # Docstring removed to avoid printing this all the time
+        def get_deltax(x):
+            (iVec, Jac) = self.get_i_Jac(x) 
+            return self.sparse_solve(Jac, x, sV, iVec, 1.0)
+        def f_eval(x):
+            iVec = self.get_i(x) 
+            return iVec - sV
+        (x, res, iterations, success) = \
+            fsolve_Newton(x0, get_deltax, f_eval)
+        if success:
+            return (x, res, iterations)
+        else:
+            raise NoConvergenceError(
+                'No convergence. iter = {0} res = {1}'.format(iterations, res))
+    def solve_homotopy_source_sparse(self, x0, sV):
+        """Newton's method with source stepping"""
+        def f(_lambda):
+            self._lambda = _lambda
+        def get_deltax(x):
+            (iVec, Jac) = self.get_i_Jac(x) 
+            return self.sparse_solve(Jac, x, sV, iVec, self._lambda)
+        def f_eval(x):
+            return self.get_i(x) - self._lambda * sV
+        (x, res, iterations, success) = \
+            self._homotopy(self._sstep, f, x0, get_deltax, f_eval)
+        if success:
+            return (x, res, iterations)
+        else:
+            raise NoConvergenceError('Source stepping did not converge')
+    def solve_homotopy_source2_sparse(self, x0, sV):
+        """Newton's method with linear source stepping"""
+        def get_deltax(x):
+            (iVec, Jac) = self.get_i_Jac(x) 
+            return self.sparse_solve(Jac, x, sV, iVec, self._lambda)
+        def f_eval(x):
+            return self.get_i(x) - self._lambda * sV
+
+        x = np.copy(x0)
+        totIter = 0
+        sepline = '===================================================='
+        print('    lambda      |   Iterations    |   Residual')
+        print(sepline)
+        self._lambda = 0.
+        while self._lambda != 1.:
+            self._lambda += self._sstep
+            if (self._lambda > 1) or (abs(1.-self._lambda) < 1e-10):
+                self._lambda = 1.
+            (x, res, iterations, success) = \
+                fsolve_Newton(x, get_deltax, f_eval)
+            print('{0:15} | {1:15} | {2:15}'.format(
+                    self._lambda, iterations, res))
+            totIter += iterations
+            if not success:
+                raise NoConvergenceError('Source stepping did not converge')
+        print(sepline)
+        return (x, res, iterations)
+    def sparse_solve(self, Jac, x, sV, iVec, _lambda):
+        """
+        This contains the main solver methods for the sparse wavelet
+        analysis.  The method re-writes the equations to calculate xnew
+        directly to estimate the support of xnew and then calculates
+        deltax normally again using the estimated support for xnew in
+                  J*deltax = -F
+        Where: deltax = xnew-xold.
+        The support for xnew is calculated as:
+                  J*xnew = -F + J*xold
+        Note:   J is actually -J here so J xnew = -F(x) + J*xold is really
+                -J xnew = F(x) - J*xold
+                
+        Inputs: 
+            Jac:  The Jacobian matrix (sparse format)
+              x:  The current estimate of the solution (xold)
+             sV:  The vector of source currents
+           iVec:  The vector of non-linear, voltage dependant, currents
+        _lambda:  This is used for source stepping.  Set to 1 if using a
+                  standard wavelet analysis.
+        """ 
+        method = self.method
+        if glVar.verbose:
+            print(method)
+        
+        # Find the number of scaling coefficients in the transformed
+        # waveforms.  This is done because all scaling coefficients have
+        # to be kept (They tend to be dense anyway so this will not
+        # significantly change how many coefficients are thresholded.)
+        startofwavelets = np.array(pywt.Wavelet(self._wavelet).filter_bank).shape[1]
+        
+        if method == 'Classical':
+            return linalg.lstsq(Jac.todense(), (_lambda * sV-iVec))[0]
+        
+        elif method == 'Threshold':
+            Thresh = linalg.lstsq(Jac.todense(), (_lambda * sV-iVec))[0]
+            ans = Thresh.copy()
+            tot = 0
+            nsamples = int(self.nsamples)
+            for n in range (self.ckt.nD_dimension):
+                sort = Thresh[n*nsamples:(n+1)*nsamples].copy()
+                sort = 1.0*sort/np.max(np.abs(sort))
+                Tval = np.max((np.max(np.abs(sort[startofwavelets:]))*glVar.reltol, glVar.abstol))
+                sort[np.abs(sort)<Tval] = 0
+                Thresh[n*nsamples:(n+1)*nsamples] = sort.copy()
+                if glVar.verbose:
+                    print ("Coefficients for node ", str(n), " : ", 1.0*np.linalg.norm(sort, 0)/self.nsamples)
+                tot = tot + 1.0*np.linalg.norm(sort, 0)/nsamples
+            tot = tot*1.0/self.ckt.nD_dimension
+            if glVar.verbose:
+                print("Total for this iteration: ", tot)
+            sourceSup = np.zeros_like(sV, dtype='bool')
+            sourceSup[Thresh!=0]=1
+            ans[Thresh == 0] = 0
+            return ans
+        elif method == 'RecalcRect':
+            Thresh = self.factor_and_solve((_lambda * sV-iVec), Jac)
+            tot = 0
+            nsamples = int(self.nsamples)
+            for n in range (self.ckt.nD_dimension):
+                sort = Thresh[n*nsamples:(n+1)*nsamples].copy()
+                sort = 1.0*sort/np.max(np.abs(sort))
+                Tval = np.max((np.max(np.abs(sort[startofwavelets:]))*glVar.reltol, glVar.abstol))
+                sort[np.abs(sort)<Tval] = 0
+        
+                Thresh[n*nsamples:(n+1)*nsamples] = sort.copy()
+                if glVar.verbose:
+                    print ("Coefficients for node ", str(n), " : ", 1.0*np.linalg.norm(sort, 0)/self.nsamples)
+                tot = tot + 1.0*np.linalg.norm(sort, 0)/nsamples
+            tot = tot*1.0/self.ckt.nD_dimension
+            if glVar.verbose:
+                print("Total for this iteration: ", tot)
+            sourceSup = np.zeros_like(sV, dtype='bool')
+            sourceSup[Thresh!=0]=1
+            Sol = np.zeros_like(sV)
+            Sol[sourceSup], b, c, d = linalg.lstsq(Jac.todense()[:, sourceSup], _lambda * sV-iVec)
+            return Sol
+        elif method == 'SenseRect':
+            #  Find the support of x first and use that as the seed:
+            if np.max(np.abs(x)) != 0:
+                    
+                Thresh = np.copy(x)
+                for n in range (self.ckt.nD_dimension):
+                    sort = Thresh[n*self.nsamples:(n+1)*self.nsamples].copy()
+                    sort = 1.0*sort/np.max(np.abs(sort))
+                    Tval = np.max((np.max(np.abs(sort[startofwavelets:]))*glVar.reltol, glVar.abstol))
+        
+                    sort[np.abs(sort)<Tval] = 0
+                    Thresh[n*self.nsamples:(n+1)*self.nsamples] = sort.copy()
+        
+            else:
+                Thresh = np.ones_like(x)
+            
+            SeedSup = (Thresh != 0)
+        
+            # Now find the test values:
+            test = Jac.T * (_lambda * sV-iVec + Jac*Thresh)
+            # The highest values per node will be used here (above the threshold)
+            for n in range (self.ckt.nD_dimension):
+                sort = test[n*self.nsamples:(n+1)*self.nsamples].copy()
+                sort = 1.0*sort/np.max(np.abs(sort))
+                Tval = np.max((np.max(np.abs(sort[startofwavelets:]))*glVar.reltol, glVar.abstol))
+                sort[np.abs(sort)<Tval] = 0
+                test[n*self.nsamples:(n+1)*self.nsamples] = sort.copy()               
+            
+            SourceSup = SeedSup + (test != 0)
+            if glVar.verbose:
+                print(" Total percentage coefficients used (average): ", np.linalg.norm(SourceSup, 0)*1.0/self.ckt.nD_dimension/self.nsamples*100, "%")
+        
+            Thresh = np.zeros_like(sV)
+            #import pdb; pdb.set_trace()
+            if np.any(np.isnan(Jac.todense())) or np.any(np.isinf(Jac.todense())):
+                return [np.array([0]), np.array([0])]
+            if ( np.linalg.norm(SourceSup, 0) == Jac.shape[0] ):
+                Thresh[SourceSup] = self.factor_and_solve((_lambda * sV-iVec), Jac)
+            else:
+                Thresh[SourceSup], b, c, d = linalg.lstsq(Jac.todense()[:, SourceSup], (_lambda * sV-iVec))
+            
+            return Thresh
 
 
 

@@ -1,8 +1,9 @@
 # Class DE amplifier (non ideal operation)
 
-.options sparse=1 maxdelta=20. softiter=80 maxiter=200 verbose=0 gyr=.01
+.options sparse=1 maxdelta=200. softiter=80 maxiter=200 verbose=1 gyr=.01
 
-.analysis ssw T=943ns nsamples=128 shell=0 deriv=Fourier multilevel=false wavelet=none
+.analysis sssw T=943ns nsamples=128 shell=0 deriv=Fourier multilevel=false wavelet='db4'
+.analysis ssw T=943ns nsamples=128 shell=0 deriv=Fourier multilevel=false wavelet='db4'
 #.analysis fdtd T=943ns nsamples=256
 #.analysis tran tstep=1ns tstop=10us
 
@@ -26,8 +27,12 @@ res:rs 8 gnd r=370
 res:r1 out gnd r=10k
 
 .plot ssw 3 4 out
+.plot sssw 3 4 out
+.plot sswcoeff 3 4 out
+.plot ssswcoeff 3 4 out
 #.plot ssw vdc:vdd:i vdc:vss:i
 .plot ssw vdc:amp:i 
+.plot sssw vdc:amp:i
 .plot fdtd out
 .plot tran 3 4 out
 .plot tran vdc:amp:i 
