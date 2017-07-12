@@ -31,6 +31,9 @@ import nodal
 from nodal import set_xin, set_i, restore_RCnumbers, delay_interp, _NLFunction
 from cardoon.globalVars import glVar
 
+# Do not use Umfpack by default
+scipy.sparse.linalg.use_solver(useUmfpack = False)
+
 # ****************** Stand-alone functions to be optimized ****************
 
 def triplet_append(G, val, row, col):
@@ -171,12 +174,11 @@ def _set_Jac(self, M, Jac, mpidx, mnidx, jacpidx, jacnidx):
     # Apparently fancy indexing is a little faster than using
     # ``nimpy.put()`` and ``numpy.take()`` to fill the matrix.
 
-#   import pdb; pdb.set_trace()
 #    np.put(M.data, mpidx + self._mbase, np.take(Jac, jacpidx))
-    M.data[mpidx + self._mbase] = Jac.flat[jacpidx]
+    M[mpidx + self._mbase] = Jac.flat[jacpidx]
     self._mbase += len(mpidx)
 #    np.put(M.data, mnidx + self._mbase, -np.take(Jac, jacnidx))
-    M.data[mnidx + self._mbase] = -Jac.flat[jacnidx]
+    M[mnidx + self._mbase] = -Jac.flat[jacnidx]
     self._mbase += len(mnidx)
 
 
@@ -425,10 +427,10 @@ class DCNodal(_NLFunctionSP):
                               dtype = float)
             set_Jac_triplet(JacTriplet, elem.nD_cpos, elem.nD_cneg, 
                             elem.nD_vpos, elem.nD_vneg, outJac)
-        self.Jaccoo = sp.coo_matrix((JacTriplet[0], JacTriplet[1:]),
-                                    (self.ckt.nD_dimension, 
-                                     self.ckt.nD_dimension), 
-                                    dtype = float)
+        # Replace JacTriplet lists with numpy vectors
+        self.JacTriplet = (np.array(JacTriplet[0]),
+                           np.array(JacTriplet[1]),
+                           np.array(JacTriplet[2]))
 
 
     def get_guess(self):
@@ -520,9 +522,13 @@ class DCNodal(_NLFunctionSP):
             # Update iVec and Jacobian now. outV may have extra charge
             # elements but they are not used in the following
             set_i(self.iVec, elem.nD_cpos, elem.nD_cneg, outV)
-            self.set_Jac(self.Jaccoo, outJac, *elem.nD_csidx)
+            self.set_Jac(self.JacTriplet[0], outJac, *elem.nD_csidx)
+        # Create Jacobian matrix. 
+        Jac = sp.coo_matrix((self.JacTriplet[0], self.JacTriplet[1:]),
+                            (self.ckt.nD_dimension, self.ckt.nD_dimension), 
+                            dtype = float)
 
-        return (self.iVec, self.Jaccoo)
+        return (self.iVec, Jac)
 
 
     def save_OP(self, xVec):
@@ -660,10 +666,12 @@ class TransientNodal(_NLFunctionSP):
                             elem.nD_vpos, elem.nD_vneg, outJac)
             set_Jac_triplet(JacTriplet, elem.nD_qpos, elem.nD_qneg, 
                             elem.nD_vpos, elem.nD_vneg, qJac)
-        self.Jaccoo = sp.coo_matrix((JacTriplet[0], JacTriplet[1:]),
-                                    (self.ckt.nD_dimension, 
-                                     self.ckt.nD_dimension), 
-                                    dtype = float)
+
+        # Replace JacTriplet lists with numpy vectors
+        self.JacTriplet = (np.array(JacTriplet[0]),
+                           np.array(JacTriplet[1]),
+                           np.array(JacTriplet[2]))
+
 
     def set_IC(self, h):
         """
@@ -685,7 +693,7 @@ class TransientNodal(_NLFunctionSP):
         # Generate Gp 
         self.update_Gp()
         # Initialize time delay structures
-        nsteps = np.ceil(self.ckt.nD_maxDelay / h)
+        nsteps = int(np.ceil(self.ckt.nD_maxDelay / h))
         self._dpsteps = nsteps * [h]
         for elem in self.ckt.nD_nlinElem:
             if elem.nDelays:
@@ -703,9 +711,9 @@ class TransientNodal(_NLFunctionSP):
         Recalculate Gp from im information
         """
         # Gp = G + a0 C in documentation (Y0 not implemented yet)
-        data = self.Jaccoo.data
-        row = self.Jaccoo.row
-        col = self.Jaccoo.col
+        data = self.JacTriplet[0]
+        row = self.JacTriplet[1]
+        col = self.JacTriplet[2]
         # Calculate a0 C and save into Jacobian
         data[self._Cbase:self._mbaseLin] = self.im.a0 * self._Cdata
         Gcoo = sp.coo_matrix((data[:self._mbaseLin], 
@@ -882,10 +890,15 @@ class TransientNodal(_NLFunctionSP):
             set_i(self.iVec, elem.nD_cpos, elem.nD_cneg, outV)
             set_i(self.iVec, elem.nD_qpos, elem.nD_qneg, 
                   self.im.a0 * outV[len(elem.csOutPorts):])
-            self.set_Jac(self.Jaccoo, outJac, *elem.nD_csidx)
+            self.set_Jac(self.JacTriplet[0], outJac, *elem.nD_csidx)
             qJac = self.im.a0 * outJac[len(elem.csOutPorts):,:]
-            self.set_Jac(self.Jaccoo, qJac, *elem.nD_qsidx)
+            self.set_Jac(self.JacTriplet[0], qJac, *elem.nD_qsidx)
+        # Create Jacobian matrix. 
+        Jac = sp.coo_matrix((self.JacTriplet[0], self.JacTriplet[1:]),
+                            (self.ckt.nD_dimension, 
+                             self.ckt.nD_dimension), 
+                            dtype = float)
 
-        return (self.iVec, self.Jaccoo)
+        return (self.iVec, Jac)
 
 

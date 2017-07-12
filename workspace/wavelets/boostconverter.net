@@ -1,6 +1,7 @@
 # Boost Converter
 
-.options sparse=1 maxdelta=10 softiter=100 maxiter=200 verbose=0 errfunc=0 reltol = 1e-4  abstol = 1e-7
+.options sparse=1 maxdelta=5. softiter=300 maxiter=400
+#verbose=0 errfunc=0 reltol = 1e-4  abstol = 1e-7
 #.analysis tran tstep=1us tstop=50000us
 #32.2581ms
 #.analysis ssw T=16.6667us nsamples=128 shell=0 deriv=Fourier multilevel=false wavelet='db4' method='Classical'
@@ -31,10 +32,9 @@ xamp1 2 4 gnd IRF540
 * Node 1 -> Drain
 * Node 2 -> Gate
 * Node 3 -> Source
-ekv_i:M1 9 7 8 8 model=MM l=100u w=100u
+ekv_i:M1 9 7 8 8 model=MM l=2u w=100u
 
-.model MM ekv_i(vt0=3.56362 Lambda=0.00291031 kp=25.0081 \
- type=n )
+.model MM ekv_i(vt0=3.56362 Lambda=0.00291031 kp=0.5e-3 type=n )
 
 res:RS 8 3 r=0.0317085
 
