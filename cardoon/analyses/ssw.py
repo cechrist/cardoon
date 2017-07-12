@@ -35,6 +35,9 @@ class SSW(ParamSet):
     ignored in this analysis (sparse matrices always used). Global
     options are documented in :doc:`global_vars`.
 
+    Note: derivative method 'alpha' uses a combination of BE and FE
+    formula: alpha * FE + (1-alpha) BE
+
     Example::
 
         .analysis ssw T = 1us nsamples = 100  
@@ -53,7 +56,8 @@ class SSW(ParamSet):
         nsamples = ('Number of samples in period (always even, power of 2 for multilevel)', '', int, 64),
         wavelet = ('Wavelet family (none=FDTD)', '', str, 'db4'),
         multilevel = ('Use multilevel transform', '', bool, False),
-        deriv = ('Derivative type: d2, d4, Fourier', '', str, 'd2'),
+        deriv = ('Derivative type: d2, d4, Fourier, alpha', '', str, 'd2'),
+        alpha = ('Weight of FE estimation for derivative', '', float, 0.45),
 #        dcguess = ('Use DC operating point as initial guess', '', bool, False),
         step = ('Directly try conservative convergence helpers', '', bool, False),
         ssfactor = ('Initial source stepping factor', '', float, 0.5),
@@ -98,6 +102,10 @@ class SSW(ParamSet):
         if not glVar.sparse:
             print('Warning: dense matrices not supported, using sparse matrices.\n')
 
+        if (self.alpha > 0.5) or (self.alpha < 0.):
+            raise analysis.AnalysisError(
+                    'alpha must be between 0 and 0.5, given: {0}'.format(self.alpha))
+        
         # Only works with flattened circuits
         if not circuit._flattened:
             circuit.flatten()
@@ -107,7 +115,8 @@ class SSW(ParamSet):
         nd.make_nodal_circuit(circuit)
 	nodalwav = nodalWavelet.WaveletNodal(circuit, self.nsamples, self.T,
                                              self.wavelet, self.multilevel,
-                                             self.deriv, self.ssfactor)
+                                             self.deriv, self.alpha,
+                                             self.ssfactor)
 
         # Retrieve wavelet transform matrix
         W = nodalwav.W

@@ -84,6 +84,19 @@ def set_Jac(dataVec, posContrib, negContrib, Jac, j):
 #----------------------------------------------------------------------
 # Derivatives
 
+def deriv_1(nsamples, T):
+    """
+    Returns D matrix using first order derivatives (BE formula)
+    
+    nsamples: number of samples
+    T: period
+    """
+    data = np.ones((3, nsamples))
+    data *= nsamples / T
+    data[[0,2],:] *= -1.
+    offsets = np.array([-1, 0, nsamples-1])
+    return sp.dia_matrix((data,offsets), shape=(nsamples, nsamples))
+
 def deriv_2(nsamples, T):
     """
     Returns D matrix using second order derivatives (2-point formula)
@@ -95,6 +108,28 @@ def deriv_2(nsamples, T):
     data *= 0.5 * nsamples / T
     data[[1,3],:] *= -1.
     offsets = np.array([-nsamples+1, -1, 1, nsamples-1])
+    return sp.dia_matrix((data,offsets), shape=(nsamples, nsamples))
+
+def deriv_alpha(nsamples, T, alpha):
+    """
+    Returns D matrix using second order derivatives as follows:
+    
+    alpha * FE + (1-alpha) * BE , 
+
+    where FE and BE stand for forward and backward Euler.
+
+    alpha = 0 is BE formula
+    alpha = 0.5 is 2-point formula
+
+    nsamples: number of samples
+    T: period
+    """
+    data = np.ones((5, nsamples))
+    data *= nsamples / T
+    data[2,:] *= (1. - 2. * alpha)
+    data[[1,4],:] *= (-1. + alpha)
+    data[[0,3],:] *= alpha
+    offsets = np.array([-nsamples+1, -1, 0, 1, nsamples-1])
     return sp.dia_matrix((data,offsets), shape=(nsamples, nsamples))
 
 def deriv_4(nsamples, T):
@@ -202,8 +237,8 @@ class WaveletNodal(nd._NLFunctionSP):
     make_nodal_circuit()) and number of samples. 
     """
 
-    def __init__(self, ckt, nsamples, T, wavelet, multilevel, deriv, sstep,
-                 matformat='csr'):
+    def __init__(self, ckt, nsamples, T, wavelet, multilevel, deriv, alpha,
+                 sstep, matformat='csr'):
         """
         Arguments:
 
@@ -238,6 +273,7 @@ class WaveletNodal(nd._NLFunctionSP):
         self.matformat = matformat
         # Save input parameters for refresh()
         self._deriv = deriv
+        self._alpha = alpha
         self._wavelet = wavelet
         self._multilevel = multilevel
         # Allocate matrices/vectors (done in refresh())
@@ -277,7 +313,9 @@ class WaveletNodal(nd._NLFunctionSP):
 
         deriv = self._deriv
         # Create derivative matrix
-        if deriv=='d2':
+        if deriv=='alpha':
+            D = deriv_alpha(self.nsamples, self.T, self._alpha)
+        elif deriv=='d2':
             D = deriv_2(self.nsamples, self.T)
         elif deriv=='d4':
             D = sp.dia_matrix(deriv_4(self.nsamples, self.T))
@@ -286,6 +324,7 @@ class WaveletNodal(nd._NLFunctionSP):
         else:
             raise AnalysisError(
                 'Invalid deriv value: {0}'.format(deriv))
+        #import pdb; pdb.set_trace()
             
         # Wavelet matrices. It may be possible to avoid its creation
         # (using the fast wavelet transform) but for the moment is it
@@ -379,7 +418,6 @@ class WaveletNodal(nd._NLFunctionSP):
                 # Save data vector only
                 ydata[:,n] = Yn.data
                 n += 1
-            # import pdb; pdb.set_trace()
             # Create convolution matrices
             # Inverse-transform Y: for now use numpy. Later switch to pyfftw
             Yblocks = np.empty((Y0.nnz, self.nsamples, self.nsamples))

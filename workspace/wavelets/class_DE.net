@@ -1,9 +1,14 @@
 # Class DE amplifier (non ideal operation)
 
-.options sparse=1 maxdelta=200. softiter=80 maxiter=200 verbose=1 gyr=.01
+.options sparse=1 maxdelta=200. softiter=80 maxiter=200 verbose=0 gyr=1e-3
 
-.analysis sssw T=943ns nsamples=128 shell=0 deriv=Fourier multilevel=false wavelet='db4'
-.analysis ssw T=943ns nsamples=128 shell=0 deriv=Fourier multilevel=false wavelet='db4'
+#.analysis sssw T=943ns nsamples=128 shell=0 deriv=Fourier multilevel=false wavelet='db4'
+#
+# Comment: using alpha < 0.5 introduces significant numerical damping
+# but it also removes oscillations thus may be useful to get initial
+# approximate solutions.
+#
+.analysis ssw T=943ns nsamples=64 shell=0 deriv=alpha multilevel=false wavelet=none alpha=0.3
 #.analysis fdtd T=943ns nsamples=256
 #.analysis tran tstep=1ns tstop=10us
 
@@ -12,10 +17,10 @@ vdc:vdd 1 gnd vdc=20V rint=2
 vdc:vss 2 gnd vdc=-20V rint=2
 
 # Switch
-vpulse:vp 1 3 v1=0 v2=5V rint=50 td=0 tf=2ns tf=2ns pw=215ns per=943ns
+vpulse:vp 1 3 v1=0 v2=5V rint=50 td=0 tr=2ns tf=2ns pw=215ns per=943ns
 acms_i:mp out1 3 1 1 w=230e-6 l=1e-6 type=p isq=40nA vth=-1V
 
-vpulse:vn 4 2 v1=0 v2=5V rint=50 td=471.5ns tf=2ns tf=2ns pw=215ns per=943ns
+vpulse:vn 4 2 v1=0 v2=5V rint=50 td=471.5ns tr=2ns tf=2ns pw=215ns per=943ns
 acms_i:mn out1 4 2 2 w=230e-6 l=1e-6 type=n isq=40nA vth=1V
 
 # Load
@@ -28,7 +33,7 @@ res:r1 out gnd r=10k
 
 .plot ssw 3 4 out
 .plot sssw 3 4 out
-.plot sswcoeff 3 4 out
+#.plot sswcoeff 3 4 out
 .plot ssswcoeff 3 4 out
 #.plot ssw vdc:vdd:i vdc:vss:i
 .plot ssw vdc:amp:i 
